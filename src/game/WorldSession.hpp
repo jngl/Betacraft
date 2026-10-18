@@ -133,7 +133,6 @@ public:
     [[nodiscard]] InventoryCrafting& crafting() noexcept { return m_crafting; }
     [[nodiscard]] const InventoryCrafting& crafting() const noexcept { return m_crafting; }
     [[nodiscard]] const std::string& name() const noexcept { return m_name; }
-    [[nodiscard]] const core::FeatureFlags& features() const noexcept { return m_features; }
 
     // One game tick (20 TPS) in Beta 1.7.3's single-player order (Minecraft.runTick):
     //  1. input: mining and attack, and the drops of what they removed;
@@ -167,8 +166,13 @@ public:
     void skipTimeIfCreative() noexcept;
 
     // S8.9 weather, advanced by tick() (clear and frozen with --no-weather).
-    [[nodiscard]] world::WeatherState& weather() noexcept { return m_weather; }
     [[nodiscard]] const world::WeatherState& weather() const noexcept { return m_weather; }
+    // Replaces the weather (tests); ignored with --no-weather, which keeps it clear.
+    void setWeather(const world::WeatherState& weather) noexcept {
+        if (m_features.weather) {
+            m_weather = weather;
+        }
+    }
     // S8.13 debug weather cycle (clear -> rain -> thunder): Creative only, and never with
     // --no-weather. False when nothing changed.
     bool cycleWeatherIfCreative();
@@ -182,7 +186,6 @@ public:
     [[nodiscard]] bool isSleeping() const noexcept { return m_sleepingBed.has_value(); }
     // Head cell of the bed being slept in.
     [[nodiscard]] const std::optional<core::BlockPos>& sleepingBed() const noexcept { return m_sleepingBed; }
-    [[nodiscard]] int32_t sleepTicks() const noexcept { return m_sleepTicks; }
     // 0..1 black veil of the sleep screen.
     [[nodiscard]] float sleepFade() const noexcept;
     // Leaves the bed without skipping the night (hurt, bed broken, Esc).
@@ -203,7 +206,6 @@ public:
     void setSpawnPoint(const glm::vec3& point) noexcept { m_spawnPoint = point; }
     // S5.8 head of the bed the spawn point is next to.
     [[nodiscard]] const std::optional<core::BlockPos>& bedSpawn() const noexcept { return m_bedSpawn; }
-    [[nodiscard]] std::optional<core::BlockPos>& bedSpawn() noexcept { return m_bedSpawn; }
 
 private:
     explicit WorldSession(const OpenOptions& options);

@@ -98,14 +98,14 @@ TEST_F(WorldSessionTick, TheTickThePlayerDiesScattersTheGridTheCursorAndTheInven
 // S8.10 the lightning roll is part of the tick: in a lasting thunderstorm a strike comes back
 // in the events, within 64 blocks of the player, on top of a rainy column.
 TEST_F(WorldSessionTick, AThunderstormReturnsLightningStrikes) {
-    m_session->weather() = world::WeatherState{.raining = true,
-                                               .thundering = true,
-                                               .rainTime = 100000,
-                                               .thunderTime = 100000,
-                                               .rainStrength = 1.0f,
-                                               .prevRainStrength = 1.0f,
-                                               .thunderStrength = 1.0f,
-                                               .prevThunderStrength = 1.0f};
+    m_session->setWeather(world::WeatherState{.raining = true,
+                                              .thundering = true,
+                                              .rainTime = 100000,
+                                              .thunderTime = 100000,
+                                              .rainStrength = 1.0f,
+                                              .prevRainStrength = 1.0f,
+                                              .thunderStrength = 1.0f,
+                                              .prevThunderStrength = 1.0f});
     std::optional<glm::vec3> strike;
     for (int32_t t = 0; t < 4000 && !strike; ++t) {
         strike = tickIdle().lightningStrike;
@@ -137,7 +137,7 @@ TEST_F(WorldSessionTick, ThunderLetsHostilesSpawnOnTheSunlitSurfaceAtNoon) {
         for (const ecs::EntityId e : mobs) {
             (void)entities.destroy(e);
         }
-        m_session->weather() = weather;
+        m_session->setWeather(weather);
         m_session->setTimeOfDay(0.25f); // Noon
         int32_t sunlit = 0;
         for (int32_t t = 0; t < ticks && sunlit == 0; ++t) {
@@ -173,7 +173,7 @@ TEST_F(WorldSessionTick, ThunderLetsHostilesSpawnOnTheSunlitSurfaceAtNoon) {
 
 // Clear weather never strikes, and the weather advances once per tick.
 TEST_F(WorldSessionTick, ClearWeatherNeverStrikesAndTheWeatherAdvancesEachTick) {
-    m_session->weather() = world::WeatherState{.rainTime = 1000};
+    m_session->setWeather(world::WeatherState{.rainTime = 1000});
     for (int32_t t = 0; t < 500; ++t) {
         ASSERT_FALSE(tickIdle().lightningStrike.has_value()) << t;
     }
