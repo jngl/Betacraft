@@ -85,7 +85,7 @@ public:
     // Precondition for both: a world is open (hasWorld()).
     [[nodiscard]] const std::optional<core::BlockPos>& getBedSpawn() const noexcept { return m_session->bedSpawn(); }
     [[nodiscard]] const glm::vec3& getSpawnPoint() const noexcept { return m_session->spawnPoint(); }
-    [[nodiscard]] const std::string& getStatusMessage() const noexcept { return m_inWorld.statusMessage; }
+    [[nodiscard]] const std::string& getStatusMessage() const noexcept { return m_inWorld.state.statusMessage; }
     // The open world's level.dat is too new or unreadable (WorldSession::isSaveDisabled).
     [[nodiscard]] bool isSaveDisabled() const noexcept { return m_session && m_session->isSaveDisabled(); }
 
@@ -180,7 +180,7 @@ private:
     };
     static constexpr int32_t kLightningFlashTicks = 6;
 
-    // The part of InWorldEffects rebuilt with {}.
+    // InWorldEffects::state: everything of it but the acoustics, rebuilt with {}.
     struct InWorldPresentation {
         render::ParticleSystem particles;
         lighting::DynamicLightManager dynamicLights;
@@ -220,12 +220,13 @@ private:
     // latches. Nothing of the world's simulation. leaveWorld calls reset() once, so the next
     // world inherits none of it. The acoustics hold the audio engine and are reset in place;
     // everything else is rebuilt with {}.
-    struct InWorldEffects : InWorldPresentation {
+    struct InWorldEffects {
         explicit InWorldEffects(audio::AudioEngine& audio) noexcept : acoustics{audio} {}
         void reset() {
-            static_cast<InWorldPresentation&>(*this) = InWorldPresentation{};
+            state = {};
             acoustics.reset();
         }
+        InWorldPresentation state;
         AcousticsController acoustics;
     };
 
