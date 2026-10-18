@@ -7,6 +7,7 @@
 #include "game/DynamicLightCollector.hpp"
 #include "game/EntitySimulation.hpp"
 #include "game/ItemUse.hpp"
+#include "game/WorldSession.hpp"
 #include "lighting/DynamicLightManager.hpp"
 #include "physics/Player.hpp"
 #include "physics/Raycaster.hpp"
@@ -42,19 +43,19 @@ public:
     // Window, GL and renderers; with EngineConfig::autoEnterWorld also enterWorld(worldSaveDir),
     // otherwise the title screen starts with no world.
     [[nodiscard]] bool initialize();
-    // S7.9 opens the world saved in `dir` (leaving the current one first): level.dat, the S7.4
-    // migration of a pre-Sprint 7 save (progress bar on the Loading screen beyond
-    // storage::kMigrationProgressThreshold chunks), then the chunks around the player. A
-    // directory without level.dat is a new world: `params` gives its seed, mode and name
-    // (nullopt: EngineConfig::worldSeed and the title screen's mode); `params` is ignored for an
+    // S7.9 opens the world saved in `dir` (leaving the current one first) through
+    // WorldSession::open, with a progress bar on the Loading screen while a pre-Sprint 7 save
+    // beyond storage::kMigrationProgressThreshold chunks is converted. A directory without
+    // level.dat is a new world: `params` gives its seed, mode and name (nullopt:
+    // EngineConfig::worldSeed and the title screen's mode); `params` is ignored for an
     // existing world. Ends on the title screen with the world loaded: enterGame (run,
     // runFixedFrames, "Singleplayer") goes in. False when the directory cannot be created.
     bool enterWorld(const std::filesystem::path& dir, std::optional<core::NewWorldParams> params = std::nullopt);
-    // S7.9 back to the title screen with no world: saves, writes every queued chunk
-    // (World::flushStorage), stops the meshing before the World is destroyed, then resets the
-    // session (entities, player proxy, mob spawner) and the player. No-op without a world.
+    // S7.9 back to the title screen with no world: stops the meshing, closes the world
+    // session (saved, every queued chunk written) and drops it with the per-world effects.
+    // No-op without a world.
     void leaveWorld();
-    [[nodiscard]] bool hasWorld() const noexcept { return m_world != nullptr; }
+    [[nodiscard]] bool hasWorld() const noexcept { return m_session != nullptr; }
     int run(int maxFrames = -1);
     // Deterministic frame loop for tests and headless runs: in game with the mouse captured,
     // each frame advancing exactly `frameDt` seconds (0.05 = one 20 TPS game tick). Frames
@@ -73,16 +74,20 @@ public:
     [[nodiscard]] const ui::InputManager& getInputManager() const noexcept { return m_inputManager; }
 
     // Null while no world is open (title screen without autoEnterWorld, after leaveWorld).
-    [[nodiscard]] world::World* getWorld() noexcept { return m_world.get(); }
-    [[nodiscard]] physics::Player& getPlayer() noexcept { return m_player; }
-    [[nodiscard]] EntitySimulation& getSession() noexcept { return m_session; }
+    [[nodiscard]] world::World* getWorld() noexcept { return m_session ? &m_session->world() : nullptr; }
+    [[nodiscard]] WorldSession* getWorldSession() noexcept { return m_session.get(); }
+    // Precondition for both: a world is open (hasWorld()).
+    [[nodiscard]] physics::Player& getPlayer() noexcept { return m_session->player(); }
+    [[nodiscard]] EntitySimulation& getSession() noexcept { return m_session->simulation(); }
 
     // Death screen "Respawn": full health and air at the spawn point, back in game.
     void respawnPlayer();
-    [[nodiscard]] const std::optional<core::BlockPos>& getBedSpawn() const noexcept { return m_bedSpawn; }
+    // Precondition for both: a world is open (hasWorld()).
+    [[nodiscard]] const std::optional<core::BlockPos>& getBedSpawn() const noexcept { return m_session->bedSpawn(); }
+    [[nodiscard]] const glm::vec3& getSpawnPoint() const noexcept { return m_session->spawnPoint(); }
     [[nodiscard]] const std::string& getStatusMessage() const noexcept { return m_inWorld.statusMessage; }
-    [[nodiscard]] const glm::vec3& getSpawnPoint() const noexcept { return m_spawnPoint; }
-    [[nodiscard]] bool isSaveDisabled() const noexcept { return m_saveDisabled; }
+    // The open world's level.dat is too new or unreadable (WorldSession::isSaveDisabled).
+    [[nodiscard]] bool isSaveDisabled() const noexcept { return m_session && m_session->isSaveDisabled(); }
 
     // S3.7 GUI Scale: TextRenderer::calculateGuiScale(w, h, pref) / 3 for the current window
     // and preference (read every frame); 1.0 for Auto at 1280x720.
@@ -104,13 +109,15 @@ private:
     void presentLoadingFrame(std::string_view title, std::string_view status, std::optional<float> progress);
     // Title / menu screens drawn without a world behind them.
     void clearFrame(int framebufferWidth, int framebufferHeight);
-    // New world only: the mode picked on the title screen, its starter kit, then level.dat
-    // written at once so the choice survives a crash.
-    void startNewWorldIfNeeded();
-    // `overflow`: pending screen stacks the inventory cannot take (see capturePlayer).
-    [[nodiscard]] world::WorldLevelData makeLevelData(std::vector<physics::InventorySlot>* overflow = nullptr) const;
-    // level.dat and the modified chunks, unless saving is disabled.
+    // WorldSession::save; closes the inventory screen when the session closed the grid.
     void saveWorld();
+    // The open world session's parts (precondition: m_session).
+    [[nodiscard]] world::World& world() noexcept { return m_session->world(); }
+    [[nodiscard]] const world::World& world() const noexcept { return m_session->world(); }
+    [[nodiscard]] physics::Player& player() noexcept { return m_session->player(); }
+    [[nodiscard]] const physics::Player& player() const noexcept { return m_session->player(); }
+    [[nodiscard]] EntitySimulation& sim() noexcept { return m_session->simulation(); }
+    [[nodiscard]] const EntitySimulation& sim() const noexcept { return m_session->simulation(); }
     // events.playerDied: inventory screen closed, everything scattered, death screen.
     void handlePlayerDeath();
     // One frame (events, update, render); false once the application was asked to quit.
@@ -156,7 +163,7 @@ private:
     // Plays a world sound at `source` with occlusion and reverb: `play(const audio::VoiceAcoustics&)`.
     template <typename PlayFn>
     void playWorldSound(const glm::vec3& source, PlayFn&& play) {
-        (void)m_inWorld.acoustics.playAt(source, *m_world, std::forward<PlayFn>(play));
+        (void)m_inWorld.acoustics.playAt(source, world(), std::forward<PlayFn>(play));
     }
 
     // Each mob's limb swing: the phase advances with the distance its render position covered
@@ -225,9 +232,8 @@ private:
     SDL_Window* m_window{nullptr};
     SDL_GLContext m_glContext{nullptr};
 
-    std::unique_ptr<world::World> m_world;
-    physics::Player m_player;
-    EntitySimulation m_session;
+    // The open world and all its simulation state; null on the title screen without a world.
+    std::unique_ptr<WorldSession> m_session;
     render::WorldRenderer m_worldRenderer;
     render::TextRenderer m_textRenderer;
     ui::HudRenderer m_hudRenderer;
@@ -242,15 +248,7 @@ private:
     ui::OptionsMenu m_optionsMenu;
     ui::WorldSelectScreen m_worldSelect;
     ui::CreateWorldScreen m_createWorld;
-    std::string m_worldName; // level.dat "name" of the open world (S7.8)
-    // Mode of a new world made on the Create World screen; nullopt: the title screen's choice.
-    std::optional<core::GameMode> m_newWorldMode;
-
     bool m_running{false};
-    bool m_isNewWorld{false};   // level.dat was Missing: mode and kit applied on entering
-    bool m_saveDisabled{false}; // level.dat TooNew or Corrupt: never overwrite the save
-    glm::vec3 m_spawnPoint{8.5f, 82.0f, 8.5f};
-    std::optional<core::BlockPos> m_bedSpawn; // S5.8: head of the bed the spawn point is next to
     bool m_mouseCaptured{false};
     bool m_inventoryOpen{false};
     bool m_showDebug{false};
@@ -259,17 +257,9 @@ private:
     int32_t m_mouseY{0};
 
     gameplay::SplitMix64 m_sfxRng{0x50D5EEDULL}; // Sound pitch jitter (pop, hurt)
-    gameplay::SplitMix64 m_randomTickRng{0}; // S5.1 random block ticks, seeded from the world seed
-    gameplay::SplitMix64 m_trampleRng{0x7EA3B1EULL}; // S5.7 farmland trampling rolls
-    float m_timeOfDay{0.22f}; // Morning sunlight
-    uint32_t m_gameTicks{0}; // Game ticks run; seeds the low-health heart jitter (Beta updateCounter)
     float m_renderAlpha{1.0f};
     float m_smoothedFps{60.0f};
     float m_smoothedFrameMs{16.6f};
-
-    // S8.9 weather, saved in level.dat (weather.*), ticked in gameTick unless --no-weather.
-    world::WeatherState m_weather{};
-    gameplay::SplitMix64 m_weatherRng{0x5EA7E5ULL}; // Seeded from the world seed on entering
 };
 
 } // namespace betacraft::game

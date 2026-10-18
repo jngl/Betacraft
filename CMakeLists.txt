@@ -86,6 +86,7 @@ set(BETACRAFT_CORE_SOURCES
     src/game/FallingBlocks.cpp
     src/game/ItemUse.cpp
     src/game/Projectiles.cpp
+    src/game/WorldSession.cpp
 )
 
 # Phase 2 modules (docs/IMPROVEMENTS_ROADMAP.md §9.2) are part of the engine core so that

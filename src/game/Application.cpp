@@ -6,9 +6,8 @@
 #include "ecs/Components.hpp"
 #include "game/ItemBridge.hpp"
 #include "game/ItemUse.hpp"
-#include "game/PlayerPersistence.hpp"
-#include "game/StarterKit.hpp"
 #include "gameplay/MobSpawnRules.hpp"
+#include "storage/SaveMigration.hpp"
 #include "world/BlockShapes.hpp"
 #include "world/Weather.hpp"
 
@@ -179,134 +178,59 @@ bool Application::enterWorld(const std::filesystem::path& dir, std::optional<cor
     leaveWorld();
     const bool fromMenu =
         m_screenState == ui::ScreenState::WorldSelect || m_screenState == ui::ScreenState::CreateWorld;
-    std::error_code ec;
-    if (params && !std::filesystem::exists(dir / "level.dat", ec)) {
-        std::filesystem::create_directories(dir, ec);
-        if (ec) {
-            core::Logger::error("Application", "Cannot create the world directory ", dir.string(), ": ", ec.message());
-            return false;
-        }
-        m_config.worldSeed = params->seed;
-    }
-    m_config.worldSaveDir = dir.string();
     m_screenState = ui::ScreenState::Loading;
     setMouseCaptured(false);
     if (fromMenu) {
         presentLoadingFrame("Loading level", "Building terrain", std::nullopt);
     }
 
-    m_world = std::make_unique<world::World>(m_config.worldSeed, m_config.worldSaveDir);
-    m_world->setRegionStorageEnabled(m_config.features.regionStorage);
-    m_session.setPathfinding(m_config.features.mobPathfinding); // S8.3, --no-pathfinding
-    m_world->setRedstoneEnabled(m_config.features.redstone);    // S8.7, --no-redstone
-
-    world::WorldLevelData savedLevel{};
-    const world::LevelLoadStatus levelStatus = m_world->loadLevelDataStatus(savedLevel);
-    // S7.4: convert a pre-Sprint 7 chunks/ save before any chunk is read (never in a
-    // read-only session: a too new or unreadable level.dat skips it).
-    if ((levelStatus == world::LevelLoadStatus::Ok || levelStatus == world::LevelLoadStatus::LegacyV1 ||
-         levelStatus == world::LevelLoadStatus::Missing) &&
-        m_world->needsStorageMigration(savedLevel.storageFormat)) {
-        const size_t legacyChunks = storage::countLegacyChunks(dir);
-        const bool progressBar = legacyChunks > storage::kMigrationProgressThreshold;
-        core::Logger::info("Application", "Migrating ", legacyChunks, " legacy chunks of ", m_config.worldSaveDir,
-                           " to region files...");
-        const std::string status = "Converting " + std::to_string(legacyChunks) + " chunks";
-        int lastDecile = -1;
-        int lastPercent = -1;
-        const storage::MigrationReport report = m_world->migrateLegacyStorage([&](float progress) {
-            const int decile = static_cast<int>(progress * 10.0f);
-            if (decile != lastDecile) {
-                lastDecile = decile;
-                core::Logger::info("Application", "Migration ", decile * 10, "%");
-            }
-            const int percent = static_cast<int>(progress * 100.0f);
-            if (progressBar && percent != lastPercent) {
-                lastPercent = percent;
-                presentLoadingFrame("Converting world", status, progress);
-            }
-        });
-        if (!report.completed) {
-            core::Logger::error("Application", "Migration of ", m_config.worldSaveDir,
-                                " did not finish; the legacy chunks stay readable and it is retried next launch.");
+    WorldSession::OpenOptions options{};
+    options.folder = dir;
+    options.seed = m_config.worldSeed;
+    options.newWorld = std::move(params);
+    options.features = m_config.features;
+    options.dayLengthSeconds = m_config.dayLengthSeconds;
+    options.defaultGameMode = m_config.defaultGameMode;
+    // S7.4: the 10 % log lines, and a progress bar beyond kMigrationProgressThreshold chunks.
+    int lastDecile = -1;
+    int lastPercent = -1;
+    options.onMigrationProgress = [&](const MigrationProgress& progress) {
+        const int decile = static_cast<int>(progress.fraction * 10.0f);
+        if (decile != lastDecile) {
+            lastDecile = decile;
+            core::Logger::info("Application", "Migration ", decile * 10, "%");
         }
+        const int percent = static_cast<int>(progress.fraction * 100.0f);
+        if (progress.legacyChunks > storage::kMigrationProgressThreshold && percent != lastPercent) {
+            lastPercent = percent;
+            presentLoadingFrame("Converting world", "Converting " + std::to_string(progress.legacyChunks) + " chunks",
+                                progress.fraction);
+        }
+    };
+    m_session = WorldSession::open(std::move(options));
+    if (!m_session) {
+        m_screenState = ui::ScreenState::TitleScreen;
+        return false;
     }
-    if (levelStatus == world::LevelLoadStatus::Ok || levelStatus == world::LevelLoadStatus::LegacyV1) {
-        m_config.worldSeed = savedLevel.seed;
-        m_world->setSeed(savedLevel.seed);
-        m_timeOfDay = savedLevel.timeOfDay;
-        m_weather = savedLevel.weather; // S8.9: a level.dat without weather keys is clear
-        // Position first: setPosition clears the fall distance restorePlayer brings back.
-        m_player.setPosition(savedLevel.playerPos);
-        m_player.setRotation(savedLevel.playerYaw, savedLevel.playerPitch);
-        if (levelStatus == world::LevelLoadStatus::Ok) {
-            if (savedLevel.player) {
-                restorePlayer(m_player, *savedLevel.player, savedLevel.itemsScheme);
-            }
-            m_spawnPoint = savedLevel.spawnPos ? *savedLevel.spawnPos : m_world->findSafeSpawnPosition();
-            m_bedSpawn = savedLevel.bedPos;
-        } else {
-            // A V1 level.dat has no player data and predates game modes: Creative, old kit.
-            m_player.setGameMode(core::GameMode::Creative);
-            applyStarterKit(m_player, core::GameMode::Creative);
-            m_spawnPoint = m_world->findSafeSpawnPosition();
-        }
-        m_worldName = savedLevel.name;
-        if (params) {
-            core::Logger::warn("Application", m_config.worldSaveDir, " already holds a world: it is opened as saved.");
-        }
-        m_world->updateChunksAround(savedLevel.playerPos, 3, 64);
-        core::Logger::info("Application", "Loaded existing world from ", m_config.worldSaveDir);
-    } else {
-        m_spawnPoint = m_world->findSafeSpawnPosition();
-        m_player.setPosition(m_spawnPoint);
-        m_world->updateChunksAround(m_spawnPoint, 3, 64);
-        if (levelStatus == world::LevelLoadStatus::Missing) {
-            // Mode and kit wait for the title screen's (or Create World's) choice: startNewWorldIfNeeded.
-            m_isNewWorld = true;
-            if (params) {
-                m_newWorldMode = params->mode;
-                m_worldName = params->name;
-            }
-            core::Logger::info("Application", "Generated new Beta 1.7.3 world (seed=", m_config.worldSeed,
-                               ") at spawn (", m_spawnPoint.x, ", ", m_spawnPoint.y, ", ", m_spawnPoint.z, ").");
-        } else {
-            // Too new or unreadable: play, but never overwrite what is on disk (conventions §1.2).
-            m_saveDisabled = true;
-            m_world->setSaveDisabled(true);
-            m_player.setGameMode(m_config.defaultGameMode);
-            applyStarterKit(m_player, m_config.defaultGameMode);
-            core::Logger::error("Application", "level.dat in ", m_config.worldSaveDir,
-                                levelStatus == world::LevelLoadStatus::TooNew ? " is from a newer version"
-                                                                              : " is unreadable",
-                                ": saving is disabled for this session.");
-        }
-    }
-    // Random ticks replay identically for a given world seed.
-    m_randomTickRng = gameplay::SplitMix64(m_world->getSeed() ^ 0x72616E646F6D7469ULL);
-    m_weatherRng = gameplay::SplitMix64(m_world->getSeed() ^ 0x7765617468657221ULL);
-    if (!m_config.features.weather) {
-        m_weather = world::WeatherState{}; // --no-weather: always clear (and saved clear)
-    }
-    m_session.setWeather(m_weather);
+    m_config.worldSeed = world().getSeed();
+    m_config.worldSaveDir = dir.string();
     // The title's mode button only for a new world opened at startup (autoEnterWorld).
-    m_titleScreen.setNewWorld(m_isNewWorld && !m_newWorldMode);
+    m_titleScreen.setNewWorld(m_session->awaitingGameMode());
     m_titleScreen.setWorldLoaded(true);
     m_screenState = ui::ScreenState::TitleScreen;
     return true;
-
 }
 
 void Application::syncRuntimeOptions() {
     const int newRenderDist = m_inputManager.getRenderDistance();
     if (m_config.renderDistanceChunks != newRenderDist) {
         m_config.renderDistanceChunks = newRenderDist;
-        if (m_world) {
+        if (m_session) {
             // S7.7: a larger view distance streams in over the next frames instead of freezing.
             if (m_config.features.asyncWorldGen) {
-                m_world->requestChunksAround(m_player.getPosition(), streamingRadius());
+                world().requestChunksAround(player().getPosition(), streamingRadius());
             } else {
-                m_world->updateChunksAround(m_player.getPosition(), streamingRadius(), 64);
+                world().updateChunksAround(player().getPosition(), streamingRadius(), 64);
             }
         }
     }
@@ -341,7 +265,7 @@ void Application::processEvents() {
             if (m_screenState == ui::ScreenState::InGame && m_mouseCaptured && !m_inventoryOpen) {
                 // S3.8: Beta's sensitivity curve, 0.15 degree per pixel at the default 50 %.
                 const float sensitivity = m_inputManager.getDegreesPerPixel();
-                m_player.rotate(
+                player().rotate(
                     static_cast<float>(ev.motion.xrel) * sensitivity,
                     -static_cast<float>(ev.motion.yrel) * sensitivity
                 );
@@ -479,7 +403,7 @@ void Application::processEvents() {
         if (m_screenState == ui::ScreenState::Sleeping) {
             // Beta GuiSleepMP "Leave Bed": Esc gets up without skipping the night.
             if (ev.type == SDL_KEYDOWN && ev.key.repeat == 0 && ev.key.keysym.sym == SDLK_ESCAPE) {
-                m_session.wakeUp();
+                sim().wakeUp();
                 m_screenState = ui::ScreenState::InGame;
                 m_audio.playUiClick();
             }
@@ -526,7 +450,7 @@ void Application::processEvents() {
         switch (ev.type) {
             case SDL_MOUSEWHEEL:
                 if (!m_inventoryOpen && ev.wheel.y != 0) {
-                    m_player.scrollSelectedSlot(ev.wheel.y > 0 ? -1 : 1);
+                    player().scrollSelectedSlot(ev.wheel.y > 0 ? -1 : 1);
                 }
                 break;
 
@@ -542,7 +466,7 @@ void Application::processEvents() {
                     if (ev.button.button == SDL_BUTTON_LEFT) {
                         m_inWorld.leftMouseDown = true;
                         m_inWorld.attackPressed = true;
-                        m_player.triggerHandSwing();
+                        player().triggerHandSwing();
                     } else if (ev.button.button == SDL_BUTTON_RIGHT) {
                         handleRightClickAction();
                     } else if (ev.button.button == SDL_BUTTON_MIDDLE) {
@@ -567,14 +491,14 @@ void Application::processEvents() {
                                 case world::BlockId::Crops: pickedItem = gameplay::items::Seeds; break;
                                 default: break;
                             }
-                            if (m_player.isCreative()) {
-                                m_player.setInventorySlot(
-                                    static_cast<size_t>(m_player.getSelectedSlot()),
+                            if (player().isCreative()) {
+                                player().setInventorySlot(
+                                    static_cast<size_t>(player().getSelectedSlot()),
                                     {pickedItem, gameplay::maxStackSize(pickedItem)}
                                 );
                                 m_audio.playUiClick();
                             } else {
-                                (void)m_player.selectHotbarSlotHolding(pickedItem);
+                                (void)player().selectHotbarSlotHolding(pickedItem);
                             }
                         }
                     }
@@ -617,8 +541,8 @@ void Application::processEvents() {
                 if (!m_inventoryOpen &&
                     ev.key.keysym.scancode == m_inputManager.getPrimaryBinding(ui::GameAction::DropItem)) {
                     const bool wholeStack = (SDL_GetModState() & KMOD_CTRL) != 0;
-                    if (m_session.dropHeldItem(m_player, wholeStack) != ecs::NULL_ENTITY) {
-                        m_player.triggerHandSwing();
+                    if (sim().dropHeldItem(player(), wholeStack) != ecs::NULL_ENTITY) {
+                        player().triggerHandSwing();
                     }
                     break;
                 }
@@ -626,10 +550,10 @@ void Application::processEvents() {
                 // S8.13 debug weather cycle: no default key, Creative only.
                 if (const SDL_Scancode cycleKey = m_inputManager.getPrimaryBinding(ui::GameAction::CycleWeather);
                     cycleKey != SDL_SCANCODE_UNKNOWN && ev.key.keysym.scancode == cycleKey) {
-                    if (m_player.isCreative() && m_config.features.weather) {
-                        world::cycleWeather(m_weather, m_weatherRng);
-                        showStatusMessage(!m_weather.raining      ? "Weather: clear"
-                                          : m_weather.thundering ? "Weather: thunderstorm"
+                    if (player().isCreative() && m_config.features.weather) {
+                        world::cycleWeather(m_session->weather(), m_session->weatherRng());
+                        showStatusMessage(!m_session->weather().raining      ? "Weather: clear"
+                                          : m_session->weather().thundering ? "Weather: thunderstorm"
                                                                  : "Weather: rain");
                         m_audio.playUiClick();
                     }
@@ -651,21 +575,19 @@ void Application::processEvents() {
 
                 switch (ev.key.keysym.sym) {
                     case SDLK_f:
-                        if (m_player.toggleFlyMode()) {
+                        if (player().toggleFlyMode()) {
                             m_audio.playUiClick();
                         }
                         break;
 
                     case SDLK_l:
                         m_config.smoothLighting = !m_config.smoothLighting;
-                        m_worldRenderer.markAllChunksDirty(*m_world);
+                        m_worldRenderer.markAllChunksDirty(world());
                         m_audio.playUiClick();
                         break;
 
                     case SDLK_t:
-                        if (m_player.isCreative()) {
-                            m_timeOfDay = std::fmod(m_timeOfDay + 0.08f, 1.0f);
-                        }
+                        m_session->skipTimeIfCreative();
                         break;
 
                     case SDLK_F5:
@@ -678,15 +600,15 @@ void Application::processEvents() {
                         SDL_SetWindowFullscreen(m_window, m_config.fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
                         break;
 
-                    case SDLK_1: m_player.setSelectedSlot(0); break;
-                    case SDLK_2: m_player.setSelectedSlot(1); break;
-                    case SDLK_3: m_player.setSelectedSlot(2); break;
-                    case SDLK_4: m_player.setSelectedSlot(3); break;
-                    case SDLK_5: m_player.setSelectedSlot(4); break;
-                    case SDLK_6: m_player.setSelectedSlot(5); break;
-                    case SDLK_7: m_player.setSelectedSlot(6); break;
-                    case SDLK_8: m_player.setSelectedSlot(7); break;
-                    case SDLK_9: m_player.setSelectedSlot(8); break;
+                    case SDLK_1: player().setSelectedSlot(0); break;
+                    case SDLK_2: player().setSelectedSlot(1); break;
+                    case SDLK_3: player().setSelectedSlot(2); break;
+                    case SDLK_4: player().setSelectedSlot(3); break;
+                    case SDLK_5: player().setSelectedSlot(4); break;
+                    case SDLK_6: player().setSelectedSlot(5); break;
+                    case SDLK_7: player().setSelectedSlot(6); break;
+                    case SDLK_8: player().setSelectedSlot(7); break;
+                    case SDLK_9: player().setSelectedSlot(8); break;
                     default: break;
                 }
                 break;
@@ -698,51 +620,51 @@ void Application::processEvents() {
 }
 
 void Application::openInventoryScreen(crafting::GridSize grid) {
-    dropAtPlayer(m_session.crafting().open(grid, m_player));
+    dropAtPlayer(m_session->crafting().open(grid, player()));
     m_inventoryOpen = true;
     m_inWorld.leftMouseDown = false;
     m_inWorld.attackPressed = false;
-    m_session.resetMining();
+    sim().resetMining();
     setMouseCaptured(false);
 }
 
 void Application::openContainerScreen(ScreenKind kind, const core::BlockPos& pos) {
-    const world::BlockId block = m_world->getBlock(pos);
+    const world::BlockId block = world().getBlock(pos);
     if (!world::hasBlockEntity(block)) {
         return;
     }
-    (void)fillDungeonChest(*m_world, pos);                  // S6.10: loot drawn on first open
-    (void)m_world->blockEntities().getOrCreate(pos, block); // Created on first open
-    dropAtPlayer(m_session.crafting().openContainer(kind, pos, m_player));
+    (void)fillDungeonChest(world(), pos);                  // S6.10: loot drawn on first open
+    (void)world().blockEntities().getOrCreate(pos, block); // Created on first open
+    dropAtPlayer(m_session->crafting().openContainer(kind, pos, player()));
     m_inventoryOpen = true;
     m_inWorld.leftMouseDown = false;
     m_inWorld.attackPressed = false;
-    m_session.resetMining();
+    sim().resetMining();
     setMouseCaptured(false);
 }
 
 void Application::closeContainerIfOutOfReach() {
-    const std::optional<core::BlockPos> pos = m_session.crafting().containerPos();
+    const std::optional<core::BlockPos> pos = m_session->crafting().containerPos();
     if (!m_inventoryOpen || !pos) {
         return;
     }
-    const glm::vec3 d = m_player.getEyePosition() - blockCentre(*pos);
-    const world::BlockEntity* entity = m_world->blockEntities().find(*pos);
+    const glm::vec3 d = player().getEyePosition() - blockCentre(*pos);
+    const world::BlockEntity* entity = world().blockEntities().find(*pos);
     if (glm::dot(d, d) > kContainerReachSq || entity == nullptr ||
-        !world::blockEntityMatches(m_world->getBlock(*pos), *entity)) {
+        !world::blockEntityMatches(world().getBlock(*pos), *entity)) {
         closeInventoryScreen();
     }
 }
 
 void Application::closeInventoryScreen() {
-    dropAtPlayer(m_session.crafting().close(m_player));
+    dropAtPlayer(m_session->crafting().close(player()));
     m_inventoryOpen = false;
     setMouseCaptured(true);
 }
 
 void Application::dropAtPlayer(const std::vector<physics::InventorySlot>& stacks) {
     for (const physics::InventorySlot& stack : stacks) {
-        (void)m_session.dropFromPlayer(m_player, toItemStack(stack));
+        (void)sim().dropFromPlayer(player(), toItemStack(stack));
     }
 }
 
@@ -757,10 +679,10 @@ ui::HudCanvas Application::hudCanvas() const noexcept {
 }
 
 void Application::handleInventoryClick(int32_t mouseX, int32_t mouseY, SlotButton button) {
-    InventoryCrafting& screen = m_session.crafting();
+    InventoryCrafting& screen = m_session->crafting();
     const bool container = isContainerScreen(screen.kind());
     const ui::InventoryLayoutKey layout{static_cast<int>(screen.gridSize()), screen.kind(),
-                                        m_player.isCreative() && !container};
+                                        player().isCreative() && !container};
     // The inventory is laid out in the GUI Scale canvas (S3.7): window points map back first.
     const ui::HudCanvas canvas = hudCanvas();
     mouseX = canvas.toCanvasX(mouseX);
@@ -772,37 +694,37 @@ void Application::handleInventoryClick(int32_t mouseX, int32_t mouseY, SlotButto
     bool changed = false;
     switch (hit.region) {
         case ui::InventoryRegion::Container:
-            changed = shift ? screen.shiftClickContainerSlot(m_player, *m_world, hit.index)
-                            : screen.clickContainerSlot(*m_world, hit.index, button);
+            changed = shift ? screen.shiftClickContainerSlot(player(), world(), hit.index)
+                            : screen.clickContainerSlot(world(), hit.index, button);
             if (!screen.containerPos()) {
                 closeInventoryScreen(); // The furnace / chest went away under the screen
                 return;
             }
             break;
         case ui::InventoryRegion::Palette:
-            changed = m_player.isCreative() && button == SlotButton::Left &&
-                      m_hudRenderer.handleInventoryClick(mouseX, mouseY, canvas.width, canvas.height, m_player);
+            changed = player().isCreative() && button == SlotButton::Left &&
+                      m_hudRenderer.handleInventoryClick(mouseX, mouseY, canvas.width, canvas.height, player());
             break;
         case ui::InventoryRegion::Inventory:
-            changed = shift ? screen.shiftClickInventorySlot(m_player, m_world.get(), hit.index)
-                            : screen.clickInventorySlot(m_player, hit.index, button);
+            changed = shift ? screen.shiftClickInventorySlot(player(), &world(), hit.index)
+                            : screen.clickInventorySlot(player(), hit.index, button);
             if (container && !screen.containerPos()) {
                 closeInventoryScreen(); // The chest went away under the screen
                 return;
             }
             break;
         case ui::InventoryRegion::CraftingGrid:
-            changed = shift ? screen.shiftClickGridSlot(m_player, hit.index) : screen.clickGridSlot(hit.index, button);
+            changed = shift ? screen.shiftClickGridSlot(player(), hit.index) : screen.clickGridSlot(hit.index, button);
             break;
         case ui::InventoryRegion::CraftingResult: {
             std::vector<physics::InventorySlot> overflow;
-            changed = shift ? screen.shiftClickResult(m_player, &overflow) : screen.clickResult(m_player, &overflow);
+            changed = shift ? screen.shiftClickResult(player(), &overflow) : screen.clickResult(player(), &overflow);
             dropAtPlayer(overflow);
             break;
         }
         case ui::InventoryRegion::Armor: // S6.7
-            changed = shift ? screen.shiftClickArmorSlot(m_player, hit.index)
-                            : screen.clickArmorSlot(m_player, hit.index, button);
+            changed = shift ? screen.shiftClickArmorSlot(player(), hit.index)
+                            : screen.clickArmorSlot(player(), hit.index, button);
             break;
         case ui::InventoryRegion::Outside: {
             // Beta slotClick(-999): left throws the cursor stack, right a single item.
@@ -833,25 +755,25 @@ void Application::handleRightClickAction() {
     const bool onBlock = m_inWorld.currentTarget.hit;
 
     // Step 1 (S6.3): the held item on the entity under the crosshair (milking a cow).
-    if (const std::optional<ecs::EntityId> entity = m_session.meleeTarget(m_player, m_inWorld.currentTarget)) {
-        if (m_session.useHeldItemOnEntity(m_player, *entity)) {
+    if (const std::optional<ecs::EntityId> entity = sim().meleeTarget(player(), m_inWorld.currentTarget)) {
+        if (sim().useHeldItemOnEntity(player(), *entity)) {
             m_inWorld.placeCooldown = 0.16f;
             return;
         }
     }
 
-    if (onBlock && !m_player.isSneaking()) {
+    if (onBlock && !player().isSneaking()) {
         // S8.7: a lever switches, a button goes down (their click comes back as a redstone
         // event); an iron door takes the click and does nothing (Beta BlockDoor.blockActivated).
         const world::BlockId targeted = m_inWorld.currentTarget.blockId;
         if (targeted == world::BlockId::Lever || targeted == world::BlockId::StoneButton ||
             targeted == world::BlockId::IronDoor) {
             if (targeted == world::BlockId::Lever) {
-                (void)m_world->toggleLever(m_inWorld.currentTarget.blockPos);
+                (void)world().toggleLever(m_inWorld.currentTarget.blockPos);
             } else if (targeted == world::BlockId::StoneButton) {
-                (void)m_world->pressButton(m_inWorld.currentTarget.blockPos);
+                (void)world().pressButton(m_inWorld.currentTarget.blockPos);
             }
-            m_player.triggerHandSwing();
+            player().triggerHandSwing();
             m_inWorld.placeCooldown = 0.18f;
             return;
         }
@@ -869,7 +791,7 @@ void Application::handleRightClickAction() {
         }
         // Creative: clicking a piston pushes the blocks opposite to the clicked face (no
         // redstone yet). In Survival a piston is just a block to build against.
-        if (m_player.isCreative() && m_inWorld.currentTarget.blockId == world::BlockId::Piston) {
+        if (player().isCreative() && m_inWorld.currentTarget.blockId == world::BlockId::Piston) {
             core::FaceDir pushDir = m_inWorld.currentTarget.face;
             switch (m_inWorld.currentTarget.face) {
                 case core::FaceDir::PosX: pushDir = core::FaceDir::NegX; break;
@@ -879,10 +801,10 @@ void Application::handleRightClickAction() {
                 case core::FaceDir::PosZ: pushDir = core::FaceDir::NegZ; break;
                 case core::FaceDir::NegZ: pushDir = core::FaceDir::PosZ; break;
             }
-            if (m_world->triggerPistonPush(m_inWorld.currentTarget.blockPos, pushDir)) {
+            if (world().triggerPistonPush(m_inWorld.currentTarget.blockPos, pushDir)) {
                 playWorldSound(blockCentre(m_inWorld.currentTarget.blockPos),
                                [&](const audio::VoiceAcoustics& a) { return m_audio.playPistonSound(a); });
-                m_player.triggerHandSwing();
+                player().triggerHandSwing();
                 m_inWorld.placeCooldown = 0.18f;
                 return;
             }
@@ -892,18 +814,18 @@ void Application::handleRightClickAction() {
     if (onBlock) {
         // Step 3: flint and steel on TNT (S6.6), the held item on the block (door, bed, seeds,
         // hoe, bucket), then the held block.
-        if (m_session.igniteTnt(*m_world, m_player, m_inWorld.currentTarget)) {
+        if (sim().igniteTnt(world(), player(), m_inWorld.currentTarget)) {
             m_inWorld.placeCooldown = 0.16f;
             return;
         }
-        if (const std::optional<ItemUseResult> used = useHeldItemOnBlock(*m_world, m_player, m_inWorld.currentTarget)) {
+        if (const std::optional<ItemUseResult> used = useHeldItemOnBlock(world(), player(), m_inWorld.currentTarget)) {
             playItemUseEffects(*used);
             m_inWorld.placeCooldown = 0.16f;
             return;
         }
-        if (const std::optional<world::BlockId> placed = placeHeldBlock(*m_world, m_player, m_inWorld.currentTarget)) {
+        if (const std::optional<world::BlockId> placed = placeHeldBlock(world(), player(), m_inWorld.currentTarget)) {
             const world::BlockDef& def = world::BlockRegistry::get(*placed);
-            m_player.triggerHandSwing();
+            player().triggerHandSwing();
             playWorldSound(blockCentre(m_inWorld.currentTarget.adjacentPos),
                            [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockPlace(def.sound, a); });
             m_inWorld.placeCooldown = 0.16f;
@@ -914,14 +836,14 @@ void Application::handleRightClickAction() {
     // Step 4 for buckets (S6.4): a liquid source or a wall within reach, nothing under the
     // crosshair.
     if (!onBlock) {
-        if (const std::optional<ItemUseResult> used = useHeldBucket(*m_world, m_player)) {
+        if (const std::optional<ItemUseResult> used = useHeldBucket(world(), player())) {
             playItemUseEffects(*used);
             m_inWorld.placeCooldown = 0.16f;
             return;
         }
     }
-    if (m_session.useHeldItem(m_player)) {
-        playWorldSound(m_player.getEyePosition(), [&](const audio::VoiceAcoustics& a) {
+    if (sim().useHeldItem(player())) {
+        playWorldSound(player().getEyePosition(), [&](const audio::VoiceAcoustics& a) {
             return m_audio.playSound(audio::SoundEffect::Eat, 0.7f, 1.0f, a);
         });
         m_inWorld.placeCooldown = 0.16f;
@@ -929,7 +851,7 @@ void Application::handleRightClickAction() {
 }
 
 void Application::playItemUseEffects(const ItemUseResult& used) {
-    m_player.triggerHandSwing();
+    player().triggerHandSwing();
     if (used.kind == ItemUseKind::BucketFilled || used.kind == ItemUseKind::BucketEmptied) {
         // Beta has no bucket sound: a splash for water, the fizz for lava.
         if (world::isLavaBlock(used.block)) {
@@ -945,7 +867,7 @@ void Application::playItemUseEffects(const ItemUseResult& used) {
     playWorldSound(blockCentre(used.pos),
                    [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockPlace(def.sound, a); });
     if (used.wear == gameplay::WearResult::Broken) {
-        playWorldSound(m_player.getEyePosition(), [&](const audio::VoiceAcoustics& a) {
+        playWorldSound(player().getEyePosition(), [&](const audio::VoiceAcoustics& a) {
             return m_audio.playSound(audio::SoundEffect::BreakWood, 0.8f, 1.6f, a);
         });
     }
@@ -953,26 +875,26 @@ void Application::playItemUseEffects(const ItemUseResult& used) {
 
 bool Application::activateDoorOrBed() {
     const core::BlockPos pos = m_inWorld.currentTarget.blockPos;
-    if (const std::optional<bool> open = toggleDoor(*m_world, pos)) {
+    if (const std::optional<bool> open = toggleDoor(world(), pos)) {
         // Beta World.playAuxSFX 1003: random.door_open or door_close.
         const audio::SoundEffect effect = *open ? audio::SoundEffect::DoorOpen : audio::SoundEffect::DoorClose;
         const float pitch = m_sfxRng.nextFloat() * 0.1f + 0.9f;
         playWorldSound(blockCentre(pos), [&](const audio::VoiceAcoustics& a) {
             return m_audio.playSound(effect, 1.0f, pitch, a);
         });
-        m_player.triggerHandSwing();
+        player().triggerHandSwing();
         m_inWorld.placeCooldown = 0.18f;
         return true;
     }
-    if (m_world->getBlock(pos) != world::BlockId::Bed) {
+    if (world().getBlock(pos) != world::BlockId::Bed) {
         return false;
     }
-    switch (m_session.trySleep(*m_world, m_player, pos, m_timeOfDay)) {
+    switch (sim().trySleep(world(), player(), pos, m_session->timeOfDay())) {
         case SleepResult::Asleep:
             m_screenState = ui::ScreenState::Sleeping;
             m_inWorld.leftMouseDown = false;
             m_inWorld.attackPressed = false;
-            m_session.resetMining();
+            sim().resetMining();
             break;
         case SleepResult::NotNight:
             showStatusMessage("You can only sleep at night");
@@ -1000,18 +922,18 @@ void Application::fixedUpdate(float fixedDt) {
         input = m_inputManager.buildPlayerInput();
     }
 
-    const physics::StepEvent stepEv = m_player.fixedUpdate(fixedDt, input, *m_world);
-    (void)trampleFarmland(*m_world, stepEv, m_trampleRng);
+    const physics::StepEvent stepEv = player().fixedUpdate(fixedDt, input, world());
+    (void)trampleFarmland(world(), stepEv, m_session->trampleRng());
     // Footsteps and splashes come from the player's feet: unoccluded, but they ring in a cave.
     if (stepEv.splashedWater) {
-        playWorldSound(m_player.getPosition(), [&](const audio::VoiceAcoustics& a) { return m_audio.playWaterSplash(a); });
+        playWorldSound(player().getPosition(), [&](const audio::VoiceAcoustics& a) { return m_audio.playWaterSplash(a); });
     } else if (stepEv.triggered) {
         const auto& groundDef = world::BlockRegistry::get(stepEv.groundBlock);
-        playWorldSound(m_player.getPosition(),
+        playWorldSound(player().getPosition(),
                        [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockStep(groundDef.sound, a); });
     }
 
-    m_inWorld.particles.update(fixedDt, *m_world);
+    m_inWorld.particles.update(fixedDt, world());
 }
 
 void Application::gameTick() {
@@ -1022,20 +944,18 @@ void Application::gameTick() {
         .target = m_inWorld.currentTarget
     };
     m_inWorld.attackPressed = false;
-    ++m_gameTicks;
+    m_session->countGameTick();
     if (m_config.features.weather) {
-        world::tickWeather(m_weather, m_weatherRng); // S8.9
+        world::tickWeather(m_session->weather(), m_session->weatherRng()); // S8.9
     }
-    m_session.setWeather(m_weather);
-    const GameTickEvents events = m_session.tick(*m_world, m_player, actions, m_timeOfDay);
+    sim().setWeather(m_session->weather());
+    const GameTickEvents events = sim().tick(world(), player(), actions, m_session->timeOfDay());
     playGameTickEffects(events);
     if (events.wokeInBed) {
         // S5.8: the night passes and the bed becomes the spawn point (Beta wakeUpPlayer).
-        m_timeOfDay = 0.0f;
-        m_bedSpawn = events.wokeInBed;
-        m_spawnPoint = bedRespawnPoint(*m_world, *events.wokeInBed).value_or(blockCentre(*events.wokeInBed));
+        m_session->wakeInBed(*events.wokeInBed);
     }
-    if (m_screenState == ui::ScreenState::Sleeping && !m_session.isSleeping()) {
+    if (m_screenState == ui::ScreenState::Sleeping && !sim().isSleeping()) {
         m_screenState = ui::ScreenState::InGame;
     }
     if (events.playerDied) {
@@ -1043,14 +963,14 @@ void Application::gameTick() {
     }
     closeContainerIfOutOfReach();
 
-    (void)m_world->tick();
-    m_world->tickRandomBlocks(m_player.getPosition(), m_randomTickRng,
-                              gameplay::skylightSubtracted(m_timeOfDay, m_weather.rainStrength,
-                                                           world::thunderStrengthAt(m_weather, 1.0f)));
-    const std::vector<fluids::FluidEvent> fluidEvents = m_world->takeFluidEvents();
-    (void)m_session.spawnFluidDrops(fluidEvents);
+    (void)world().tick();
+    world().tickRandomBlocks(player().getPosition(), m_session->randomTickRng(),
+                              gameplay::skylightSubtracted(m_session->timeOfDay(), m_session->weather().rainStrength,
+                                                           world::thunderStrengthAt(m_session->weather(), 1.0f)));
+    const std::vector<fluids::FluidEvent> fluidEvents = world().takeFluidEvents();
+    (void)sim().spawnFluidDrops(fluidEvents);
     if (const std::optional<FizzSound> fizz =
-            loudestFizzSound(fluidEvents, m_player.getInterpolatedEyePosition(m_renderAlpha))) {
+            loudestFizzSound(fluidEvents, player().getInterpolatedEyePosition(m_renderAlpha))) {
         playWorldSound(fizz->position, [&](const audio::VoiceAcoustics& a) { return m_audio.playLavaFizz(fizz->gain, a); });
     }
     playRedstoneEffects();
@@ -1058,7 +978,7 @@ void Application::gameTick() {
 }
 
 void Application::tickWeatherEffects() {
-    const glm::vec3 eye = m_player.getInterpolatedEyePosition(m_renderAlpha);
+    const glm::vec3 eye = player().getInterpolatedEyePosition(m_renderAlpha);
 
     // S8.10 lightning: the flash and bolt fade over kLightningFlashTicks; the thunder follows at the
     // speed of sound, quieter for a far strike.
@@ -1066,15 +986,15 @@ void Application::tickWeatherEffects() {
     if (m_inWorld.lightningTicks > 0 && --m_inWorld.lightningTicks == 0) {
         m_inWorld.lightningBolt.reset();
     }
-    if (world::rollLightning(m_weather, m_world->getChunks().size(), m_weatherRng)) {
-        const int32_t x = static_cast<int32_t>(std::floor(eye.x)) + m_weatherRng.nextInt(2 * kStrikeRange + 1) - kStrikeRange;
-        const int32_t z = static_cast<int32_t>(std::floor(eye.z)) + m_weatherRng.nextInt(2 * kStrikeRange + 1) - kStrikeRange;
-        const int32_t y = world::precipitationHeight(*m_world, x, z);
+    if (world::rollLightning(m_session->weather(), world().getChunks().size(), m_session->weatherRng())) {
+        const int32_t x = static_cast<int32_t>(std::floor(eye.x)) + m_session->weatherRng().nextInt(2 * kStrikeRange + 1) - kStrikeRange;
+        const int32_t z = static_cast<int32_t>(std::floor(eye.z)) + m_session->weatherRng().nextInt(2 * kStrikeRange + 1) - kStrikeRange;
+        const int32_t y = world::precipitationHeight(world(), x, z);
         // Beta canLightningStrikeAt: a loaded column where it rains (not snows).
-        if (y > 0 && world::precipitationAt(m_world->getBiomeAt(x, z)) == world::Precipitation::Rain) {
+        if (y > 0 && world::precipitationAt(world().getBiomeAt(x, z)) == world::Precipitation::Rain) {
             const glm::vec3 strike(static_cast<float>(x) + 0.5f, static_cast<float>(y), static_cast<float>(z) + 0.5f);
             m_inWorld.lightningBolt = strike;
-            m_inWorld.lightningSeed = static_cast<uint32_t>(m_weatherRng.next());
+            m_inWorld.lightningSeed = static_cast<uint32_t>(m_session->weatherRng().next());
             m_inWorld.lightningTicks = kLightningFlashTicks;
             const float dist = glm::length(strike - eye);
             m_inWorld.pendingThunder.push_back({world::thunderDelayTicks(dist), std::clamp(1.0f - dist / 256.0f, 0.35f, 1.0f)});
@@ -1090,19 +1010,19 @@ void Application::tickWeatherEffects() {
     }
 
     // S8.11 splashes where the rain lands around the player (Beta addRainParticles).
-    const float rain = m_weather.rainStrength;
+    const float rain = m_session->weather().rainStrength;
     if (rain > 0.0f) {
         const int32_t splashes = static_cast<int32_t>(rain * rain * 12.0f);
         for (int32_t i = 0; i < splashes; ++i) {
-            const int32_t x = static_cast<int32_t>(std::floor(eye.x)) + m_weatherRng.nextInt(21) - 10;
-            const int32_t z = static_cast<int32_t>(std::floor(eye.z)) + m_weatherRng.nextInt(21) - 10;
-            const int32_t y = world::precipitationHeight(*m_world, x, z);
+            const int32_t x = static_cast<int32_t>(std::floor(eye.x)) + m_session->weatherRng().nextInt(21) - 10;
+            const int32_t z = static_cast<int32_t>(std::floor(eye.z)) + m_session->weatherRng().nextInt(21) - 10;
+            const int32_t y = world::precipitationHeight(world(), x, z);
             if (y <= 0 || std::abs(static_cast<float>(y) - eye.y) > 10.0f ||
-                world::precipitationAt(m_world->getBiomeAt(x, z)) != world::Precipitation::Rain) {
+                world::precipitationAt(world().getBiomeAt(x, z)) != world::Precipitation::Rain) {
                 continue;
             }
-            m_inWorld.particles.spawnRainSplash(glm::vec3(static_cast<float>(x) + m_weatherRng.nextFloat(), static_cast<float>(y),
-                                                  static_cast<float>(z) + m_weatherRng.nextFloat()),
+            m_inWorld.particles.spawnRainSplash(glm::vec3(static_cast<float>(x) + m_session->weatherRng().nextFloat(), static_cast<float>(y),
+                                                  static_cast<float>(z) + m_session->weatherRng().nextFloat()),
                                         1);
         }
     }
@@ -1110,26 +1030,26 @@ void Application::tickWeatherEffects() {
     // S8.12 the rain loop, re-measured 4 times a second.
     if (rain <= 0.0f) {
         m_audio.setRainLoop(0.0f);
-    } else if (m_gameTicks % 5U == 0U) {
-        const RainAudibility heard = measureRainAudibility(*m_world, eye);
+    } else if (m_session->gameTicks() % 5U == 0U) {
+        const RainAudibility heard = measureRainAudibility(world(), eye);
         m_audio.setRainLoop(rain * heard.gain, heard.cutoffHz);
     }
 }
 
 std::string Application::weatherDebugLine() const {
     std::ostringstream out;
-    const glm::vec3 feet = m_player.getPosition();
-    const world::BiomeId biome = m_world->getBiomeAt(static_cast<int32_t>(std::floor(feet.x)),
+    const glm::vec3 feet = player().getPosition();
+    const world::BiomeId biome = world().getBiomeAt(static_cast<int32_t>(std::floor(feet.x)),
                                                      static_cast<int32_t>(std::floor(feet.z)));
     const world::Precipitation precip = world::precipitationAt(biome);
-    out << "Weather: " << (m_weather.raining ? (m_weather.thundering ? "storm" : "rain") : "clear") << std::fixed
-        << std::setprecision(2) << "  rain " << m_weather.rainStrength << " (" << m_weather.rainTime << " t)  thunder "
-        << m_weather.thunderStrength << " (" << m_weather.thunderTime << " t)  "
+    out << "Weather: " << (m_session->weather().raining ? (m_session->weather().thundering ? "storm" : "rain") : "clear") << std::fixed
+        << std::setprecision(2) << "  rain " << m_session->weather().rainStrength << " (" << m_session->weather().rainTime << " t)  thunder "
+        << m_session->weather().thunderStrength << " (" << m_session->weather().thunderTime << " t)  "
         << (precip == world::Precipitation::Snow ? "snow" : precip == world::Precipitation::Rain ? "rain" : "dry")
         << " here" << (m_config.features.weather ? "" : "  [--no-weather]");
     // Sprint 8 tick costs next to the fluids and lighting ones: A* nodes and redstone work.
-    const redstone::RedstoneTickStats& rs = m_world->getRedstoneStats();
-    out << "  |  A* " << m_session.lastPathNodes() << " nodes  redstone " << rs.evaluations << " evals"
+    const redstone::RedstoneTickStats& rs = world().getRedstoneStats();
+    out << "  |  A* " << sim().lastPathNodes() << " nodes  redstone " << rs.evaluations << " evals"
         << (rs.pending > 0 ? " (+" + std::to_string(rs.pending) + " pending)" : std::string{});
     return out.str();
 }
@@ -1137,12 +1057,12 @@ std::string Application::weatherDebugLine() const {
 // S8.7 Beta sounds of the redstone events: random.click (volume 0.3, pitch 0.6 down / on,
 // 0.5 up / off), the door sounds, the piston, and random.fizz for a torch burning out.
 void Application::playRedstoneEffects() {
-    for (const redstone::RedstoneEvent& ev : m_world->takeRedstoneEvents()) {
+    for (const redstone::RedstoneEvent& ev : world().takeRedstoneEvents()) {
         const glm::vec3 at = blockCentre(ev.pos);
         switch (ev.kind) {
             case redstone::RedstoneEventKind::Click: {
-                const world::BlockId block = m_world->getBlock(ev.pos);
-                const uint8_t meta = m_world->getMetadata(ev.pos);
+                const world::BlockId block = world().getBlock(ev.pos);
+                const uint8_t meta = world().getMetadata(ev.pos);
                 const bool down = block == world::BlockId::Lever       ? (meta & world::kLeverOnBit) != 0
                                 : block == world::BlockId::StoneButton ? (meta & world::kButtonPressedBit) != 0
                                                                        : (meta & world::kPlatePressedBit) != 0;
@@ -1172,14 +1092,14 @@ void Application::playRedstoneEffects() {
 
 void Application::playGameTickEffects(const GameTickEvents& events) {
     if (events.digging) {
-        m_player.triggerHandSwing();
+        player().triggerHandSwing();
         // Beta plays the dig sound every 4 ticks of a held dig.
         if (m_inWorld.digTicks++ % 4 == 0) {
-            const world::BlockId block = m_world->getBlock(m_inWorld.currentTarget.blockPos);
+            const world::BlockId block = world().getBlock(m_inWorld.currentTarget.blockPos);
             const world::BlockDef& def = world::BlockRegistry::get(block);
             playWorldSound(blockCentre(m_inWorld.currentTarget.blockPos),
                            [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockDigHit(def.sound, a); });
-            m_inWorld.particles.spawnMiningHitParticles(*m_world, m_inWorld.currentTarget.blockPos, m_inWorld.currentTarget.face, block, 2);
+            m_inWorld.particles.spawnMiningHitParticles(world(), m_inWorld.currentTarget.blockPos, m_inWorld.currentTarget.face, block, 2);
         }
     } else {
         m_inWorld.digTicks = 0;
@@ -1187,7 +1107,7 @@ void Application::playGameTickEffects(const GameTickEvents& events) {
     if (events.blockBroken) {
         const BlockBreakEvent& broken = *events.blockBroken;
         const world::BlockDef& def = world::BlockRegistry::get(broken.block);
-        m_inWorld.particles.spawnBlockBreakBurst(*m_world, broken.pos, broken.block, 24);
+        m_inWorld.particles.spawnBlockBreakBurst(world(), broken.pos, broken.block, 24);
         playWorldSound(blockCentre(broken.pos),
                        [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockBreak(def.sound, a); });
     }
@@ -1200,9 +1120,9 @@ void Application::playGameTickEffects(const GameTickEvents& events) {
         });
     }
     if (events.melee && events.melee->result.hit.applied > 0) {
-        const glm::vec3 at = m_session.entities().valid(events.melee->target)
-            ? m_session.entities().get<ecs::TransformComp>(events.melee->target).pos
-            : m_player.getEyePosition();
+        const glm::vec3 at = sim().entities().valid(events.melee->target)
+            ? sim().entities().get<ecs::TransformComp>(events.melee->target).pos
+            : player().getEyePosition();
         playWorldSound(at, [&](const audio::VoiceAcoustics& a) {
             return m_audio.playSound(audio::SoundEffect::MobHurt, 0.9f, 0.9f + m_sfxRng.nextFloat() * 0.2f, a);
         });
@@ -1235,7 +1155,7 @@ void Application::playGameTickEffects(const GameTickEvents& events) {
     }
     if (events.heldWear == gameplay::WearResult::Broken) {
         // Beta "random.break": a sharp snap, pitched up from the wood break.
-        playWorldSound(m_player.getEyePosition(), [&](const audio::VoiceAcoustics& a) {
+        playWorldSound(player().getEyePosition(), [&](const audio::VoiceAcoustics& a) {
             return m_audio.playSound(audio::SoundEffect::BreakWood, 0.8f, 1.6f, a);
         });
     }
@@ -1243,19 +1163,19 @@ void Application::playGameTickEffects(const GameTickEvents& events) {
         // Beta random.pop: volume 0.2, pitch ((r1 - r2) * 0.7 + 1) * 2; the synthesised pop
         // is already pitched up, so the factor 2 is left out.
         const float pitch = (m_sfxRng.nextFloat() - m_sfxRng.nextFloat()) * 0.7f + 1.0f;
-        playWorldSound(m_player.getEyePosition(), [&](const audio::VoiceAcoustics& a) {
+        playWorldSound(player().getEyePosition(), [&](const audio::VoiceAcoustics& a) {
             return m_audio.playSound(audio::SoundEffect::Pop, 0.2f, pitch, a);
         });
     }
     // Beta attackEntityFrom plays the hurt sound on every hit that lands; a fall adds
     // damage.fallbig above 4 damage, damage.fallsmall otherwise.
     for (const PlayerHurtEvent& hurt : events.playerHurt) {
-        playWorldSound(m_player.getEyePosition(), [&](const audio::VoiceAcoustics& a) {
+        playWorldSound(player().getEyePosition(), [&](const audio::VoiceAcoustics& a) {
             return m_audio.playSound(audio::SoundEffect::Hurt, 0.9f, 0.9f + m_sfxRng.nextFloat() * 0.2f, a);
         });
         if (hurt.cause == DamageCause::Fall) {
             const audio::SoundEffect fall = hurt.amount > 4 ? audio::SoundEffect::FallBig : audio::SoundEffect::FallSmall;
-            playWorldSound(m_player.getPosition(), [&](const audio::VoiceAcoustics& a) {
+            playWorldSound(player().getPosition(), [&](const audio::VoiceAcoustics& a) {
                 return m_audio.playSound(fall, 1.0f, 1.0f, a);
             });
         }
@@ -1264,7 +1184,7 @@ void Application::playGameTickEffects(const GameTickEvents& events) {
 
 void Application::update(float dt) {
     // The world keeps running while the player sleeps (S5.8).
-    if (!m_world || (m_screenState != ui::ScreenState::InGame && m_screenState != ui::ScreenState::Sleeping)) {
+    if (!m_session || (m_screenState != ui::ScreenState::InGame && m_screenState != ui::ScreenState::Sleeping)) {
         m_audio.setRainLoop(0.0f); // Paused or in a menu: the rain falls silent
         return;
     }
@@ -1272,10 +1192,8 @@ void Application::update(float dt) {
 
     m_inWorld.totalTime += dt;
     // Before this frame's sounds start, so they are ray-marched from a current listener.
-    m_inWorld.acoustics.update(static_cast<double>(m_inWorld.totalTime), m_player.getInterpolatedEyePosition(m_renderAlpha), *m_world);
-    if (m_config.dayLengthSeconds > 1.0f) {
-        m_timeOfDay = std::fmod(m_timeOfDay + dt / m_config.dayLengthSeconds, 1.0f);
-    }
+    m_inWorld.acoustics.update(static_cast<double>(m_inWorld.totalTime), player().getInterpolatedEyePosition(m_renderAlpha), world());
+    m_session->advanceTimeOfDay(dt);
     if (m_inWorld.placeCooldown > 0.0f) {
         m_inWorld.placeCooldown = std::max(0.0f, m_inWorld.placeCooldown - dt);
     }
@@ -1297,22 +1215,17 @@ void Application::update(float dt) {
     }
 
     m_renderAlpha = m_inWorld.accumulator / FIXED_DT;
-    m_player.setRenderAlpha(m_renderAlpha);
+    player().setRenderAlpha(m_renderAlpha);
 
     // Stream chunks around player: S7.7 disk reads and pass 1 off the main thread, then at
     // most kIntegrationBudget of integration per frame (--no-async-gen: 2 chunks in place).
-    if (m_config.features.asyncWorldGen) {
-        m_world->requestChunksAround(m_player.getPosition(), streamingRadius());
-        (void)m_world->integrateReadyChunks(world::World::kIntegrationBudget);
-    } else {
-        m_world->updateChunksAround(m_player.getPosition(), streamingRadius(), 2);
-    }
+    m_session->streamAround(streamingRadius());
 
     // Update voxel raycast from camera eye
     m_inWorld.currentTarget = physics::Raycaster::cast(
-        *m_world,
-        m_player.getInterpolatedEyePosition(m_renderAlpha),
-        m_player.getLookDirection(),
+        world(),
+        player().getInterpolatedEyePosition(m_renderAlpha),
+        player().getLookDirection(),
         core::EngineConfig::REACH_DISTANCE
     );
 }
@@ -1324,7 +1237,7 @@ void Application::collectMobInstances(float tickAlpha) {
     constexpr float kHurtWindowSeconds = 0.5f;
     constexpr float kPi = 3.14159265f;
 
-    ecs::Registry& reg = m_session.entities();
+    ecs::Registry& reg = sim().entities();
     m_inWorld.mobInstances.clear();
     m_inWorld.mobWalkNext.clear();
     reg.view<ecs::TransformComp, ecs::MobKindComp>().each(
@@ -1380,7 +1293,7 @@ void Application::renderFrame(bool present) {
     int framebufferHeight = m_config.windowHeight;
     SDL_GL_GetDrawableSize(m_window, &framebufferWidth, &framebufferHeight);
 
-    if (!m_world) {
+    if (!m_session) {
         // Title and world menus with no world open (S7.9).
         clearFrame(framebufferWidth, framebufferHeight);
     } else {
@@ -1396,10 +1309,10 @@ void Application::renderFrame(bool present) {
 void Application::renderWorldFrame(int framebufferWidth, int framebufferHeight) {
     // Entities move on the 20 TPS game tick, so they interpolate with that clock's alpha.
     const float tickAlpha = std::clamp(m_inWorld.gameTickAccumulator / core::EngineConfig::GAME_TICK_SECONDS, 0.0f, 1.0f);
-    m_player.setTickAlpha(tickAlpha); // The hurt camera roll runs on the game tick
-    collectDynamicLights(m_inWorld.dynamicLights, m_player, &m_session.entities(), tickAlpha);
+    player().setTickAlpha(tickAlpha); // The hurt camera roll runs on the game tick
+    collectDynamicLights(m_inWorld.dynamicLights, player(), &sim().entities(), tickAlpha);
     m_inWorld.itemInstances.clear();
-    m_session.entities().view<ecs::TransformComp, ecs::ItemDropComp>().each(
+    sim().entities().view<ecs::TransformComp, ecs::ItemDropComp>().each(
         [&](ecs::EntityId e, const ecs::TransformComp& t, const ecs::ItemDropComp& item) {
             const float age = item.ageSeconds + tickAlpha * core::EngineConfig::GAME_TICK_SECONDS;
             m_inWorld.itemInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), item.id, age,
@@ -1407,41 +1320,41 @@ void Application::renderWorldFrame(int framebufferWidth, int framebufferHeight) 
         });
     collectMobInstances(tickAlpha);
     m_inWorld.fallingBlockInstances.clear();
-    m_session.entities().view<ecs::TransformComp, ecs::FallingBlockComp>().each(
+    sim().entities().view<ecs::TransformComp, ecs::FallingBlockComp>().each(
         [&](ecs::EntityId, const ecs::TransformComp& t, const ecs::FallingBlockComp& falling) {
             m_inWorld.fallingBlockInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), falling.id});
         });
     // S6.6 primed TNT: the block itself, blinking white over the last kTntFlashTicks.
-    m_session.entities().view<ecs::TransformComp, ecs::PrimedTntComp>().each(
+    sim().entities().view<ecs::TransformComp, ecs::PrimedTntComp>().each(
         [&](ecs::EntityId, const ecs::TransformComp& t, const ecs::PrimedTntComp& tnt) {
             const float flash = tnt.fuse <= kTntFlashTicks && (tnt.fuse / 2) % 2 == 0 ? 0.8f : 0.0f;
             m_inWorld.fallingBlockInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), world::BlockId::TNT, flash});
         });
     // S6.2 arrows, along their flight.
     m_inWorld.arrowInstances.clear();
-    m_session.entities().view<ecs::TransformComp, ecs::ArrowComp>().each(
+    sim().entities().view<ecs::TransformComp, ecs::ArrowComp>().each(
         [&](ecs::EntityId, const ecs::TransformComp& t, const ecs::ArrowComp&) {
             m_inWorld.arrowInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), t.yaw, t.pitch});
         });
     // The crack belongs to the block being mined, not to whatever the crosshair crossed since.
-    const bool crackOnTarget = m_inWorld.currentTarget.hit && m_session.miningTarget() &&
-                               *m_session.miningTarget() == m_inWorld.currentTarget.blockPos;
+    const bool crackOnTarget = m_inWorld.currentTarget.hit && sim().miningTarget() &&
+                               *sim().miningTarget() == m_inWorld.currentTarget.blockPos;
 
     // S8.10 / S8.11 weather of this frame, interpolated on the game tick.
     m_worldRenderer.setWeather(render::WeatherFrame{
-        .rainStrength = world::rainStrengthAt(m_weather, tickAlpha),
-        .thunderStrength = world::thunderStrengthAt(m_weather, tickAlpha),
+        .rainStrength = world::rainStrengthAt(m_session->weather(), tickAlpha),
+        .thunderStrength = world::thunderStrengthAt(m_session->weather(), tickAlpha),
         .lightningFlash = static_cast<float>(m_inWorld.lightningTicks) / static_cast<float>(kLightningFlashTicks),
         .bolt = m_inWorld.lightningBolt,
         .boltSeed = m_inWorld.lightningSeed});
     m_inWorld.lastRenderStats = m_worldRenderer.renderWorld(
-        *m_world,
-        m_player,
+        world(),
+        player(),
         m_inWorld.currentTarget,
-        crackOnTarget ? m_session.crackStage() : -1,
+        crackOnTarget ? sim().crackStage() : -1,
         m_inWorld.particles,
         m_config,
-        m_timeOfDay,
+        m_session->timeOfDay(),
         m_inWorld.totalTime,
         framebufferWidth,
         framebufferHeight,
@@ -1455,42 +1368,42 @@ void Application::renderWorldFrame(int framebufferWidth, int framebufferHeight) 
 
 void Application::renderScreens() {
     const ui::HudCanvas canvas = hudCanvas();
-    if (m_world && (m_screenState == ui::ScreenState::InGame || m_screenState == ui::ScreenState::Sleeping)) {
+    if (m_session && (m_screenState == ui::ScreenState::InGame || m_screenState == ui::ScreenState::Sleeping)) {
         const ui::HudDebugContext hudCtx{
             .fps = m_smoothedFps,
             .frameTimeMs = m_smoothedFrameMs,
-            .timeOfDay = m_timeOfDay,
+            .timeOfDay = m_session->timeOfDay(),
             .showDebug = m_showDebug,
             .inventoryOpen = m_inventoryOpen,
-            .creative = m_player.isCreative(),
+            .creative = player().isCreative(),
             .musicEnabled = m_audio.isMusicEnabled(),
             .mouseX = canvas.toCanvasX(m_mouseX),
             .mouseY = canvas.toCanvasY(m_mouseY),
             .renderStats = m_inWorld.lastRenderStats,
             .targetHit = m_inWorld.currentTarget,
-            .crafting = craftingScreenView(m_session.crafting(), *m_world),
-            .hurtFlash = gameplay::hurtFlashIntensity(m_player.health()),
+            .crafting = craftingScreenView(m_session->crafting(), world()),
+            .hurtFlash = gameplay::hurtFlashIntensity(player().health()),
             // Beta GuiIngame: the hearts flash white every 3 ticks while hits are resisted.
-            .heartsBlink = m_player.health().isInvulnerable() && (m_player.health().invulnerableTicks / 3) % 2 == 1,
-            .lowHealth = m_player.getHealth() <= 4,
-            .burning = m_player.burning().isBurning(),
-            .jitterSeed = m_gameTicks * 312871U, // Beta rand.setSeed(updateCounter * 312871)
-            .mobs = {.passive = m_session.spawner().stats().passive,
-                     .hostile = m_session.spawner().stats().hostile,
-                     .passiveCap = m_session.spawner().stats().passiveCap,
-                     .hostileCap = m_session.spawner().stats().hostileCap},
+            .heartsBlink = player().health().isInvulnerable() && (player().health().invulnerableTicks / 3) % 2 == 1,
+            .lowHealth = player().getHealth() <= 4,
+            .burning = player().burning().isBurning(),
+            .jitterSeed = m_session->gameTicks() * 312871U, // Beta rand.setSeed(updateCounter * 312871)
+            .mobs = {.passive = sim().spawner().stats().passive,
+                     .hostile = sim().spawner().stats().hostile,
+                     .passiveCap = sim().spawner().stats().passiveCap,
+                     .hostileCap = sim().spawner().stats().hostileCap},
             .statusMessage = m_inWorld.statusMessageSeconds > 0.0f ? m_inWorld.statusMessage : std::string{},
             .statusAlpha = std::clamp(m_inWorld.statusMessageSeconds, 0.0f, 1.0f),
-            .sleepFade = m_session.sleepFade(),
-            .storage = hudStorageStats(*m_world),
+            .sleepFade = sim().sleepFade(),
+            .storage = hudStorageStats(world()),
             .weather = m_showDebug ? weatherDebugLine() : std::string{}
         };
 
         m_hudRenderer.render(
             canvas.width,
             canvas.height,
-            m_player,
-            *m_world,
+            player(),
+            world(),
             m_worldRenderer.getAtlas(),
             m_config,
             hudCtx
@@ -1604,7 +1517,7 @@ void Application::renderScreens() {
 }
 
 int Application::run(int maxFrames) {
-    if (maxFrames >= 0 && m_world) {
+    if (maxFrames >= 0 && m_session) {
         enterGame();
     }
 
@@ -1630,7 +1543,7 @@ int Application::run(int maxFrames) {
 }
 
 int Application::runFixedFrames(int frames, float frameDt) {
-    if (m_world) {
+    if (m_session) {
         enterGame();
     }
     for (int i = 0; i < frames && m_running; ++i) {
@@ -1640,11 +1553,14 @@ int Application::runFixedFrames(int frames, float frameDt) {
 }
 
 void Application::enterGame() {
-    if (!m_world) {
+    if (!m_session) {
         return;
     }
-    startNewWorldIfNeeded();
-    if (m_player.isDead()) {
+    if (m_session->awaitingGameMode()) {
+        m_session->startNewWorld(m_titleScreen.selectedMode());
+        m_titleScreen.setNewWorld(false);
+    }
+    if (player().isDead()) {
         // Saved while dead (death screen, then "Title menu"): respawn from the death screen.
         m_screenState = ui::ScreenState::DeathScreen;
         setMouseCaptured(false);
@@ -1654,49 +1570,21 @@ void Application::enterGame() {
     setMouseCaptured(true);
 }
 
-void Application::startNewWorldIfNeeded() {
-    if (!m_isNewWorld) {
-        return;
-    }
-    const core::GameMode mode = m_newWorldMode.value_or(m_titleScreen.selectedMode());
-    m_player.setGameMode(mode);
-    applyStarterKit(m_player, mode);
-    if (m_world && !m_saveDisabled) {
-        m_world->saveModifiedChunks(makeLevelData());
-    }
-    m_isNewWorld = false;
-    m_newWorldMode.reset();
-    m_titleScreen.setNewWorld(false);
-}
-
 void Application::leaveWorld() {
-    if (!m_world) {
+    if (!m_session) {
         return;
     }
-    // 1. level.dat and the modified chunks, 2. every queued chunk on disk and the region
-    // headers, 3. no mesh job may still read the World, 4. the World itself.
-    saveWorld();
-    if (!m_world->flushStorage()) {
+    // No mesh job may still read the World; then level.dat, the modified chunks and every
+    // queued chunk on disk; then the session, and everything of the world with it.
+    m_worldRenderer.releaseWorld();
+    if (!m_session->close()) {
         core::Logger::error("Application", "Some chunks of ", m_config.worldSaveDir, " could not be written.");
     }
-    m_worldRenderer.releaseWorld();
-    m_world.reset();
+    m_session.reset();
 
-    // Nothing of this world may leak into the next one: entities, player proxy, mob spawner,
-    // the player, the effects and every per-world timer.
-    m_session = EntitySimulation{};
-    m_player = physics::Player{};
+    // Nothing of this world may leak into the next one: the effects and the screens' state.
     m_inWorld.reset(); // effects, render instances, timers, input latches
     m_inventoryOpen = false;
-    m_isNewWorld = false;
-    m_saveDisabled = false;
-    m_newWorldMode.reset();
-    m_worldName.clear();
-    m_spawnPoint = glm::vec3(8.5f, 82.0f, 8.5f);
-    m_bedSpawn.reset();
-    m_timeOfDay = 0.22f;
-    m_gameTicks = 0;
-    m_weather = world::WeatherState{};
     m_audio.setRainLoop(0.0f);
     m_worldRenderer.setWeather({});
 
@@ -1771,40 +1659,16 @@ void Application::clearFrame(int framebufferWidth, int framebufferHeight) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-world::WorldLevelData Application::makeLevelData(std::vector<physics::InventorySlot>* overflow) const {
-    const std::vector<physics::InventorySlot> pending = m_session.crafting().pendingStacks();
-    world::WorldLevelData data{};
-    data.itemsScheme = world::kCurrentItemsScheme;
-    data.seed = m_world ? m_world->getSeed() : m_config.worldSeed;
-    data.playerPos = m_player.getPosition();
-    data.playerYaw = m_player.getYaw();
-    data.playerPitch = m_player.getPitch();
-    data.timeOfDay = m_timeOfDay;
-    data.spawnPos = m_spawnPoint;
-    data.bedPos = m_bedSpawn;
-    data.player = capturePlayer(m_player, pending, overflow);
-    data.storageFormat = m_world ? m_world->storageFormat() : world::kLegacyStorageFormat;
-    data.name = m_worldName;
-    data.weather = m_weather;
-    return data;
-}
-
 void Application::saveWorld() {
-    // A new world quit from the title screen was never played: writing level.dat now would
-    // fix its mode to the default and skip the title's choice and starter kit next launch.
-    if (!m_world || m_saveDisabled || m_isNewWorld) {
+    if (!m_session) {
         return;
     }
-    // Stacks an open screen holds that a full inventory cannot take would vanish from the
-    // save: close the screen first, as Beta does on quit, which throws them in front of the
-    // player (and never duplicates them, unlike dropping copies).
-    std::vector<physics::InventorySlot> overflow;
-    world::WorldLevelData data = makeLevelData(&overflow);
-    if (!overflow.empty() && m_inventoryOpen) {
-        closeInventoryScreen();
-        data = makeLevelData();
+    // Stacks the grid held that the inventory could not take were thrown in front of the
+    // player and the grid closed: the screen goes with it.
+    if (m_session->save().closedCrafting) {
+        m_inventoryOpen = false;
+        setMouseCaptured(true);
     }
-    m_world->saveModifiedChunks(data);
 }
 
 void Application::handlePlayerDeath() {
@@ -1812,8 +1676,8 @@ void Application::handlePlayerDeath() {
     if (m_inventoryOpen) {
         closeInventoryScreen();
     }
-    (void)m_session.dropInventoryOnDeath(m_player);
-    m_session.resetMining();
+    (void)sim().dropInventoryOnDeath(player());
+    sim().resetMining();
     m_inWorld.leftMouseDown = false;
     m_inWorld.attackPressed = false;
     m_screenState = ui::ScreenState::DeathScreen;
@@ -1821,16 +1685,16 @@ void Application::handlePlayerDeath() {
 }
 
 void Application::respawnPlayer() {
-    if (!m_world) {
+    if (!m_session) {
         return;
     }
     // S5.8: next to the bed slept in, or back to the world spawn when it is gone.
-    const RespawnChoice choice = chooseRespawnPoint(*m_world, m_bedSpawn, m_spawnPoint);
-    m_spawnPoint = choice.point;
+    const RespawnChoice choice = chooseRespawnPoint(world(), m_session->bedSpawn(), m_session->spawnPoint());
+    m_session->setSpawnPoint(choice.point);
     if (choice.bedMissing) {
         showStatusMessage("Your home bed was missing or obstructed");
     }
-    (void)game::respawnPlayer(*m_world, m_player, m_spawnPoint);
+    (void)game::respawnPlayer(world(), player(), m_session->spawnPoint());
     m_screenState = ui::ScreenState::InGame;
     setMouseCaptured(true);
 }
