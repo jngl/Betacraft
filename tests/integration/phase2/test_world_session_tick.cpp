@@ -7,6 +7,7 @@
 
 #include "crafting/CraftingGrid.hpp"
 #include "gameplay/ItemIds.hpp"
+#include "gameplay/MobDefs.hpp"
 #include "world/Block.hpp"
 #include "world/Weather.hpp"
 
@@ -14,6 +15,7 @@
 
 #include <cmath>
 #include <optional>
+#include <vector>
 
 namespace betacraft::test::worldsession {
 namespace {
@@ -118,6 +120,55 @@ TEST_F(WorldSessionTick, AThunderstormReturnsLightningStrikes) {
     const auto z = static_cast<int32_t>(std::floor(strike->z));
     EXPECT_FLOAT_EQ(strike->y, static_cast<float>(world::precipitationHeight(world(), x, z)));
     EXPECT_EQ(world::precipitationAt(world().getBiomeAt(x, z)), world::Precipitation::Rain);
+}
+
+// Spec #9 user story 10: natural spawning runs in the tick with the session's weather. At
+// noon a clear sky keeps hostiles off the sunlit surface; a thunderstorm lets them spawn there
+// (Beta reads their light with skylightSubtracted 10). Hostiles in caves do not count.
+TEST_F(WorldSessionTick, ThunderLetsHostilesSpawnOnTheSunlitSurfaceAtNoon) {
+    const auto sunlitHostilesWithin = [&](const world::WeatherState& weather, int32_t ticks) {
+        ecs::Registry& entities = m_session->simulation().entities();
+        std::vector<ecs::EntityId> mobs;
+        entities.view<ecs::MobKindComp>().each([&](ecs::EntityId e, const ecs::MobKindComp&) {
+            if (!entities.has<ecs::PlayerTagComp>(e)) {
+                mobs.push_back(e);
+            }
+        });
+        for (const ecs::EntityId e : mobs) {
+            (void)entities.destroy(e);
+        }
+        m_session->weather() = weather;
+        m_session->setTimeOfDay(0.25f); // Noon
+        int32_t sunlit = 0;
+        for (int32_t t = 0; t < ticks && sunlit == 0; ++t) {
+            (void)tickIdle();
+            entities.view<ecs::TransformComp, ecs::MobKindComp>().each(
+                [&](ecs::EntityId e, const ecs::TransformComp& transform, const ecs::MobKindComp& mob) {
+                    if (entities.has<ecs::PlayerTagComp>(e) ||
+                        gameplay::mobDef(mob.kind).category != gameplay::MobCategory::Hostile) {
+                        return;
+                    }
+                    const core::BlockPos cell{static_cast<int32_t>(std::floor(transform.pos.x)),
+                                              static_cast<int32_t>(std::floor(transform.pos.y)),
+                                              static_cast<int32_t>(std::floor(transform.pos.z))};
+                    sunlit += world().getSkyLight(cell.x, cell.y, cell.z) == 15 ? 1 : 0;
+                });
+        }
+        return sunlit;
+    };
+
+    // Long timers: neither weather changes during the run.
+    EXPECT_EQ(sunlitHostilesWithin(world::WeatherState{.rainTime = 100000, .thunderTime = 100000}, 1500), 0);
+    EXPECT_GT(sunlitHostilesWithin(world::WeatherState{.raining = true,
+                                                       .thundering = true,
+                                                       .rainTime = 100000,
+                                                       .thunderTime = 100000,
+                                                       .rainStrength = 1.0f,
+                                                       .prevRainStrength = 1.0f,
+                                                       .thunderStrength = 1.0f,
+                                                       .prevThunderStrength = 1.0f},
+                                   1500),
+              0);
 }
 
 // Clear weather never strikes, and the weather advances once per tick.
