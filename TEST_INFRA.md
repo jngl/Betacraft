@@ -56,7 +56,7 @@
 ## Phase 2 Test Philosophy
 - Each Phase 2 module was developed test-first against its own GoogleTest executable, using only the module's public headers plus test doubles (`PipelineTestDoubles.hpp`, `FluidTestUtils.hpp`, `GridFluidVoxelAccess`, `AcousticsTestUtils.hpp`, `WorldgenTestSupport.hpp`, `GlslMiniInterpreter.hpp`).
 - Beta 1.7.3 parity is pinned by explicit value tests: tool durability, weapon damage, fluid tick rates and decay, recipe shapes, and cave spec constants.
-- Integration tests in `tests/integration/phase2/` drive the real `World`, `GameSession`, `WorldMeshStreamer`, `AudioEngine` and renderer-side helpers headlessly.
+- Integration tests in `tests/integration/phase2/` drive the real `World`, `WorldSession`, `EntitySimulation`, `WorldMeshStreamer`, `AudioEngine` and renderer-side helpers headlessly.
 
 ## Phase 2 Module Suites (`tests/phase2/<key>/`)
 `CMakeLists.txt` (`BETACRAFT_PHASE2_MODULES`) globs `tests/phase2/<key>/*.cpp` into `betacraft_p2_<key>_tests`, which links `betacraft_p2_<key>`, an INTERFACE target over `betacraft_core`. It registers the executable in CTest as `Phase2_<key>`.
@@ -91,7 +91,7 @@ Coverage highlights per suite:
 |------|----------|-------|
 | `test_p2_foundations_blocks.cpp`, `test_p2_foundations_items.cpp`, `test_p2_foundations_metadata.cpp` | `P2FoundationsBlocks`, `P2FoundationsItems`, `P2FoundationsMetadata` | Lava block ids, item id scheme, per-voxel fluid metadata in `Chunk`/`World`/storage |
 | `test_p2_streaming_world.cpp`, `test_p2_streaming_dirty.cpp`, `test_p2_fixes_streaming.cpp` | `P2StreamingWorld`, `P2StreamingDirty`, `P2StreamingChunkDirty`, `P2FixesStreaming`, `P2FixesStreamingChunk`, `P2FixesRenderStats` | `WorldMeshStreamer` against a live `World`: dirty marking, lifecycle reporting, unload deletions, render stats |
-| `test_p2_gameplay_mining.cpp`, `test_p2_gameplay_entities.cpp`, `test_p2_gameplay_crafting.cpp`, `test_p2_fixes_gameplay.cpp` | `P2GameplayMining`, `P2GameplayEntities`, `P2GameplayCrafting`, `P2FixesGameplay`, `P2FixesHardness`, `P2FixesRecipes`, `P2FixesSupport` | `GameSession` mining with wear, item entities and pickup, melee on spawned mobs, inventory crafting, unsupported drops |
+| `test_p2_gameplay_mining.cpp`, `test_p2_gameplay_entities.cpp`, `test_p2_gameplay_crafting.cpp`, `test_p2_fixes_gameplay.cpp` | `P2GameplayMining`, `P2GameplayEntities`, `P2GameplayCrafting`, `P2FixesGameplay`, `P2FixesHardness`, `P2FixesRecipes`, `P2FixesSupport` | `EntitySimulation` mining with wear, item entities and pickup, melee on spawned mobs, inventory crafting, unsupported drops |
 | `test_p2_fluids_world.cpp`, `test_p2_fluids_game.cpp` | `P2FluidsWorld`, `P2FluidsStreaming`, `P2FluidsGame`, `P2FluidsInput` | `World`-backed fluid simulation, chunk-load scheduling, game-tick events (drops, fizz), placing sources |
 | `test_p2_worldgen_caves.cpp`, `test_p2_worldgen_decoration.cpp`, `test_p2_worldgen_persistence.cpp` | `P2WorldgenCaves`, `P2WorldgenDecoration`, `P2WorldgenPersistence` | `CaveCarver` in `WorldGen`, cross-border two-pass decoration, decoration-record save/load |
 | `test_p2_dynlight_collect.cpp`, `test_p2_dynlight_frame.cpp`, `test_p2_dynlight_shader.cpp` | `P2DynLightCollect`, `P2DynLightFrame`, `P2DynLightShader` | `collectDynamicLights` from player and ECS item drops, frame build, injected chunk shader source |

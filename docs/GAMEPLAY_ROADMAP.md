@@ -1828,11 +1828,11 @@ inv 9 17 32 0
 3. **Objet tenu sur le bloc visé** (`useHeldItemOnBlock`) : graines, houe, porte, lit, seau, puis pose du bloc tenu.
 4. **Objet tenu dans le vide** (`useHeldItem`) : nourriture, seau sur une source proche.
 
-**Dégâts au joueur.** Ils passent tous par `GameSession::damagePlayer` (S1.5) ; une écriture directe dans `Health::current` est interdite. `DamageCause` ne grandit qu'à la fin de l'enum.
+**Dégâts au joueur.** Ils passent tous par `EntitySimulation::damagePlayer` (S1.5) ; une écriture directe dans `Health::current` est interdite. `DamageCause` ne grandit qu'à la fin de l'enum.
 
 ### 3. Mode de jeu et feature flags
 
-- **Mode de jeu.** Toute triche (palette, clic molette 64 blocs, vol, T, piston au clic droit, `CycleWeather`) passe par le seul prédicat `Player::isCreative()`, que `GameSession` et `Application` relaient. Les tests `if (cheatKey)` dispersés sont interdits.
+- **Mode de jeu.** Toute triche (palette, clic molette 64 blocs, vol, T, piston au clic droit, `CycleWeather`) passe par le seul prédicat `Player::isCreative()`, que `EntitySimulation`, `WorldSession` et `Application` relaient. Les tests `if (cheatKey)` dispersés sont interdits.
 - **Feature flags.** Les mécaniques risquées sont protégées par des drapeaux, chacun exposé en ligne de commande (`--no-async-gen`…) et retiré une version après stabilisation :
   ```cpp
   struct FeatureFlags { bool asyncWorldGen{true}; bool regionStorage{true}; bool mobPathfinding{true}; bool redstone{true}; bool weather{true}; };
@@ -1859,7 +1859,7 @@ inv 9 17 32 0
 - **Ce qui est listé à la main** (sinon jamais compilé) :
   - tout `.cpp` de `src/{core,math,world,physics,render,audio,ui,game}` dans `BETACRAFT_CORE_SOURCES` (`CMakeLists.txt:32-66`) ;
   - `tests/unit/*` dans `UNIT_TEST_SOURCES`, `tests/integration/*.cpp` hors `phase2/` dans `INTEGRATION_TEST_SOURCES`, `tests/e2e/*` dans `E2E_TEST_SOURCES`.
-- **Signatures publiques utilisées par les tests :** `WorldStorage::saveChunk` et `loadChunk`, `World::ensureChunkLoaded`, `SkyRenderer::evaluateAtmosphere`, `MobAISystem::update`, `Raycaster::cast`, `HudRenderer::hitTestInventory`, `GameSession::tick`, `renderWorld`. Elles ne changent pas : on ajoute une surcharge ou un paramètre par défaut.
+- **Signatures publiques utilisées par les tests :** `WorldStorage::saveChunk` et `loadChunk`, `World::ensureChunkLoaded`, `SkyRenderer::evaluateAtmosphere`, `MobAISystem::update`, `Raycaster::cast`, `HudRenderer::hitTestInventory`, `EntitySimulation::tick`, `WorldSession::open`, `WorldSession::tick`, `renderWorld`. Elles ne changent pas : on ajoute une surcharge ou un paramètre par défaut.
 - **Enums :** `ScreenState`, `BlockId`, `SoundEffect`, `GameAction`, `RenderShape`, `InventoryRegion`, `MobKind` et `DamageCause` grandissent **à la fin**. Ordre prévu pour `ScreenState` : `DeathScreen` (S1.6), puis `Sleeping` (S5.8), puis `WorldSelect`, `CreateWorld` et `Loading` (S7.8).
 - **Avant chaque fusion :** `ctest -LE benchmark` vert, smoke test `betacraft --frames 300 --save-dir <tmp>`, et checklist de playtest du sprint cochée dans la PR.
 
