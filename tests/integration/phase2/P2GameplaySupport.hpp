@@ -1,12 +1,12 @@
 #pragma once
 // Shared fixture for the Phase 2 gameplay integration tests (P2.1 ECS entities, P2.5 tools,
-// durability and combat, P2.6 crafting) through the GL-free game::GameSession.
+// durability and combat, P2.6 crafting) through the GL-free game::EntitySimulation.
 
 #include "tests/test_helpers.hpp"
 
 #include "P2WorldgenSupport.hpp"
 #include "ecs/Components.hpp"
-#include "game/GameSession.hpp"
+#include "game/EntitySimulation.hpp"
 #include "physics/Player.hpp"
 #include "world/World.hpp"
 
@@ -97,7 +97,7 @@ protected:
     TempDir m_dir{"betacraft_p2_gameplay_"};
     std::unique_ptr<world::World> m_world;
     physics::Player m_player;
-    game::GameSession m_session{12345ULL};
+    game::EntitySimulation m_session{12345ULL};
 };
 
 } // namespace betacraft::test::p2gameplay

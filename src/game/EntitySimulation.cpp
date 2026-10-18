@@ -1,4 +1,4 @@
-#include "game/GameSession.hpp"
+#include "game/EntitySimulation.hpp"
 
 #include "ai/WorldNavQuery.hpp"
 #include "crafting/Furnace.hpp"
@@ -59,10 +59,10 @@ constexpr gameplay::KnockbackParams kMobHitKnockback{.horizontalSpeed = kMobKnoc
 
 } // namespace
 
-GameSession::GameSession(uint64_t seed)
+EntitySimulation::EntitySimulation(uint64_t seed)
     : m_rng(seed), m_spawnRng(seed ^ 0x6D6F62737061776EULL), m_mobRng(seed ^ 0x6D6F626C6976696EULL) {}
 
-GameTickEvents GameSession::tick(world::World& world, physics::Player& player, const PlayerActions& actions,
+GameTickEvents EntitySimulation::tick(world::World& world, physics::Player& player, const PlayerActions& actions,
                                  float timeOfDay) {
     // Hits and explosions recorded by explode() calls made between ticks come first.
     GameTickEvents events = std::exchange(m_pendingEvents, GameTickEvents{});
@@ -91,7 +91,7 @@ GameTickEvents GameSession::tick(world::World& world, physics::Player& player, c
     return events;
 }
 
-void GameSession::tickSleep(const world::World& world, const physics::Player& player, GameTickEvents& events) {
+void EntitySimulation::tickSleep(const world::World& world, const physics::Player& player, GameTickEvents& events) {
     if (!m_sleepingBed) {
         return;
     }
@@ -106,7 +106,7 @@ void GameSession::tickSleep(const world::World& world, const physics::Player& pl
     }
 }
 
-SleepResult GameSession::trySleep(const world::World& world, const physics::Player& player, const core::BlockPos& bed,
+SleepResult EntitySimulation::trySleep(const world::World& world, const physics::Player& player, const core::BlockPos& bed,
                                   float timeOfDay) {
     const std::optional<core::BlockPos> head = bedHeadAt(world, bed);
     if (!head || player.isDead()) {
@@ -137,17 +137,17 @@ SleepResult GameSession::trySleep(const world::World& world, const physics::Play
     return SleepResult::Asleep;
 }
 
-float GameSession::sleepFade() const noexcept {
+float EntitySimulation::sleepFade() const noexcept {
     return m_sleepingBed ? std::clamp(static_cast<float>(m_sleepTicks) / static_cast<float>(kSleepTicks), 0.0f, 1.0f)
                          : 0.0f;
 }
 
-void GameSession::wakeUp() noexcept {
+void EntitySimulation::wakeUp() noexcept {
     m_sleepingBed.reset();
     m_sleepTicks = 0;
 }
 
-gameplay::HitResult GameSession::damagePlayer(physics::Player& player, const PlayerDamage& damage,
+gameplay::HitResult EntitySimulation::damagePlayer(physics::Player& player, const PlayerDamage& damage,
                                              GameTickEvents& events) {
     if (player.isCreative() || player.isDead()) {
         return {};
@@ -191,7 +191,7 @@ gameplay::HitResult GameSession::damagePlayer(physics::Player& player, const Pla
 // (Entity.onEntityUpdate), cactus contact (moveEntity), then air, then the void, then the
 // hurt-resistance timers count down. Every hit goes through damagePlayer, so the resistance
 // window keeps lava from killing in 5 ticks.
-void GameSession::tickPlayerSurvival(world::World& world, physics::Player& player, GameTickEvents& events) {
+void EntitySimulation::tickPlayerSurvival(world::World& world, physics::Player& player, GameTickEvents& events) {
     const float fall = player.takePendingFall();
     player.tickHurtTime();
     if (player.isCreative()) {
@@ -231,7 +231,7 @@ void GameSession::tickPlayerSurvival(world::World& world, physics::Player& playe
     gameplay::tickHealth(player.health());
 }
 
-void GameSession::syncPlayerProxy(const physics::Player& player) {
+void EntitySimulation::syncPlayerProxy(const physics::Player& player) {
     const glm::vec3 feet = player.getPosition();
     if (ecs::TransformComp* t = m_entities.valid(m_playerProxy) ? m_entities.tryGet<ecs::TransformComp>(m_playerProxy)
                                                                 : nullptr) {
@@ -242,7 +242,7 @@ void GameSession::syncPlayerProxy(const physics::Player& player) {
     m_playerProxy = ecs::EntityFactory::spawnPlayerProxy(m_entities, feet);
 }
 
-size_t GameSession::spawnMobDrops(gameplay::MobKind kind, const glm::vec3& pos, bool burning) {
+size_t EntitySimulation::spawnMobDrops(gameplay::MobKind kind, const glm::vec3& pos, bool burning) {
     size_t spawned = 0;
     for (const gameplay::MobDropRoll& roll : gameplay::rollMobDrops(kind, burning, m_rng)) {
         // Beta Entity.entityDropItem: from the mob's feet with EntityItem's random pop.
@@ -255,19 +255,19 @@ size_t GameSession::spawnMobDrops(gameplay::MobKind kind, const glm::vec3& pos, 
     return spawned;
 }
 
-void GameSession::resetMining() noexcept {
+void EntitySimulation::resetMining() noexcept {
     m_mining.reset();
     m_miningTarget.reset();
 }
 
-ecs::EntityId GameSession::spawnItem(const gameplay::ItemStack& stack, const glm::vec3& pos, const glm::vec3& velocity) {
+ecs::EntityId EntitySimulation::spawnItem(const gameplay::ItemStack& stack, const glm::vec3& pos, const glm::vec3& velocity) {
     if (stack.empty()) {
         return ecs::NULL_ENTITY;
     }
     return ecs::EntityFactory::spawnItemDrop(m_entities, pos, stack.id, stack.count, velocity, stack.damage);
 }
 
-ecs::EntityId GameSession::spawnBlockDrop(const gameplay::ItemStack& stack, const core::BlockPos& cell) {
+ecs::EntityId EntitySimulation::spawnBlockDrop(const gameplay::ItemStack& stack, const core::BlockPos& cell) {
     const float margin = (1.0f - DROP_SPREAD) * 0.5f;
     const glm::vec3 pos(static_cast<float>(cell.x) + margin + m_rng.nextFloat() * DROP_SPREAD,
                         static_cast<float>(cell.y) + margin + m_rng.nextFloat() * DROP_SPREAD,
@@ -277,7 +277,7 @@ ecs::EntityId GameSession::spawnBlockDrop(const gameplay::ItemStack& stack, cons
     return spawnItem(stack, pos, velocity);
 }
 
-bool GameSession::spawnNaturalDrop(world::BlockId block, const core::BlockPos& cell, uint8_t meta) {
+bool EntitySimulation::spawnNaturalDrop(world::BlockId block, const core::BlockPos& cell, uint8_t meta) {
     // Beta dropBlockAsItem without a player: the bare-hand drop table, nothing to wear.
     gameplay::ItemStack noTool{};
     const gameplay::BlockBreakOutcome outcome = gameplay::breakBlockWith(block, noTool, m_rng.next(), meta);
@@ -287,7 +287,7 @@ bool GameSession::spawnNaturalDrop(world::BlockId block, const core::BlockPos& c
     return outcome.drop && spawnBlockDrop(*outcome.drop, cell) != ecs::NULL_ENTITY;
 }
 
-size_t GameSession::spawnFluidDrops(std::span<const fluids::FluidEvent> events) {
+size_t EntitySimulation::spawnFluidDrops(std::span<const fluids::FluidEvent> events) {
     size_t spawned = 0;
     for (const fluids::FluidEvent& ev : events) {
         if (ev.kind == fluids::FluidEventKind::BlockWashedAway && spawnNaturalDrop(ev.block, ev.pos)) {
@@ -297,7 +297,7 @@ size_t GameSession::spawnFluidDrops(std::span<const fluids::FluidEvent> events) 
     return spawned;
 }
 
-size_t GameSession::spawnUnsupportedDrops(world::World& world) {
+size_t EntitySimulation::spawnUnsupportedDrops(world::World& world) {
     size_t spawned = 0;
     for (const world::World::UnsupportedBreak& broken : world.takeUnsupportedBreaks()) {
         if (spawnNaturalDrop(broken.block, broken.pos, broken.meta)) {
@@ -307,7 +307,7 @@ size_t GameSession::spawnUnsupportedDrops(world::World& world) {
     return spawned;
 }
 
-void GameSession::tickFallingBlocks(world::World& world) {
+void EntitySimulation::tickFallingBlocks(world::World& world) {
     for (const world::World::FallingBlockSpawn& spawn : world.takeFallingBlockSpawns()) {
         (void)spawnFallingBlock(m_entities, spawn.pos, spawn.id);
     }
@@ -336,7 +336,7 @@ void GameSession::tickFallingBlocks(world::World& world) {
     }
 }
 
-size_t GameSession::spawnRemovedBlockEntityDrops(world::World& world) {
+size_t EntitySimulation::spawnRemovedBlockEntityDrops(world::World& world) {
     size_t spawned = 0;
     const auto drop = [&](const world::StoredStack& s, const core::BlockPos& pos) {
         if (s.empty()) return;
@@ -359,7 +359,7 @@ size_t GameSession::spawnRemovedBlockEntityDrops(world::World& world) {
     return spawned;
 }
 
-void GameSession::tickBlockEntities(world::World& world) {
+void EntitySimulation::tickBlockEntities(world::World& world) {
     struct Change {
         core::BlockPos pos;
         bool litChanged;
@@ -387,7 +387,7 @@ void GameSession::tickBlockEntities(world::World& world) {
     }
 }
 
-std::optional<int32_t> GameSession::useHeldItem(physics::Player& player) {
+std::optional<int32_t> EntitySimulation::useHeldItem(physics::Player& player) {
     if (player.isDead()) {
         return std::nullopt;
     }
@@ -410,7 +410,7 @@ std::optional<int32_t> GameSession::useHeldItem(physics::Player& player) {
     return healed;
 }
 
-ecs::EntityId GameSession::dropFromPlayer(const physics::Player& player, const gameplay::ItemStack& stack) {
+ecs::EntityId EntitySimulation::dropFromPlayer(const physics::Player& player, const gameplay::ItemStack& stack) {
     // Beta dropPlayerItem: 0.3 blocks/tick along the look plus a 0.1 lift.
     constexpr float kThrowSpeed = 0.3f * static_cast<float>(gameplay::kTicksPerSecond);
     constexpr float kThrowLift = 0.1f * static_cast<float>(gameplay::kTicksPerSecond);
@@ -424,7 +424,7 @@ ecs::EntityId GameSession::dropFromPlayer(const physics::Player& player, const g
     return e;
 }
 
-ecs::EntityId GameSession::dropHeldItem(physics::Player& player, bool wholeStack) {
+ecs::EntityId EntitySimulation::dropHeldItem(physics::Player& player, bool wholeStack) {
     const physics::InventorySlot held = player.getHeldItem();
     if (held.isEmpty() || player.isDead()) {
         return ecs::NULL_ENTITY;
@@ -437,7 +437,7 @@ ecs::EntityId GameSession::dropHeldItem(physics::Player& player, bool wholeStack
     return e;
 }
 
-size_t GameSession::dropInventoryOnDeath(physics::Player& player) {
+size_t EntitySimulation::dropInventoryOnDeath(physics::Player& player) {
     // The 36 inventory stacks, then the 4 armor pieces (Beta InventoryPlayer.dropAllItems).
     std::array<gameplay::ItemStack, physics::Player::TOTAL_INVENTORY_SIZE + physics::Player::ARMOR_SLOT_COUNT> stacks{};
     for (size_t i = 0; i < physics::Player::TOTAL_INVENTORY_SIZE; ++i) {
@@ -459,7 +459,7 @@ size_t GameSession::dropInventoryOnDeath(physics::Player& player) {
     return spawned;
 }
 
-bool GameSession::useHeldItemOnEntity(physics::Player& player, ecs::EntityId target) {
+bool EntitySimulation::useHeldItemOnEntity(physics::Player& player, ecs::EntityId target) {
     if (player.isDead() || !m_entities.valid(target) || m_entities.has<CorpseComp>(target)) {
         return false;
     }
@@ -476,7 +476,7 @@ bool GameSession::useHeldItemOnEntity(physics::Player& player, ecs::EntityId tar
     return true;
 }
 
-std::optional<ecs::EntityId> GameSession::meleeTarget(const physics::Player& player,
+std::optional<ecs::EntityId> EntitySimulation::meleeTarget(const physics::Player& player,
                                                       const physics::RaycastHit& blockTarget) {
     std::vector<physics::AABB> boxes;
     std::vector<ecs::EntityId> ids;
@@ -496,7 +496,7 @@ std::optional<ecs::EntityId> GameSession::meleeTarget(const physics::Player& pla
 // crosshair if there is one, otherwise clicks the block; every tick the button stays down
 // damages the targeted block (the press tick included). The click counts even when the
 // button was already released before this tick (a tap shorter than 50 ms).
-void GameSession::handleAttack(world::World& world, physics::Player& player, const PlayerActions& actions,
+void EntitySimulation::handleAttack(world::World& world, physics::Player& player, const PlayerActions& actions,
                                GameTickEvents& events) {
     if (actions.attackPressed) {
         if (const auto target = meleeTarget(player, actions.target)) {
@@ -537,7 +537,7 @@ void GameSession::handleAttack(world::World& world, physics::Player& player, con
     }
 }
 
-void GameSession::breakBlock(world::World& world, physics::Player& player, const core::BlockPos& pos,
+void EntitySimulation::breakBlock(world::World& world, physics::Player& player, const core::BlockPos& pos,
                              world::BlockId block, GameTickEvents& events) {
     gameplay::ItemStack held = toItemStack(player.getHeldItem());
     if (block == world::BlockId::TNT && !player.isCreative()) {
@@ -583,7 +583,7 @@ void GameSession::breakBlock(world::World& world, physics::Player& player, const
     events.blockBroken = ev;
 }
 
-void GameSession::attackEntity(physics::Player& player, ecs::EntityId target, GameTickEvents& events) {
+void EntitySimulation::attackEntity(physics::Player& player, ecs::EntityId target, GameTickEvents& events) {
     ecs::HealthComp& health = m_entities.get<ecs::HealthComp>(target);
     const ecs::TransformComp& transform = m_entities.get<ecs::TransformComp>(target);
     ecs::VelocityComp* velocity = m_entities.tryGet<ecs::VelocityComp>(target);
@@ -622,7 +622,7 @@ void GameSession::attackEntity(physics::Player& player, ecs::EntityId target, Ga
 // Fixed-tick order from the ECS integration notes: target search -> AI -> skeleton, spider and
 // creeper attacks (S6.3) -> movement -> voxel collision -> arrows (S6.2) -> fire -> mob contact hits -> health (corpses, death drops) -> natural
 // spawning -> item ageing. Structural changes go through the command buffer.
-void GameSession::setPathfinding(bool enabled) {
+void EntitySimulation::setPathfinding(bool enabled) {
     m_pathfinding = enabled;
     if (enabled) {
         return;
@@ -635,7 +635,7 @@ void GameSession::setPathfinding(bool enabled) {
     m_pathPlanning.clear();
 }
 
-void GameSession::runEntitySystems(world::World& world, physics::Player& player, float timeOfDay,
+void EntitySimulation::runEntitySystems(world::World& world, physics::Player& player, float timeOfDay,
                                    GameTickEvents& events) {
     const float sun = gameplay::sunBrightness(timeOfDay);
     acquireTargets(m_entities, world, m_playerProxy, player.gameMode(), m_ticks, player.isDead(), sun);
@@ -725,11 +725,11 @@ void GameSession::runEntitySystems(world::World& world, physics::Player& player,
     ambientMobSounds(m_entities, player.getPosition(), m_mobRng, events.mobSounds);
 }
 
-void GameSession::queueExplosion(const glm::vec3& centre, float power, ecs::EntityId source) {
+void EntitySimulation::queueExplosion(const glm::vec3& centre, float power, ecs::EntityId source) {
     m_explosionQueue.push_back({centre, power, source});
 }
 
-void GameSession::tickPrimedTnt() {
+void EntitySimulation::tickPrimedTnt() {
     m_entities.view<ecs::TransformComp, ecs::PrimedTntComp>().each(
         [&](ecs::EntityId e, const ecs::TransformComp& t, ecs::PrimedTntComp& tnt) {
             if (--tnt.fuse > 0) {
@@ -743,7 +743,7 @@ void GameSession::tickPrimedTnt() {
     (void)m_commands.flush(m_entities);
 }
 
-void GameSession::runExplosionQueue(world::World& world, physics::Player& player, GameTickEvents& events) {
+void EntitySimulation::runExplosionQueue(world::World& world, physics::Player& player, GameTickEvents& events) {
     const size_t n = std::min(m_explosionQueue.size(), kMaxExplosionsPerTick);
     if (n == 0) {
         return;
@@ -756,7 +756,7 @@ void GameSession::runExplosionQueue(world::World& world, physics::Player& player
     }
 }
 
-ecs::EntityId GameSession::primeTnt(world::World& world, const core::BlockPos& cell, int32_t fuse) {
+ecs::EntityId EntitySimulation::primeTnt(world::World& world, const core::BlockPos& cell, int32_t fuse) {
     if (world.getBlock(cell) != world::BlockId::TNT || !world.setBlock(cell, world::BlockId::Air)) {
         return ecs::NULL_ENTITY;
     }
@@ -782,7 +782,7 @@ ecs::EntityId GameSession::primeTnt(world::World& world, const core::BlockPos& c
     return e;
 }
 
-std::optional<ecs::EntityId> GameSession::igniteTnt(world::World& world, physics::Player& player,
+std::optional<ecs::EntityId> EntitySimulation::igniteTnt(world::World& world, physics::Player& player,
                                                     const physics::RaycastHit& target) {
     physics::InventorySlot held = player.getHeldItem();
     if (!target.hit || player.isDead() || held.isEmpty() ||
@@ -804,12 +804,12 @@ std::optional<ecs::EntityId> GameSession::igniteTnt(world::World& world, physics
     return e;
 }
 
-void GameSession::explode(world::World& world, physics::Player& player, glm::vec3 centre, float power,
+void EntitySimulation::explode(world::World& world, physics::Player& player, glm::vec3 centre, float power,
                           ecs::EntityId source) {
     explode(world, player, centre, power, source, m_tickEvents != nullptr ? *m_tickEvents : m_pendingEvents);
 }
 
-void GameSession::explode(world::World& world, physics::Player& player, glm::vec3 centre, float power,
+void EntitySimulation::explode(world::World& world, physics::Player& player, glm::vec3 centre, float power,
                           ecs::EntityId source, GameTickEvents& events) {
     if (!(power > 0.0f)) {
         return;
@@ -917,7 +917,7 @@ void GameSession::explode(world::World& world, physics::Player& player, glm::vec
     events.explosions.push_back({centre, power, destroyed});
 }
 
-size_t GameSession::tickPressurePlates(world::World& world, const physics::Player& player) {
+size_t EntitySimulation::tickPressurePlates(world::World& world, const physics::Player& player) {
     size_t contacts = 0;
     const auto touch = [&](const physics::AABB& box, bool living) {
         // Plates lie in the cell at the feet (they do not collide).
@@ -954,7 +954,7 @@ size_t GameSession::tickPressurePlates(world::World& world, const physics::Playe
     return contacts;
 }
 
-int32_t GameSession::pickUpItems(physics::Player& player) {
+int32_t EntitySimulation::pickUpItems(physics::Player& player) {
     const physics::AABB reach = player.getAABB().expanded({PICKUP_REACH_XZ, 0.0f, PICKUP_REACH_XZ});
     int32_t picked = 0;
     m_entities.view<ecs::TransformComp, ecs::AABBColliderComp, ecs::ItemDropComp>().each(

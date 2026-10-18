@@ -1,6 +1,6 @@
 // Sprint 5 (S5.2, S5.3) scheduled block updates and falling sand: World::setBlock schedules a
 // check 3 ticks later for sand and gravel at and above the edited cell; over air or liquid the
-// block becomes an entity (GameSession::tickFallingBlocks) that lands back as a block, or as
+// block becomes an entity (EntitySimulation::tickFallingBlocks) that lands back as a block, or as
 // an item where it cannot be placed. Eyes inside an opaque solid block suffocate.
 #include "P2GameplaySupport.hpp"
 

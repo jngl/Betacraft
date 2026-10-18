@@ -7,7 +7,7 @@
 #include "ecs/Components.hpp"
 #include "ecs/Registry.hpp"
 #include "ecs/Systems.hpp"
-#include "game/GameSession.hpp"
+#include "game/EntitySimulation.hpp"
 #include "game/MobBehaviour.hpp"
 #include "gameplay/MobDefs.hpp"
 #include "physics/Player.hpp"
@@ -89,7 +89,7 @@ TEST(PlayerProxy, NoSystemMovesTheProxy) {
 
 TEST(PlayerProxy, MeleeTargetNeverReturnsTheProxy) {
     world::BlockRegistry::initialize();
-    game::GameSession session{3ULL};
+    game::EntitySimulation session{3ULL};
     physics::Player player;
     player.setPosition({0.5f, 64.0f, 0.5f});
     player.setRotation(0.0f, 0.0f); // looking along +X

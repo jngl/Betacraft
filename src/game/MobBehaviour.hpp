@@ -16,8 +16,8 @@ namespace betacraft::world { class World; }
 
 namespace betacraft::game {
 
-// Sprint 4 mob rules that need the World or the player but not the GameSession: target
-// acquisition, contact attacks, burning in daylight and ambient sounds. GameSession runs them
+// Sprint 4 mob rules that need the World or the player but not the EntitySimulation: target
+// acquisition, contact attacks, burning in daylight and ambient sounds. EntitySimulation runs them
 // on the 20 TPS tick around the ECS systems; the player is seen through its proxy entity
 // (ecs::EntityFactory::spawnPlayerProxy).
 
@@ -48,7 +48,7 @@ struct MobSoundEvent {
     glm::vec3 pos{0.0f};
 };
 
-// A contact hit of a hostile on the player (meleeContact); GameSession turns it into
+// A contact hit of a hostile on the player (meleeContact); EntitySimulation turns it into
 // damagePlayer({damage, DamageCause::Mob, sourcePos}).
 struct MobMeleeHit {
     ecs::EntityId mob{ecs::NULL_ENTITY};
@@ -77,7 +77,7 @@ void acquireTargets(ecs::Registry& reg, const world::World& world, ecs::EntityId
 [[nodiscard]] std::vector<MobMeleeHit> meleeContact(ecs::Registry& reg, ecs::EntityId proxy);
 // Same, and the mob must also see the player: a block between the mob's eyes and the
 // player's eyes (Raycaster::cast) stops the hit, so a zombie cannot hit through a wall
-// (Beta EntityCreature attacks only a target it canEntityBeSeen). GameSession uses this one.
+// (Beta EntityCreature attacks only a target it canEntityBeSeen). EntitySimulation uses this one.
 [[nodiscard]] std::vector<MobMeleeHit> meleeContact(ecs::Registry& reg, const world::World& world,
                                                     ecs::EntityId proxy);
 
@@ -131,7 +131,7 @@ std::vector<ecs::EntityId> rangedAttacks(ecs::Registry& reg, const world::World&
 void spiderBehaviour(ecs::Registry& reg, const world::World& world, ecs::EntityId proxy, float sunBrightness,
                      gameplay::SplitMix64& rng);
 
-// A creeper whose fuse ran out this tick: GameSession explodes it with `power` at its feet and
+// A creeper whose fuse ran out this tick: EntitySimulation explodes it with `power` at its feet and
 // removes it without drops.
 struct CreeperBlast {
     ecs::EntityId creeper{ecs::NULL_ENTITY};

@@ -1,4 +1,4 @@
-// Sprint 8 integration (S8.1-S8.4): through the GL-free GameSession on a real World, a zombie
+// Sprint 8 integration (S8.1-S8.4): through the GL-free EntitySimulation on a real World, a zombie
 // chasing the player goes around a 6-block wall and climbs a one-block step in under 200
 // ticks; straight-line steering (--no-pathfinding) stays stuck against the wall.
 #include "P2GameplaySupport.hpp"

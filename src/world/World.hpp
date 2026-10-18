@@ -148,7 +148,7 @@ public:
     [[nodiscard]] const ScheduledTickQueue& getScheduledTicks() const noexcept { return m_scheduledTicks; }
 
     // S5.3: sand and gravel the scheduled update found over air or liquid: the cell is already
-    // air, whoever runs the game tick spawns the falling entity (GameSession::tickFallingBlocks).
+    // air, whoever runs the game tick spawns the falling entity (EntitySimulation::tickFallingBlocks).
     struct FallingBlockSpawn {
         core::BlockPos pos{};
         BlockId id{BlockId::Air};

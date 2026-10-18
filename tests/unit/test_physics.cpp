@@ -196,7 +196,7 @@ TEST(PlayerTest, SurvivalCannotToggleFly) {
     EXPECT_EQ(core::parseGameMode("hardcore"), std::nullopt);
 }
 
-// S1.5: physics records the fall; the 20 TPS game tick (GameSession) turns it into damage.
+// S1.5: physics records the fall; the 20 TPS game tick (EntitySimulation) turns it into damage.
 TEST(PlayerTest, LandingRecordsPendingFallWithoutDamage) {
     test::TempDir tempDir;
     world::World w(173ULL, tempDir.path());

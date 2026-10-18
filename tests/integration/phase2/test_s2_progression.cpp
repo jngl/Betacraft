@@ -1,5 +1,5 @@
 // Sprint 2 integration: a scripted Survival run of the material progression, through the
-// game's own rules only (GameSession mining and pickup, the InventoryCrafting screen with
+// game's own rules only (EntitySimulation mining and pickup, the InventoryCrafting screen with
 // the vanilla book, the furnace screen and its block entity): log -> planks -> workbench ->
 // wooden pickaxe -> cobblestone -> stone pickaxe -> furnace -> iron ingots -> iron pickaxe
 // -> a diamond. Raw ore never makes a tool.

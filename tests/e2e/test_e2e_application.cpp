@@ -49,7 +49,7 @@ TEST(ApplicationE2ETest, RunMultipleFramesAndCleanShutdown) {
 }
 
 // The in-game half of the frame loop: Application::update's 20 TPS game tick drives
-// GameSession (mining, item entities), World::tick (fluids) and the fluid drops, from real
+// EntitySimulation (mining, item entities), World::tick (fluids) and the fluid drops, from real
 // SDL input events.
 class ApplicationInGameE2ETest : public ::testing::Test {
 protected:

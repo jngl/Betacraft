@@ -160,7 +160,7 @@ namespace {
 namespace items = gameplay::items;
 
 // Counts the dropped items of `id` (whole stacks) in the session.
-int32_t droppedItems(game::GameSession& session, gameplay::ItemId id) {
+int32_t droppedItems(game::EntitySimulation& session, gameplay::ItemId id) {
     int32_t n = 0;
     session.entities().view<ecs::ItemDropComp>().each([&](ecs::EntityId, const ecs::ItemDropComp& item) {
         n += item.id == id ? item.count : 0;

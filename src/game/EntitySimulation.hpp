@@ -55,7 +55,7 @@ struct MeleeHitEvent {
 // Explosion).
 enum class DamageCause : uint8_t { Fall, Drown, Void, Lava, Fire, Cactus, Mob, Suffocation, Projectile, Explosion };
 
-// One hit on the player, the only way to lower its health (GameSession::damagePlayer).
+// One hit on the player, the only way to lower its health (EntitySimulation::damagePlayer).
 struct PlayerDamage {
     int32_t amount{0};
     DamageCause cause{DamageCause::Fall};
@@ -138,7 +138,7 @@ struct CorpseComp {
 // registry of non-player entities (dropped items, mobs), Beta hold-to-mine with tool
 // requirements and wear, item entities and their pickup, melee hits with knockback and hurt
 // frames, and the inventory crafting screen. physics::Player keeps its own 60 Hz movement.
-class GameSession {
+class EntitySimulation {
 public:
     static constexpr float TICK_SECONDS = 1.0f / static_cast<float>(gameplay::kTicksPerSecond);
     // Beta EntityPlayer.onLivingUpdate collects items in its box grown by 1 block on X/Z.
@@ -147,7 +147,7 @@ public:
     static constexpr float DROP_SPREAD = 0.7f;
     static constexpr float OUT_OF_WORLD_Y = -64.0f;
 
-    explicit GameSession(uint64_t seed = 0x5EED5EEDULL);
+    explicit EntitySimulation(uint64_t seed = 0x5EED5EEDULL);
 
     [[nodiscard]] ecs::Registry& entities() noexcept { return m_entities; }
     [[nodiscard]] const ecs::Registry& entities() const noexcept { return m_entities; }

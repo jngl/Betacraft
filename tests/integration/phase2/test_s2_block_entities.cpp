@@ -2,7 +2,7 @@
 // follow their chunk to and from disk (the chunk bundle's block entity record since S7.2; the
 // .be file before), leave the store through the single
 // applyBlockEdit hook (their contents drop on the next game tick), and the furnace ticks in
-// GameSession, swapping Furnace <-> LitFurnace without losing its inventory.
+// EntitySimulation, swapping Furnace <-> LitFurnace without losing its inventory.
 #include "P2GameplaySupport.hpp"
 
 #include "crafting/ItemIds.hpp"

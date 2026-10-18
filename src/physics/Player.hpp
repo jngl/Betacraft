@@ -139,8 +139,8 @@ public:
     void triggerHandSwing() noexcept { m_swingTimer = 1.0f; }
     [[nodiscard]] float getHandSwingProgress() const noexcept { return 1.0f - m_swingTimer; }
 
-    // Health & Air (Beta 1.7.3). The game tick (game::GameSession) owns them: damage goes
-    // through GameSession::damagePlayer only, never by writing Health::current.
+    // Health & Air (Beta 1.7.3). The game tick (game::EntitySimulation) owns them: damage goes
+    // through EntitySimulation::damagePlayer only, never by writing Health::current.
     [[nodiscard]] gameplay::Health& health() noexcept { return m_health; }
     [[nodiscard]] const gameplay::Health& health() const noexcept { return m_health; }
     [[nodiscard]] gameplay::Breath& breath() noexcept { return m_breath; }
@@ -151,7 +151,7 @@ public:
 
     // Hurt camera (Beta EntityLiving.hurtTime / EntityRenderer.hurtCameraEffect).
     static constexpr int32_t HURT_TIME_TICKS = 10;
-    // A full hit landed (GameSession::damagePlayer): restarts the 10-tick camera roll.
+    // A full hit landed (EntitySimulation::damagePlayer): restarts the 10-tick camera roll.
     void onHurt() noexcept { m_hurtTime = HURT_TIME_TICKS; }
     // Knockback from a hit with a source (Beta EntityLiving.knockBack): the velocity is
     // halved, `impulse` (blocks/s) added and the upward speed capped at
@@ -237,7 +237,7 @@ public:
     // Beta getTotalArmorValue of the worn pieces (gameplay::totalArmorValue): 0..20.
     [[nodiscard]] int32_t armorValue() const noexcept;
     // Beta EntityPlayer.damageRemainder: the armor-absorbed fraction carried to the next hit
-    // (GameSession::damagePlayer); not saved, as in Beta.
+    // (EntitySimulation::damagePlayer); not saved, as in Beta.
     [[nodiscard]] int32_t& armorDamageRemainder() noexcept { return m_armorDamageRemainder; }
 
 private:

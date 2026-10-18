@@ -140,7 +140,7 @@ struct BurningComp {
     int32_t ticks{0};
 };
 
-// S5.3 sand or gravel falling as an entity (Beta EntityFallingSand); GameSession turns it
+// S5.3 sand or gravel falling as an entity (Beta EntityFallingSand); EntitySimulation turns it
 // back into a block where it lands, or into an item.
 struct FallingBlockComp {
     world::BlockId id{world::BlockId::Sand};

@@ -42,7 +42,7 @@ struct RangedAttack {
 
 // S6.1 suicide attack (Beta EntityCreeper): the fuse counts up while the target is closer than
 // `igniteRange`, down again beyond `cancelRange`, and at `fuseTicks` the mob explodes with
-// `power` (GameSession::explode) and disappears without drops. fuseTicks == 0: none.
+// `power` (EntitySimulation::explode) and disappears without drops. fuseTicks == 0: none.
 struct ExplodeAttack {
     int32_t fuseTicks{0};
     float power{0.0f};

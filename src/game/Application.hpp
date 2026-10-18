@@ -5,7 +5,7 @@
 #include "core/Types.hpp"
 #include "game/AcousticsController.hpp"
 #include "game/DynamicLightCollector.hpp"
-#include "game/GameSession.hpp"
+#include "game/EntitySimulation.hpp"
 #include "game/ItemUse.hpp"
 #include "lighting/DynamicLightManager.hpp"
 #include "physics/Player.hpp"
@@ -75,7 +75,7 @@ public:
     // Null while no world is open (title screen without autoEnterWorld, after leaveWorld).
     [[nodiscard]] world::World* getWorld() noexcept { return m_world.get(); }
     [[nodiscard]] physics::Player& getPlayer() noexcept { return m_player; }
-    [[nodiscard]] GameSession& getSession() noexcept { return m_session; }
+    [[nodiscard]] EntitySimulation& getSession() noexcept { return m_session; }
 
     // Death screen "Respawn": full health and air at the spawn point, back in game.
     void respawnPlayer();
@@ -165,7 +165,7 @@ private:
 
     std::unique_ptr<world::World> m_world;
     physics::Player m_player;
-    GameSession m_session;
+    EntitySimulation m_session;
     render::WorldRenderer m_worldRenderer;
     render::ParticleSystem m_particles;
     lighting::DynamicLightManager m_dynamicLights;

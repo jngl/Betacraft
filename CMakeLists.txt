@@ -78,7 +78,7 @@ set(BETACRAFT_CORE_SOURCES
     src/game/DynamicLightCollector.cpp
     src/game/AcousticsController.cpp
     src/game/InventoryCrafting.cpp
-    src/game/GameSession.cpp
+    src/game/EntitySimulation.cpp
     src/game/StarterKit.cpp
     src/game/PlayerPersistence.cpp
     src/game/MobSpawner.cpp

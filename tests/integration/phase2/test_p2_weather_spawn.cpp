@@ -12,7 +12,7 @@
 #include "ecs/Registry.hpp"
 #include "ecs/Systems.hpp"
 #include "game/AcousticsController.hpp"
-#include "game/GameSession.hpp"
+#include "game/EntitySimulation.hpp"
 #include "game/MobBehaviour.hpp"
 #include "game/MobSpawner.hpp"
 #include "gameplay/MobDefs.hpp"
@@ -116,7 +116,7 @@ protected:
     glm::vec3 m_feet{8.5f, static_cast<float>(kGroundY + 1), 8.5f};
 };
 
-// GameSession on the same world with a Creative player (mobs ignore it and stay put).
+// EntitySimulation on the same world with a Creative player (mobs ignore it and stay put).
 class P2WeatherSession : public P2WeatherWorld {
 protected:
     void SetUp() override {
@@ -143,7 +143,7 @@ protected:
         return false;
     }
 
-    game::GameSession m_session{99ULL};
+    game::EntitySimulation m_session{99ULL};
     physics::Player m_player;
 };
 

@@ -36,7 +36,7 @@ protected:
             for (int cz = -1; cz <= 1; ++cz) m_world->ensureChunkLoaded({cx, cz});
     }
 
-    // One arrow tick as GameSession runs it: movement, then the arrows.
+    // One arrow tick as EntitySimulation runs it: movement, then the arrows.
     game::ArrowTickResult step(EntityId proxy = NULL_ENTITY, const game::ArrowPlayerHitFn& hit = {}) {
         MovementPhysicsSystem::update(m_reg, DT);
         return game::tickArrows(m_reg, *m_world, proxy, hit);

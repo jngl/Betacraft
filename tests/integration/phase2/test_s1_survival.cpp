@@ -1,5 +1,5 @@
 // Sprint 1 integration, honest survival: one player health (gameplay::Health), one damage
-// entry point (GameSession::damagePlayer) and the survival rules the game tick runs first
+// entry point (EntitySimulation::damagePlayer) and the survival rules the game tick runs first
 // (fall damage from the landing physics recorded, drowning, the void), all with Beta 1.7.3
 // numbers. Creative ignores them.
 #include "P2GameplaySupport.hpp"
@@ -241,7 +241,7 @@ TEST_F(S1Survival, DeathFiresOnceAndScattersEveryStack) {
     bool sawWornPickaxe = false;
     m_session.entities().view<ecs::ItemDropComp>().each([&](ecs::EntityId, const ecs::ItemDropComp& item) {
         EXPECT_FLOAT_EQ(item.pickupDelaySeconds,
-                        static_cast<float>(gameplay::kDeathDropPickupDelayTicks) * game::GameSession::TICK_SECONDS);
+                        static_cast<float>(gameplay::kDeathDropPickupDelayTicks) * game::EntitySimulation::TICK_SECONDS);
         EXPECT_EQ(gameplay::kDeathDropPickupDelayTicks, 40);
         if (item.id == gameplay::items::StonePickaxe) sawWornPickaxe = item.damage == 40;
     });

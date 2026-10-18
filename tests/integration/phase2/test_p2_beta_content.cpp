@@ -1,6 +1,6 @@
-// Sprint 6 integration (Beta content) through the GL-free game::GameSession and a real World:
+// Sprint 6 integration (Beta content) through the GL-free game::EntitySimulation and a real World:
 // S6.4 buckets (Raycaster LiquidSources, game::useHeldBucket), S6.6 explosions and TNT
-// (GameSession::explode, primed TNT, flint and steel, chain reactions, the 4-per-tick queue),
+// (EntitySimulation::explode, primed TNT, flint and steel, chain reactions, the 4-per-tick queue),
 // S6.2 arrows and S6.3 skeletons, spiders, creepers and cows in a running session, S6.7 armor
 // (every hit but the void), S6.10 dungeon chests and spawners.
 #include "P2GameplaySupport.hpp"
@@ -713,7 +713,7 @@ TEST_F(S6BetaContent, TheVoidIgnoresArmorButFallsDoNot) {
     // The real void path of the survival tick bypasses it.
     m_player.health() = gameplay::makeHealth(20);
     m_session.setNaturalSpawning(false);
-    m_player.setPosition({2.5f, game::GameSession::OUT_OF_WORLD_Y - 10.0f, 2.5f});
+    m_player.setPosition({2.5f, game::EntitySimulation::OUT_OF_WORLD_Y - 10.0f, 2.5f});
     const game::GameTickEvents ev = tickIdle();
     ASSERT_FALSE(ev.playerHurt.empty());
     EXPECT_EQ(ev.playerHurt[0].cause, DamageCause::Void);

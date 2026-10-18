@@ -1,5 +1,5 @@
 // Sprint 8 integration (S8.5-S8.8): the redstone engine on a real World and through the
-// GL-free GameSession: a lever opens an iron door through wire (and the AI sees the door
+// GL-free EntitySimulation: a lever opens an iron door through wire (and the AI sees the door
 // open), a pressure plate under the player fires a piston, circuits survive a save and
 // reload, and chunks read from disk get their torches and buttons scheduled again.
 #include "P2GameplaySupport.hpp"

@@ -1684,7 +1684,7 @@ void Application::leaveWorld() {
 
     // Nothing of this world may leak into the next one: entities, player proxy, mob spawner,
     // the player, the effects and every per-world timer.
-    m_session = GameSession{};
+    m_session = EntitySimulation{};
     m_player = physics::Player{};
     m_particles = render::ParticleSystem{};
     m_dynamicLights.clear();
