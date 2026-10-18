@@ -80,7 +80,7 @@ public:
     // Death screen "Respawn": full health and air at the spawn point, back in game.
     void respawnPlayer();
     [[nodiscard]] const std::optional<core::BlockPos>& getBedSpawn() const noexcept { return m_bedSpawn; }
-    [[nodiscard]] const std::string& getStatusMessage() const noexcept { return m_statusMessage; }
+    [[nodiscard]] const std::string& getStatusMessage() const noexcept { return m_inWorld.statusMessage; }
     [[nodiscard]] const glm::vec3& getSpawnPoint() const noexcept { return m_spawnPoint; }
     [[nodiscard]] bool isSaveDisabled() const noexcept { return m_saveDisabled; }
 
@@ -156,8 +156,70 @@ private:
     // Plays a world sound at `source` with occlusion and reverb: `play(const audio::VoiceAcoustics&)`.
     template <typename PlayFn>
     void playWorldSound(const glm::vec3& source, PlayFn&& play) {
-        (void)m_acoustics.playAt(source, *m_world, std::forward<PlayFn>(play));
+        (void)m_inWorld.acoustics.playAt(source, *m_world, std::forward<PlayFn>(play));
     }
+
+    // Each mob's limb swing: the phase advances with the distance its render position covered
+    // since the previous frame (Beta limbSwing).
+    struct MobWalkState {
+        float phase{0.0f};
+        glm::vec3 lastPos{0.0f};
+    };
+    // S8.10 a thunder clap on its way (speed of sound).
+    struct PendingThunder {
+        int32_t ticks{0};
+        float volume{1.0f};
+    };
+    static constexpr int32_t kLightningFlashTicks = 6;
+
+    // The part of InWorldEffects rebuilt with {}.
+    struct InWorldPresentation {
+        render::ParticleSystem particles;
+        lighting::DynamicLightManager dynamicLights;
+        float totalTime{0.0f};
+        // Fixed-timestep accumulators: player step and 20 TPS game tick.
+        float accumulator{0.0f};
+        float gameTickAccumulator{0.0f};
+
+        // Instances drawn this frame, and the mobs' limb swing.
+        std::vector<render::ItemEntityInstance> itemInstances;
+        std::vector<render::FallingBlockInstance> fallingBlockInstances;
+        std::vector<render::ArrowRenderInstance> arrowInstances; // S6.2
+        std::vector<render::MobRenderInstance> mobInstances;
+        std::unordered_map<ecs::EntityId, MobWalkState> mobWalk;
+        std::unordered_map<ecs::EntityId, MobWalkState> mobWalkNext;
+
+        // S8.10 lightning: the thunder claps on their way, and the last bolt, drawn with the
+        // sky flash for kLightningFlashTicks.
+        std::vector<PendingThunder> pendingThunder;
+        std::optional<glm::vec3> lightningBolt;
+        uint32_t lightningSeed{0};
+        int32_t lightningTicks{0};
+
+        int32_t digTicks{0};
+        float placeCooldown{0.0f};
+        // S5.8 one-line notices above the hotbar (bed refusals, missing bed), shown for a while.
+        std::string statusMessage;
+        float statusMessageSeconds{0.0f};
+
+        bool leftMouseDown{false};
+        bool attackPressed{false}; // Latched until the next game tick consumes it
+        physics::RaycastHit currentTarget{};
+
+        render::RenderStats lastRenderStats{};
+    };
+    // Application's per-world presentation state: effects, render instances, timers, input
+    // latches. Nothing of the world's simulation. leaveWorld calls reset() once, so the next
+    // world inherits none of it. The acoustics hold the audio engine and are reset in place;
+    // everything else is rebuilt with {}.
+    struct InWorldEffects : InWorldPresentation {
+        explicit InWorldEffects(audio::AudioEngine& audio) noexcept : acoustics{audio} {}
+        void reset() {
+            static_cast<InWorldPresentation&>(*this) = InWorldPresentation{};
+            acoustics.reset();
+        }
+        AcousticsController acoustics;
+    };
 
     core::EngineConfig m_config;
     SDL_Window* m_window{nullptr};
@@ -167,12 +229,10 @@ private:
     physics::Player m_player;
     EntitySimulation m_session;
     render::WorldRenderer m_worldRenderer;
-    render::ParticleSystem m_particles;
-    lighting::DynamicLightManager m_dynamicLights;
     render::TextRenderer m_textRenderer;
     ui::HudRenderer m_hudRenderer;
     audio::AudioEngine m_audio;
-    AcousticsController m_acoustics{m_audio};
+    InWorldEffects m_inWorld{m_audio};
 
     ui::ScreenState m_screenState{ui::ScreenState::TitleScreen};
     ui::ScreenState m_previousScreenState{ui::ScreenState::TitleScreen};
@@ -194,58 +254,22 @@ private:
     bool m_mouseCaptured{false};
     bool m_inventoryOpen{false};
     bool m_showDebug{false};
-    bool m_leftMouseDown{false};
-    bool m_attackPressed{false}; // Latched until the next game tick consumes it
 
     int32_t m_mouseX{0};
     int32_t m_mouseY{0};
 
-    physics::RaycastHit m_currentTarget{};
-    int32_t m_digTicks{0};
     gameplay::SplitMix64 m_sfxRng{0x50D5EEDULL}; // Sound pitch jitter (pop, hurt)
     gameplay::SplitMix64 m_randomTickRng{0}; // S5.1 random block ticks, seeded from the world seed
-    float m_placeCooldown{0.0f};
     gameplay::SplitMix64 m_trampleRng{0x7EA3B1EULL}; // S5.7 farmland trampling rolls
-    // S5.8 one-line notices above the hotbar (bed refusals, missing bed), shown for a while.
-    std::string m_statusMessage;
-    float m_statusMessageSeconds{0.0f};
-    std::vector<render::ItemEntityInstance> m_itemInstances;
-    std::vector<render::FallingBlockInstance> m_fallingBlockInstances;
-    std::vector<render::ArrowRenderInstance> m_arrowInstances; // S6.2
-    // Mobs drawn this frame, and each mob's limb swing: the phase advances with the distance
-    // its render position covered since the previous frame (Beta limbSwing).
-    struct MobWalkState {
-        float phase{0.0f};
-        glm::vec3 lastPos{0.0f};
-    };
-    std::vector<render::MobRenderInstance> m_mobInstances;
-    std::unordered_map<ecs::EntityId, MobWalkState> m_mobWalk;
-    std::unordered_map<ecs::EntityId, MobWalkState> m_mobWalkNext;
-
     float m_timeOfDay{0.22f}; // Morning sunlight
-    float m_totalTime{0.0f};
-    float m_accumulator{0.0f};
-    float m_gameTickAccumulator{0.0f};
     uint32_t m_gameTicks{0}; // Game ticks run; seeds the low-health heart jitter (Beta updateCounter)
     float m_renderAlpha{1.0f};
     float m_smoothedFps{60.0f};
     float m_smoothedFrameMs{16.6f};
-    render::RenderStats m_lastRenderStats{};
 
     // S8.9 weather, saved in level.dat (weather.*), ticked in gameTick unless --no-weather.
     world::WeatherState m_weather{};
     gameplay::SplitMix64 m_weatherRng{0x5EA7E5ULL}; // Seeded from the world seed on entering
-    // S8.10 lightning: the thunder claps on their way (speed of sound), and the last bolt,
-    // drawn with the sky flash for kLightningFlashTicks.
-    struct PendingThunder {
-        int32_t ticks{0};
-        float volume{1.0f};
-    };
-    static constexpr int32_t kLightningFlashTicks = 6;
-    std::vector<PendingThunder> m_pendingThunder;
-    std::optional<glm::vec3> m_lightningBolt;
-    uint32_t m_lightningSeed{0};
-    int32_t m_lightningTicks{0};
 };
 
 } // namespace betacraft::game
