@@ -1167,7 +1167,6 @@ void Application::update(float dt) {
     m_inWorld.totalTime += dt;
     // Before this frame's sounds start, so they are ray-marched from a current listener.
     m_inWorld.acoustics.update(static_cast<double>(m_inWorld.totalTime), player().getInterpolatedEyePosition(m_renderAlpha), world());
-    m_session->advanceTimeOfDay(dt);
     if (m_inWorld.placeCooldown > 0.0f) {
         m_inWorld.placeCooldown = std::max(0.0f, m_inWorld.placeCooldown - dt);
     }
@@ -1328,7 +1327,7 @@ void Application::renderWorldFrame(int framebufferWidth, int framebufferHeight) 
         crackOnTarget ? sim().crackStage() : -1,
         m_inWorld.particles,
         m_config,
-        m_session->timeOfDay(),
+        m_session->timeOfDay(tickAlpha), // Advanced per game tick, smoothed between them
         m_inWorld.totalTime,
         framebufferWidth,
         framebufferHeight,

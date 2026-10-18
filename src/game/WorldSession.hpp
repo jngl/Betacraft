@@ -135,10 +135,17 @@ public:
     [[nodiscard]] const std::string& name() const noexcept { return m_name; }
     [[nodiscard]] const core::FeatureFlags& features() const noexcept { return m_features; }
 
-    // One game tick (20 TPS) in today's order: weather, the entity simulation (input stage and
-    // entities), natural spawning, sleep (the morning applied on waking in bed), the death
-    // scatter on the tick the player dies, World::tick, random ticks, the fluid wash-away drops
-    // and the lightning roll. No clock inside: the caller calls it once per game tick.
+    // One game tick (20 TPS) in Beta 1.7.3's single-player order (Minecraft.runTick):
+    //  1. input: mining and attack, and the drops of what they removed;
+    //  2. entity phase: entities, TNT, explosions, falling-block landing (drops spawned there
+    //     move in this tick), then block entities; the death scatter on the tick the player dies;
+    //  3. world phase: weather, sleep (the morning applied on waking in bed), natural
+    //     spawning, time of day + 1 tick, World::tick (scheduled ticks, redstone, fluids),
+    //     random ticks and the lightning roll;
+    //  4. World's queues, in this order: falling-block spawns, unsupported breaks, removed
+    //     block entities, fluid wash-away drops. These exist at the end of this tick and first
+    //     move in the next one (Beta spawns them during World.tick, after the entities).
+    // No clock inside: the caller calls it once per game tick.
     WorldTickEvents tick(const PlayerActions& actions);
 
     // The 60 Hz player step: movement and collisions, then farmland trampling (S5.7).
@@ -149,11 +156,13 @@ public:
     // generation: 2 chunks in place).
     void streamAround(int32_t radius);
 
-    // Time of day (SkyRenderer: 0 sunrise, 0.25 noon).
+    // Time of day (SkyRenderer: 0 sunrise, 0.25 noon). tick() advances it by one game tick of
+    // a day lasting OpenOptions::dayLengthSeconds; 1 s or less freezes it.
     [[nodiscard]] float timeOfDay() const noexcept { return m_timeOfDay; }
-    // `seconds` of a day lasting OpenOptions::dayLengthSeconds; 1 s or less freezes it.
-    void advanceTimeOfDay(float seconds) noexcept;
-    void setTimeOfDay(float timeOfDay) noexcept { m_timeOfDay = timeOfDay; }
+    // Between the previous tick's time and this one's, `alpha` (0..1) of the way: the sky
+    // stays smooth between game ticks.
+    [[nodiscard]] float timeOfDay(float alpha) const noexcept;
+    void setTimeOfDay(float timeOfDay) noexcept { m_timeOfDay = m_prevTimeOfDay = timeOfDay; }
     // Creative time skip (+0.08 of a day); nothing outside Creative.
     void skipTimeIfCreative() noexcept;
 
@@ -206,6 +215,8 @@ private:
     // Beta onDeath: the grid and cursor stacks go back to the inventory (what does not fit is
     // thrown), then all 40 slots scatter and mining stops.
     void scatterOnDeath();
+    // Beta World.tick worldTime + 1: one game tick of the day.
+    void tickTimeOfDay() noexcept;
     // S8.10 Beta World.updateLightning: a strike within 64 blocks of the player, where it rains.
     [[nodiscard]] std::optional<glm::vec3> rollLightning();
 
@@ -226,6 +237,7 @@ private:
     glm::vec3 m_spawnPoint{8.5f, 82.0f, 8.5f};
     std::optional<core::BlockPos> m_bedSpawn;
     float m_timeOfDay{0.22f}; // Morning sunlight
+    float m_prevTimeOfDay{0.22f}; // Before the last tick, for timeOfDay(alpha)
     uint32_t m_gameTicks{0};
     // S8.9 weather, saved in level.dat (weather.*); always clear with --no-weather.
     world::WeatherState m_weather{};

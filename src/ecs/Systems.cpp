@@ -22,45 +22,74 @@ namespace {
 
 } // namespace
 
+void MovementPhysicsSystem::integrate(TransformComp& t, VelocityComp& v, float dt,
+                                      const MovementParams& params) noexcept {
+    t.prevPos = t.pos;
+    const float buoyancy = v.inWater ? params.waterGravityFactor : 1.0f;
+    v.linear.y -= params.gravity * v.gravityScale * buoyancy * dt;
+    v.linear.y = std::max(v.linear.y, -params.terminalVelocity);
+    const float horizontalRate = v.horizontalDrag + (v.onGround ? v.groundFriction : 0.0f);
+    if (horizontalRate > 0.0f) {
+        const float k = std::exp(-horizontalRate * dt);
+        v.linear.x *= k;
+        v.linear.z *= k;
+    }
+    if (v.verticalDrag > 0.0f) {
+        v.linear.y *= std::exp(-v.verticalDrag * dt);
+    }
+    t.pos += v.linear * dt;
+}
+
 void MovementPhysicsSystem::update(Registry& reg, float dt, const MovementParams& params) {
     dt = sanitizeDt(dt, params.maxDt);
-    reg.group<TransformComp, VelocityComp>().each([&](TransformComp& t, VelocityComp& v) {
-        t.prevPos = t.pos;
-        const float buoyancy = v.inWater ? params.waterGravityFactor : 1.0f;
-        v.linear.y -= params.gravity * v.gravityScale * buoyancy * dt;
-        v.linear.y = std::max(v.linear.y, -params.terminalVelocity);
-        const float horizontalRate = v.horizontalDrag + (v.onGround ? v.groundFriction : 0.0f);
-        if (horizontalRate > 0.0f) {
-            const float k = std::exp(-horizontalRate * dt);
-            v.linear.x *= k;
-            v.linear.z *= k;
+    reg.group<TransformComp, VelocityComp>().each(
+        [&](TransformComp& t, VelocityComp& v) { integrate(t, v, dt, params); });
+}
+
+void MovementPhysicsSystem::update(Registry& reg, std::span<const EntityId> entities, float dt,
+                                   const MovementParams& params) {
+    dt = sanitizeDt(dt, params.maxDt);
+    for (const EntityId e : entities) {
+        TransformComp* t = reg.tryGet<TransformComp>(e);
+        VelocityComp* v = reg.tryGet<VelocityComp>(e);
+        if (t != nullptr && v != nullptr) {
+            integrate(*t, *v, dt, params);
         }
-        if (v.verticalDrag > 0.0f) {
-            v.linear.y *= std::exp(-v.verticalDrag * dt);
+    }
+}
+
+bool VoxelCollisionSystem::WorldBoxCollides::operator()(const physics::AABB& box) const {
+    // Same cell walk as gridCollides (range-checked casts), refined by the real block shape.
+    // The scan reaches one cell below the box: a fence's 1.5-high box rises into the cell
+    // above its own. Each solid cell then contributes its collision boxes (two for stairs).
+    const physics::AABB scan{box.min - glm::vec3(0.0f, 1.0f, 0.0f), box.max};
+    return gridCollides(scan, [&](int32_t x, int32_t y, int32_t z) {
+        const world::BlockId id = world->getBlock(x, y, z);
+        if (!world::BlockRegistry::isSolid(id)) {
+            return false;
         }
-        t.pos += v.linear * dt;
+        const uint8_t meta = world::shapeDependsOnMetadata(world::BlockRegistry::get(id).shape)
+            ? world->getMetadata(x, y, z)
+            : uint8_t{0};
+        return physics::AABB::forEachBlockBox(x, y, z, id, meta,
+                                              [&](const physics::AABB& b) { return box.intersects(b); });
     });
 }
 
 void VoxelCollisionSystem::update(Registry& reg, const world::World& world) {
-    // Same cell walk as gridCollides (range-checked casts), refined by the real block shape.
-    // The scan reaches one cell below the box: a fence's 1.5-high box rises into the cell
-    // above its own. Each solid cell then contributes its collision boxes (two for stairs).
-    const auto collides = [&world](const physics::AABB& box) {
-        const physics::AABB scan{box.min - glm::vec3(0.0f, 1.0f, 0.0f), box.max};
-        return gridCollides(scan, [&](int32_t x, int32_t y, int32_t z) {
-            const world::BlockId id = world.getBlock(x, y, z);
-            if (!world::BlockRegistry::isSolid(id)) {
-                return false;
-            }
-            const uint8_t meta = world::shapeDependsOnMetadata(world::BlockRegistry::get(id).shape)
-                ? world.getMetadata(x, y, z)
-                : uint8_t{0};
-            return physics::AABB::forEachBlockBox(x, y, z, id, meta,
-                                                  [&](const physics::AABB& b) { return box.intersects(b); });
-        });
-    };
-    update(reg, collides);
+    update(reg, WorldBoxCollides{&world});
+}
+
+void VoxelCollisionSystem::update(Registry& reg, std::span<const EntityId> entities, const world::World& world) {
+    WorldBoxCollides collides{&world};
+    for (const EntityId e : entities) {
+        TransformComp* t = reg.tryGet<TransformComp>(e);
+        VelocityComp* v = reg.tryGet<VelocityComp>(e);
+        const AABBColliderComp* c = reg.tryGet<AABBColliderComp>(e);
+        if (t != nullptr && v != nullptr && c != nullptr) {
+            resolveBody(*t, *v, *c, collides);
+        }
+    }
 }
 
 bool HealthSystem::applyDamage(Registry& reg, EntityId e, int amount, const glm::vec3& knockback) {

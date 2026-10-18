@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <glm/glm.hpp>
+#include <span>
 #include <type_traits>
 #include <vector>
 
@@ -33,6 +34,13 @@ struct MovementParams {
 class MovementPhysicsSystem {
 public:
     static void update(Registry& reg, float dt, const MovementParams& params = {});
+    // The same step for `entities` only (gone ones and those without both components are
+    // skipped): bodies that joined after this tick's update still take their step in it.
+    static void update(Registry& reg, std::span<const EntityId> entities, float dt,
+                       const MovementParams& params = {});
+
+private:
+    static void integrate(TransformComp& t, VelocityComp& v, float dt, const MovementParams& params) noexcept;
 };
 
 // S2: resolves the displacement prevPos -> pos of every collider against voxel geometry,
@@ -104,8 +112,16 @@ public:
 
     // World form: uses the real block shapes (slabs, cactus...) via physics::AABB::fromBlock.
     static void update(Registry& reg, const world::World& world);
+    // World form for `entities` only (see MovementPhysicsSystem's subset update).
+    static void update(Registry& reg, std::span<const EntityId> entities, const world::World& world);
 
 private:
+    // The world form's geometry: the real block shapes of the solid cells a box overlaps.
+    struct WorldBoxCollides {
+        const world::World* world;
+        [[nodiscard]] bool operator()(const physics::AABB& box) const;
+    };
+
     [[nodiscard]] static bool isFinite(const glm::vec3& p) noexcept {
         return std::isfinite(p.x) && std::isfinite(p.y) && std::isfinite(p.z);
     }

@@ -22,6 +22,8 @@ protected:
     static constexpr int32_t kX = 5;
     static constexpr int32_t kZ = 2;
     static constexpr float kNight = 0.75f;
+    // One game tick of the fixture's 1200 s day: tick() advances the time of day by it.
+    static constexpr float kOneTick = 1.0f / (1200.0f * 20.0f);
 
     void SetUp() override {
         WorldSessionSupport::SetUp();
@@ -100,8 +102,9 @@ TEST_F(WorldSessionSleep, TheNightPassesAndTheBedBecomesTheSpawn) {
     const game::WorldTickEvents ev = tickIdle();
     ASSERT_EQ(ev.game.wokeInBed, std::optional<core::BlockPos>{m_head}) << "after 100 ticks";
     EXPECT_FALSE(m_session->isSleeping());
-    // The session skips to sunrise (time of day 0) on waking: day again.
-    EXPECT_FLOAT_EQ(m_session->timeOfDay(), 0.0f);
+    // The session skips to sunrise (time of day 0) on waking: day again. Beta World.tick then
+    // adds the tick's worldTime + 1, as the sleep check comes before it.
+    EXPECT_FLOAT_EQ(m_session->timeOfDay(), kOneTick);
     EXPECT_TRUE(game::isDaytime(m_session->timeOfDay()));
     EXPECT_EQ(m_session->bedSpawn(), std::optional<core::BlockPos>{m_head});
 
@@ -129,7 +132,7 @@ TEST_F(WorldSessionSleep, AHitOrALostBedEndsTheSleepWithoutSkippingTheNight) {
     EXPECT_FALSE(hurt.game.playerHurt.empty());
     EXPECT_FALSE(hurt.game.wokeInBed.has_value());
     EXPECT_FALSE(m_session->isSleeping());
-    EXPECT_FLOAT_EQ(m_session->timeOfDay(), kNight) << "still night";
+    EXPECT_FLOAT_EQ(m_session->timeOfDay(), kNight + kOneTick) << "still night, one tick later";
     ASSERT_TRUE(world().setBlock(2, kY, 2, BlockId::Air));
 
     // The bed broken under the sleeper.

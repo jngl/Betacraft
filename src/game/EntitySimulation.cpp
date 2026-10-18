@@ -70,24 +70,47 @@ GameTickEvents EntitySimulation::tick(world::World& world, physics::Player& play
     ++m_ticks;
     syncPlayerProxy(player);
     tickPlayerSurvival(world, player, events);
+    // Input stage. Beta drops a mined block's neighbours and contents at once, before the
+    // entities are updated: the edits of this attack (and of right clicks since the last tick)
+    // are emptied here.
     if (player.isDead()) {
         resetMining();
     } else {
         handleAttack(world, player, actions, events);
     }
-    tickBlockEntities(world);
     spawnUnsupportedDrops(world);
     spawnRemovedBlockEntityDrops(world);
+
+    // Entity phase (Beta World.updateEntities).
     runEntitySystems(world, player, timeOfDay, weather, events);
     tickFallingBlocks(world);
     (void)tickPressurePlates(world, player);
     tickPrimedTnt();
     runExplosionQueue(world, player, events);
+    spawnUnsupportedDrops(world); // What blasts and landings knocked off
+    spawnRemovedBlockEntityDrops(world);
+    moveLateDrops(world);
     if (!player.isDead()) {
         events.itemsPickedUp = pickUpItems(player);
     }
+    tickBlockEntities(world); // Beta: tile entities after every entity
     m_tickEvents = nullptr;
     return events;
+}
+
+void EntitySimulation::moveLateDrops(world::World& world) {
+    // Beta updateEntities re-reads the list size on every pass: an item added during the loop
+    // (a mob's loot, a blast's or a landing's drop) is updated in that same loop.
+    m_movedThisTick = false;
+    ecs::MovementPhysicsSystem::update(m_entities, m_lateDrops, TICK_SECONDS);
+    ecs::VoxelCollisionSystem::update(m_entities, m_lateDrops, world);
+    m_lateDrops.clear();
+}
+
+void EntitySimulation::reseed(uint64_t seed) noexcept {
+    m_rng = gameplay::SplitMix64(seed);
+    m_spawnRng = gameplay::SplitMix64(seed ^ 0x6D6F62737061776EULL);
+    m_mobRng = gameplay::SplitMix64(seed ^ 0x6D6F626C6976696EULL);
 }
 
 void EntitySimulation::spawnMobs(world::World& world, const physics::Player& player, float timeOfDay,
@@ -219,7 +242,12 @@ ecs::EntityId EntitySimulation::spawnItem(const gameplay::ItemStack& stack, cons
     if (stack.empty()) {
         return ecs::NULL_ENTITY;
     }
-    return ecs::EntityFactory::spawnItemDrop(m_entities, pos, stack.id, stack.count, velocity, stack.damage);
+    const ecs::EntityId e =
+        ecs::EntityFactory::spawnItemDrop(m_entities, pos, stack.id, stack.count, velocity, stack.damage);
+    if (m_movedThisTick && e != ecs::NULL_ENTITY) {
+        m_lateDrops.push_back(e);
+    }
+    return e;
 }
 
 ecs::EntityId EntitySimulation::spawnBlockDrop(const gameplay::ItemStack& stack, const core::BlockPos& cell) {
@@ -262,10 +290,16 @@ size_t EntitySimulation::spawnUnsupportedDrops(world::World& world) {
     return spawned;
 }
 
-void EntitySimulation::tickFallingBlocks(world::World& world) {
+size_t EntitySimulation::spawnFallingBlocks(world::World& world) {
+    size_t spawned = 0;
     for (const world::World::FallingBlockSpawn& spawn : world.takeFallingBlockSpawns()) {
-        (void)spawnFallingBlock(m_entities, spawn.pos, spawn.id);
+        spawned += spawnFallingBlock(m_entities, spawn.pos, spawn.id) != ecs::NULL_ENTITY ? 1 : 0;
     }
+    return spawned;
+}
+
+void EntitySimulation::tickFallingBlocks(world::World& world) {
+    (void)spawnFallingBlocks(world);
     struct Landed {
         ecs::EntityId entity;
         world::BlockId id;
@@ -575,8 +609,8 @@ void EntitySimulation::attackEntity(physics::Player& player, ecs::EntityId targe
 }
 
 // Fixed-tick order from the ECS integration notes: target search -> AI -> skeleton, spider and
-// creeper attacks (S6.3) -> movement -> voxel collision -> arrows (S6.2) -> fire -> mob contact hits -> health (corpses, death drops) -> natural
-// spawning -> item ageing. Structural changes go through the command buffer.
+// creeper attacks (S6.3) -> movement -> voxel collision -> arrows (S6.2) -> fire -> mob contact hits -> health (corpses, death drops) -> item
+// ageing. Structural changes go through the command buffer.
 void EntitySimulation::setPathfinding(bool enabled) {
     m_pathfinding = enabled;
     if (enabled) {
@@ -621,6 +655,7 @@ void EntitySimulation::runEntitySystems(world::World& world, physics::Player& pl
     }
     ecs::MovementPhysicsSystem::update(m_entities, TICK_SECONDS);
     ecs::VoxelCollisionSystem::update(m_entities, world);
+    m_movedThisTick = true; // Drops spawned from here on move in moveLateDrops
     // S6.2 arrows, on the segment they just flew.
     const ArrowTickResult arrows = tickArrows(m_entities, world, m_playerProxy, [&](const ArrowPlayerHit& hit) {
         const gameplay::HitResult r = damagePlayer(

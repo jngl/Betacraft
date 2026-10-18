@@ -56,7 +56,7 @@ WorldSession::WorldSession(const OpenOptions& options)
 
     if (m_levelStatus == world::LevelLoadStatus::Ok || m_levelStatus == world::LevelLoadStatus::LegacyV1) {
         m_world->setSeed(saved.seed);
-        m_timeOfDay = saved.timeOfDay;
+        setTimeOfDay(saved.timeOfDay);
         m_weather = saved.weather; // S8.9: a level.dat without weather keys is clear
         // Position first: setPosition clears the fall distance restorePlayer brings back.
         m_player.setPosition(saved.playerPos);
@@ -104,6 +104,7 @@ WorldSession::WorldSession(const OpenOptions& options)
     // Random ticks replay identically for a given world seed.
     m_randomTickRng = gameplay::SplitMix64(m_world->getSeed() ^ 0x72616E646F6D7469ULL);
     m_weatherRng = gameplay::SplitMix64(m_world->getSeed() ^ 0x7765617468657221ULL);
+    m_simulation.reseed(m_world->getSeed() ^ 0x656E746974696573ULL); // Drops, spawning, mobs
     if (!m_features.weather) {
         m_weather = world::WeatherState{}; // --no-weather: always clear (and saved clear)
     }
@@ -214,25 +215,51 @@ void WorldSession::streamAround(int32_t radius) {
 WorldTickEvents WorldSession::tick(const PlayerActions& actions) {
     WorldTickEvents events{};
     ++m_gameTicks;
-    if (m_features.weather) {
-        world::tickWeather(m_weather, m_weatherRng); // S8.9
-    }
+    // Input stage and entity phase (Beta Minecraft.runTick up to World.updateEntities).
     events.game = m_simulation.tick(*m_world, m_player, actions, m_timeOfDay, m_weather);
-    m_simulation.spawnMobs(*m_world, m_player, m_timeOfDay, m_weather);
-    tickSleep(events.game);
     if (events.game.playerDied) {
         scatterOnDeath();
     }
 
+    // World phase (Beta World.tick).
+    if (m_features.weather) {
+        world::tickWeather(m_weather, m_weatherRng); // S8.9
+    }
+    tickSleep(events.game);
+    m_simulation.spawnMobs(*m_world, m_player, m_timeOfDay, m_weather);
+    tickTimeOfDay();
     (void)m_world->tick();
     m_world->tickRandomBlocks(m_player.getPosition(), m_randomTickRng,
                               gameplay::skylightSubtracted(m_timeOfDay, m_weather.rainStrength,
                                                            world::thunderStrengthAt(m_weather, 1.0f)));
+    events.lightningStrike = rollLightning();
+
+    // World's queues, right after the world phase: Beta creates these entities during
+    // World.tick, so they exist at the end of this tick and first move in the next one.
+    (void)m_simulation.spawnFallingBlocks(*m_world);
+    (void)m_simulation.spawnUnsupportedDrops(*m_world);
+    (void)m_simulation.spawnRemovedBlockEntityDrops(*m_world);
     events.fluids = m_world->takeFluidEvents();
     (void)m_simulation.spawnFluidDrops(events.fluids);
     events.redstone = m_world->takeRedstoneEvents();
-    events.lightningStrike = rollLightning();
     return events;
+}
+
+void WorldSession::tickTimeOfDay() noexcept {
+    m_prevTimeOfDay = m_timeOfDay;
+    if (m_dayLengthSeconds > 1.0f) {
+        const float perTick = 1.0f / (m_dayLengthSeconds * static_cast<float>(gameplay::kTicksPerSecond));
+        m_timeOfDay = std::fmod(m_timeOfDay + perTick, 1.0f);
+    }
+}
+
+float WorldSession::timeOfDay(float alpha) const noexcept {
+    float to = m_timeOfDay;
+    if (to < m_prevTimeOfDay) {
+        to += 1.0f; // Wrapped past midnight during the last tick
+    }
+    const float t = std::isfinite(alpha) ? std::clamp(alpha, 0.0f, 1.0f) : 1.0f;
+    return std::fmod(m_prevTimeOfDay + (to - m_prevTimeOfDay) * t, 1.0f);
 }
 
 physics::StepEvent WorldSession::stepPlayer(float dt, const physics::PlayerInput& input) {
@@ -329,20 +356,14 @@ bool WorldSession::cycleWeatherIfCreative() {
     return true;
 }
 
-void WorldSession::advanceTimeOfDay(float seconds) noexcept {
-    if (m_dayLengthSeconds > 1.0f) {
-        m_timeOfDay = std::fmod(m_timeOfDay + seconds / m_dayLengthSeconds, 1.0f);
-    }
-}
-
 void WorldSession::skipTimeIfCreative() noexcept {
     if (m_player.isCreative()) {
-        m_timeOfDay = std::fmod(m_timeOfDay + 0.08f, 1.0f);
+        setTimeOfDay(std::fmod(m_timeOfDay + 0.08f, 1.0f)); // A jump: nothing to interpolate
     }
 }
 
 void WorldSession::wakeInBed(const core::BlockPos& bedHead) {
-    m_timeOfDay = 0.0f;
+    setTimeOfDay(0.0f);
     m_bedSpawn = bedHead;
     const glm::vec3 centre = glm::vec3(static_cast<float>(bedHead.x), static_cast<float>(bedHead.y),
                                        static_cast<float>(bedHead.z)) + glm::vec3(0.5f);

@@ -13,6 +13,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <filesystem>
@@ -199,6 +200,22 @@ TEST_F(WorldSessionBetaOrder, TimeOfDayAdvancesOncePerGameTick) {
         (void)frozen->tick({});
     }
     EXPECT_FLOAT_EQ(frozen->timeOfDay(), 0.3f);
+}
+
+// The sky reads the time of day between the last two game ticks, across midnight too.
+TEST_F(WorldSessionBetaOrder, TheSkyReadsTheTimeOfDayBetweenTwoTicks) {
+    constexpr float kOneTick = 1.0f / (1200.0f * 20.0f);
+    m_session->setTimeOfDay(0.3f);
+    (void)tickIdle();
+    EXPECT_FLOAT_EQ(m_session->timeOfDay(0.0f), 0.3f);
+    EXPECT_FLOAT_EQ(m_session->timeOfDay(0.5f), 0.3f + 0.5f * kOneTick);
+    EXPECT_FLOAT_EQ(m_session->timeOfDay(1.0f), m_session->timeOfDay());
+
+    m_session->setTimeOfDay(1.0f - 0.5f * kOneTick);
+    (void)tickIdle();
+    EXPECT_LT(m_session->timeOfDay(), kOneTick) << "past midnight";
+    const float midway = m_session->timeOfDay(0.5f);
+    EXPECT_LT(std::min(midway, 1.0f - midway), 0.25f * kOneTick) << "midnight, not noon";
 }
 
 } // namespace

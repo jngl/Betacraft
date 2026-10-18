@@ -138,15 +138,19 @@ public:
     [[nodiscard]] int32_t crackStage() const noexcept { return m_mining.crackStage(); }
     [[nodiscard]] const std::optional<core::BlockPos>& miningTarget() const noexcept { return m_miningTarget; }
 
-    // One game tick: the player's proxy entity follows the player, then the player's survival
-    // rules (fall, breath, void, health timers), the player's attack (melee or mining), the
-    // drops of blocks left without support, the entity systems (target search, AI, skeleton
-    // shots, spider leaps and creeper fuses (S6.3), movement, voxel collision, arrows (S6.2),
-    // sun burning, mob contact hits, health/corpses/death drops, item ageing), the falling
-    // blocks, the primed TNT fuses and up to kMaxExplosionsPerTick queued explosions (S6.6),
-    // and item pickup. A dead player neither attacks nor picks anything up. `timeOfDay` follows
-    // SkyRenderer (0.25 = noon, the default). S8.10 `weather`: mobs in the rain do not burn and
-    // lose their fire (clear by default). Natural spawning is spawnMobs, called after.
+    // The input stage and the entity phase of one game tick (Beta 1.7.3 Minecraft.runTick up
+    // to World.updateEntities). Input: the player's proxy entity follows the player, the
+    // player's survival rules (fall, breath, void, health timers), the player's attack (melee
+    // or mining), then the drops of the blocks and block entities those edits removed. Entity
+    // phase: the entity systems (target search, AI, skeleton shots, spider leaps and creeper
+    // fuses (S6.3), movement, voxel collision, arrows (S6.2), sun burning, mob contact hits,
+    // health/corpses/death drops, item ageing), the falling blocks, the pressure plates, the
+    // primed TNT fuses and up to kMaxExplosionsPerTick queued explosions (S6.6), the drops of
+    // what they removed, and item pickup; drops spawned after the movement still move in this
+    // tick (Beta updates entities added during the loop). Block entities run last. A dead
+    // player neither attacks nor picks anything up. `timeOfDay` follows SkyRenderer (0.25 =
+    // noon, the default). S8.10 `weather`: mobs in the rain do not burn and lose their fire
+    // (clear by default). Natural spawning is spawnMobs, called after.
     GameTickEvents tick(world::World& world, physics::Player& player, const PlayerActions& actions,
                         float timeOfDay = 0.25f, const world::WeatherState& weather = {});
 
@@ -230,12 +234,17 @@ public:
     // dropBlockAsItem); other events are ignored. Returns the number of entities spawned.
     size_t spawnFluidDrops(std::span<const fluids::FluidEvent> events);
     // Spawns the drops of the flora and torches World broke because their support went away
-    // (World::takeUnsupportedBreaks); tick() runs it after the player's attack.
+    // (World::takeUnsupportedBreaks); tick() runs it after the player's attack and after the
+    // explosions, the WorldSession after the world phase.
     size_t spawnUnsupportedDrops(world::World& world);
     // S5.3: spawns the falling sand and gravel entities World's scheduled updates released
-    // (World::takeFallingBlockSpawns), then settles the ones that landed: back to a block in a
-    // replaceable cell, otherwise (or after kFallingBlockMaxTicks in flight) an item through
-    // spawnBlockDrop. tick() runs it after the entity systems moved them.
+    // (World::takeFallingBlockSpawns); the WorldSession runs it right after the world phase.
+    // Returns the number of entities spawned.
+    size_t spawnFallingBlocks(world::World& world);
+    // spawnFallingBlocks (for what nobody spawned yet), then settles the falling blocks that
+    // landed: back to a block in a replaceable cell, otherwise (or after kFallingBlockMaxTicks
+    // in flight) an item through spawnBlockDrop. tick() runs it after the entity systems
+    // moved them.
     void tickFallingBlocks(world::World& world);
 
     // S8.7 pressure plates (Beta BlockPressurePlate.onEntityCollidedWithBlock): every plate
@@ -245,13 +254,18 @@ public:
     size_t tickPressurePlates(world::World& world, const physics::Player& player);
 
     // Spawns the contents of the chests and furnaces whose block went away
-    // (World::takeRemovedBlockEntities), one entity per non-empty slot; tick() runs it.
+    // (World::takeRemovedBlockEntities), one entity per non-empty slot; tick() runs it with
+    // spawnUnsupportedDrops, and so does the WorldSession after the world phase.
     size_t spawnRemovedBlockEntityDrops(world::World& world);
 
     // One tick of every resident furnace (crafting::tickFurnace): the block swaps between
     // Furnace and LitFurnace when it lights or goes out (the entity is kept), and a changed
-    // furnace marks its chunk for saving. tick() runs it after the player's attack.
+    // furnace marks its chunk for saving. tick() runs it last, after every entity.
     void tickBlockEntities(world::World& world);
+
+    // Restarts the drop, spawn and mob random streams from `seed` (the WorldSession seeds
+    // them from the world seed).
+    void reseed(uint64_t seed) noexcept;
 
     // Right click with the held item in the void (step 4 of the right-click order): eats
     // food at once (Beta ItemFood), even at full health; mushroom stew leaves its bowl.
@@ -297,6 +311,8 @@ private:
                           const world::WeatherState& weather, GameTickEvents& events);
     void tickPrimedTnt();
     void runExplosionQueue(world::World& world, physics::Player& player, GameTickEvents& events);
+    // Moves the drops spawned after this tick's movement (m_lateDrops) by one tick.
+    void moveLateDrops(world::World& world);
     int32_t pickUpItems(physics::Player& player);
 
     ecs::Registry m_entities;
@@ -321,6 +337,9 @@ private:
         ecs::EntityId source{ecs::NULL_ENTITY};
     };
     std::vector<QueuedExplosion> m_explosionQueue;
+    // Set once tick()'s movement ran: spawnItem then records the drop in m_lateDrops.
+    bool m_movedThisTick{false};
+    std::vector<ecs::EntityId> m_lateDrops;
     // Where explode() records hits and events: the running tick's, or m_pendingEvents
     // (handed to the next tick) when called from outside tick().
     GameTickEvents* m_tickEvents{nullptr};
