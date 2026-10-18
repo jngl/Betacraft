@@ -6,7 +6,6 @@
 #include "ecs/Registry.hpp"
 #include "ecs/Systems.hpp"
 #include "fluids/FluidSimulator.hpp"
-#include "game/InventoryCrafting.hpp"
 #include "game/MobBehaviour.hpp"
 #include "game/MobSpawner.hpp"
 #include "gameplay/Harvesting.hpp"
@@ -105,28 +104,10 @@ struct GameTickEvents {
     bool playerDied{false};                  // Set on the tick whose hit killed the player
     std::vector<MobSoundEvent> mobSounds;    // Ambient, hurt and death sounds of mobs (S4.9)
     // S5.8: set on the tick a full night's sleep ends, to the head of the bed slept in. The
-    // caller skips to the morning (time of day 0) and makes the bed the spawn point.
+    // WorldSession has already applied the morning and the bed spawn.
     std::optional<core::BlockPos> wokeInBed;
     std::vector<ExplosionEvent> explosions; // S6.6, in the order they went off
 };
-
-// S5.8 beds (Beta BlockBed / EntityPlayer.sleepInBedAt).
-enum class SleepResult : uint8_t {
-    Asleep,         // Lying in the bed: the night passes after kSleepTicks
-    NotNight,       // Beta "You can only sleep at night"
-    MonstersNearby, // Beta "You may not rest now, there are monsters nearby"
-    NotABed         // Not a whole bed, or the player is dead
-};
-// Beta EntityPlayer.sleepTimer: the screen fades out for 100 ticks before the morning.
-inline constexpr int32_t kSleepTicks = 100;
-// Beta sleepInBedAt: hostile mobs within x/z +-8 and y +-5 of the bed keep the player awake.
-inline constexpr int32_t kBedMonsterReachXZ = 8;
-inline constexpr int32_t kBedMonsterReachY = 5;
-
-// Daytime as the bed sees it: time of day in [0, 0.5) (SkyRenderer: 0 sunrise, 0.5 sunset).
-[[nodiscard]] constexpr bool isDaytime(float timeOfDay) noexcept {
-    return timeOfDay >= 0.0f && timeOfDay < 0.5f;
-}
 
 // Dead entities stay targetable for gameplay::kDeathAnimationTicks before they are removed.
 struct CorpseComp {
@@ -134,10 +115,11 @@ struct CorpseComp {
     bool burning{false}; // On fire when it died: a pig then drops cooked porkchop (S4.6)
 };
 
-// GL-free game state and rules the Application drives on the 20 TPS game tick: the ECS
-// registry of non-player entities (dropped items, mobs), Beta hold-to-mine with tool
-// requirements and wear, item entities and their pickup, melee hits with knockback and hurt
-// frames, and the inventory crafting screen. physics::Player keeps its own 60 Hz movement.
+// GL-free entity simulation (glossary: Entity simulation), the part of the WorldSession that
+// runs the input stage and the entity phase of each game tick: the ECS registry of non-player
+// entities (dropped items, mobs), Beta hold-to-mine with tool requirements and wear, item
+// entities and their pickup, melee hits with knockback and hurt frames, natural spawning
+// (spawnMobs). physics::Player keeps its own 60 Hz movement.
 class EntitySimulation {
 public:
     static constexpr float TICK_SECONDS = 1.0f / static_cast<float>(gameplay::kTicksPerSecond);
@@ -151,8 +133,6 @@ public:
 
     [[nodiscard]] ecs::Registry& entities() noexcept { return m_entities; }
     [[nodiscard]] const ecs::Registry& entities() const noexcept { return m_entities; }
-    [[nodiscard]] InventoryCrafting& crafting() noexcept { return m_crafting; }
-    [[nodiscard]] const InventoryCrafting& crafting() const noexcept { return m_crafting; }
     [[nodiscard]] const gameplay::MiningProgress& mining() const noexcept { return m_mining; }
     // Crack overlay stage for the renderer: 0..9, -1 when nothing is being mined.
     [[nodiscard]] int32_t crackStage() const noexcept { return m_mining.crackStage(); }
@@ -162,11 +142,19 @@ public:
     // rules (fall, breath, void, health timers), the player's attack (melee or mining), the
     // drops of blocks left without support, the entity systems (target search, AI, skeleton
     // shots, spider leaps and creeper fuses (S6.3), movement, voxel collision, arrows (S6.2),
-    // sun burning, mob contact hits, health/corpses/death drops, natural spawning, item
-    // ageing), the falling blocks, the primed TNT fuses and up to kMaxExplosionsPerTick queued
-    // explosions (S6.6), and item pickup. A dead player neither attacks nor picks anything up. `timeOfDay` follows SkyRenderer (0.25 = noon, the default).
+    // sun burning, mob contact hits, health/corpses/death drops, item ageing), the falling
+    // blocks, the primed TNT fuses and up to kMaxExplosionsPerTick queued explosions (S6.6),
+    // and item pickup. A dead player neither attacks nor picks anything up. `timeOfDay` follows
+    // SkyRenderer (0.25 = noon, the default). S8.10 `weather`: mobs in the rain do not burn and
+    // lose their fire (clear by default). Natural spawning is spawnMobs, called after.
     GameTickEvents tick(world::World& world, physics::Player& player, const PlayerActions& actions,
-                        float timeOfDay = 0.25f);
+                        float timeOfDay = 0.25f, const world::WeatherState& weather = {});
+
+    // Natural mob spawning and despawning (MobSpawner) and the dungeon spawners (S6.10), when
+    // naturalSpawning() is on. S8.10 rain and thunder darken spawning, and a thunderstorm lets
+    // hostiles spawn by day. The WorldSession calls it once per game tick, after tick().
+    void spawnMobs(world::World& world, const physics::Player& player, float timeOfDay,
+                   const world::WeatherState& weather);
 
     // The single entry point for damage to the player (fall, drowning, void, and later lava,
     // mobs, explosions). Nothing happens in Creative or to a dead player; otherwise
@@ -213,30 +201,9 @@ public:
     void syncPlayerProxy(const physics::Player& player);
 
     [[nodiscard]] const MobSpawner& spawner() const noexcept { return m_spawner; }
-    // S5.8 right click on a bed (step 2 of the right-click order): at night, with no hostile
-    // mob near the bed, the player falls asleep in it; tick() then counts kSleepTicks and
-    // reports GameTickEvents::wokeInBed. `bed` is either half.
-    SleepResult trySleep(const world::World& world, const physics::Player& player, const core::BlockPos& bed,
-                         float timeOfDay);
-    [[nodiscard]] bool isSleeping() const noexcept { return m_sleepingBed.has_value(); }
-    // Head cell of the bed being slept in.
-    [[nodiscard]] const std::optional<core::BlockPos>& sleepingBed() const noexcept { return m_sleepingBed; }
-    [[nodiscard]] int32_t sleepTicks() const noexcept { return m_sleepTicks; }
-    // 0..1 black veil of the sleep screen.
-    [[nodiscard]] float sleepFade() const noexcept;
-    // Leaves the bed without skipping the night (hurt, bed broken, Esc).
-    void wakeUp() noexcept;
-
-    // Natural mob spawning and despawning (MobSpawner) on each tick; on by default.
+    // spawnMobs does nothing while off; on by default.
     void setNaturalSpawning(bool enabled) noexcept { m_naturalSpawning = enabled; }
     [[nodiscard]] bool naturalSpawning() const noexcept { return m_naturalSpawning; }
-
-    // S8.10 the weather the next ticks run under (the Application ticks it, world::tickWeather,
-    // and hands it over before each tick): mobs in the rain do not burn and lose their fire,
-    // rain and thunder darken spawning, and a thunderstorm lets hostiles spawn by day. Clear
-    // by default.
-    void setWeather(const world::WeatherState& weather) noexcept { m_weather = weather; }
-    [[nodiscard]] const world::WeatherState& weather() const noexcept { return m_weather; }
 
     // S8.3 A* path following for mobs (FeatureFlags::mobPathfinding, --no-pathfinding); on by
     // default. Off: mobs lose their MobPathComp and steer in straight lines.
@@ -320,21 +287,20 @@ public:
 
 private:
     void tickPlayerSurvival(world::World& world, physics::Player& player, GameTickEvents& events);
-    void tickSleep(const world::World& world, const physics::Player& player, GameTickEvents& events);
     void handleAttack(world::World& world, physics::Player& player, const PlayerActions& actions,
                       GameTickEvents& events);
     void breakBlock(world::World& world, physics::Player& player, const core::BlockPos& pos,
                     world::BlockId block, GameTickEvents& events);
     void attackEntity(physics::Player& player, ecs::EntityId target, GameTickEvents& events);
     bool spawnNaturalDrop(world::BlockId block, const core::BlockPos& cell, uint8_t meta = 0);
-    void runEntitySystems(world::World& world, physics::Player& player, float timeOfDay, GameTickEvents& events);
+    void runEntitySystems(world::World& world, physics::Player& player, float timeOfDay,
+                          const world::WeatherState& weather, GameTickEvents& events);
     void tickPrimedTnt();
     void runExplosionQueue(world::World& world, physics::Player& player, GameTickEvents& events);
     int32_t pickUpItems(physics::Player& player);
 
     ecs::Registry m_entities;
     ecs::CommandBuffer m_commands;
-    InventoryCrafting m_crafting;
     gameplay::MiningProgress m_mining;
     std::optional<core::BlockPos> m_miningTarget;
     gameplay::SplitMix64 m_rng; // Drop rolls and drop scatter, reproducible per seed
@@ -344,10 +310,7 @@ private:
     gameplay::SplitMix64 m_mobRng;
     MobSpawner m_spawner;
     ecs::EntityId m_playerProxy{ecs::NULL_ENTITY};
-    std::optional<core::BlockPos> m_sleepingBed;
-    int32_t m_sleepTicks{0};
     bool m_naturalSpawning{true};
-    world::WeatherState m_weather{};
     bool m_pathfinding{true};
     ecs::PathPlanningSystem m_pathPlanning;
     int32_t m_lastPathNodes{0};

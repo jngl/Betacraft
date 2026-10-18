@@ -6,7 +6,6 @@
 #include "ecs/Components.hpp"
 #include "game/ItemBridge.hpp"
 #include "game/ItemUse.hpp"
-#include "gameplay/MobSpawnRules.hpp"
 #include "storage/SaveMigration.hpp"
 #include "world/BlockShapes.hpp"
 #include "world/Weather.hpp"
@@ -403,7 +402,7 @@ void Application::processEvents() {
         if (m_screenState == ui::ScreenState::Sleeping) {
             // Beta GuiSleepMP "Leave Bed": Esc gets up without skipping the night.
             if (ev.type == SDL_KEYDOWN && ev.key.repeat == 0 && ev.key.keysym.sym == SDLK_ESCAPE) {
-                sim().wakeUp();
+                m_session->wakeUp();
                 m_screenState = ui::ScreenState::InGame;
                 m_audio.playUiClick();
             }
@@ -550,8 +549,7 @@ void Application::processEvents() {
                 // S8.13 debug weather cycle: no default key, Creative only.
                 if (const SDL_Scancode cycleKey = m_inputManager.getPrimaryBinding(ui::GameAction::CycleWeather);
                     cycleKey != SDL_SCANCODE_UNKNOWN && ev.key.keysym.scancode == cycleKey) {
-                    if (player().isCreative() && m_config.features.weather) {
-                        world::cycleWeather(m_session->weather(), m_session->weatherRng());
+                    if (m_session->cycleWeatherIfCreative()) {
                         showStatusMessage(!m_session->weather().raining      ? "Weather: clear"
                                           : m_session->weather().thundering ? "Weather: thunderstorm"
                                                                  : "Weather: rain");
@@ -889,7 +887,7 @@ bool Application::activateDoorOrBed() {
     if (world().getBlock(pos) != world::BlockId::Bed) {
         return false;
     }
-    switch (sim().trySleep(world(), player(), pos, m_session->timeOfDay())) {
+    switch (m_session->trySleep(pos)) {
         case SleepResult::Asleep:
             m_screenState = ui::ScreenState::Sleeping;
             m_inWorld.leftMouseDown = false;
@@ -922,8 +920,7 @@ void Application::fixedUpdate(float fixedDt) {
         input = m_inputManager.buildPlayerInput();
     }
 
-    const physics::StepEvent stepEv = player().fixedUpdate(fixedDt, input, world());
-    (void)trampleFarmland(world(), stepEv, m_session->trampleRng());
+    const physics::StepEvent stepEv = m_session->stepPlayer(fixedDt, input);
     // Footsteps and splashes come from the player's feet: unoccluded, but they ring in a cave.
     if (stepEv.splashedWater) {
         playWorldSound(player().getPosition(), [&](const audio::VoiceAcoustics& a) { return m_audio.playWaterSplash(a); });
@@ -944,61 +941,38 @@ void Application::gameTick() {
         .target = m_inWorld.currentTarget
     };
     m_inWorld.attackPressed = false;
-    m_session->countGameTick();
-    if (m_config.features.weather) {
-        world::tickWeather(m_session->weather(), m_session->weatherRng()); // S8.9
-    }
-    sim().setWeather(m_session->weather());
-    const GameTickEvents events = sim().tick(world(), player(), actions, m_session->timeOfDay());
-    playGameTickEffects(events);
-    if (events.wokeInBed) {
-        // S5.8: the night passes and the bed becomes the spawn point (Beta wakeUpPlayer).
-        m_session->wakeInBed(*events.wokeInBed);
-    }
-    if (m_screenState == ui::ScreenState::Sleeping && !sim().isSleeping()) {
+    const WorldTickEvents events = m_session->tick(actions);
+    playGameTickEffects(events.game);
+    if (m_screenState == ui::ScreenState::Sleeping && !m_session->isSleeping()) {
         m_screenState = ui::ScreenState::InGame;
     }
-    if (events.playerDied) {
+    if (events.game.playerDied) {
         handlePlayerDeath();
     }
     closeContainerIfOutOfReach();
 
-    (void)world().tick();
-    world().tickRandomBlocks(player().getPosition(), m_session->randomTickRng(),
-                              gameplay::skylightSubtracted(m_session->timeOfDay(), m_session->weather().rainStrength,
-                                                           world::thunderStrengthAt(m_session->weather(), 1.0f)));
-    const std::vector<fluids::FluidEvent> fluidEvents = world().takeFluidEvents();
-    (void)sim().spawnFluidDrops(fluidEvents);
     if (const std::optional<FizzSound> fizz =
-            loudestFizzSound(fluidEvents, player().getInterpolatedEyePosition(m_renderAlpha))) {
+            loudestFizzSound(events.fluids, player().getInterpolatedEyePosition(m_renderAlpha))) {
         playWorldSound(fizz->position, [&](const audio::VoiceAcoustics& a) { return m_audio.playLavaFizz(fizz->gain, a); });
     }
-    playRedstoneEffects();
-    tickWeatherEffects();
+    playRedstoneEffects(events.redstone);
+    tickWeatherEffects(events.lightningStrike);
 }
 
-void Application::tickWeatherEffects() {
+void Application::tickWeatherEffects(const std::optional<glm::vec3>& strike) {
     const glm::vec3 eye = player().getInterpolatedEyePosition(m_renderAlpha);
 
     // S8.10 lightning: the flash and bolt fade over kLightningFlashTicks; the thunder follows at the
     // speed of sound, quieter for a far strike.
-    constexpr int32_t kStrikeRange = 64;
     if (m_inWorld.lightningTicks > 0 && --m_inWorld.lightningTicks == 0) {
         m_inWorld.lightningBolt.reset();
     }
-    if (world::rollLightning(m_session->weather(), world().getChunks().size(), m_session->weatherRng())) {
-        const int32_t x = static_cast<int32_t>(std::floor(eye.x)) + m_session->weatherRng().nextInt(2 * kStrikeRange + 1) - kStrikeRange;
-        const int32_t z = static_cast<int32_t>(std::floor(eye.z)) + m_session->weatherRng().nextInt(2 * kStrikeRange + 1) - kStrikeRange;
-        const int32_t y = world::precipitationHeight(world(), x, z);
-        // Beta canLightningStrikeAt: a loaded column where it rains (not snows).
-        if (y > 0 && world::precipitationAt(world().getBiomeAt(x, z)) == world::Precipitation::Rain) {
-            const glm::vec3 strike(static_cast<float>(x) + 0.5f, static_cast<float>(y), static_cast<float>(z) + 0.5f);
-            m_inWorld.lightningBolt = strike;
-            m_inWorld.lightningSeed = static_cast<uint32_t>(m_session->weatherRng().next());
-            m_inWorld.lightningTicks = kLightningFlashTicks;
-            const float dist = glm::length(strike - eye);
-            m_inWorld.pendingThunder.push_back({world::thunderDelayTicks(dist), std::clamp(1.0f - dist / 256.0f, 0.35f, 1.0f)});
-        }
+    if (strike) {
+        m_inWorld.lightningBolt = *strike;
+        m_inWorld.lightningSeed = static_cast<uint32_t>(m_presentationRng.next());
+        m_inWorld.lightningTicks = kLightningFlashTicks;
+        const float dist = glm::length(*strike - eye);
+        m_inWorld.pendingThunder.push_back({world::thunderDelayTicks(dist), std::clamp(1.0f - dist / 256.0f, 0.35f, 1.0f)});
     }
     for (auto it = m_inWorld.pendingThunder.begin(); it != m_inWorld.pendingThunder.end();) {
         if (--it->ticks <= 0) {
@@ -1014,15 +988,15 @@ void Application::tickWeatherEffects() {
     if (rain > 0.0f) {
         const int32_t splashes = static_cast<int32_t>(rain * rain * 12.0f);
         for (int32_t i = 0; i < splashes; ++i) {
-            const int32_t x = static_cast<int32_t>(std::floor(eye.x)) + m_session->weatherRng().nextInt(21) - 10;
-            const int32_t z = static_cast<int32_t>(std::floor(eye.z)) + m_session->weatherRng().nextInt(21) - 10;
+            const int32_t x = static_cast<int32_t>(std::floor(eye.x)) + m_presentationRng.nextInt(21) - 10;
+            const int32_t z = static_cast<int32_t>(std::floor(eye.z)) + m_presentationRng.nextInt(21) - 10;
             const int32_t y = world::precipitationHeight(world(), x, z);
             if (y <= 0 || std::abs(static_cast<float>(y) - eye.y) > 10.0f ||
                 world::precipitationAt(world().getBiomeAt(x, z)) != world::Precipitation::Rain) {
                 continue;
             }
-            m_inWorld.particles.spawnRainSplash(glm::vec3(static_cast<float>(x) + m_session->weatherRng().nextFloat(), static_cast<float>(y),
-                                                  static_cast<float>(z) + m_session->weatherRng().nextFloat()),
+            m_inWorld.particles.spawnRainSplash(glm::vec3(static_cast<float>(x) + m_presentationRng.nextFloat(), static_cast<float>(y),
+                                                  static_cast<float>(z) + m_presentationRng.nextFloat()),
                                         1);
         }
     }
@@ -1056,8 +1030,8 @@ std::string Application::weatherDebugLine() const {
 
 // S8.7 Beta sounds of the redstone events: random.click (volume 0.3, pitch 0.6 down / on,
 // 0.5 up / off), the door sounds, the piston, and random.fizz for a torch burning out.
-void Application::playRedstoneEffects() {
-    for (const redstone::RedstoneEvent& ev : world().takeRedstoneEvents()) {
+void Application::playRedstoneEffects(const std::vector<redstone::RedstoneEvent>& events) {
+    for (const redstone::RedstoneEvent& ev : events) {
         const glm::vec3 at = blockCentre(ev.pos);
         switch (ev.kind) {
             case redstone::RedstoneEventKind::Click: {
@@ -1394,7 +1368,7 @@ void Application::renderScreens() {
                      .hostileCap = sim().spawner().stats().hostileCap},
             .statusMessage = m_inWorld.statusMessageSeconds > 0.0f ? m_inWorld.statusMessage : std::string{},
             .statusAlpha = std::clamp(m_inWorld.statusMessageSeconds, 0.0f, 1.0f),
-            .sleepFade = sim().sleepFade(),
+            .sleepFade = m_session->sleepFade(),
             .storage = hudStorageStats(world()),
             .weather = m_showDebug ? weatherDebugLine() : std::string{}
         };
@@ -1672,12 +1646,8 @@ void Application::saveWorld() {
 }
 
 void Application::handlePlayerDeath() {
-    // The grid and the cursor stack go back to the inventory first so they scatter too.
-    if (m_inventoryOpen) {
-        closeInventoryScreen();
-    }
-    (void)sim().dropInventoryOnDeath(player());
-    sim().resetMining();
+    // The session already emptied the grid and the cursor and scattered everything.
+    m_inventoryOpen = false;
     m_inWorld.leftMouseDown = false;
     m_inWorld.attackPressed = false;
     m_screenState = ui::ScreenState::DeathScreen;

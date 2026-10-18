@@ -63,7 +63,7 @@ EntitySimulation::EntitySimulation(uint64_t seed)
     : m_rng(seed), m_spawnRng(seed ^ 0x6D6F62737061776EULL), m_mobRng(seed ^ 0x6D6F626C6976696EULL) {}
 
 GameTickEvents EntitySimulation::tick(world::World& world, physics::Player& player, const PlayerActions& actions,
-                                 float timeOfDay) {
+                                 float timeOfDay, const world::WeatherState& weather) {
     // Hits and explosions recorded by explode() calls made between ticks come first.
     GameTickEvents events = std::exchange(m_pendingEvents, GameTickEvents{});
     m_tickEvents = &events;
@@ -78,7 +78,7 @@ GameTickEvents EntitySimulation::tick(world::World& world, physics::Player& play
     tickBlockEntities(world);
     spawnUnsupportedDrops(world);
     spawnRemovedBlockEntityDrops(world);
-    runEntitySystems(world, player, timeOfDay, events);
+    runEntitySystems(world, player, timeOfDay, weather, events);
     tickFallingBlocks(world);
     (void)tickPressurePlates(world, player);
     tickPrimedTnt();
@@ -86,65 +86,20 @@ GameTickEvents EntitySimulation::tick(world::World& world, physics::Player& play
     if (!player.isDead()) {
         events.itemsPickedUp = pickUpItems(player);
     }
-    tickSleep(world, player, events);
     m_tickEvents = nullptr;
     return events;
 }
 
-void EntitySimulation::tickSleep(const world::World& world, const physics::Player& player, GameTickEvents& events) {
-    if (!m_sleepingBed) {
+void EntitySimulation::spawnMobs(world::World& world, const physics::Player& player, float timeOfDay,
+                                 const world::WeatherState& weather) {
+    if (!m_naturalSpawning) {
         return;
     }
-    // Beta wakeUpPlayer: a hit, death or the bed going away ends the sleep early.
-    if (player.isDead() || !events.playerHurt.empty() || !bedHeadAt(world, *m_sleepingBed)) {
-        wakeUp();
-        return;
-    }
-    if (++m_sleepTicks >= kSleepTicks) {
-        events.wokeInBed = m_sleepingBed;
-        wakeUp();
-    }
-}
-
-SleepResult EntitySimulation::trySleep(const world::World& world, const physics::Player& player, const core::BlockPos& bed,
-                                  float timeOfDay) {
-    const std::optional<core::BlockPos> head = bedHeadAt(world, bed);
-    if (!head || player.isDead()) {
-        return SleepResult::NotABed;
-    }
-    if (isDaytime(timeOfDay)) {
-        return SleepResult::NotNight;
-    }
-    bool monsters = false;
-    m_entities.view<ecs::TransformComp, ecs::MobKindComp>().each(
-        [&](ecs::EntityId e, const ecs::TransformComp& t, const ecs::MobKindComp& mob) {
-            if (monsters || m_entities.has<ecs::PlayerTagComp>(e) || m_entities.has<CorpseComp>(e) ||
-                gameplay::mobDef(mob.kind).category != gameplay::MobCategory::Hostile) {
-                return;
-            }
-            const glm::vec3 d = t.pos - glm::vec3(static_cast<float>(head->x) + 0.5f, static_cast<float>(head->y),
-                                                  static_cast<float>(head->z) + 0.5f);
-            monsters = std::abs(d.x) <= static_cast<float>(kBedMonsterReachXZ) + 0.5f &&
-                       std::abs(d.z) <= static_cast<float>(kBedMonsterReachXZ) + 0.5f &&
-                       d.y >= -static_cast<float>(kBedMonsterReachY) &&
-                       d.y <= static_cast<float>(kBedMonsterReachY) + 1.0f;
-        });
-    if (monsters) {
-        return SleepResult::MonstersNearby;
-    }
-    m_sleepingBed = head;
-    m_sleepTicks = 0;
-    return SleepResult::Asleep;
-}
-
-float EntitySimulation::sleepFade() const noexcept {
-    return m_sleepingBed ? std::clamp(static_cast<float>(m_sleepTicks) / static_cast<float>(kSleepTicks), 0.0f, 1.0f)
-                         : 0.0f;
-}
-
-void EntitySimulation::wakeUp() noexcept {
-    m_sleepingBed.reset();
-    m_sleepTicks = 0;
+    m_spawner.tick(world, m_entities, m_commands, player.getPosition(), timeOfDay, player.gameMode(), m_spawnRng,
+                   weather);
+    m_spawner.tickSpawners(world, m_entities, m_commands, player.getPosition(), timeOfDay, m_spawnRng,
+                           weather); // S6.10
+    (void)m_commands.flush(m_entities);
 }
 
 gameplay::HitResult EntitySimulation::damagePlayer(physics::Player& player, const PlayerDamage& damage,
@@ -636,7 +591,7 @@ void EntitySimulation::setPathfinding(bool enabled) {
 }
 
 void EntitySimulation::runEntitySystems(world::World& world, physics::Player& player, float timeOfDay,
-                                   GameTickEvents& events) {
+                                        const world::WeatherState& weather, GameTickEvents& events) {
     const float sun = gameplay::sunBrightness(timeOfDay);
     acquireTargets(m_entities, world, m_playerProxy, player.gameMode(), m_ticks, player.isDead(), sun);
     if (m_pathfinding) {
@@ -678,8 +633,8 @@ void EntitySimulation::runEntitySystems(world::World& world, physics::Player& pl
         }
     }
 
-    sunBurn(m_entities, world, timeOfDay, m_mobRng, m_weather);
-    for (const ecs::EntityId e : tickBurning(m_entities, world, m_weather)) {
+    sunBurn(m_entities, world, timeOfDay, m_mobRng, weather);
+    for (const ecs::EntityId e : tickBurning(m_entities, world, weather)) {
         if (const ecs::MobKindComp* mob = m_entities.tryGet<ecs::MobKindComp>(e)) {
             events.mobSounds.push_back({mob->kind, MobSoundKind::Hurt, m_entities.get<ecs::TransformComp>(e).pos});
         }
@@ -706,12 +661,6 @@ void EntitySimulation::runEntitySystems(world::World& world, physics::Player& pl
             m_commands.emplaceOrReplace(e, CorpseComp{ticks, burning});
             m_commands.remove<ecs::MobAIComp>(e); // The dead do not walk
         }
-    }
-    if (m_naturalSpawning) {
-        m_spawner.tick(world, m_entities, m_commands, player.getPosition(), timeOfDay, player.gameMode(), m_spawnRng,
-                       m_weather);
-        m_spawner.tickSpawners(world, m_entities, m_commands, player.getPosition(), timeOfDay, m_spawnRng,
-                               m_weather); // S6.10
     }
     // Beta Entity.onEntityUpdate kills anything below the void floor; over unloaded chunks
     // the world reads as air, so this is also what ends a fall there.

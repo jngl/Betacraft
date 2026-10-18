@@ -1,11 +1,16 @@
 #include "game/WorldSession.hpp"
 
 #include "core/Logger.hpp"
+#include "ecs/Components.hpp"
 #include "game/ItemBridge.hpp"
+#include "game/ItemUse.hpp"
 #include "game/PlayerPersistence.hpp"
 #include "game/StarterKit.hpp"
+#include "gameplay/MobDefs.hpp"
+#include "gameplay/MobSpawnRules.hpp"
 #include "storage/SaveMigration.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <system_error>
 
@@ -100,7 +105,6 @@ WorldSession::WorldSession(const OpenOptions& options)
     if (!m_features.weather) {
         m_weather = world::WeatherState{}; // --no-weather: always clear (and saved clear)
     }
-    m_simulation.setWeather(m_weather);
     // Create World chose the mode already: the world starts at once.
     if (m_awaitingGameMode && options.newWorld) {
         startNewWorld(options.newWorld->mode);
@@ -203,6 +207,124 @@ void WorldSession::streamAround(int32_t radius) {
     } else {
         m_world->updateChunksAround(feet, radius, 2);
     }
+}
+
+WorldTickEvents WorldSession::tick(const PlayerActions& actions) {
+    WorldTickEvents events{};
+    ++m_gameTicks;
+    if (m_features.weather) {
+        world::tickWeather(m_weather, m_weatherRng); // S8.9
+    }
+    events.game = m_simulation.tick(*m_world, m_player, actions, m_timeOfDay, m_weather);
+    m_simulation.spawnMobs(*m_world, m_player, m_timeOfDay, m_weather);
+    tickSleep(events.game);
+    if (events.game.playerDied) {
+        scatterOnDeath();
+    }
+
+    (void)m_world->tick();
+    m_world->tickRandomBlocks(m_player.getPosition(), m_randomTickRng,
+                              gameplay::skylightSubtracted(m_timeOfDay, m_weather.rainStrength,
+                                                           world::thunderStrengthAt(m_weather, 1.0f)));
+    events.fluids = m_world->takeFluidEvents();
+    (void)m_simulation.spawnFluidDrops(events.fluids);
+    events.redstone = m_world->takeRedstoneEvents();
+    events.lightningStrike = rollLightning();
+    return events;
+}
+
+physics::StepEvent WorldSession::stepPlayer(float dt, const physics::PlayerInput& input) {
+    const physics::StepEvent step = m_player.fixedUpdate(dt, input, *m_world);
+    (void)trampleFarmland(*m_world, step, m_trampleRng);
+    return step;
+}
+
+void WorldSession::tickSleep(GameTickEvents& events) {
+    if (!m_sleepingBed) {
+        return;
+    }
+    if (m_player.isDead() || !events.playerHurt.empty() || !bedHeadAt(*m_world, *m_sleepingBed)) {
+        wakeUp();
+        return;
+    }
+    if (++m_sleepTicks >= kSleepTicks) {
+        events.wokeInBed = m_sleepingBed;
+        wakeUp();
+        wakeInBed(*events.wokeInBed);
+    }
+}
+
+void WorldSession::scatterOnDeath() {
+    for (const physics::InventorySlot& stack : m_crafting.close(m_player)) {
+        (void)m_simulation.dropFromPlayer(m_player, toItemStack(stack));
+    }
+    (void)m_simulation.dropInventoryOnDeath(m_player);
+    m_simulation.resetMining();
+}
+
+std::optional<glm::vec3> WorldSession::rollLightning() {
+    constexpr int32_t kStrikeRange = 64;
+    if (!world::rollLightning(m_weather, m_world->getChunks().size(), m_weatherRng)) {
+        return std::nullopt;
+    }
+    const glm::vec3 eye = m_player.getEyePosition();
+    const int32_t x = static_cast<int32_t>(std::floor(eye.x)) + m_weatherRng.nextInt(2 * kStrikeRange + 1) - kStrikeRange;
+    const int32_t z = static_cast<int32_t>(std::floor(eye.z)) + m_weatherRng.nextInt(2 * kStrikeRange + 1) - kStrikeRange;
+    const int32_t y = world::precipitationHeight(*m_world, x, z);
+    // Beta canLightningStrikeAt: a loaded column where it rains (not snows).
+    if (y <= 0 || world::precipitationAt(m_world->getBiomeAt(x, z)) != world::Precipitation::Rain) {
+        return std::nullopt;
+    }
+    return glm::vec3(static_cast<float>(x) + 0.5f, static_cast<float>(y), static_cast<float>(z) + 0.5f);
+}
+
+SleepResult WorldSession::trySleep(const core::BlockPos& bed) {
+    const std::optional<core::BlockPos> head = bedHeadAt(*m_world, bed);
+    if (!head || m_player.isDead()) {
+        return SleepResult::NotABed;
+    }
+    if (isDaytime(m_timeOfDay)) {
+        return SleepResult::NotNight;
+    }
+    ecs::Registry& entities = m_simulation.entities();
+    bool monsters = false;
+    entities.view<ecs::TransformComp, ecs::MobKindComp>().each(
+        [&](ecs::EntityId e, const ecs::TransformComp& t, const ecs::MobKindComp& mob) {
+            if (monsters || entities.has<ecs::PlayerTagComp>(e) || entities.has<CorpseComp>(e) ||
+                gameplay::mobDef(mob.kind).category != gameplay::MobCategory::Hostile) {
+                return;
+            }
+            const glm::vec3 d = t.pos - glm::vec3(static_cast<float>(head->x) + 0.5f, static_cast<float>(head->y),
+                                                  static_cast<float>(head->z) + 0.5f);
+            monsters = std::abs(d.x) <= static_cast<float>(kBedMonsterReachXZ) + 0.5f &&
+                       std::abs(d.z) <= static_cast<float>(kBedMonsterReachXZ) + 0.5f &&
+                       d.y >= -static_cast<float>(kBedMonsterReachY) &&
+                       d.y <= static_cast<float>(kBedMonsterReachY) + 1.0f;
+        });
+    if (monsters) {
+        return SleepResult::MonstersNearby;
+    }
+    m_sleepingBed = head;
+    m_sleepTicks = 0;
+    return SleepResult::Asleep;
+}
+
+float WorldSession::sleepFade() const noexcept {
+    return m_sleepingBed ? std::clamp(static_cast<float>(m_sleepTicks) / static_cast<float>(kSleepTicks), 0.0f, 1.0f)
+                         : 0.0f;
+}
+
+void WorldSession::wakeUp() noexcept {
+    m_sleepingBed.reset();
+    m_sleepTicks = 0;
+}
+
+bool WorldSession::cycleWeatherIfCreative() {
+    if (!m_player.isCreative() || !m_features.weather) {
+        return false;
+    }
+    world::cycleWeather(m_weather, m_weatherRng);
+    return true;
 }
 
 void WorldSession::advanceTimeOfDay(float seconds) noexcept {

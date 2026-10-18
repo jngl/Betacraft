@@ -60,6 +60,7 @@ protected:
 
     [[nodiscard]] world::World& world() { return m_session->world(); }
     [[nodiscard]] physics::Player& player() { return m_session->player(); }
+    [[nodiscard]] const physics::Player& player() const { return m_session->player(); }
 
     // Stands the player on the floor and lets physics settle so isOnGround() holds.
     void placePlayer(const glm::vec3& feet) {
@@ -68,6 +69,50 @@ protected:
             (void)player().fixedUpdate(1.0f / 60.0f, {}, world());
         }
         ASSERT_TRUE(player().isOnGround());
+    }
+
+    void hold(physics::InventorySlot slot) { player().setHeldItem(slot); }
+
+    // A hit on the -X face of `pos`, as the crosshair of a player west of it reports it.
+    [[nodiscard]] static physics::RaycastHit targetAt(const core::BlockPos& pos, BlockId id, float distance = 2.5f) {
+        physics::RaycastHit hit{};
+        hit.hit = true;
+        hit.blockPos = pos;
+        hit.adjacentPos = {pos.x - 1, pos.y, pos.z};
+        hit.face = core::FaceDir::NegX;
+        hit.blockId = id;
+        hit.distance = distance;
+        return hit;
+    }
+
+    // One game tick of the session.
+    game::WorldTickEvents tick(const game::PlayerActions& actions) { return m_session->tick(actions); }
+    game::WorldTickEvents tickIdle() { return tick({}); }
+    // `n` idle game ticks; the events of the last one.
+    game::WorldTickEvents tickIdle(int32_t n) {
+        game::WorldTickEvents last{};
+        for (int32_t i = 0; i < n; ++i) {
+            last = tickIdle();
+        }
+        return last;
+    }
+
+    struct MineResult {
+        int32_t ticks{0}; // Ticks the button was held, including the click tick
+        std::optional<game::BlockBreakEvent> broken;
+    };
+
+    // Clicks and holds on `pos` until it breaks or `maxTicks` pass, then releases.
+    MineResult mine(const core::BlockPos& pos, int32_t maxTicks = 2000) {
+        MineResult r{};
+        const physics::RaycastHit target = targetAt(pos, world().getBlock(pos));
+        for (int32_t t = 0; t < maxTicks && !r.broken; ++t) {
+            const game::WorldTickEvents ev = tick({.attackPressed = t == 0, .attackHeld = true, .target = target});
+            ++r.ticks;
+            r.broken = ev.game.blockBroken;
+        }
+        (void)tickIdle(); // Button released
+        return r;
     }
 
     [[nodiscard]] size_t itemEntityCount() const {

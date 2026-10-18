@@ -118,7 +118,8 @@ private:
     [[nodiscard]] const physics::Player& player() const noexcept { return m_session->player(); }
     [[nodiscard]] EntitySimulation& sim() noexcept { return m_session->simulation(); }
     [[nodiscard]] const EntitySimulation& sim() const noexcept { return m_session->simulation(); }
-    // events.playerDied: inventory screen closed, everything scattered, death screen.
+    // events.playerDied (the session already scattered everything): the inventory screen and
+    // the input latches let go, then the death screen.
     void handlePlayerDeath();
     // One frame (events, update, render); false once the application was asked to quit.
     bool runFrame(float dt, bool present);
@@ -139,10 +140,10 @@ private:
     // Hand swing and sound of a step 3/4 item use (door, bed, hoe, seeds, bucket).
     void playItemUseEffects(const ItemUseResult& used);
     bool activateDoorOrBed();
-    void playRedstoneEffects();
-    // S8.10-S8.12 after each game tick: lightning strikes and their delayed thunder, rain
+    void playRedstoneEffects(const std::vector<redstone::RedstoneEvent>& events);
+    // S8.10-S8.12 after each game tick: the flash, bolt and delayed thunder of `strike`, rain
     // splashes around the player, and the rain loop's gain and occlusion.
-    void tickWeatherEffects();
+    void tickWeatherEffects(const std::optional<glm::vec3>& strike);
     // F3 line of the weather state.
     [[nodiscard]] std::string weatherDebugLine() const;
     void showStatusMessage(std::string text);
@@ -257,6 +258,9 @@ private:
     int32_t m_mouseY{0};
 
     gameplay::SplitMix64 m_sfxRng{0x50D5EEDULL}; // Sound pitch jitter (pop, hurt)
+    // Effects that do not change the world (lightning bolt shape, rain splashes): never the
+    // session's weather RNG, so effects cannot shift the simulation.
+    gameplay::SplitMix64 m_presentationRng{0x9E5E47A7ULL};
     float m_renderAlpha{1.0f};
     float m_smoothedFps{60.0f};
     float m_smoothedFrameMs{16.6f};

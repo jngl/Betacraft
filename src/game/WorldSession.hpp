@@ -5,7 +5,9 @@
 #include "game/EntitySimulation.hpp"
 #include "game/InventoryCrafting.hpp"
 #include "gameplay/SplitMix64.hpp"
+#include "fluids/FluidSimulator.hpp"
 #include "physics/Player.hpp"
+#include "redstone/RedstoneEngine.hpp"
 #include "world/Weather.hpp"
 #include "world/World.hpp"
 #include "world/WorldStorage.hpp"
@@ -35,13 +37,40 @@ struct SaveResult {
     bool closedCrafting{false};
 };
 
+// S5.8 beds (Beta BlockBed / EntityPlayer.sleepInBedAt).
+enum class SleepResult : uint8_t {
+    Asleep,         // Lying in the bed: the night passes after kSleepTicks
+    NotNight,       // Beta "You can only sleep at night"
+    MonstersNearby, // Beta "You may not rest now, there are monsters nearby"
+    NotABed         // Not a whole bed, or the player is dead
+};
+// Beta EntityPlayer.sleepTimer: the screen fades out for 100 ticks before the morning.
+inline constexpr int32_t kSleepTicks = 100;
+// Beta sleepInBedAt: hostile mobs within x/z +-8 and y +-5 of the bed keep the player awake.
+inline constexpr int32_t kBedMonsterReachXZ = 8;
+inline constexpr int32_t kBedMonsterReachY = 5;
+
+// Daytime as the bed sees it: time of day in [0, 0.5) (SkyRenderer: 0 sunrise, 0.5 sunset).
+[[nodiscard]] constexpr bool isDaytime(float timeOfDay) noexcept {
+    return timeOfDay >= 0.0f && timeOfDay < 0.5f;
+}
+
+// What happened during one WorldSession::tick. Ongoing conditions (weather, time of day,
+// sleeping, mining) are read from the session instead.
+struct WorldTickEvents {
+    GameTickEvents game;                           // The input stage and the entity simulation
+    std::vector<redstone::RedstoneEvent> redstone; // Clicks, doors, pistons, burnouts (S8.7)
+    std::vector<fluids::FluidEvent> fluids;        // Wash-aways (already dropped) and fizzes
+    std::optional<glm::vec3> lightningStrike;      // S8.10 where lightning struck, if it did
+};
+
 // One open world (glossary: World session), GL-free: the World, the Player, the entity
 // simulation and every per-world simulation state (weather, time of day, spawn points, the
 // crafting grid, the random-tick and trample RNGs). Destroying the session drops all of it,
 // so nothing carries over to the next world.
 //
-// Spec #9 delivery step 2: the lifecycle lives here; the Application still runs the game tick
-// and steps the state through the accessors below until the tick moves in (ticket #14).
+// It owns the world's lifecycle and its game tick; the Application only decides when to tick
+// (not in menus, yes while sleeping) and turns the returned events into effects.
 class WorldSession : private core::NonCopyable {
 public:
     struct OpenOptions {
@@ -99,6 +128,15 @@ public:
     [[nodiscard]] const std::string& name() const noexcept { return m_name; }
     [[nodiscard]] const core::FeatureFlags& features() const noexcept { return m_features; }
 
+    // One game tick (20 TPS) in today's order: weather, the entity simulation (input stage and
+    // entities), natural spawning, sleep (the morning applied on waking in bed), the death
+    // scatter on the tick the player dies, World::tick, random ticks, the fluid wash-away drops
+    // and the lightning roll. No clock inside: the caller calls it once per game tick.
+    WorldTickEvents tick(const PlayerActions& actions);
+
+    // The 60 Hz player step: movement and collisions, then farmland trampling (S5.7).
+    physics::StepEvent stepPlayer(float dt, const physics::PlayerInput& input);
+
     // Streams chunks within `radius` of the player, once per frame: S7.7 disk reads and pass 1
     // off the main thread, then World::kIntegrationBudget of integration (without async
     // generation: 2 chunks in place).
@@ -108,21 +146,31 @@ public:
     [[nodiscard]] float timeOfDay() const noexcept { return m_timeOfDay; }
     // `seconds` of a day lasting OpenOptions::dayLengthSeconds; 1 s or less freezes it.
     void advanceTimeOfDay(float seconds) noexcept;
+    void setTimeOfDay(float timeOfDay) noexcept { m_timeOfDay = timeOfDay; }
     // Creative time skip (+0.08 of a day); nothing outside Creative.
     void skipTimeIfCreative() noexcept;
 
-    // Per-world state the Application's tick steps until the tick moves in (ticket #14).
+    // S8.9 weather, advanced by tick() (clear and frozen with --no-weather).
     [[nodiscard]] world::WeatherState& weather() noexcept { return m_weather; }
     [[nodiscard]] const world::WeatherState& weather() const noexcept { return m_weather; }
-    [[nodiscard]] gameplay::SplitMix64& weatherRng() noexcept { return m_weatherRng; }
-    [[nodiscard]] gameplay::SplitMix64& randomTickRng() noexcept { return m_randomTickRng; }
-    [[nodiscard]] gameplay::SplitMix64& trampleRng() noexcept { return m_trampleRng; }
+    // S8.13 debug weather cycle (clear -> rain -> thunder): Creative only, and never with
+    // --no-weather. False when nothing changed.
+    bool cycleWeatherIfCreative();
     // Game ticks run; seeds the low-health heart jitter (Beta updateCounter).
     [[nodiscard]] uint32_t gameTicks() const noexcept { return m_gameTicks; }
-    void countGameTick() noexcept { ++m_gameTicks; }
-    // S5.8 the night passed in the bed whose head is `bedHead`: morning, and the bed becomes
-    // the spawn point.
-    void wakeInBed(const core::BlockPos& bedHead);
+
+    // S5.8 right click on a bed (step 2 of the right-click order): at night, with no hostile
+    // mob near the bed, the player falls asleep in it; tick() then counts kSleepTicks, applies
+    // the morning and the bed spawn, and reports GameTickEvents::wokeInBed. `bed` is either half.
+    SleepResult trySleep(const core::BlockPos& bed);
+    [[nodiscard]] bool isSleeping() const noexcept { return m_sleepingBed.has_value(); }
+    // Head cell of the bed being slept in.
+    [[nodiscard]] const std::optional<core::BlockPos>& sleepingBed() const noexcept { return m_sleepingBed; }
+    [[nodiscard]] int32_t sleepTicks() const noexcept { return m_sleepTicks; }
+    // 0..1 black veil of the sleep screen.
+    [[nodiscard]] float sleepFade() const noexcept;
+    // Leaves the bed without skipping the night (hurt, bed broken, Esc).
+    void wakeUp() noexcept;
 
     [[nodiscard]] const glm::vec3& spawnPoint() const noexcept { return m_spawnPoint; }
     void setSpawnPoint(const glm::vec3& point) noexcept { m_spawnPoint = point; }
@@ -134,6 +182,17 @@ private:
     explicit WorldSession(const OpenOptions& options);
     [[nodiscard]] world::WorldLevelData makeLevelData(std::vector<physics::InventorySlot>* overflow = nullptr) const;
     void migrateLegacyStorage(const OpenOptions& options, uint32_t storageFormat);
+    // Beta wakeUpPlayer: a hit, death or the bed going away ends the sleep early; a full
+    // night's sleep reports wokeInBed and applies the morning.
+    void tickSleep(GameTickEvents& events);
+    // S5.8 the night passed in the bed whose head is `bedHead`: morning, and the bed becomes
+    // the spawn point.
+    void wakeInBed(const core::BlockPos& bedHead);
+    // Beta onDeath: the grid and cursor stacks go back to the inventory (what does not fit is
+    // thrown), then all 40 slots scatter and mining stops.
+    void scatterOnDeath();
+    // S8.10 Beta World.updateLightning: a strike within 64 blocks of the player, where it rains.
+    [[nodiscard]] std::optional<glm::vec3> rollLightning();
 
     std::filesystem::path m_folder;
     core::FeatureFlags m_features;
@@ -158,6 +217,8 @@ private:
     gameplay::SplitMix64 m_weatherRng{0x5EA7E5ULL};    // Seeded from the world seed
     gameplay::SplitMix64 m_randomTickRng{0};           // S5.1, seeded from the world seed
     gameplay::SplitMix64 m_trampleRng{0x7EA3B1EULL};   // S5.7 farmland trampling rolls
+    std::optional<core::BlockPos> m_sleepingBed;      // S5.8 head of the bed slept in
+    int32_t m_sleepTicks{0};
 };
 
 } // namespace betacraft::game

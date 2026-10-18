@@ -273,7 +273,12 @@ protected:
         m_player.setPosition(m_feet);
     }
 
-    game::GameTickEvents tick(float timeOfDay) { return m_session.tick(*m_world, m_player, {}, timeOfDay); }
+    // The entity phase, then natural spawning, as WorldSession::tick runs them (clear weather).
+    game::GameTickEvents tick(float timeOfDay) {
+        game::GameTickEvents events = m_session.tick(*m_world, m_player, {}, timeOfDay);
+        m_session.spawnMobs(*m_world, m_player, timeOfDay, {});
+        return events;
+    }
 
     [[nodiscard]] ecs::Registry& reg() { return m_session.entities(); }
 

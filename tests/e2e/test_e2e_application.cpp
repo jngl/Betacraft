@@ -48,9 +48,8 @@ TEST(ApplicationE2ETest, RunMultipleFramesAndCleanShutdown) {
     EXPECT_TRUE(std::filesystem::exists(levelDat));
 }
 
-// The in-game half of the frame loop: Application::update's 20 TPS game tick drives
-// EntitySimulation (mining, item entities), World::tick (fluids) and the fluid drops, from real
-// SDL input events.
+// The in-game half of the frame loop: Application::update latches real SDL input and calls
+// WorldSession::tick at 20 TPS. What the tick does (drops, fluids): test_world_session_tick.cpp.
 class ApplicationInGameE2ETest : public ::testing::Test {
 protected:
     void SetUp() override {
@@ -91,10 +90,6 @@ protected:
         if (m_app) m_app->shutdown();
     }
 
-    [[nodiscard]] size_t itemEntities() const {
-        return m_app->getSession().entities().count<ecs::ItemDropComp>();
-    }
-
     static void pushLeftButton(Uint32 type) {
         SDL_Event ev{};
         ev.type = type;
@@ -113,32 +108,32 @@ protected:
     int32_t m_z0{0};
 };
 
-TEST_F(ApplicationInGameE2ETest, ATapOnAFlowerReleasedWithinOneTickBreaksItAndDropsIt) {
+// Hand-off: a click pressed and released between two game ticks is latched by the
+// Application and still reaches WorldSession::tick as attackPressed on the crosshair target.
+TEST_F(ApplicationInGameE2ETest, ATapOnAFlowerReleasedWithinOneTickBreaksIt) {
     world::World& w = *m_app->getWorld();
     const core::BlockPos flower{m_x0 + 2, kFloorY + 1, m_z0};
     ASSERT_TRUE(w.setBlock(flower, world::BlockId::Dandelion));
     // Aim at the flower's box centre from the eye (1.62 above the feet).
     m_app->getPlayer().setRotation(0.0f, glm::degrees(std::atan2(-1.32f, 2.0f)));
     ASSERT_EQ(m_app->runFixedFrames(2, kTick), 0); // The crosshair finds the flower
-    const size_t before = itemEntities();
 
     pushLeftButton(SDL_MOUSEBUTTONDOWN);
     pushLeftButton(SDL_MOUSEBUTTONUP);
     ASSERT_EQ(m_app->runFixedFrames(2, kTick), 0);
 
     EXPECT_EQ(w.getBlock(flower), world::BlockId::Air);
-    EXPECT_EQ(itemEntities(), before + 1);
 }
 
-TEST_F(ApplicationInGameE2ETest, WaterPlacedNextToAFlowerFlowsOverItAndDropsIt) {
+// Hand-off: the frame loop's game ticks run the world phase (fluids and their drops).
+TEST_F(ApplicationInGameE2ETest, WaterPlacedNextToAFlowerFlowsOverIt) {
     world::World& w = *m_app->getWorld();
-    // Away from the player so the drop is not picked up at once, and more than Beta's 4-block
-    // flow search from every platform edge so the source spreads in all four directions.
+    // More than Beta's 4-block flow search from every platform edge so the source spreads in
+    // all four directions.
     const core::BlockPos source{m_x0 + 5, kFloorY + 1, m_z0 + 5};
     const core::BlockPos flower{source.x + 1, source.y, source.z};
     ASSERT_TRUE(w.setBlock(flower, world::BlockId::Rose));
     ASSERT_TRUE(w.setBlock(source, world::BlockId::Water));
-    const size_t before = itemEntities();
 
     // Water spreads every 5 game ticks, but the update waits its turn behind the generated
     // terrain's own fluid work (256 updates per tick), so give it a generous bound.
@@ -147,7 +142,6 @@ TEST_F(ApplicationInGameE2ETest, WaterPlacedNextToAFlowerFlowsOverItAndDropsIt) 
     }
 
     EXPECT_TRUE(world::isWaterBlock(w.getBlock(flower)));
-    EXPECT_EQ(itemEntities(), before + 1);
 }
 
 namespace {

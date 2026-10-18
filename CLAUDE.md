@@ -39,7 +39,7 @@ All engine code goes into one static library, `betacraft_core`; `betacraft` is j
 
 ## Architecture
 
-**Main loop (`game/Application`).** Polls SDL → `InputManager` → fixed-timestep accumulator (20 TPS game ticks, decoupled from render rate) → per tick: `EntitySimulation::tick` (mining/attack, drops, ECS systems, pickup) then `World::tick()` (fluids, scheduled/random block ticks, weather) → render with interpolation alpha. A screen state machine (`ScreenState`, `game/ScreenKind.hpp`, `ui/*Screen`) picks title / world select / options / in-game / death screens.
+**Main loop (`game/Application`).** Polls SDL → `InputManager` → fixed-timestep accumulator (20 TPS game ticks, decoupled from render rate) → per tick: `WorldSession::tick` (weather, `EntitySimulation::tick` for mining/attack, drops, ECS systems and pickup, `spawnMobs`, sleep, death scatter, then `World::tick()` and random ticks, fluid drops and the lightning roll), returning `WorldTickEvents` that `Application` turns into effects → render with interpolation alpha. A screen state machine (`ScreenState`, `game/ScreenKind.hpp`, `ui/*Screen`) picks title / world select / options / in-game / death screens.
 
 **World data (`world/`).** `World` owns chunks; each `Chunk` is a stack of 16³ `PalettedSection`s with dynamic 0/4/8/16-bit palettes and lazily allocated light arrays. Per-voxel 4-bit metadata stores fluid level and orientation. `DifferentialLightingEngine` does BFS add/remove light propagation (bounded to 4991 voxels) plus vertical skylight extinction. Block entities (furnace, chest) live in `BlockEntityStore`.
 
@@ -57,7 +57,7 @@ All engine code goes into one static library, `betacraft_core`; `betacraft` is j
 
 - **Saves:** every file carries a format id + version; readers accept versions ≤ their own and refuse (never overwrite) newer ones. New data = new key, no version bump. Write atomically (`.tmp` → rename old to `_old` → rename). Unreadable chunks are quarantined (`.chk.corrupt`), not silently regenerated.
 - **Enums grow only at the end:** `ScreenState`, `BlockId`, `SoundEffect`, `GameAction`, `RenderShape`, `InventoryRegion`, `MobKind`, `DamageCause`.
-- **Public signatures used by tests don't change** (add an overload or defaulted parameter instead): `WorldStorage::saveChunk/loadChunk`, `World::ensureChunkLoaded`, `SkyRenderer::evaluateAtmosphere`, `MobAISystem::update`, `Raycaster::cast`, `HudRenderer::hitTestInventory`, `EntitySimulation::tick`, `WorldSession::open`, `renderWorld`.
+- **Public signatures used by tests don't change** (add an overload or defaulted parameter instead): `WorldStorage::saveChunk/loadChunk`, `World::ensureChunkLoaded`, `SkyRenderer::evaluateAtmosphere`, `MobAISystem::update`, `Raycaster::cast`, `HudRenderer::hitTestInventory`, `EntitySimulation::tick`, `WorldSession::open`, `WorldSession::tick`, `renderWorld`.
 - **All player damage goes through `EntitySimulation::damagePlayer`**; never write `Health::current` directly.
 - **All cheats** (palette, fly, time skip, creative piston push, weather cycle) gate on the single predicate `Player::isCreative()`.
 - **Right-click order** (`handleRightClickAction`): targeted entity → activate targeted block (unless sneaking) → held item on block → held item in air.

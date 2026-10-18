@@ -2,9 +2,8 @@
 // Beta side 2..5), climbed (descent capped at 3 b/s, no fall damage, sneaking holds on,
 // pushing against the wall climbs at 4 b/s), broken and dropped when its wall goes.
 // S5.6 door: placed as two halves, both flip on a click, one item dropped. S5.7 farming: hoe,
-// farmland moisture, seeds, crop growth, trampling, harvest. S5.8 bed: refused by day and
-// near monsters, the night passes after 100 ticks, the bed becomes the spawn point and a
-// broken bed sends the player back to the world spawn.
+// farmland moisture, seeds, crop growth, trampling, harvest. S5.8 bed: placed along the look,
+// and its recipe (sleeping is a WorldSession matter: test_world_session_sleep.cpp).
 #include "P2GameplaySupport.hpp"
 
 #include "crafting/BetaRecipes.hpp"
@@ -492,7 +491,6 @@ class S5Bed : public GameplayWorld {
 protected:
     static constexpr int32_t kX = 5;
     static constexpr int32_t kZ = 2;
-    static constexpr float kNight = 0.75f;
 
     void SetUp() override {
         GameplayWorld::SetUp();
@@ -538,101 +536,6 @@ TEST_F(S5Bed, PlacedAlongTheLook) {
     EXPECT_EQ(game::bedFacingForLook(0.0f, 1.0f), 0);
     EXPECT_EQ(game::bedFacingForLook(-1.0f, 0.0f), 1);
     EXPECT_EQ(game::bedFacingForLook(0.0f, -1.0f), 2);
-}
-
-TEST_F(S5Bed, RefusedByDayAndWithAZombieNearby) {
-    placeBed();
-    EXPECT_EQ(m_session.trySleep(*m_world, m_player, m_foot, 0.25f), game::SleepResult::NotNight);
-    EXPECT_EQ(m_session.trySleep(*m_world, m_player, m_foot, 0.0f), game::SleepResult::NotNight);
-    EXPECT_FALSE(m_session.isSleeping());
-
-    const ecs::EntityId zombie = ecs::EntityFactory::spawnMob(
-        m_session.entities(), {m_head.x + 5.5f, static_cast<float>(kY), m_head.z + 0.5f}, gameplay::MobKind::Zombie);
-    EXPECT_EQ(m_session.trySleep(*m_world, m_player, m_head, kNight), game::SleepResult::MonstersNearby);
-    // A pig does not count, nor a zombie 10 blocks away.
-    ecs::EntityFactory::spawnMob(m_session.entities(), {m_head.x + 2.5f, static_cast<float>(kY), m_head.z + 0.5f},
-                                 gameplay::MobKind::Pig);
-    m_session.entities().get<ecs::TransformComp>(zombie).pos.x += 5.0f;
-    EXPECT_EQ(m_session.trySleep(*m_world, m_player, m_head, kNight), game::SleepResult::Asleep);
-    EXPECT_EQ(m_session.sleepingBed(), std::optional<core::BlockPos>{m_head});
-}
-
-TEST_F(S5Bed, TheNightPassesAndTheBedBecomesTheSpawn) {
-    placeBed();
-    ASSERT_EQ(m_session.trySleep(*m_world, m_player, m_foot, kNight), game::SleepResult::Asleep);
-    for (int32_t i = 1; i < game::kSleepTicks; ++i) {
-        const game::GameTickEvents ev = m_session.tick(*m_world, m_player, {}, kNight);
-        ASSERT_FALSE(ev.wokeInBed.has_value()) << i;
-        ASSERT_TRUE(m_session.isSleeping());
-    }
-    EXPECT_NEAR(m_session.sleepFade(), 0.99f, 1e-4f) << "the screen has almost faded out";
-    const game::GameTickEvents ev = m_session.tick(*m_world, m_player, {}, kNight);
-    ASSERT_EQ(ev.wokeInBed, std::optional<core::BlockPos>{m_head}) << "after 100 ticks";
-    EXPECT_FALSE(m_session.isSleeping());
-    // The Application sets the time of day to 0 (sunrise) on wokeInBed: day again.
-    EXPECT_TRUE(game::isDaytime(0.0f));
-
-    // The spawn point is next to the bed: on the floor, out of the bed's cells.
-    std::optional<core::BlockPos> bed = ev.wokeInBed;
-    const game::RespawnChoice choice = game::chooseRespawnPoint(*m_world, bed, {0.5f, 70.0f, 0.5f});
-    EXPECT_FALSE(choice.bedMissing);
-    ASSERT_TRUE(bed.has_value());
-    EXPECT_FLOAT_EQ(choice.point.y, static_cast<float>(kY));
-    EXPECT_LE(std::abs(choice.point.x - (m_head.x + 0.5f)), 2.0f);
-    EXPECT_LE(std::abs(choice.point.z - (m_head.z + 0.5f)), 1.0f);
-    const core::BlockPos cell{static_cast<int32_t>(std::floor(choice.point.x)), kY,
-                              static_cast<int32_t>(std::floor(choice.point.z))};
-    EXPECT_EQ(m_world->getBlock(cell), BlockId::Air);
-}
-
-TEST_F(S5Bed, AHitOrALostBedEndsTheSleepWithoutSkippingTheNight) {
-    placeBed();
-    // Lava in the player's cell: the hit of the next tick wakes the player up.
-    ASSERT_EQ(m_session.trySleep(*m_world, m_player, m_foot, kNight), game::SleepResult::Asleep);
-    ASSERT_TRUE(m_world->setBlock(2, kY, 2, BlockId::Lava));
-    (void)m_player.fixedUpdate(1.0f / 60.0f, {}, *m_world);
-    ASSERT_TRUE(m_player.isInLava());
-    const game::GameTickEvents hurt = m_session.tick(*m_world, m_player, {}, kNight);
-    EXPECT_FALSE(hurt.playerHurt.empty());
-    EXPECT_FALSE(hurt.wokeInBed.has_value());
-    EXPECT_FALSE(m_session.isSleeping());
-    ASSERT_TRUE(m_world->setBlock(2, kY, 2, BlockId::Air));
-
-    // The bed broken under the sleeper.
-    ASSERT_EQ(m_session.trySleep(*m_world, m_player, m_foot, kNight), game::SleepResult::Asleep);
-    ASSERT_TRUE(m_world->setBlock(m_head, BlockId::Air));
-    const game::GameTickEvents lost = m_session.tick(*m_world, m_player, {}, kNight);
-    EXPECT_FALSE(lost.wokeInBed.has_value());
-    EXPECT_FALSE(m_session.isSleeping());
-    EXPECT_EQ(m_world->getBlock(m_foot), BlockId::Air) << "the foot went with the head";
-}
-
-TEST_F(S5Bed, ABrokenBedSendsThePlayerBackToTheWorldSpawn) {
-    placeBed();
-    std::optional<core::BlockPos> bed = m_head;
-    ASSERT_FALSE(game::chooseRespawnPoint(*m_world, bed, {}).bedMissing);
-
-    // Breaking the foot takes the head along and drops a single bed.
-    const MineResult r = mine(m_foot);
-    ASSERT_TRUE(r.broken.has_value());
-    EXPECT_EQ(m_world->getBlock(m_foot), BlockId::Air);
-    EXPECT_EQ(m_world->getBlock(m_head), BlockId::Air);
-    tickIdle(2);
-    EXPECT_EQ(droppedItems(m_session, items::Bed), 1);
-
-    const game::RespawnChoice choice = game::chooseRespawnPoint(*m_world, bed, {0.5f, 70.0f, 0.5f});
-    EXPECT_TRUE(choice.bedMissing);
-    EXPECT_FALSE(bed.has_value()) << "the bed spawn is forgotten";
-    const glm::vec3 worldSpawn = m_world->findSafeSpawnPosition();
-    EXPECT_FLOAT_EQ(choice.point.x, worldSpawn.x);
-    EXPECT_FLOAT_EQ(choice.point.y, worldSpawn.y);
-    EXPECT_FLOAT_EQ(choice.point.z, worldSpawn.z);
-    EXPECT_EQ(m_session.trySleep(*m_world, m_player, m_foot, kNight), game::SleepResult::NotABed);
-
-    // Without a bed spawn the given spawn point is kept.
-    const game::RespawnChoice plain = game::chooseRespawnPoint(*m_world, bed, {0.5f, 70.0f, 0.5f});
-    EXPECT_FALSE(plain.bedMissing);
-    EXPECT_FLOAT_EQ(plain.point.y, 70.0f);
 }
 
 TEST_F(S5Bed, DoorAndBedRecipes) {
