@@ -1,0 +1,161 @@
+// S8.5 redstone blocks: Beta ids, registry flags, the Flat and Lever shapes (appended to
+// RenderShape), their boxes, and the geometry the shared shape mesher builds for them.
+#include "gameplay/Harvesting.hpp"
+#include "gameplay/ItemIds.hpp"
+#include "physics/AABB.hpp"
+#include "render/BlockShapeMesher.hpp"
+#include "world/Block.hpp"
+#include "world/BlockShapes.hpp"
+
+#include <gtest/gtest.h>
+
+#include <vector>
+
+using namespace betacraft;
+using world::BlockId;
+using world::BlockRegistry;
+using world::RenderShape;
+
+TEST(RedstoneBlocks, BetaIdsAndAppendedShapes) {
+    EXPECT_EQ(static_cast<int>(BlockId::RedstoneWire), 55);
+    EXPECT_EQ(static_cast<int>(BlockId::Lever), 69);
+    EXPECT_EQ(static_cast<int>(BlockId::StonePressurePlate), 70);
+    EXPECT_EQ(static_cast<int>(BlockId::IronDoor), 71);
+    EXPECT_EQ(static_cast<int>(BlockId::WoodPressurePlate), 72);
+    EXPECT_EQ(static_cast<int>(BlockId::RedstoneOre), 73);
+    EXPECT_EQ(static_cast<int>(BlockId::RedstoneTorchOff), 75);
+    EXPECT_EQ(static_cast<int>(BlockId::RedstoneTorchOn), 76);
+    EXPECT_EQ(static_cast<int>(BlockId::StoneButton), 77);
+    EXPECT_EQ(static_cast<int>(BlockId::SnowGrass), 78) << "78 is never reassigned";
+    // Appended after the S5.4 shapes.
+    EXPECT_EQ(static_cast<int>(RenderShape::Flat), static_cast<int>(RenderShape::Stairs) + 1);
+    EXPECT_EQ(static_cast<int>(RenderShape::Lever), static_cast<int>(RenderShape::Stairs) + 2);
+    EXPECT_TRUE(world::isDetailedShape(RenderShape::Flat));
+    EXPECT_TRUE(world::isDetailedShape(RenderShape::Lever));
+    EXPECT_TRUE(world::shapeDependsOnMetadata(RenderShape::Flat));
+    EXPECT_TRUE(world::shapeDependsOnMetadata(RenderShape::Lever));
+    EXPECT_EQ(gameplay::items::IronDoor, 330);
+    EXPECT_EQ(gameplay::maxStackSize(gameplay::items::IronDoor), 1);
+}
+
+TEST(RedstoneBlocks, RegistryFlags) {
+    BlockRegistry::initialize();
+    for (const BlockId id : {BlockId::RedstoneWire, BlockId::Lever, BlockId::StonePressurePlate,
+                             BlockId::WoodPressurePlate, BlockId::RedstoneTorchOff, BlockId::RedstoneTorchOn,
+                             BlockId::StoneButton}) {
+        const world::BlockDef& def = BlockRegistry::get(id);
+        EXPECT_EQ(def.id, id);
+        EXPECT_FALSE(def.solid) << def.name << ": nothing of it collides";
+        EXPECT_FALSE(def.opaque) << def.name;
+        EXPECT_TRUE(def.selectable) << def.name;
+        EXPECT_FALSE(def.replaceable) << def.name;
+        EXPECT_FALSE(def.isItemOnly) << def.name;
+    }
+    EXPECT_EQ(BlockRegistry::get(BlockId::RedstoneTorchOn).lightEmission, 7);
+    EXPECT_EQ(BlockRegistry::get(BlockId::RedstoneTorchOff).lightEmission, 0);
+    EXPECT_EQ(BlockRegistry::get(BlockId::RedstoneTorchOn).shape, RenderShape::Torch);
+    const world::BlockDef& iron = BlockRegistry::get(BlockId::IronDoor);
+    EXPECT_TRUE(iron.solid);
+    EXPECT_EQ(iron.shape, RenderShape::Door);
+    EXPECT_FLOAT_EQ(iron.hardness, 5.0f);
+    EXPECT_TRUE(world::isDoorBlock(BlockId::IronDoor));
+    EXPECT_TRUE(world::isDoorBlock(BlockId::WoodDoor));
+    EXPECT_FALSE(world::isDoorBlock(BlockId::Lever));
+    EXPECT_EQ(BlockRegistry::get(BlockId::RedstoneWire).shape, RenderShape::Flat);
+    EXPECT_EQ(BlockRegistry::get(BlockId::StonePressurePlate).shape, RenderShape::Flat);
+    EXPECT_EQ(BlockRegistry::get(BlockId::StoneButton).shape, RenderShape::Lever);
+}
+
+TEST(RedstoneBlocks, Drops) {
+    BlockRegistry::initialize();
+    // Redstone ore yields 4 or 5 dust (Beta quantityDropped 4 + nextInt(2)).
+    bool four = false;
+    bool five = false;
+    for (uint64_t seed = 0; seed < 64; ++seed) {
+        gameplay::ItemStack pick = gameplay::makeStack(gameplay::items::IronPickaxe, 1);
+        const gameplay::BlockBreakOutcome r = gameplay::breakBlockWith(BlockId::RedstoneOre, pick, seed);
+        ASSERT_TRUE(r.drop.has_value());
+        EXPECT_EQ(r.drop->id, gameplay::items::Redstone);
+        four |= r.drop->count == 4;
+        five |= r.drop->count == 5;
+        EXPECT_TRUE(r.drop->count == 4 || r.drop->count == 5);
+    }
+    EXPECT_TRUE(four && five);
+    gameplay::ItemStack hand{};
+    const auto wire = gameplay::breakBlockWith(BlockId::RedstoneWire, hand, 1);
+    ASSERT_TRUE(wire.drop.has_value());
+    EXPECT_EQ(wire.drop->id, gameplay::items::Redstone);
+    const auto unlit = gameplay::breakBlockWith(BlockId::RedstoneTorchOff, hand, 1);
+    ASSERT_TRUE(unlit.drop.has_value());
+    EXPECT_EQ(unlit.drop->id, gameplay::toItemId(BlockId::RedstoneTorchOn)) << "an unlit torch drops a lit one";
+    gameplay::ItemStack pick = gameplay::makeStack(gameplay::items::StonePickaxe, 1);
+    const auto door = gameplay::breakBlockWith(BlockId::IronDoor, pick, 1);
+    ASSERT_TRUE(door.drop.has_value());
+    EXPECT_EQ(door.drop->id, gameplay::items::IronDoor);
+    gameplay::ItemStack bare{};
+    EXPECT_FALSE(gameplay::breakBlockWith(BlockId::IronDoor, bare, 1).drop.has_value()) << "needs a pickaxe";
+}
+
+TEST(RedstoneBlocks, AttachmentAndBoxes) {
+    using world::attachmentOffset;
+    EXPECT_EQ(attachmentOffset(world::kAttachWallNegX), glm::ivec3(-1, 0, 0));
+    EXPECT_EQ(attachmentOffset(world::kAttachWallPosX), glm::ivec3(1, 0, 0));
+    EXPECT_EQ(attachmentOffset(world::kAttachWallNegZ), glm::ivec3(0, 0, -1));
+    EXPECT_EQ(attachmentOffset(world::kAttachWallPosZ), glm::ivec3(0, 0, 1));
+    EXPECT_EQ(attachmentOffset(world::kAttachFloor), glm::ivec3(0, -1, 0));
+    EXPECT_EQ(attachmentOffset(0), glm::ivec3(0, -1, 0)) << "torches placed before S8.5 stand";
+    EXPECT_EQ(attachmentOffset(world::kAttachWallPosX | world::kLeverOnBit), glm::ivec3(1, 0, 0));
+    EXPECT_EQ(world::attachmentForClickedFace(core::FaceDir::PosX), world::kAttachWallNegX);
+    EXPECT_EQ(world::attachmentForClickedFace(core::FaceDir::PosY), world::kAttachFloor);
+    EXPECT_FALSE(world::attachmentForClickedFace(core::FaceDir::NegY).has_value());
+
+    // A button against the wall at +X sits flush with that side of the cell.
+    const world::ShapeBox button = world::orientAttachedBox(world::buttonBox(0), world::kAttachWallPosX);
+    EXPECT_EQ(button.x1, 16);
+    EXPECT_EQ(button.x0, 16 - world::kButtonDepth);
+    const world::ShapeBox pressed =
+        world::orientAttachedBox(world::buttonBox(world::kButtonPressedBit), world::kAttachWallPosX);
+    EXPECT_EQ(pressed.x1 - pressed.x0, 1) << "a pressed button is thinner";
+    const world::ShapeBox negZ = world::orientAttachedBox(world::buttonBox(0), world::kAttachWallNegZ);
+    EXPECT_EQ(negZ.z0, 0);
+    EXPECT_EQ(negZ.z1, world::kButtonDepth);
+    EXPECT_LT(negZ.y1 - negZ.y0, 16);
+
+    const physics::AABB wire = physics::AABB::selectionBox(0, 0, 0, BlockId::RedstoneWire, 5);
+    EXPECT_FLOAT_EQ(wire.max.y, 1.0f / 16.0f);
+    EXPECT_FLOAT_EQ(wire.min.x, 0.0f);
+    const physics::AABB plate = physics::AABB::selectionBox(0, 0, 0, BlockId::StonePressurePlate, 0);
+    EXPECT_FLOAT_EQ(plate.min.x, 1.0f / 16.0f);
+    EXPECT_FLOAT_EQ(plate.max.z, 15.0f / 16.0f);
+    // Lever off and on lean their handles opposite ways.
+    EXPECT_NE(world::leverHandleBox(0).z0, world::leverHandleBox(world::kLeverOnBit).z0);
+    // Pistons: Beta facing 0..5 and the look rule (it faces the player).
+    EXPECT_EQ(world::pistonFacing(5), core::FaceDir::PosX);
+    EXPECT_EQ(world::pistonFacing(world::kPistonPoweredBit | 2), core::FaceDir::NegZ);
+    EXPECT_EQ(world::pistonMetaForLook(1.0f, 0.0f, 0.0f), 4);  // looking +X: faces -X
+    EXPECT_EQ(world::pistonMetaForLook(0.0f, -1.0f, 0.0f), 1); // looking down: faces up
+}
+
+TEST(RedstoneBlocks, ShapeMesherBuildsEveryPart) {
+    BlockRegistry::initialize();
+    const auto air = [](int32_t, int32_t, int32_t) { return render::ShapeVoxel{}; };
+    const auto quads = [&](BlockId id, uint8_t meta) {
+        std::vector<render::PackedChunkVertex> out;
+        render::emitDetailedShape(out, BlockRegistry::get(id), meta, 1, 1, 1, 0, air);
+        return out.size() / 4;
+    };
+    EXPECT_EQ(quads(BlockId::RedstoneWire, 0), 6u);
+    EXPECT_EQ(quads(BlockId::StonePressurePlate, 0), 6u);
+    EXPECT_EQ(quads(BlockId::WoodPressurePlate, world::kPlatePressedBit), 6u);
+    EXPECT_EQ(quads(BlockId::Lever, world::kAttachFloor), 12u) << "base + handle";
+    EXPECT_EQ(quads(BlockId::Lever, world::kAttachWallNegZ | world::kLeverOnBit), 12u);
+    EXPECT_EQ(quads(BlockId::StoneButton, world::kAttachWallPosX), 6u);
+    EXPECT_EQ(quads(BlockId::IronDoor, 0), 6u);
+    // The bottom of a plate on a stone block is hidden.
+    const auto onStone = [](int32_t, int32_t dy, int32_t) {
+        return render::ShapeVoxel{dy < 0 ? BlockId::Stone : BlockId::Air, 0, 15, 0};
+    };
+    std::vector<render::PackedChunkVertex> out;
+    render::emitDetailedShape(out, BlockRegistry::get(BlockId::RedstoneWire), 3, 1, 1, 1, 0, onStone);
+    EXPECT_EQ(out.size() / 4, 5u);
+}

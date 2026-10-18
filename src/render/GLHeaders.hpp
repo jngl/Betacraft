@@ -1,0 +1,48 @@
+#pragma once
+
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
+#include <SDL2/SDL_opengl_glext.h>
+
+namespace betacraft::render {
+
+bool initOpenGLFunctions() noexcept;
+
+} // namespace betacraft::render
+
+// OpenGL 3.3 Core function pointers loaded via SDL_GL_GetProcAddress
+extern PFNGLCREATESHADERPROC bc_glCreateShader;
+extern PFNGLSHADERSOURCEPROC bc_glShaderSource;
+extern PFNGLCOMPILESHADERPROC bc_glCompileShader;
+extern PFNGLGETSHADERIVPROC bc_glGetShaderiv;
+extern PFNGLGETSHADERINFOLOGPROC bc_glGetShaderInfoLog;
+extern PFNGLDELETESHADERPROC bc_glDeleteShader;
+extern PFNGLCREATEPROGRAMPROC bc_glCreateProgram;
+extern PFNGLATTACHSHADERPROC bc_glAttachShader;
+extern PFNGLLINKPROGRAMPROC bc_glLinkProgram;
+extern PFNGLGETPROGRAMIVPROC bc_glGetProgramiv;
+extern PFNGLGETPROGRAMINFOLOGPROC bc_glGetProgramInfoLog;
+extern PFNGLUSEPROGRAMPROC bc_glUseProgram;
+extern PFNGLDELETEPROGRAMPROC bc_glDeleteProgram;
+extern PFNGLGETUNIFORMLOCATIONPROC bc_glGetUniformLocation;
+extern PFNGLUNIFORM1IPROC bc_glUniform1i;
+extern PFNGLUNIFORM3IPROC bc_glUniform3i;
+extern PFNGLUNIFORM1FPROC bc_glUniform1f;
+extern PFNGLUNIFORM2FPROC bc_glUniform2f;
+extern PFNGLUNIFORM3FPROC bc_glUniform3f;
+extern PFNGLUNIFORM3FVPROC bc_glUniform3fv;
+extern PFNGLUNIFORM4FPROC bc_glUniform4f;
+extern PFNGLUNIFORMMATRIX4FVPROC bc_glUniformMatrix4fv;
+extern PFNGLGENVERTEXARRAYSPROC bc_glGenVertexArrays;
+extern PFNGLBINDVERTEXARRAYPROC bc_glBindVertexArray;
+extern PFNGLDELETEVERTEXARRAYSPROC bc_glDeleteVertexArrays;
+extern PFNGLGENBUFFERSPROC bc_glGenBuffers;
+extern PFNGLBINDBUFFERPROC bc_glBindBuffer;
+extern PFNGLBUFFERDATAPROC bc_glBufferData;
+extern PFNGLBUFFERSUBDATAPROC bc_glBufferSubData;
+extern PFNGLDELETEBUFFERSPROC bc_glDeleteBuffers;
+extern PFNGLENABLEVERTEXATTRIBARRAYPROC bc_glEnableVertexAttribArray;
+extern PFNGLVERTEXATTRIBPOINTERPROC bc_glVertexAttribPointer;
+extern PFNGLVERTEXATTRIBIPOINTERPROC bc_glVertexAttribIPointer;
+extern PFNGLACTIVETEXTUREPROC bc_glActiveTexture;
+extern PFNGLGENERATEMIPMAPPROC bc_glGenerateMipmap;

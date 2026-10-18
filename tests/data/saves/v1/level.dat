@@ -1,0 +1,15 @@
+BETACRAFT_LEVEL_V2
+items_scheme 2
+seed 173173173
+time 0.25
+mode survival
+spawn 8.5 122 8.5
+player.pos 8.5 122 8.5
+player.rot -90 0
+player.health 17
+player.air 300
+player.selected 0
+player.fall 0
+inv 0 274 1 17
+inv 1 4 32 0
+inv 9 17 16 0
