@@ -5,6 +5,7 @@
 
 #include "tests/test_helpers.hpp"
 
+#include "GlassFloorSupport.hpp"
 #include "P2WorldgenSupport.hpp"
 #include "ecs/Components.hpp"
 #include "game/WorldSession.hpp"
@@ -23,8 +24,8 @@ namespace betacraft::test::worldsession {
 using world::BlockId;
 
 // High above the generated terrain of the test seed, on a glass floor laid by the fixture.
-constexpr int32_t kFloorY = 119;
-constexpr int32_t kY = 120;
+using glassfloor::kFloorY;
+using glassfloor::kY;
 
 // Options of a deterministic session on `folder`: the worldgen test seed, chunks generated in
 // place (no async generation, so no sleeps).
@@ -44,17 +45,8 @@ protected:
         ASSERT_NE(m_session, nullptr);
         ASSERT_TRUE(m_session->awaitingGameMode());
         m_session->startNewWorld(m_mode);
-        p2worldgen::loadAll(world(), p2worldgen::squareRegion({0, 0}, 1));
-        for (int32_t z = -6; z <= 14; ++z) {
-            for (int32_t x = -6; x <= 14; ++x) {
-                (void)world().setBlock(x, kFloorY, z, BlockId::Glass);
-            }
-        }
-        for (size_t i = 0; i < physics::Player::TOTAL_INVENTORY_SIZE; ++i) {
-            player().setInventorySlot(i, {});
-        }
-        player().setSelectedSlot(0);
-        player().setRotation(0.0f, 0.0f); // Looking along +X
+        glassfloor::layGlassFloor(world());
+        glassfloor::resetPlayer(player());
         placePlayer({2.5f, static_cast<float>(kY), 2.5f});
     }
 
@@ -63,26 +55,13 @@ protected:
     [[nodiscard]] const physics::Player& player() const { return m_session->player(); }
 
     // Stands the player on the floor and lets physics settle so isOnGround() holds.
-    void placePlayer(const glm::vec3& feet) {
-        player().setPosition(feet);
-        for (int i = 0; i < 30; ++i) {
-            (void)player().fixedUpdate(1.0f / 60.0f, {}, world());
-        }
-        ASSERT_TRUE(player().isOnGround());
-    }
+    void placePlayer(const glm::vec3& feet) { glassfloor::placePlayer(player(), world(), feet); }
 
     void hold(physics::InventorySlot slot) { player().setHeldItem(slot); }
 
     // A hit on the -X face of `pos`, as the crosshair of a player west of it reports it.
     [[nodiscard]] static physics::RaycastHit targetAt(const core::BlockPos& pos, BlockId id, float distance = 2.5f) {
-        physics::RaycastHit hit{};
-        hit.hit = true;
-        hit.blockPos = pos;
-        hit.adjacentPos = {pos.x - 1, pos.y, pos.z};
-        hit.face = core::FaceDir::NegX;
-        hit.blockId = id;
-        hit.distance = distance;
-        return hit;
+        return glassfloor::targetAt(pos, id, distance);
     }
 
     // One game tick of the session.
@@ -97,22 +76,12 @@ protected:
         return last;
     }
 
-    struct MineResult {
-        int32_t ticks{0}; // Ticks the button was held, including the click tick
-        std::optional<game::BlockBreakEvent> broken;
-    };
+    using MineResult = glassfloor::MineResult;
 
     // Clicks and holds on `pos` until it breaks or `maxTicks` pass, then releases.
     MineResult mine(const core::BlockPos& pos, int32_t maxTicks = 2000) {
-        MineResult r{};
-        const physics::RaycastHit target = targetAt(pos, world().getBlock(pos));
-        for (int32_t t = 0; t < maxTicks && !r.broken; ++t) {
-            const game::WorldTickEvents ev = tick({.attackPressed = t == 0, .attackHeld = true, .target = target});
-            ++r.ticks;
-            r.broken = ev.game.blockBroken;
-        }
-        (void)tickIdle(); // Button released
-        return r;
+        return glassfloor::mine(world(), pos, maxTicks,
+                                [&](const game::PlayerActions& actions) { return tick(actions).game; });
     }
 
     [[nodiscard]] size_t itemEntityCount() const {
