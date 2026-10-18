@@ -540,20 +540,20 @@ void Application::processEvents() {
                     setMouseCaptured(true);
                 } else {
                     if (ev.button.button == SDL_BUTTON_LEFT) {
-                        m_leftMouseDown = true;
-                        m_attackPressed = true;
+                        m_inWorld.leftMouseDown = true;
+                        m_inWorld.attackPressed = true;
                         m_player.triggerHandSwing();
                     } else if (ev.button.button == SDL_BUTTON_RIGHT) {
                         handleRightClickAction();
                     } else if (ev.button.button == SDL_BUTTON_MIDDLE) {
                         // Pick Block: Creative conjures a full stack, Survival (Beta) only
                         // selects a hotbar slot that already holds the block.
-                        if (m_currentTarget.hit && m_currentTarget.blockId != world::BlockId::Bedrock) {
+                        if (m_inWorld.currentTarget.hit && m_inWorld.currentTarget.blockId != world::BlockId::Bedrock) {
                             // A lit furnace is a furnace in hand: a placed LitFurnace without a
                             // block entity would glow forever.
-                            const world::BlockId picked = m_currentTarget.blockId == world::BlockId::LitFurnace
+                            const world::BlockId picked = m_inWorld.currentTarget.blockId == world::BlockId::LitFurnace
                                 ? world::BlockId::Furnace
-                                : m_currentTarget.blockId;
+                                : m_inWorld.currentTarget.blockId;
                             // Doors, beds and crops are picked as the item that places them.
                             gameplay::ItemId pickedItem = gameplay::toItemId(picked);
                             switch (picked) {
@@ -583,7 +583,7 @@ void Application::processEvents() {
 
             case SDL_MOUSEBUTTONUP:
                 if (ev.button.button == SDL_BUTTON_LEFT) {
-                    m_leftMouseDown = false;
+                    m_inWorld.leftMouseDown = false;
                 }
                 break;
 
@@ -700,8 +700,8 @@ void Application::processEvents() {
 void Application::openInventoryScreen(crafting::GridSize grid) {
     dropAtPlayer(m_session.crafting().open(grid, m_player));
     m_inventoryOpen = true;
-    m_leftMouseDown = false;
-    m_attackPressed = false;
+    m_inWorld.leftMouseDown = false;
+    m_inWorld.attackPressed = false;
     m_session.resetMining();
     setMouseCaptured(false);
 }
@@ -715,8 +715,8 @@ void Application::openContainerScreen(ScreenKind kind, const core::BlockPos& pos
     (void)m_world->blockEntities().getOrCreate(pos, block); // Created on first open
     dropAtPlayer(m_session.crafting().openContainer(kind, pos, m_player));
     m_inventoryOpen = true;
-    m_leftMouseDown = false;
-    m_attackPressed = false;
+    m_inWorld.leftMouseDown = false;
+    m_inWorld.attackPressed = false;
     m_session.resetMining();
     setMouseCaptured(false);
 }
@@ -827,15 +827,15 @@ void Application::handleInventoryClick(int32_t mouseX, int32_t mouseY, SlotButto
 // 3. the held item on the targeted block (placing the held block);
 // 4. the held item in the void (food), also when a block is targeted but step 3 did nothing.
 void Application::handleRightClickAction() {
-    if (m_placeCooldown > 0.0f) {
+    if (m_inWorld.placeCooldown > 0.0f) {
         return;
     }
-    const bool onBlock = m_currentTarget.hit;
+    const bool onBlock = m_inWorld.currentTarget.hit;
 
     // Step 1 (S6.3): the held item on the entity under the crosshair (milking a cow).
-    if (const std::optional<ecs::EntityId> entity = m_session.meleeTarget(m_player, m_currentTarget)) {
+    if (const std::optional<ecs::EntityId> entity = m_session.meleeTarget(m_player, m_inWorld.currentTarget)) {
         if (m_session.useHeldItemOnEntity(m_player, *entity)) {
-            m_placeCooldown = 0.16f;
+            m_inWorld.placeCooldown = 0.16f;
             return;
         }
     }
@@ -843,35 +843,35 @@ void Application::handleRightClickAction() {
     if (onBlock && !m_player.isSneaking()) {
         // S8.7: a lever switches, a button goes down (their click comes back as a redstone
         // event); an iron door takes the click and does nothing (Beta BlockDoor.blockActivated).
-        const world::BlockId targeted = m_currentTarget.blockId;
+        const world::BlockId targeted = m_inWorld.currentTarget.blockId;
         if (targeted == world::BlockId::Lever || targeted == world::BlockId::StoneButton ||
             targeted == world::BlockId::IronDoor) {
             if (targeted == world::BlockId::Lever) {
-                (void)m_world->toggleLever(m_currentTarget.blockPos);
+                (void)m_world->toggleLever(m_inWorld.currentTarget.blockPos);
             } else if (targeted == world::BlockId::StoneButton) {
-                (void)m_world->pressButton(m_currentTarget.blockPos);
+                (void)m_world->pressButton(m_inWorld.currentTarget.blockPos);
             }
             m_player.triggerHandSwing();
-            m_placeCooldown = 0.18f;
+            m_inWorld.placeCooldown = 0.18f;
             return;
         }
         if (activateDoorOrBed()) {
             return;
         }
-        if (const std::optional<ScreenKind> screen = activatedScreen(m_currentTarget.blockId)) {
+        if (const std::optional<ScreenKind> screen = activatedScreen(m_inWorld.currentTarget.blockId)) {
             if (*screen == ScreenKind::Workbench3x3) {
                 openInventoryScreen(crafting::GridSize::Workbench3x3);
             } else {
-                openContainerScreen(*screen, m_currentTarget.blockPos);
+                openContainerScreen(*screen, m_inWorld.currentTarget.blockPos);
             }
             m_audio.playUiClick();
             return;
         }
         // Creative: clicking a piston pushes the blocks opposite to the clicked face (no
         // redstone yet). In Survival a piston is just a block to build against.
-        if (m_player.isCreative() && m_currentTarget.blockId == world::BlockId::Piston) {
-            core::FaceDir pushDir = m_currentTarget.face;
-            switch (m_currentTarget.face) {
+        if (m_player.isCreative() && m_inWorld.currentTarget.blockId == world::BlockId::Piston) {
+            core::FaceDir pushDir = m_inWorld.currentTarget.face;
+            switch (m_inWorld.currentTarget.face) {
                 case core::FaceDir::PosX: pushDir = core::FaceDir::NegX; break;
                 case core::FaceDir::NegX: pushDir = core::FaceDir::PosX; break;
                 case core::FaceDir::PosY: pushDir = core::FaceDir::NegY; break;
@@ -879,11 +879,11 @@ void Application::handleRightClickAction() {
                 case core::FaceDir::PosZ: pushDir = core::FaceDir::NegZ; break;
                 case core::FaceDir::NegZ: pushDir = core::FaceDir::PosZ; break;
             }
-            if (m_world->triggerPistonPush(m_currentTarget.blockPos, pushDir)) {
-                playWorldSound(blockCentre(m_currentTarget.blockPos),
+            if (m_world->triggerPistonPush(m_inWorld.currentTarget.blockPos, pushDir)) {
+                playWorldSound(blockCentre(m_inWorld.currentTarget.blockPos),
                                [&](const audio::VoiceAcoustics& a) { return m_audio.playPistonSound(a); });
                 m_player.triggerHandSwing();
-                m_placeCooldown = 0.18f;
+                m_inWorld.placeCooldown = 0.18f;
                 return;
             }
         }
@@ -892,21 +892,21 @@ void Application::handleRightClickAction() {
     if (onBlock) {
         // Step 3: flint and steel on TNT (S6.6), the held item on the block (door, bed, seeds,
         // hoe, bucket), then the held block.
-        if (m_session.igniteTnt(*m_world, m_player, m_currentTarget)) {
-            m_placeCooldown = 0.16f;
+        if (m_session.igniteTnt(*m_world, m_player, m_inWorld.currentTarget)) {
+            m_inWorld.placeCooldown = 0.16f;
             return;
         }
-        if (const std::optional<ItemUseResult> used = useHeldItemOnBlock(*m_world, m_player, m_currentTarget)) {
+        if (const std::optional<ItemUseResult> used = useHeldItemOnBlock(*m_world, m_player, m_inWorld.currentTarget)) {
             playItemUseEffects(*used);
-            m_placeCooldown = 0.16f;
+            m_inWorld.placeCooldown = 0.16f;
             return;
         }
-        if (const std::optional<world::BlockId> placed = placeHeldBlock(*m_world, m_player, m_currentTarget)) {
+        if (const std::optional<world::BlockId> placed = placeHeldBlock(*m_world, m_player, m_inWorld.currentTarget)) {
             const world::BlockDef& def = world::BlockRegistry::get(*placed);
             m_player.triggerHandSwing();
-            playWorldSound(blockCentre(m_currentTarget.adjacentPos),
+            playWorldSound(blockCentre(m_inWorld.currentTarget.adjacentPos),
                            [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockPlace(def.sound, a); });
-            m_placeCooldown = 0.16f;
+            m_inWorld.placeCooldown = 0.16f;
             return;
         }
     }
@@ -916,7 +916,7 @@ void Application::handleRightClickAction() {
     if (!onBlock) {
         if (const std::optional<ItemUseResult> used = useHeldBucket(*m_world, m_player)) {
             playItemUseEffects(*used);
-            m_placeCooldown = 0.16f;
+            m_inWorld.placeCooldown = 0.16f;
             return;
         }
     }
@@ -924,7 +924,7 @@ void Application::handleRightClickAction() {
         playWorldSound(m_player.getEyePosition(), [&](const audio::VoiceAcoustics& a) {
             return m_audio.playSound(audio::SoundEffect::Eat, 0.7f, 1.0f, a);
         });
-        m_placeCooldown = 0.16f;
+        m_inWorld.placeCooldown = 0.16f;
     }
 }
 
@@ -952,7 +952,7 @@ void Application::playItemUseEffects(const ItemUseResult& used) {
 }
 
 bool Application::activateDoorOrBed() {
-    const core::BlockPos pos = m_currentTarget.blockPos;
+    const core::BlockPos pos = m_inWorld.currentTarget.blockPos;
     if (const std::optional<bool> open = toggleDoor(*m_world, pos)) {
         // Beta World.playAuxSFX 1003: random.door_open or door_close.
         const audio::SoundEffect effect = *open ? audio::SoundEffect::DoorOpen : audio::SoundEffect::DoorClose;
@@ -961,7 +961,7 @@ bool Application::activateDoorOrBed() {
             return m_audio.playSound(effect, 1.0f, pitch, a);
         });
         m_player.triggerHandSwing();
-        m_placeCooldown = 0.18f;
+        m_inWorld.placeCooldown = 0.18f;
         return true;
     }
     if (m_world->getBlock(pos) != world::BlockId::Bed) {
@@ -970,8 +970,8 @@ bool Application::activateDoorOrBed() {
     switch (m_session.trySleep(*m_world, m_player, pos, m_timeOfDay)) {
         case SleepResult::Asleep:
             m_screenState = ui::ScreenState::Sleeping;
-            m_leftMouseDown = false;
-            m_attackPressed = false;
+            m_inWorld.leftMouseDown = false;
+            m_inWorld.attackPressed = false;
             m_session.resetMining();
             break;
         case SleepResult::NotNight:
@@ -983,14 +983,14 @@ bool Application::activateDoorOrBed() {
         case SleepResult::NotABed:
             break;
     }
-    m_placeCooldown = 0.18f;
+    m_inWorld.placeCooldown = 0.18f;
     return true;
 }
 
 void Application::showStatusMessage(std::string text) {
     core::Logger::info("Application", text);
-    m_statusMessage = std::move(text);
-    m_statusMessageSeconds = 4.0f;
+    m_inWorld.statusMessage = std::move(text);
+    m_inWorld.statusMessageSeconds = 4.0f;
 }
 
 void Application::fixedUpdate(float fixedDt) {
@@ -1011,17 +1011,17 @@ void Application::fixedUpdate(float fixedDt) {
                        [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockStep(groundDef.sound, a); });
     }
 
-    m_particles.update(fixedDt, *m_world);
+    m_inWorld.particles.update(fixedDt, *m_world);
 }
 
 void Application::gameTick() {
     const bool playing = m_mouseCaptured && !m_inventoryOpen && m_screenState == ui::ScreenState::InGame;
     const PlayerActions actions{
-        .attackPressed = m_attackPressed && playing,
-        .attackHeld = m_leftMouseDown && playing,
-        .target = m_currentTarget
+        .attackPressed = m_inWorld.attackPressed && playing,
+        .attackHeld = m_inWorld.leftMouseDown && playing,
+        .target = m_inWorld.currentTarget
     };
-    m_attackPressed = false;
+    m_inWorld.attackPressed = false;
     ++m_gameTicks;
     if (m_config.features.weather) {
         world::tickWeather(m_weather, m_weatherRng); // S8.9
@@ -1063,8 +1063,8 @@ void Application::tickWeatherEffects() {
     // S8.10 lightning: the flash and bolt fade over kLightningFlashTicks; the thunder follows at the
     // speed of sound, quieter for a far strike.
     constexpr int32_t kStrikeRange = 64;
-    if (m_lightningTicks > 0 && --m_lightningTicks == 0) {
-        m_lightningBolt.reset();
+    if (m_inWorld.lightningTicks > 0 && --m_inWorld.lightningTicks == 0) {
+        m_inWorld.lightningBolt.reset();
     }
     if (world::rollLightning(m_weather, m_world->getChunks().size(), m_weatherRng)) {
         const int32_t x = static_cast<int32_t>(std::floor(eye.x)) + m_weatherRng.nextInt(2 * kStrikeRange + 1) - kStrikeRange;
@@ -1073,17 +1073,17 @@ void Application::tickWeatherEffects() {
         // Beta canLightningStrikeAt: a loaded column where it rains (not snows).
         if (y > 0 && world::precipitationAt(m_world->getBiomeAt(x, z)) == world::Precipitation::Rain) {
             const glm::vec3 strike(static_cast<float>(x) + 0.5f, static_cast<float>(y), static_cast<float>(z) + 0.5f);
-            m_lightningBolt = strike;
-            m_lightningSeed = static_cast<uint32_t>(m_weatherRng.next());
-            m_lightningTicks = kLightningFlashTicks;
+            m_inWorld.lightningBolt = strike;
+            m_inWorld.lightningSeed = static_cast<uint32_t>(m_weatherRng.next());
+            m_inWorld.lightningTicks = kLightningFlashTicks;
             const float dist = glm::length(strike - eye);
-            m_pendingThunder.push_back({world::thunderDelayTicks(dist), std::clamp(1.0f - dist / 256.0f, 0.35f, 1.0f)});
+            m_inWorld.pendingThunder.push_back({world::thunderDelayTicks(dist), std::clamp(1.0f - dist / 256.0f, 0.35f, 1.0f)});
         }
     }
-    for (auto it = m_pendingThunder.begin(); it != m_pendingThunder.end();) {
+    for (auto it = m_inWorld.pendingThunder.begin(); it != m_inWorld.pendingThunder.end();) {
         if (--it->ticks <= 0) {
             (void)m_audio.playThunder(it->volume);
-            it = m_pendingThunder.erase(it);
+            it = m_inWorld.pendingThunder.erase(it);
         } else {
             ++it;
         }
@@ -1101,7 +1101,7 @@ void Application::tickWeatherEffects() {
                 world::precipitationAt(m_world->getBiomeAt(x, z)) != world::Precipitation::Rain) {
                 continue;
             }
-            m_particles.spawnRainSplash(glm::vec3(static_cast<float>(x) + m_weatherRng.nextFloat(), static_cast<float>(y),
+            m_inWorld.particles.spawnRainSplash(glm::vec3(static_cast<float>(x) + m_weatherRng.nextFloat(), static_cast<float>(y),
                                                   static_cast<float>(z) + m_weatherRng.nextFloat()),
                                         1);
         }
@@ -1174,26 +1174,26 @@ void Application::playGameTickEffects(const GameTickEvents& events) {
     if (events.digging) {
         m_player.triggerHandSwing();
         // Beta plays the dig sound every 4 ticks of a held dig.
-        if (m_digTicks++ % 4 == 0) {
-            const world::BlockId block = m_world->getBlock(m_currentTarget.blockPos);
+        if (m_inWorld.digTicks++ % 4 == 0) {
+            const world::BlockId block = m_world->getBlock(m_inWorld.currentTarget.blockPos);
             const world::BlockDef& def = world::BlockRegistry::get(block);
-            playWorldSound(blockCentre(m_currentTarget.blockPos),
+            playWorldSound(blockCentre(m_inWorld.currentTarget.blockPos),
                            [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockDigHit(def.sound, a); });
-            m_particles.spawnMiningHitParticles(*m_world, m_currentTarget.blockPos, m_currentTarget.face, block, 2);
+            m_inWorld.particles.spawnMiningHitParticles(*m_world, m_inWorld.currentTarget.blockPos, m_inWorld.currentTarget.face, block, 2);
         }
     } else {
-        m_digTicks = 0;
+        m_inWorld.digTicks = 0;
     }
     if (events.blockBroken) {
         const BlockBreakEvent& broken = *events.blockBroken;
         const world::BlockDef& def = world::BlockRegistry::get(broken.block);
-        m_particles.spawnBlockBreakBurst(*m_world, broken.pos, broken.block, 24);
+        m_inWorld.particles.spawnBlockBreakBurst(*m_world, broken.pos, broken.block, 24);
         playWorldSound(blockCentre(broken.pos),
                        [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockBreak(def.sound, a); });
     }
     for (const ExplosionEvent& blast : events.explosions) {
         // Beta Explosion.doExplosionB: random.explode at volume 4, pitch (1 + (r1 - r2) * 0.2) * 0.7.
-        m_particles.spawnExplosionBurst(blast.centre, blast.power);
+        m_inWorld.particles.spawnExplosionBurst(blast.centre, blast.power);
         const float pitch = (1.0f + (m_sfxRng.nextFloat() - m_sfxRng.nextFloat()) * 0.2f) * 0.7f;
         playWorldSound(blast.centre, [&](const audio::VoiceAcoustics& a) {
             return m_audio.playSound(audio::SoundEffect::Explosion, 1.0f, pitch, a);
@@ -1268,35 +1268,35 @@ void Application::update(float dt) {
         m_audio.setRainLoop(0.0f); // Paused or in a menu: the rain falls silent
         return;
     }
-    m_statusMessageSeconds = std::max(0.0f, m_statusMessageSeconds - dt);
+    m_inWorld.statusMessageSeconds = std::max(0.0f, m_inWorld.statusMessageSeconds - dt);
 
-    m_totalTime += dt;
+    m_inWorld.totalTime += dt;
     // Before this frame's sounds start, so they are ray-marched from a current listener.
-    m_acoustics.update(static_cast<double>(m_totalTime), m_player.getInterpolatedEyePosition(m_renderAlpha), *m_world);
+    m_inWorld.acoustics.update(static_cast<double>(m_inWorld.totalTime), m_player.getInterpolatedEyePosition(m_renderAlpha), *m_world);
     if (m_config.dayLengthSeconds > 1.0f) {
         m_timeOfDay = std::fmod(m_timeOfDay + dt / m_config.dayLengthSeconds, 1.0f);
     }
-    if (m_placeCooldown > 0.0f) {
-        m_placeCooldown = std::max(0.0f, m_placeCooldown - dt);
+    if (m_inWorld.placeCooldown > 0.0f) {
+        m_inWorld.placeCooldown = std::max(0.0f, m_inWorld.placeCooldown - dt);
     }
 
     constexpr float FIXED_DT = 1.0f / 60.0f;
     constexpr float MAX_ACCUMULATOR = 0.25f;
 
-    m_accumulator = std::min(m_accumulator + dt, MAX_ACCUMULATOR);
-    while (m_accumulator >= FIXED_DT) {
+    m_inWorld.accumulator = std::min(m_inWorld.accumulator + dt, MAX_ACCUMULATOR);
+    while (m_inWorld.accumulator >= FIXED_DT) {
         fixedUpdate(FIXED_DT);
-        m_accumulator -= FIXED_DT;
+        m_inWorld.accumulator -= FIXED_DT;
     }
 
     // Beta's 20 TPS game tick runs on its own clock: physics steps at 60 Hz.
-    m_gameTickAccumulator = std::min(m_gameTickAccumulator + dt, MAX_ACCUMULATOR);
-    while (m_gameTickAccumulator >= core::EngineConfig::GAME_TICK_SECONDS) {
+    m_inWorld.gameTickAccumulator = std::min(m_inWorld.gameTickAccumulator + dt, MAX_ACCUMULATOR);
+    while (m_inWorld.gameTickAccumulator >= core::EngineConfig::GAME_TICK_SECONDS) {
         gameTick();
-        m_gameTickAccumulator -= core::EngineConfig::GAME_TICK_SECONDS;
+        m_inWorld.gameTickAccumulator -= core::EngineConfig::GAME_TICK_SECONDS;
     }
 
-    m_renderAlpha = m_accumulator / FIXED_DT;
+    m_renderAlpha = m_inWorld.accumulator / FIXED_DT;
     m_player.setRenderAlpha(m_renderAlpha);
 
     // Stream chunks around player: S7.7 disk reads and pass 1 off the main thread, then at
@@ -1309,7 +1309,7 @@ void Application::update(float dt) {
     }
 
     // Update voxel raycast from camera eye
-    m_currentTarget = physics::Raycaster::cast(
+    m_inWorld.currentTarget = physics::Raycaster::cast(
         *m_world,
         m_player.getInterpolatedEyePosition(m_renderAlpha),
         m_player.getLookDirection(),
@@ -1325,8 +1325,8 @@ void Application::collectMobInstances(float tickAlpha) {
     constexpr float kPi = 3.14159265f;
 
     ecs::Registry& reg = m_session.entities();
-    m_mobInstances.clear();
-    m_mobWalkNext.clear();
+    m_inWorld.mobInstances.clear();
+    m_inWorld.mobWalkNext.clear();
     reg.view<ecs::TransformComp, ecs::MobKindComp>().each(
         [&](ecs::EntityId e, const ecs::TransformComp& t, const ecs::MobKindComp& mob) {
             if (reg.has<ecs::PlayerTagComp>(e)) {
@@ -1354,7 +1354,7 @@ void Application::collectMobInstances(float tickAlpha) {
             }
 
             MobWalkState walk{0.0f, inst.pos};
-            if (const auto it = m_mobWalk.find(e); it != m_mobWalk.end()) {
+            if (const auto it = m_inWorld.mobWalk.find(e); it != m_inWorld.mobWalk.end()) {
                 walk.phase = it->second.phase;
                 const glm::vec2 step(inst.pos.x - it->second.lastPos.x, inst.pos.z - it->second.lastPos.z);
                 const float dist = glm::length(step);
@@ -1367,10 +1367,10 @@ void Application::collectMobInstances(float tickAlpha) {
                 }
             }
             inst.walkPhase = walk.phase;
-            m_mobWalkNext.emplace(e, walk);
-            m_mobInstances.push_back(inst);
+            m_inWorld.mobWalkNext.emplace(e, walk);
+            m_inWorld.mobInstances.push_back(inst);
         });
-    m_mobWalk.swap(m_mobWalkNext);
+    m_inWorld.mobWalk.swap(m_inWorld.mobWalkNext);
 }
 
 void Application::renderFrame(bool present) {
@@ -1395,61 +1395,61 @@ void Application::renderFrame(bool present) {
 
 void Application::renderWorldFrame(int framebufferWidth, int framebufferHeight) {
     // Entities move on the 20 TPS game tick, so they interpolate with that clock's alpha.
-    const float tickAlpha = std::clamp(m_gameTickAccumulator / core::EngineConfig::GAME_TICK_SECONDS, 0.0f, 1.0f);
+    const float tickAlpha = std::clamp(m_inWorld.gameTickAccumulator / core::EngineConfig::GAME_TICK_SECONDS, 0.0f, 1.0f);
     m_player.setTickAlpha(tickAlpha); // The hurt camera roll runs on the game tick
-    collectDynamicLights(m_dynamicLights, m_player, &m_session.entities(), tickAlpha);
-    m_itemInstances.clear();
+    collectDynamicLights(m_inWorld.dynamicLights, m_player, &m_session.entities(), tickAlpha);
+    m_inWorld.itemInstances.clear();
     m_session.entities().view<ecs::TransformComp, ecs::ItemDropComp>().each(
         [&](ecs::EntityId e, const ecs::TransformComp& t, const ecs::ItemDropComp& item) {
             const float age = item.ageSeconds + tickAlpha * core::EngineConfig::GAME_TICK_SECONDS;
-            m_itemInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), item.id, age,
+            m_inWorld.itemInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), item.id, age,
                                        static_cast<float>(ecs::entityIndex(e) % 628U) * 0.01f});
         });
     collectMobInstances(tickAlpha);
-    m_fallingBlockInstances.clear();
+    m_inWorld.fallingBlockInstances.clear();
     m_session.entities().view<ecs::TransformComp, ecs::FallingBlockComp>().each(
         [&](ecs::EntityId, const ecs::TransformComp& t, const ecs::FallingBlockComp& falling) {
-            m_fallingBlockInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), falling.id});
+            m_inWorld.fallingBlockInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), falling.id});
         });
     // S6.6 primed TNT: the block itself, blinking white over the last kTntFlashTicks.
     m_session.entities().view<ecs::TransformComp, ecs::PrimedTntComp>().each(
         [&](ecs::EntityId, const ecs::TransformComp& t, const ecs::PrimedTntComp& tnt) {
             const float flash = tnt.fuse <= kTntFlashTicks && (tnt.fuse / 2) % 2 == 0 ? 0.8f : 0.0f;
-            m_fallingBlockInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), world::BlockId::TNT, flash});
+            m_inWorld.fallingBlockInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), world::BlockId::TNT, flash});
         });
     // S6.2 arrows, along their flight.
-    m_arrowInstances.clear();
+    m_inWorld.arrowInstances.clear();
     m_session.entities().view<ecs::TransformComp, ecs::ArrowComp>().each(
         [&](ecs::EntityId, const ecs::TransformComp& t, const ecs::ArrowComp&) {
-            m_arrowInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), t.yaw, t.pitch});
+            m_inWorld.arrowInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), t.yaw, t.pitch});
         });
     // The crack belongs to the block being mined, not to whatever the crosshair crossed since.
-    const bool crackOnTarget = m_currentTarget.hit && m_session.miningTarget() &&
-                               *m_session.miningTarget() == m_currentTarget.blockPos;
+    const bool crackOnTarget = m_inWorld.currentTarget.hit && m_session.miningTarget() &&
+                               *m_session.miningTarget() == m_inWorld.currentTarget.blockPos;
 
     // S8.10 / S8.11 weather of this frame, interpolated on the game tick.
     m_worldRenderer.setWeather(render::WeatherFrame{
         .rainStrength = world::rainStrengthAt(m_weather, tickAlpha),
         .thunderStrength = world::thunderStrengthAt(m_weather, tickAlpha),
-        .lightningFlash = static_cast<float>(m_lightningTicks) / static_cast<float>(kLightningFlashTicks),
-        .bolt = m_lightningBolt,
-        .boltSeed = m_lightningSeed});
-    m_lastRenderStats = m_worldRenderer.renderWorld(
+        .lightningFlash = static_cast<float>(m_inWorld.lightningTicks) / static_cast<float>(kLightningFlashTicks),
+        .bolt = m_inWorld.lightningBolt,
+        .boltSeed = m_inWorld.lightningSeed});
+    m_inWorld.lastRenderStats = m_worldRenderer.renderWorld(
         *m_world,
         m_player,
-        m_currentTarget,
+        m_inWorld.currentTarget,
         crackOnTarget ? m_session.crackStage() : -1,
-        m_particles,
+        m_inWorld.particles,
         m_config,
         m_timeOfDay,
-        m_totalTime,
+        m_inWorld.totalTime,
         framebufferWidth,
         framebufferHeight,
-        m_dynamicLights,
-        m_itemInstances,
-        m_mobInstances,
-        m_fallingBlockInstances,
-        m_arrowInstances
+        m_inWorld.dynamicLights,
+        m_inWorld.itemInstances,
+        m_inWorld.mobInstances,
+        m_inWorld.fallingBlockInstances,
+        m_inWorld.arrowInstances
     );
 }
 
@@ -1466,8 +1466,8 @@ void Application::renderScreens() {
             .musicEnabled = m_audio.isMusicEnabled(),
             .mouseX = canvas.toCanvasX(m_mouseX),
             .mouseY = canvas.toCanvasY(m_mouseY),
-            .renderStats = m_lastRenderStats,
-            .targetHit = m_currentTarget,
+            .renderStats = m_inWorld.lastRenderStats,
+            .targetHit = m_inWorld.currentTarget,
             .crafting = craftingScreenView(m_session.crafting(), *m_world),
             .hurtFlash = gameplay::hurtFlashIntensity(m_player.health()),
             // Beta GuiIngame: the hearts flash white every 3 ticks while hits are resisted.
@@ -1479,8 +1479,8 @@ void Application::renderScreens() {
                      .hostile = m_session.spawner().stats().hostile,
                      .passiveCap = m_session.spawner().stats().passiveCap,
                      .hostileCap = m_session.spawner().stats().hostileCap},
-            .statusMessage = m_statusMessageSeconds > 0.0f ? m_statusMessage : std::string{},
-            .statusAlpha = std::clamp(m_statusMessageSeconds, 0.0f, 1.0f),
+            .statusMessage = m_inWorld.statusMessageSeconds > 0.0f ? m_inWorld.statusMessage : std::string{},
+            .statusAlpha = std::clamp(m_inWorld.statusMessageSeconds, 0.0f, 1.0f),
             .sleepFade = m_session.sleepFade(),
             .storage = hudStorageStats(*m_world),
             .weather = m_showDebug ? weatherDebugLine() : std::string{}
@@ -1686,23 +1686,8 @@ void Application::leaveWorld() {
     // the player, the effects and every per-world timer.
     m_session = GameSession{};
     m_player = physics::Player{};
-    m_particles = render::ParticleSystem{};
-    m_dynamicLights.clear();
-    m_acoustics.reset();
-    m_itemInstances.clear();
-    m_fallingBlockInstances.clear();
-    m_arrowInstances.clear();
-    m_mobInstances.clear();
-    m_mobWalk.clear();
-    m_mobWalkNext.clear();
-    m_currentTarget = {};
-    m_digTicks = 0;
-    m_placeCooldown = 0.0f;
-    m_statusMessage.clear();
-    m_statusMessageSeconds = 0.0f;
+    m_inWorld.reset(); // effects, render instances, timers, input latches
     m_inventoryOpen = false;
-    m_leftMouseDown = false;
-    m_attackPressed = false;
     m_isNewWorld = false;
     m_saveDisabled = false;
     m_newWorldMode.reset();
@@ -1710,15 +1695,8 @@ void Application::leaveWorld() {
     m_spawnPoint = glm::vec3(8.5f, 82.0f, 8.5f);
     m_bedSpawn.reset();
     m_timeOfDay = 0.22f;
-    m_totalTime = 0.0f;
-    m_accumulator = 0.0f;
-    m_gameTickAccumulator = 0.0f;
     m_gameTicks = 0;
-    m_lastRenderStats = {};
     m_weather = world::WeatherState{};
-    m_pendingThunder.clear();
-    m_lightningBolt.reset();
-    m_lightningTicks = 0;
     m_audio.setRainLoop(0.0f);
     m_worldRenderer.setWeather({});
 
@@ -1836,8 +1814,8 @@ void Application::handlePlayerDeath() {
     }
     (void)m_session.dropInventoryOnDeath(m_player);
     m_session.resetMining();
-    m_leftMouseDown = false;
-    m_attackPressed = false;
+    m_inWorld.leftMouseDown = false;
+    m_inWorld.attackPressed = false;
     m_screenState = ui::ScreenState::DeathScreen;
     setMouseCaptured(false);
 }
