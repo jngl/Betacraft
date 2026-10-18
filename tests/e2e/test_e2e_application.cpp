@@ -219,7 +219,7 @@ TEST(ApplicationE2ETest, DeathScreenThenRespawnAtSpawn) {
     ASSERT_EQ(app.runFixedFrames(2, 0.05f), 0);
     physics::Player& player = app.getPlayer();
     player.setInventorySlot(0, {world::BlockId::Torch, 10});
-    const size_t itemsBefore = app.getSession().entities().count<ecs::ItemDropComp>();
+    const size_t itemsBefore = app.getSimulation().entities().count<ecs::ItemDropComp>();
 
     player.setPosition({8.5f, -70.0f, 8.5f});
     for (int i = 0; i < 200 && app.getScreenState() != ui::ScreenState::DeathScreen; ++i) {
@@ -228,7 +228,7 @@ TEST(ApplicationE2ETest, DeathScreenThenRespawnAtSpawn) {
     ASSERT_EQ(app.getScreenState(), ui::ScreenState::DeathScreen);
     EXPECT_TRUE(player.isDead());
     EXPECT_EQ(player.countItem(world::BlockId::Torch), 0);
-    EXPECT_EQ(app.getSession().entities().count<ecs::ItemDropComp>(), itemsBefore + 1);
+    EXPECT_EQ(app.getSimulation().entities().count<ecs::ItemDropComp>(), itemsBefore + 1);
 
     app.respawnPlayer();
     EXPECT_EQ(app.getScreenState(), ui::ScreenState::InGame);

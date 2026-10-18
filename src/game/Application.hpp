@@ -78,7 +78,7 @@ public:
     [[nodiscard]] WorldSession* getWorldSession() noexcept { return m_session.get(); }
     // Precondition for both: a world is open (hasWorld()).
     [[nodiscard]] physics::Player& getPlayer() noexcept { return m_session->player(); }
-    [[nodiscard]] EntitySimulation& getSession() noexcept { return m_session->simulation(); }
+    [[nodiscard]] EntitySimulation& getSimulation() noexcept { return m_session->simulation(); }
 
     // Death screen "Respawn": full health and air at the spawn point, back in game.
     void respawnPlayer();
