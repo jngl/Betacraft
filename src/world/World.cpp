@@ -1514,6 +1514,12 @@ storage::MigrationReport World::migrateLegacyStorage(const std::function<void(fl
 }
 
 void World::saveModifiedChunks(const WorldLevelData& levelData) {
+    queueModifiedChunks(levelData);
+    // Waits for the queued writes, then region headers after their data.
+    (void)flushStorage();
+}
+
+void World::queueModifiedChunks(const WorldLevelData& levelData) {
     if (m_saveDisabled) {
         return;
     }
@@ -1527,10 +1533,8 @@ void World::saveModifiedChunks(const WorldLevelData& levelData) {
             }
         }
     }
-    // Waits for the queued writes, then region headers after their data.
-    (void)flushStorage();
     if (savedCount > 0) {
-        core::Logger::info("World", "Saved ", savedCount, " modified chunks to disk.");
+        core::Logger::info("World", "Queued ", savedCount, " modified chunks for saving.");
     }
 }
 

@@ -240,6 +240,20 @@ TEST_F(WorldSessionLifecycle, CloseCanBeCalledMoreThanOnce) {
     EXPECT_FALSE(levelDatExists()) << "the second close writes nothing";
 }
 
+// Spec #9 user story 24: close() reports a chunk that could not be written, even though the
+// save() inside it only queued the chunk. A file where the region folder goes makes every
+// region write fail.
+TEST_F(WorldSessionLifecycle, CloseReportsChunksThatCouldNotBeWritten) {
+    std::ofstream(m_dir.path() / "region") << "not a folder";
+    std::unique_ptr<WorldSession> session = open();
+    ASSERT_NE(session, nullptr);
+    session->startNewWorld(core::GameMode::Survival);
+    ASSERT_TRUE(session->world().setBlock(2, 100, 2, BlockId::Glowstone));
+
+    EXPECT_FALSE(session->close());
+    EXPECT_FALSE(session->close()) << "later calls return the first result";
+}
+
 } // namespace
 
 // The fixture opens, starts, saves and closes a world with no GL.

@@ -115,8 +115,8 @@ public:
     // level.dat too new or unreadable: never overwritten (World holds the flag).
     [[nodiscard]] bool isSaveDisabled() const noexcept { return m_world->isSaveDisabled(); }
 
-    // level.dat and the modified chunks (World::saveModifiedChunks), unless saving is disabled
-    // or the world awaits its mode. Stacks the grid and cursor hold that the inventory cannot
+    // level.dat, and the modified chunks queued for writing without waiting for them
+    // (World::queueModifiedChunks), unless saving is disabled or the world awaits its mode. Stacks the grid and cursor hold that the inventory cannot
     // take are thrown in front of the player and the grid is closed (closedCrafting).
     SaveResult save();
     // save(), then every queued chunk written (World::flushStorage). False when some chunk

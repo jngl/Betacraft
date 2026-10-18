@@ -188,7 +188,7 @@ SaveResult WorldSession::save() {
         result.closedCrafting = true;
         data = makeLevelData();
     }
-    m_world->saveModifiedChunks(data);
+    m_world->queueModifiedChunks(data); // close() flushes them
     return result;
 }
 
