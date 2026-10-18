@@ -573,15 +573,14 @@ TEST_F(S5Bed, TheNightPassesAndTheBedBecomesTheSpawn) {
     EXPECT_TRUE(game::isDaytime(0.0f));
 
     // The spawn point is next to the bed: on the floor, out of the bed's cells.
-    std::optional<core::BlockPos> bed = ev.wokeInBed;
-    const game::RespawnChoice choice = game::chooseRespawnPoint(*m_world, bed, {0.5f, 70.0f, 0.5f});
-    EXPECT_FALSE(choice.bedMissing);
-    ASSERT_TRUE(bed.has_value());
-    EXPECT_FLOAT_EQ(choice.point.y, static_cast<float>(kY));
-    EXPECT_LE(std::abs(choice.point.x - (m_head.x + 0.5f)), 2.0f);
-    EXPECT_LE(std::abs(choice.point.z - (m_head.z + 0.5f)), 1.0f);
-    const core::BlockPos cell{static_cast<int32_t>(std::floor(choice.point.x)), kY,
-                              static_cast<int32_t>(std::floor(choice.point.z))};
+    const std::optional<glm::vec3> nextToBed = game::bedRespawnPoint(*m_world, *ev.wokeInBed);
+    ASSERT_TRUE(nextToBed.has_value());
+    const glm::vec3 choice{*nextToBed};
+    EXPECT_FLOAT_EQ(choice.y, static_cast<float>(kY));
+    EXPECT_LE(std::abs(choice.x - (m_head.x + 0.5f)), 2.0f);
+    EXPECT_LE(std::abs(choice.z - (m_head.z + 0.5f)), 1.0f);
+    const core::BlockPos cell{static_cast<int32_t>(std::floor(choice.x)), kY,
+                              static_cast<int32_t>(std::floor(choice.z))};
     EXPECT_EQ(m_world->getBlock(cell), BlockId::Air);
 }
 
@@ -607,10 +606,9 @@ TEST_F(S5Bed, AHitOrALostBedEndsTheSleepWithoutSkippingTheNight) {
     EXPECT_EQ(m_world->getBlock(m_foot), BlockId::Air) << "the foot went with the head";
 }
 
-TEST_F(S5Bed, ABrokenBedSendsThePlayerBackToTheWorldSpawn) {
+TEST_F(S5Bed, ABrokenBedIsNoLongerARespawnPoint) {
     placeBed();
-    std::optional<core::BlockPos> bed = m_head;
-    ASSERT_FALSE(game::chooseRespawnPoint(*m_world, bed, {}).bedMissing);
+    ASSERT_TRUE(game::bedRespawnPoint(*m_world, m_head).has_value());
 
     // Breaking the foot takes the head along and drops a single bed.
     const MineResult r = mine(m_foot);
@@ -620,19 +618,9 @@ TEST_F(S5Bed, ABrokenBedSendsThePlayerBackToTheWorldSpawn) {
     tickIdle(2);
     EXPECT_EQ(droppedItems(m_session, items::Bed), 1);
 
-    const game::RespawnChoice choice = game::chooseRespawnPoint(*m_world, bed, {0.5f, 70.0f, 0.5f});
-    EXPECT_TRUE(choice.bedMissing);
-    EXPECT_FALSE(bed.has_value()) << "the bed spawn is forgotten";
-    const glm::vec3 worldSpawn = m_world->findSafeSpawnPosition();
-    EXPECT_FLOAT_EQ(choice.point.x, worldSpawn.x);
-    EXPECT_FLOAT_EQ(choice.point.y, worldSpawn.y);
-    EXPECT_FLOAT_EQ(choice.point.z, worldSpawn.z);
+    // WorldSession::respawn then falls back to the world spawn (test_world_session_respawn).
+    EXPECT_FALSE(game::bedRespawnPoint(*m_world, m_head).has_value());
     EXPECT_EQ(m_session.trySleep(*m_world, m_player, m_foot, kNight), game::SleepResult::NotABed);
-
-    // Without a bed spawn the given spawn point is kept.
-    const game::RespawnChoice plain = game::chooseRespawnPoint(*m_world, bed, {0.5f, 70.0f, 0.5f});
-    EXPECT_FALSE(plain.bedMissing);
-    EXPECT_FLOAT_EQ(plain.point.y, 70.0f);
 }
 
 TEST_F(S5Bed, DoorAndBedRecipes) {

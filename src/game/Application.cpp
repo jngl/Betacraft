@@ -1689,12 +1689,9 @@ void Application::respawnPlayer() {
         return;
     }
     // S5.8: next to the bed slept in, or back to the world spawn when it is gone.
-    const RespawnChoice choice = chooseRespawnPoint(world(), m_session->bedSpawn(), m_session->spawnPoint());
-    m_session->setSpawnPoint(choice.point);
-    if (choice.bedMissing) {
+    if (m_session->respawn().bedMissing) {
         showStatusMessage("Your home bed was missing or obstructed");
     }
-    (void)game::respawnPlayer(world(), player(), m_session->spawnPoint());
     m_screenState = ui::ScreenState::InGame;
     setMouseCaptured(true);
 }

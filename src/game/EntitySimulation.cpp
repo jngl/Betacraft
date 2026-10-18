@@ -1119,27 +1119,4 @@ std::optional<glm::vec3> bedRespawnPoint(const world::World& world, const core::
     return std::nullopt;
 }
 
-RespawnChoice chooseRespawnPoint(world::World& world, std::optional<core::BlockPos>& bed, const glm::vec3& spawnPoint) {
-    if (!bed) {
-        return {spawnPoint, false};
-    }
-    world.updateChunksAround(glm::vec3(static_cast<float>(bed->x), static_cast<float>(bed->y), static_cast<float>(bed->z)), 3, 64);
-    if (const std::optional<glm::vec3> nextToBed = bedRespawnPoint(world, *bed)) {
-        return {*nextToBed, false};
-    }
-    bed.reset();
-    return {world.findSafeSpawnPosition(), true};
-}
-
-glm::vec3 respawnPlayer(world::World& world, physics::Player& player, const glm::vec3& spawnPoint) {
-    gameplay::respawn(player.health());
-    player.breath().air = gameplay::kMaxAirTicks;
-    player.burning().fireTicks = 0;
-    world.updateChunksAround(spawnPoint, 3, 64);
-    const glm::vec3 feet = world.findStandableAbove(spawnPoint);
-    player.setPosition(feet);
-    player.resetInterpolationHistory();
-    return feet;
-}
-
 } // namespace betacraft::game

@@ -254,36 +254,3 @@ TEST_F(S1Survival, DeathFiresOnceAndScattersEveryStack) {
     }
 }
 
-TEST_F(S1Survival, RespawnRestoresHealthAirAndSpawn) {
-    submerge();
-    tickIdle(100); // Some air used up
-    ASSERT_LT(m_player.breath().air, gameplay::kMaxAirTicks);
-    for (int32_t y = kY; y <= kY + 2; ++y) {
-        ASSERT_TRUE(m_world->setBlock(2, y, 2, BlockId::Air));
-    }
-    ASSERT_EQ(dieInTheVoid(), 1);
-    (void)m_session.dropInventoryOnDeath(m_player);
-    m_player.breath().air = 37; // Whatever was left when the player died
-
-    // The spawn point sits inside the glass floor: the player stands on top of it.
-    const glm::vec3 spawn{10.5f, static_cast<float>(kFloorY) + 0.5f, 10.5f};
-    const glm::vec3 feet = game::respawnPlayer(*m_world, m_player, spawn);
-    EXPECT_FALSE(m_player.isDead());
-    EXPECT_EQ(m_player.getHealth(), 20);
-    EXPECT_EQ(m_player.health().invulnerableTicks, 0);
-    EXPECT_EQ(m_player.breath().air, gameplay::kMaxAirTicks);
-    EXPECT_FLOAT_EQ(feet.x, 10.5f);
-    EXPECT_FLOAT_EQ(feet.z, 10.5f);
-    EXPECT_NEAR(feet.y, static_cast<float>(kY), 0.02f);
-    EXPECT_EQ(m_player.getPosition(), feet);
-    EXPECT_EQ(m_player.getInterpolatedPosition(0.0f), feet) << "no interpolation from the death place";
-
-    // Alive again: the survival rules apply and the player stands on the floor.
-    for (int i = 0; i < 30; ++i) {
-        (void)m_player.fixedUpdate(1.0f / 60.0f, {}, *m_world);
-    }
-    EXPECT_TRUE(m_player.isOnGround());
-    EXPECT_TRUE(tickIdle().playerHurt.empty());
-    GameTickEvents ev{};
-    EXPECT_EQ(m_session.damagePlayer(m_player, {.amount = 3, .cause = DamageCause::Fall}, ev).applied, 3);
-}

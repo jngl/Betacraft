@@ -392,19 +392,4 @@ bool fillDungeonChest(world::World& world, const core::BlockPos& pos);
 // above it; nullopt when the bed is gone or every such cell is blocked.
 [[nodiscard]] std::optional<glm::vec3> bedRespawnPoint(const world::World& world, const core::BlockPos& bedHead);
 
-struct RespawnChoice {
-    glm::vec3 point{0.0f};
-    bool bedMissing{false}; // Beta "Your home bed was missing or obstructed"
-};
-
-// Where a dead player comes back: next to the bed when `bed` is set (its chunks loaded
-// first); when that bed is gone or obstructed, `bed` is cleared and the world spawn
-// (World::findSafeSpawnPosition) is used. Without a bed, `spawnPoint`.
-RespawnChoice chooseRespawnPoint(world::World& world, std::optional<core::BlockPos>& bed, const glm::vec3& spawnPoint);
-
-// Brings a dead player back (Beta respawnPlayer): full health and air, the chunks around
-// `spawnPoint` loaded, the feet on the first free cell at or above it, no interpolation from
-// the death place. Returns the new feet position.
-glm::vec3 respawnPlayer(world::World& world, physics::Player& player, const glm::vec3& spawnPoint);
-
 } // namespace betacraft::game

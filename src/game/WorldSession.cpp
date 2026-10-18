@@ -4,6 +4,8 @@
 #include "game/ItemBridge.hpp"
 #include "game/PlayerPersistence.hpp"
 #include "game/StarterKit.hpp"
+#include "gameplay/Health.hpp"
+#include "gameplay/Survival.hpp"
 #include "storage/SaveMigration.hpp"
 
 #include <cmath>
@@ -223,6 +225,31 @@ void WorldSession::wakeInBed(const core::BlockPos& bedHead) {
     const glm::vec3 centre = glm::vec3(static_cast<float>(bedHead.x), static_cast<float>(bedHead.y),
                                        static_cast<float>(bedHead.z)) + glm::vec3(0.5f);
     m_spawnPoint = bedRespawnPoint(*m_world, bedHead).value_or(centre);
+}
+
+RespawnResult WorldSession::respawn() {
+    RespawnResult result{};
+    if (m_bedSpawn) {
+        world::World& w = *m_world;
+        w.updateChunksAround(glm::vec3(static_cast<float>(m_bedSpawn->x), static_cast<float>(m_bedSpawn->y),
+                                       static_cast<float>(m_bedSpawn->z)),
+                             3, 64);
+        if (const std::optional<glm::vec3> nextToBed = bedRespawnPoint(w, *m_bedSpawn)) {
+            m_spawnPoint = *nextToBed;
+        } else {
+            m_bedSpawn.reset();
+            m_spawnPoint = w.findSafeSpawnPosition();
+            result.bedMissing = true;
+        }
+    }
+
+    gameplay::respawn(m_player.health());
+    m_player.breath().air = gameplay::kMaxAirTicks;
+    m_player.burning().fireTicks = 0;
+    m_world->updateChunksAround(m_spawnPoint, 3, 64);
+    m_player.setPosition(m_world->findStandableAbove(m_spawnPoint));
+    m_player.resetInterpolationHistory();
+    return result;
 }
 
 } // namespace betacraft::game
