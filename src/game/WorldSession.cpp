@@ -1,12 +1,9 @@
 #include "game/WorldSession.hpp"
 
 #include "core/Logger.hpp"
-#include "ecs/Components.hpp"
-#include "game/ItemBridge.hpp"
 #include "game/ItemUse.hpp"
 #include "game/PlayerPersistence.hpp"
 #include "game/StarterKit.hpp"
-#include "gameplay/MobDefs.hpp"
 #include "gameplay/MobSpawnRules.hpp"
 #include "gameplay/Health.hpp"
 #include "gameplay/Survival.hpp"
@@ -17,6 +14,13 @@
 #include <system_error>
 
 namespace betacraft::game {
+
+namespace {
+// Chunks loaded at once around where the player appears (opening a world, respawning): the
+// radius, and the most new chunks one call may load.
+constexpr int32_t kArrivalChunkRadius = 3;
+constexpr int32_t kArrivalMaxNewChunks = 64;
+} // namespace
 
 std::unique_ptr<WorldSession> WorldSession::open(OpenOptions options) {
     if (options.folder.empty()) {
@@ -77,12 +81,12 @@ WorldSession::WorldSession(const OpenOptions& options)
         if (options.newWorld) {
             core::Logger::warn("WorldSession", dir, " already holds a world: it is opened as saved.");
         }
-        m_world->updateChunksAround(saved.playerPos, 3, 64);
+        m_world->updateChunksAround(saved.playerPos, kArrivalChunkRadius, kArrivalMaxNewChunks);
         core::Logger::info("WorldSession", "Loaded existing world from ", dir);
     } else {
         m_spawnPoint = m_world->findSafeSpawnPosition();
         m_player.setPosition(m_spawnPoint);
-        m_world->updateChunksAround(m_spawnPoint, 3, 64);
+        m_world->updateChunksAround(m_spawnPoint, kArrivalChunkRadius, kArrivalMaxNewChunks);
         if (m_levelStatus == world::LevelLoadStatus::Missing) {
             m_awaitingGameMode = true;
             if (options.newWorld) {
@@ -182,14 +186,16 @@ SaveResult WorldSession::save() {
     std::vector<physics::InventorySlot> overflow;
     world::WorldLevelData data = makeLevelData(&overflow);
     if (!overflow.empty()) {
-        for (const physics::InventorySlot& stack : m_crafting.close(m_player)) {
-            (void)m_simulation.dropFromPlayer(m_player, toItemStack(stack));
-        }
+        closeCrafting();
         result.closedCrafting = true;
         data = makeLevelData();
     }
     m_world->queueModifiedChunks(data); // close() flushes them
     return result;
+}
+
+void WorldSession::closeCrafting() {
+    m_simulation.dropAllFromPlayer(m_player, m_crafting.close(m_player));
 }
 
 bool WorldSession::close() {
@@ -284,9 +290,7 @@ void WorldSession::tickSleep(GameTickEvents& events) {
 }
 
 void WorldSession::scatterOnDeath() {
-    for (const physics::InventorySlot& stack : m_crafting.close(m_player)) {
-        (void)m_simulation.dropFromPlayer(m_player, toItemStack(stack));
-    }
+    closeCrafting();
     (void)m_simulation.dropInventoryOnDeath(m_player);
     m_simulation.resetMining();
 }
@@ -304,7 +308,7 @@ std::optional<glm::vec3> WorldSession::rollLightning() {
     if (y <= 0 || world::precipitationAt(m_world->getBiomeAt(x, z)) != world::Precipitation::Rain) {
         return std::nullopt;
     }
-    return glm::vec3(static_cast<float>(x) + 0.5f, static_cast<float>(y), static_cast<float>(z) + 0.5f);
+    return core::blockBottomCentre({x, y, z});
 }
 
 SleepResult WorldSession::trySleep(const core::BlockPos& bed) {
@@ -315,22 +319,7 @@ SleepResult WorldSession::trySleep(const core::BlockPos& bed) {
     if (isDaytime(m_timeOfDay)) {
         return SleepResult::NotNight;
     }
-    ecs::Registry& entities = m_simulation.entities();
-    bool monsters = false;
-    entities.view<ecs::TransformComp, ecs::MobKindComp>().each(
-        [&](ecs::EntityId e, const ecs::TransformComp& t, const ecs::MobKindComp& mob) {
-            if (monsters || entities.has<ecs::PlayerTagComp>(e) || entities.has<CorpseComp>(e) ||
-                gameplay::mobDef(mob.kind).category != gameplay::MobCategory::Hostile) {
-                return;
-            }
-            const glm::vec3 d = t.pos - glm::vec3(static_cast<float>(head->x) + 0.5f, static_cast<float>(head->y),
-                                                  static_cast<float>(head->z) + 0.5f);
-            monsters = std::abs(d.x) <= static_cast<float>(kBedMonsterReachXZ) + 0.5f &&
-                       std::abs(d.z) <= static_cast<float>(kBedMonsterReachXZ) + 0.5f &&
-                       d.y >= -static_cast<float>(kBedMonsterReachY) &&
-                       d.y <= static_cast<float>(kBedMonsterReachY) + 1.0f;
-        });
-    if (monsters) {
+    if (m_simulation.hostileMobNearBed(*head)) {
         return SleepResult::MonstersNearby;
     }
     m_sleepingBed = head;
@@ -365,18 +354,14 @@ void WorldSession::skipTimeIfCreative() noexcept {
 void WorldSession::wakeInBed(const core::BlockPos& bedHead) {
     setTimeOfDay(0.0f);
     m_bedSpawn = bedHead;
-    const glm::vec3 centre = glm::vec3(static_cast<float>(bedHead.x), static_cast<float>(bedHead.y),
-                                       static_cast<float>(bedHead.z)) + glm::vec3(0.5f);
-    m_spawnPoint = bedRespawnPoint(*m_world, bedHead).value_or(centre);
+    m_spawnPoint = bedRespawnPoint(*m_world, bedHead).value_or(core::blockCentre(bedHead));
 }
 
 RespawnResult WorldSession::respawn() {
     RespawnResult result{};
     if (m_bedSpawn) {
         world::World& w = *m_world;
-        w.updateChunksAround(glm::vec3(static_cast<float>(m_bedSpawn->x), static_cast<float>(m_bedSpawn->y),
-                                       static_cast<float>(m_bedSpawn->z)),
-                             3, 64);
+        w.updateChunksAround(core::blockCentre(*m_bedSpawn), kArrivalChunkRadius, kArrivalMaxNewChunks);
         if (const std::optional<glm::vec3> nextToBed = bedRespawnPoint(w, *m_bedSpawn)) {
             m_spawnPoint = *nextToBed;
         } else {
@@ -389,7 +374,7 @@ RespawnResult WorldSession::respawn() {
     gameplay::respawn(m_player.health());
     m_player.breath().air = gameplay::kMaxAirTicks;
     m_player.burning().fireTicks = 0;
-    m_world->updateChunksAround(m_spawnPoint, 3, 64);
+    m_world->updateChunksAround(m_spawnPoint, kArrivalChunkRadius, kArrivalMaxNewChunks);
     m_player.setPosition(m_world->findStandableAbove(m_spawnPoint));
     m_player.resetInterpolationHistory();
     return result;

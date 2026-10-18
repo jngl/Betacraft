@@ -120,6 +120,10 @@ struct CorpseComp {
 // entities (dropped items, mobs), Beta hold-to-mine with tool requirements and wear, item
 // entities and their pickup, melee hits with knockback and hurt frames, natural spawning
 // (spawnMobs). physics::Player keeps its own 60 Hz movement.
+// Beta sleepInBedAt: hostile mobs within x/z +-8 and y +-5 of the bed keep the player awake.
+inline constexpr int32_t kBedMonsterReachXZ = 8;
+inline constexpr int32_t kBedMonsterReachY = 5;
+
 class EntitySimulation {
 public:
     static constexpr float TICK_SECONDS = 1.0f / static_cast<float>(gameplay::kTicksPerSecond);
@@ -194,6 +198,10 @@ public:
     // nullopt when the held item or the target does not fit.
     std::optional<ecs::EntityId> igniteTnt(world::World& world, physics::Player& player,
                                            const physics::RaycastHit& target);
+
+    // S5.8 Beta sleepInBedAt: a living hostile mob within x/z +-kBedMonsterReachXZ and y
+    // -kBedMonsterReachY..+kBedMonsterReachY+1 of the bed whose head is at `bedHead`.
+    [[nodiscard]] bool hostileMobNearBed(const core::BlockPos& bedHead);
 
     // Stops mining (button released, screen opened): drops progress and the hit delay.
     void resetMining() noexcept;
@@ -276,6 +284,8 @@ public:
     // Throws `stack` from 0.3 below the player's eyes along the look (Beta dropPlayerItem),
     // collectable only after gameplay::kDeathDropPickupDelayTicks.
     ecs::EntityId dropFromPlayer(const physics::Player& player, const gameplay::ItemStack& stack);
+    // dropFromPlayer for each of `stacks` (a closed grid, a cursor, what did not fit).
+    void dropAllFromPlayer(const physics::Player& player, std::span<const physics::InventorySlot> stacks);
 
     // Q / Ctrl+Q (Beta EntityPlayer.dropCurrentItem): takes one item, or the whole stack, off
     // the selected hotbar slot, wear kept, and throws it with dropFromPlayer. Returns the

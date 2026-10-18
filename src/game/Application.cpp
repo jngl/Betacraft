@@ -39,10 +39,6 @@ namespace {
             .loading = static_cast<uint32_t>(streaming.loading)};
 }
 
-[[nodiscard]] glm::vec3 blockCentre(const core::BlockPos& pos) noexcept {
-    return glm::vec3(static_cast<float>(pos.x), static_cast<float>(pos.y), static_cast<float>(pos.z)) + glm::vec3(0.5f);
-}
-
 [[nodiscard]] ui::CraftingScreenView craftingScreenView(const InventoryCrafting& screen, const world::World& world) noexcept {
     ui::CraftingScreenView view{};
     view.gridDim = static_cast<int>(screen.gridSize());
@@ -646,7 +642,7 @@ void Application::closeContainerIfOutOfReach() {
     if (!m_inventoryOpen || !pos) {
         return;
     }
-    const glm::vec3 d = player().getEyePosition() - blockCentre(*pos);
+    const glm::vec3 d = player().getEyePosition() - core::blockCentre(*pos);
     const world::BlockEntity* entity = world().blockEntities().find(*pos);
     if (glm::dot(d, d) > kContainerReachSq || entity == nullptr ||
         !world::blockEntityMatches(world().getBlock(*pos), *entity)) {
@@ -655,15 +651,13 @@ void Application::closeContainerIfOutOfReach() {
 }
 
 void Application::closeInventoryScreen() {
-    dropAtPlayer(m_session->crafting().close(player()));
+    m_session->closeCrafting();
     m_inventoryOpen = false;
     setMouseCaptured(true);
 }
 
 void Application::dropAtPlayer(const std::vector<physics::InventorySlot>& stacks) {
-    for (const physics::InventorySlot& stack : stacks) {
-        (void)sim().dropFromPlayer(player(), toItemStack(stack));
-    }
+    sim().dropAllFromPlayer(player(), stacks);
 }
 
 float Application::hudScale() const noexcept {
@@ -800,7 +794,7 @@ void Application::handleRightClickAction() {
                 case core::FaceDir::NegZ: pushDir = core::FaceDir::PosZ; break;
             }
             if (world().triggerPistonPush(m_inWorld.currentTarget.blockPos, pushDir)) {
-                playWorldSound(blockCentre(m_inWorld.currentTarget.blockPos),
+                playWorldSound(core::blockCentre(m_inWorld.currentTarget.blockPos),
                                [&](const audio::VoiceAcoustics& a) { return m_audio.playPistonSound(a); });
                 player().triggerHandSwing();
                 m_inWorld.placeCooldown = 0.18f;
@@ -824,7 +818,7 @@ void Application::handleRightClickAction() {
         if (const std::optional<world::BlockId> placed = placeHeldBlock(world(), player(), m_inWorld.currentTarget)) {
             const world::BlockDef& def = world::BlockRegistry::get(*placed);
             player().triggerHandSwing();
-            playWorldSound(blockCentre(m_inWorld.currentTarget.adjacentPos),
+            playWorldSound(core::blockCentre(m_inWorld.currentTarget.adjacentPos),
                            [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockPlace(def.sound, a); });
             m_inWorld.placeCooldown = 0.16f;
             return;
@@ -853,16 +847,16 @@ void Application::playItemUseEffects(const ItemUseResult& used) {
     if (used.kind == ItemUseKind::BucketFilled || used.kind == ItemUseKind::BucketEmptied) {
         // Beta has no bucket sound: a splash for water, the fizz for lava.
         if (world::isLavaBlock(used.block)) {
-            playWorldSound(blockCentre(used.pos),
+            playWorldSound(core::blockCentre(used.pos),
                            [&](const audio::VoiceAcoustics& a) { return m_audio.playLavaFizz(0.6f, a); });
         } else {
-            playWorldSound(blockCentre(used.pos),
+            playWorldSound(core::blockCentre(used.pos),
                            [&](const audio::VoiceAcoustics& a) { return m_audio.playWaterSplash(a); });
         }
         return;
     }
     const world::BlockDef& def = world::BlockRegistry::get(used.block);
-    playWorldSound(blockCentre(used.pos),
+    playWorldSound(core::blockCentre(used.pos),
                    [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockPlace(def.sound, a); });
     if (used.wear == gameplay::WearResult::Broken) {
         playWorldSound(player().getEyePosition(), [&](const audio::VoiceAcoustics& a) {
@@ -877,7 +871,7 @@ bool Application::activateDoorOrBed() {
         // Beta World.playAuxSFX 1003: random.door_open or door_close.
         const audio::SoundEffect effect = *open ? audio::SoundEffect::DoorOpen : audio::SoundEffect::DoorClose;
         const float pitch = m_sfxRng.nextFloat() * 0.1f + 0.9f;
-        playWorldSound(blockCentre(pos), [&](const audio::VoiceAcoustics& a) {
+        playWorldSound(core::blockCentre(pos), [&](const audio::VoiceAcoustics& a) {
             return m_audio.playSound(effect, 1.0f, pitch, a);
         });
         player().triggerHandSwing();
@@ -1032,7 +1026,7 @@ std::string Application::weatherDebugLine() const {
 // 0.5 up / off), the door sounds, the piston, and random.fizz for a torch burning out.
 void Application::playRedstoneEffects(const std::vector<redstone::RedstoneEvent>& events) {
     for (const redstone::RedstoneEvent& ev : events) {
-        const glm::vec3 at = blockCentre(ev.pos);
+        const glm::vec3 at = core::blockCentre(ev.pos);
         switch (ev.kind) {
             case redstone::RedstoneEventKind::Click: {
                 const world::BlockId block = world().getBlock(ev.pos);
@@ -1071,7 +1065,7 @@ void Application::playGameTickEffects(const GameTickEvents& events) {
         if (m_inWorld.digTicks++ % 4 == 0) {
             const world::BlockId block = world().getBlock(m_inWorld.currentTarget.blockPos);
             const world::BlockDef& def = world::BlockRegistry::get(block);
-            playWorldSound(blockCentre(m_inWorld.currentTarget.blockPos),
+            playWorldSound(core::blockCentre(m_inWorld.currentTarget.blockPos),
                            [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockDigHit(def.sound, a); });
             m_inWorld.particles.spawnMiningHitParticles(world(), m_inWorld.currentTarget.blockPos, m_inWorld.currentTarget.face, block, 2);
         }
@@ -1082,7 +1076,7 @@ void Application::playGameTickEffects(const GameTickEvents& events) {
         const BlockBreakEvent& broken = *events.blockBroken;
         const world::BlockDef& def = world::BlockRegistry::get(broken.block);
         m_inWorld.particles.spawnBlockBreakBurst(world(), broken.pos, broken.block, 24);
-        playWorldSound(blockCentre(broken.pos),
+        playWorldSound(core::blockCentre(broken.pos),
                        [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockBreak(def.sound, a); });
     }
     for (const ExplosionEvent& blast : events.explosions) {

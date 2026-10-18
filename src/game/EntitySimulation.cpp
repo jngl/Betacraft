@@ -413,6 +413,31 @@ ecs::EntityId EntitySimulation::dropFromPlayer(const physics::Player& player, co
     return e;
 }
 
+void EntitySimulation::dropAllFromPlayer(const physics::Player& player,
+                                         std::span<const physics::InventorySlot> stacks) {
+    for (const physics::InventorySlot& stack : stacks) {
+        (void)dropFromPlayer(player, toItemStack(stack));
+    }
+}
+
+bool EntitySimulation::hostileMobNearBed(const core::BlockPos& bedHead) {
+    const glm::vec3 bed = core::blockBottomCentre(bedHead);
+    bool monsters = false;
+    m_entities.view<ecs::TransformComp, ecs::MobKindComp>().each(
+        [&](ecs::EntityId e, const ecs::TransformComp& t, const ecs::MobKindComp& mob) {
+            if (monsters || m_entities.has<ecs::PlayerTagComp>(e) || m_entities.has<CorpseComp>(e) ||
+                gameplay::mobDef(mob.kind).category != gameplay::MobCategory::Hostile) {
+                return;
+            }
+            const glm::vec3 d = t.pos - bed;
+            monsters = std::abs(d.x) <= static_cast<float>(kBedMonsterReachXZ) + 0.5f &&
+                       std::abs(d.z) <= static_cast<float>(kBedMonsterReachXZ) + 0.5f &&
+                       d.y >= -static_cast<float>(kBedMonsterReachY) &&
+                       d.y <= static_cast<float>(kBedMonsterReachY) + 1.0f;
+        });
+    return monsters;
+}
+
 ecs::EntityId EntitySimulation::dropHeldItem(physics::Player& player, bool wholeStack) {
     const physics::InventorySlot held = player.getHeldItem();
     if (held.isEmpty() || player.isDead()) {

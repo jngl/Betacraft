@@ -46,9 +46,6 @@ enum class SleepResult : uint8_t {
 };
 // Beta EntityPlayer.sleepTimer: the screen fades out for 100 ticks before the morning.
 inline constexpr int32_t kSleepTicks = 100;
-// Beta sleepInBedAt: hostile mobs within x/z +-8 and y +-5 of the bed keep the player awake.
-inline constexpr int32_t kBedMonsterReachXZ = 8;
-inline constexpr int32_t kBedMonsterReachY = 5;
 
 // Daytime as the bed sees it: time of day in [0, 0.5) (SkyRenderer: 0 sunrise, 0.5 sunset).
 [[nodiscard]] constexpr bool isDaytime(float timeOfDay) noexcept {
@@ -119,6 +116,9 @@ public:
     // (World::queueModifiedChunks), unless saving is disabled or the world awaits its mode. Stacks the grid and cursor hold that the inventory cannot
     // take are thrown in front of the player and the grid is closed (closedCrafting).
     SaveResult save();
+    // Closes the crafting grid (InventoryCrafting::close) and throws what the grid and the
+    // cursor held in front of the player.
+    void closeCrafting();
     // save(), then every queued chunk written (World::flushStorage). False when some chunk
     // could not be written. Later calls do nothing and return the first result.
     bool close();
