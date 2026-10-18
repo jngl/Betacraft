@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/jngl/Developpement/MyEngine/WorkDir/Betacraft/build/_deps/googletest-subbuild/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

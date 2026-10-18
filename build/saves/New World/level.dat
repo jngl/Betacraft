@@ -1,0 +1,21 @@
+BETACRAFT_LEVEL_V2
+items_scheme 2
+seed 16999849721259090413
+time 0.230059892
+storage_format 2
+name New World
+mode survival
+spawn 8.5 67.0100021 8.5
+weather.raining 0
+weather.thundering 0
+weather.rainTime 24366
+weather.thunderTime 111005
+weather.rainStrength 0
+weather.thunderStrength 0
+player.pos 2.89543939 65.0001755 13.6387415
+player.rot -215.998169 -31.4999504
+player.health 20
+player.air 300
+player.selected 0
+player.fall 0
+inv 29 83 3 0
