@@ -64,6 +64,13 @@ struct WorldTickEvents {
     std::optional<glm::vec3> lightningStrike;      // S8.10 where lightning struck, if it did
 };
 
+// What WorldSession::respawn did besides bringing the player back.
+struct RespawnResult {
+    // S5.8 the bed spawn was gone or obstructed: it is cleared and the player is back at the
+    // world spawn. The caller shows Beta's "Your home bed was missing or obstructed".
+    bool bedMissing{false};
+};
+
 // One open world (glossary: World session), GL-free: the World, the Player, the entity
 // simulation and every per-world simulation state (weather, time of day, spawn points, the
 // crafting grid, the random-tick and trample RNGs). Destroying the session drops all of it,
@@ -171,6 +178,17 @@ public:
     [[nodiscard]] float sleepFade() const noexcept;
     // Leaves the bed without skipping the night (hurt, bed broken, Esc).
     void wakeUp() noexcept;
+    // S5.8 the night passed in the bed whose head is `bedHead`: morning, and the bed becomes
+    // the spawn point. tick() calls it when a full night's sleep ends.
+    void wakeInBed(const core::BlockPos& bedHead);
+
+    // S1.6 the death screen's Respawn (Beta respawnPlayer): next to the bed spawn when that bed
+    // is still there and not blocked, else at the world spawn (World::findSafeSpawnPosition),
+    // which becomes the spawn point. Full health and air, no fire, the chunks around the spawn
+    // loaded, the feet on the first free cell at or above it, no interpolation from the death
+    // place. The inventory (scattered at death), the game mode and the selected slot are left
+    // alone. A session opened on a world saved while dead has player().isDead() until then.
+    RespawnResult respawn();
 
     [[nodiscard]] const glm::vec3& spawnPoint() const noexcept { return m_spawnPoint; }
     void setSpawnPoint(const glm::vec3& point) noexcept { m_spawnPoint = point; }
@@ -185,9 +203,6 @@ private:
     // Beta wakeUpPlayer: a hit, death or the bed going away ends the sleep early; a full
     // night's sleep reports wokeInBed and applies the morning.
     void tickSleep(GameTickEvents& events);
-    // S5.8 the night passed in the bed whose head is `bedHead`: morning, and the bed becomes
-    // the spawn point.
-    void wakeInBed(const core::BlockPos& bedHead);
     // Beta onDeath: the grid and cursor stacks go back to the inventory (what does not fit is
     // thrown), then all 40 slots scatter and mining stops.
     void scatterOnDeath();

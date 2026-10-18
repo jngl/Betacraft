@@ -207,8 +207,8 @@ TEST(ApplicationE2ETest, NewCreativeWorldGetsTheCreativeKit) {
     app.shutdown();
 }
 
-// S1.6: dying opens the death screen with the inventory scattered; Respawn brings the player
-// back to the spawn point with full health.
+// S1.6: dying opens the death screen with the inventory scattered; Respawn goes back in game
+// alive. Where and how the player comes back: test_world_session_respawn (GL-free).
 TEST(ApplicationE2ETest, DeathScreenThenRespawnAtSpawn) {
     if (!test::GLTestContext::isAvailable()) {
         GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
@@ -232,11 +232,7 @@ TEST(ApplicationE2ETest, DeathScreenThenRespawnAtSpawn) {
 
     app.respawnPlayer();
     EXPECT_EQ(app.getScreenState(), ui::ScreenState::InGame);
-    EXPECT_EQ(player.getHealth(), 20);
     EXPECT_FALSE(player.isDead());
-    EXPECT_FLOAT_EQ(player.getPosition().x, app.getSpawnPoint().x);
-    EXPECT_FLOAT_EQ(player.getPosition().z, app.getSpawnPoint().z);
-    EXPECT_GE(player.getPosition().y, app.getSpawnPoint().y - 0.01f);
     app.shutdown();
 }
 
