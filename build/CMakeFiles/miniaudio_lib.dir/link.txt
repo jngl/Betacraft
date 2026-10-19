@@ -1,2 +1,0 @@
-/usr/bin/ar qc libminiaudio_lib.a CMakeFiles/miniaudio_lib.dir/src/audio/miniaudio_impl.cpp.o
-/usr/bin/ranlib libminiaudio_lib.a
