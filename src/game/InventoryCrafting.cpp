@@ -37,19 +37,19 @@ namespace {
 // The stored stack behind container slot `index` of `entity` for a screen of `kind`, null
 // when the entity is not that kind's payload or the index is out of range.
 template <class Entity>
-[[nodiscard]] auto* storedSlot(Entity& entity, ScreenKind kind, size_t index) noexcept {
+[[nodiscard]] auto* storedSlot(Entity& entity, ui::ScreenKind kind, size_t index) noexcept {
     using Stack = std::conditional_t<std::is_const_v<Entity>, const world::StoredStack, world::StoredStack>;
     Stack* out = nullptr;
-    if (kind == ScreenKind::Chest) {
+    if (kind == ui::ScreenKind::Chest) {
         if (auto* chest = std::get_if<world::ChestData>(&entity); chest != nullptr && index < chest->slots.size()) {
             out = &chest->slots[index];
         }
-    } else if (kind == ScreenKind::Furnace) {
+    } else if (kind == ui::ScreenKind::Furnace) {
         if (auto* furnace = std::get_if<world::FurnaceData>(&entity)) {
             switch (index) {
-                case kFurnaceInputSlot: out = &furnace->input; break;
-                case kFurnaceFuelSlot: out = &furnace->fuel; break;
-                case kFurnaceOutputSlot: out = &furnace->output; break;
+                case ui::kFurnaceInputSlot: out = &furnace->input; break;
+                case ui::kFurnaceFuelSlot: out = &furnace->fuel; break;
+                case ui::kFurnaceOutputSlot: out = &furnace->output; break;
                 default: break;
             }
         }
@@ -116,15 +116,15 @@ InventoryCrafting::InventoryCrafting(crafting::RecipeRegistry book) : m_book(std
 std::vector<physics::InventorySlot> InventoryCrafting::open(crafting::GridSize size, physics::Player& player) {
     std::vector<physics::InventorySlot> overflow = returnContents(player);
     m_grid = crafting::CraftingGrid{size};
-    m_kind = size == crafting::GridSize::Workbench3x3 ? ScreenKind::Workbench3x3 : ScreenKind::Inventory2x2;
+    m_kind = size == crafting::GridSize::Workbench3x3 ? ui::ScreenKind::Workbench3x3 : ui::ScreenKind::Inventory2x2;
     m_containerPos.reset();
     return overflow;
 }
 
-std::vector<physics::InventorySlot> InventoryCrafting::openContainer(ScreenKind kind, core::BlockPos pos,
+std::vector<physics::InventorySlot> InventoryCrafting::openContainer(ui::ScreenKind kind, core::BlockPos pos,
                                                                      physics::Player& player) {
-    if (!isContainerScreen(kind)) {
-        return open(kind == ScreenKind::Workbench3x3 ? crafting::GridSize::Workbench3x3
+    if (!ui::isContainerScreen(kind)) {
+        return open(kind == ui::ScreenKind::Workbench3x3 ? crafting::GridSize::Workbench3x3
                                                      : crafting::GridSize::Inventory2x2,
                     player);
     }
@@ -141,14 +141,14 @@ std::vector<physics::InventorySlot> InventoryCrafting::close(physics::Player& pl
 
 void InventoryCrafting::forgetContainer() noexcept {
     m_containerPos.reset();
-    m_kind = m_grid.size() == crafting::GridSize::Workbench3x3 ? ScreenKind::Workbench3x3 : ScreenKind::Inventory2x2;
+    m_kind = m_grid.size() == crafting::GridSize::Workbench3x3 ? ui::ScreenKind::Workbench3x3 : ui::ScreenKind::Inventory2x2;
 }
 
 size_t InventoryCrafting::containerSlotCount() const noexcept {
     if (!m_containerPos) return 0;
     switch (m_kind) {
-        case ScreenKind::Furnace: return kFurnaceSlotCount;
-        case ScreenKind::Chest: return world::kChestSlots;
+        case ui::ScreenKind::Furnace: return ui::kFurnaceSlotCount;
+        case ui::ScreenKind::Chest: return world::kChestSlots;
         default: return 0;
     }
 }
@@ -221,7 +221,7 @@ bool InventoryCrafting::clickContainerSlot(world::World& world, size_t index, Sl
         return false;
     }
     physics::InventorySlot slot = fromStored(*stored);
-    const bool takeOnly = m_kind == ScreenKind::Furnace && index == kFurnaceOutputSlot;
+    const bool takeOnly = m_kind == ui::ScreenKind::Furnace && index == ui::kFurnaceOutputSlot;
     if (!clickStack(slot, button, takeOnly)) {
         return false;
     }
@@ -334,7 +334,7 @@ bool InventoryCrafting::shiftClickInventorySlot(physics::Player& player, world::
     }
     int32_t left = slot.count;
     // S6.7: on the player's own screen, an armor piece is worn at once when its slot is free.
-    if (m_kind == ScreenKind::Inventory2x2) {
+    if (m_kind == ui::ScreenKind::Inventory2x2) {
         if (const auto armor = gameplay::armorInfo(gameplay::canonicalize(slot.id))) {
             const auto armorSlot = static_cast<size_t>(armor->slot);
             if (player.getArmorSlot(armorSlot).isEmpty()) {
@@ -345,7 +345,7 @@ bool InventoryCrafting::shiftClickInventorySlot(physics::Player& player, world::
             }
         }
     }
-    if (m_kind == ScreenKind::Chest && m_containerPos && world != nullptr) {
+    if (m_kind == ui::ScreenKind::Chest && m_containerPos && world != nullptr) {
         world::BlockEntity* entity = liveContainer(*world);
         auto* chest = entity != nullptr ? std::get_if<world::ChestData>(entity) : nullptr;
         if (chest == nullptr) {

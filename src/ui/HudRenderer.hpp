@@ -2,14 +2,15 @@
 
 #include "core/Config.hpp"
 #include "core/Types.hpp"
-#include "game/ScreenKind.hpp"
 #include "physics/Player.hpp"
 #include "physics/Raycaster.hpp"
+#include "render/BitmapFont.hpp"
 #include "render/GLHeaders.hpp"
+#include "render/GuiScale.hpp"
 #include "render/Shader.hpp"
 #include "render/TextureAtlas.hpp"
 #include "render/WorldRenderer.hpp"
-#include "ui/BitmapFont.hpp"
+#include "ui/ScreenKind.hpp"
 #include "ui/ScreenState.hpp"
 #include "world/World.hpp"
 
@@ -30,7 +31,7 @@ struct CraftingScreenView {
     physics::InventorySlot carried{}; // Drawn under the mouse cursor
     // S2.6: a furnace (container[0..2]: input, fuel, output) or a chest (27 slots) replaces
     // the grid and the palette.
-    game::ScreenKind kind{game::ScreenKind::Inventory2x2};
+    ScreenKind kind{ScreenKind::Inventory2x2};
     std::array<physics::InventorySlot, 27> container{};
     float cookProgress{0.0f}; // Furnace arrow fill, 0..1
     float burnProgress{0.0f}; // Furnace flame fill, 0..1
@@ -45,7 +46,7 @@ enum class InventoryRegion : uint8_t { None, Palette, Inventory, CraftingGrid, C
 // and no palette; its slots sit where the palette is drawn otherwise.
 struct InventoryLayoutKey {
     int gridDim{2};
-    game::ScreenKind kind{game::ScreenKind::Inventory2x2};
+    ScreenKind kind{ScreenKind::Inventory2x2};
     bool palette{true}; // Creative palette drawn (and hit); ignored on container screens
 };
 
@@ -194,9 +195,9 @@ public:
                                                              int32_t screenHeight, InventoryLayoutKey layout) noexcept;
 
     // S3.7: TextRenderer::calculateGuiScale(w, h, pref) / 3.
-    [[nodiscard]] static float hudScale(int32_t windowWidth, int32_t windowHeight, GuiScalePreference pref) noexcept;
+    [[nodiscard]] static float hudScale(int32_t windowWidth, int32_t windowHeight, render::GuiScalePreference pref) noexcept;
     [[nodiscard]] static HudCanvas hudCanvas(int32_t windowWidth, int32_t windowHeight,
-                                             GuiScalePreference pref) noexcept;
+                                             render::GuiScalePreference pref) noexcept;
 
     // S3.6: the lines of the tooltip shown when hovering `slot` with an empty cursor: the item
     // name, then "remaining / max" durability for a tool. Empty for an empty slot.

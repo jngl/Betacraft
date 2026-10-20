@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "audio/MpscRingBuffer.hpp"
+#include "core/MpscRingBuffer.hpp"
 #include "audio/AudioEngine.hpp"
 
 #include <array>
@@ -12,6 +12,7 @@
 #include <random>
 
 using namespace betacraft::audio;
+using namespace betacraft::core;
 
 struct M3StressPayload {
     uint32_t producerId{0};

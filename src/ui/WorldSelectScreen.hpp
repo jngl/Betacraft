@@ -2,7 +2,7 @@
 
 #include "audio/AudioEngine.hpp"
 #include "core/Config.hpp"
-#include "ui/BitmapFont.hpp"
+#include "render/BitmapFont.hpp"
 #include "ui/TitleScreen.hpp"
 #include "world/WorldStorage.hpp"
 
@@ -54,7 +54,7 @@ public:
     // Null when nothing is selected.
     [[nodiscard]] const WorldSummary* selectedWorld() const noexcept;
 
-    void render(int windowWidth, int windowHeight, std::vector<UiQuadVertex>& outVerts, float mouseX,
+    void render(int windowWidth, int windowHeight, std::vector<render::UiQuadVertex>& outVerts, float mouseX,
                 float mouseY) const;
     WorldSelectChoice handleMouseClick(float mouseX, float mouseY, int windowWidth, int windowHeight,
                                        audio::AudioEngine& audio);
@@ -78,7 +78,7 @@ private:
 
 // The Loading screen (S7.8/S7.9): a title, a status line and, when `progress` is set, Beta's
 // grey and green progress bar (0..1).
-void appendLoadingScreen(std::vector<UiQuadVertex>& outVerts, int windowWidth, int windowHeight,
+void appendLoadingScreen(std::vector<render::UiQuadVertex>& outVerts, int windowWidth, int windowHeight,
                          std::string_view title, std::string_view status, std::optional<float> progress);
 
 } // namespace betacraft::ui

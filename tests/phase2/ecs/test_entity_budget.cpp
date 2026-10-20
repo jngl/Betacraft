@@ -50,7 +50,7 @@ TEST(EcsEntityBudget, TwoThousandFiveHundredEntitiesStayWithinThePerTickWorkBudg
         PlayerControlSystem::update(reg, DT);
         MobAISystem::update(reg, DT);
         MovementPhysicsSystem::update(reg, DT);
-        VoxelCollisionSystem::update(reg, [&](const physics::AABB& box) {
+        VoxelCollisionSystem::update(reg, [&](const math::AABB& box) {
             ++tickQueries;
             return VoxelCollisionSystem::gridCollides(box, floorBelowZero);
         });

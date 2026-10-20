@@ -10,11 +10,11 @@ namespace {
 constexpr int kRespawnId = 1;
 constexpr int kTitleMenuId = 2;
 
-void pushSolidQuad(std::vector<UiQuadVertex>& out, float x0, float y0, float x1, float y1, const glm::vec4& color) {
-    const UiQuadVertex v0{{x0, y0}, {0.0f, 0.0f}, color, 0.0f};
-    const UiQuadVertex v1{{x1, y0}, {0.0f, 0.0f}, color, 0.0f};
-    const UiQuadVertex v2{{x1, y1}, {0.0f, 0.0f}, color, 0.0f};
-    const UiQuadVertex v3{{x0, y1}, {0.0f, 0.0f}, color, 0.0f};
+void pushSolidQuad(std::vector<render::UiQuadVertex>& out, float x0, float y0, float x1, float y1, const glm::vec4& color) {
+    const render::UiQuadVertex v0{{x0, y0}, {0.0f, 0.0f}, color, 0.0f};
+    const render::UiQuadVertex v1{{x1, y0}, {0.0f, 0.0f}, color, 0.0f};
+    const render::UiQuadVertex v2{{x1, y1}, {0.0f, 0.0f}, color, 0.0f};
+    const render::UiQuadVertex v3{{x0, y1}, {0.0f, 0.0f}, color, 0.0f};
     out.push_back(v0);
     out.push_back(v1);
     out.push_back(v2);
@@ -42,7 +42,7 @@ std::vector<MenuButton> DeathScreen::layoutButtons(int windowWidth, int windowHe
     };
 }
 
-void DeathScreen::render(int windowWidth, int windowHeight, std::vector<UiQuadVertex>& outVerts, float mouseX,
+void DeathScreen::render(int windowWidth, int windowHeight, std::vector<render::UiQuadVertex>& outVerts, float mouseX,
                          float mouseY) const {
     const float sw = static_cast<float>(windowWidth);
     const float sh = static_cast<float>(windowHeight);

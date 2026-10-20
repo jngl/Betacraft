@@ -110,10 +110,10 @@ TEST(HudInventoryLayout, PaletteIsNotHitWithoutCreative) {
 // those screens), map back to their index and never overlap the inventory.
 TEST(HudInventoryLayout, FurnaceAndChestSlotsMapBackAndDoNotOverlap) {
     struct Case {
-        game::ScreenKind kind;
+        ui::ScreenKind kind;
         size_t slots;
     };
-    for (const Case c : {Case{game::ScreenKind::Furnace, 3}, Case{game::ScreenKind::Chest, 27}}) {
+    for (const Case c : {Case{ui::ScreenKind::Furnace, 3}, Case{ui::ScreenKind::Chest, 27}}) {
         for (const bool palette : {true, false}) {
             const ui::InventoryLayoutKey layout{2, c.kind, palette};
             std::vector<ui::SlotRect> rects;
@@ -153,7 +153,7 @@ TEST(HudInventoryLayout, FurnaceAndChestSlotsMapBackAndDoNotOverlap) {
         }
     }
     // The old signature still describes the grid screens.
-    const ui::InventoryLayoutKey grid{3, game::ScreenKind::Workbench3x3, true};
+    const ui::InventoryLayoutKey grid{3, ui::ScreenKind::Workbench3x3, true};
     const ui::SlotRect a = HudRenderer::inventorySlotRect(InventoryRegion::CraftingGrid, 4, kW, kH, 3);
     const ui::SlotRect b = HudRenderer::inventorySlotRect(InventoryRegion::CraftingGrid, 4, kW, kH, grid);
     EXPECT_EQ(a.x, b.x);
@@ -163,7 +163,7 @@ TEST(HudInventoryLayout, FurnaceAndChestSlotsMapBackAndDoNotOverlap) {
 // S3.4: off the dialog panel the screen hit test reports Outside (Beta drops the cursor
 // stack there); gaps inside the panel stay None, and slots keep mapping as before.
 TEST(HudInventoryLayout, OffPanelClicksReportOutside) {
-    const ui::InventoryLayoutKey layout{2, game::ScreenKind::Inventory2x2, false};
+    const ui::InventoryLayoutKey layout{2, ui::ScreenKind::Inventory2x2, false};
     EXPECT_EQ(HudRenderer::hitTestInventoryScreen(2, 2, kW, kH, layout).region, InventoryRegion::Outside);
     EXPECT_EQ(HudRenderer::hitTestInventoryScreen(kW - 2, kH - 2, kW, kH, layout).region, InventoryRegion::Outside);
     const ui::SlotRect panel = HudRenderer::inventorySlotRect(InventoryRegion::None, 0, kW, kH, layout);
@@ -184,16 +184,16 @@ TEST(HudInventoryLayout, OffPanelClicksReportOutside) {
 // S3.7: GUI Scale lays the HUD out in a (window / scale) canvas, scale = guiScale / 3. Auto at
 // 1280x720 is guiScale 3, so the canvas is the window and the layout is unchanged.
 TEST(HudInventoryLayout, AutoScaleAt720pKeepsLayout) {
-    const ui::HudCanvas canvas = HudRenderer::hudCanvas(kW, kH, ui::GuiScalePreference::Auto);
+    const ui::HudCanvas canvas = HudRenderer::hudCanvas(kW, kH, render::GuiScalePreference::Auto);
     EXPECT_FLOAT_EQ(canvas.scale, 1.0f);
-    EXPECT_FLOAT_EQ(HudRenderer::hudScale(kW, kH, ui::GuiScalePreference::Auto), 1.0f);
+    EXPECT_FLOAT_EQ(HudRenderer::hudScale(kW, kH, render::GuiScalePreference::Auto), 1.0f);
     EXPECT_EQ(canvas.width, kW);
     EXPECT_EQ(canvas.height, kH);
     for (const int32_t v : {0, 1, 333, 719}) {
         EXPECT_EQ(canvas.toCanvasX(v), v);
         EXPECT_EQ(canvas.toCanvasY(v), v);
     }
-    const ui::InventoryLayoutKey layout{2, game::ScreenKind::Inventory2x2, false};
+    const ui::InventoryLayoutKey layout{2, ui::ScreenKind::Inventory2x2, false};
     const ui::SlotRect a = HudRenderer::inventorySlotRect(InventoryRegion::Inventory, 7, kW, kH, layout);
     const ui::SlotRect b =
         HudRenderer::inventorySlotRect(InventoryRegion::Inventory, 7, canvas.width, canvas.height, layout);
@@ -202,13 +202,13 @@ TEST(HudInventoryLayout, AutoScaleAt720pKeepsLayout) {
     EXPECT_EQ(a.size, b.size);
 
     // 1920x1080: Auto is guiScale 4, the HUD grows by a third (Beta behaviour).
-    const ui::HudCanvas big = HudRenderer::hudCanvas(1920, 1080, ui::GuiScalePreference::Auto);
+    const ui::HudCanvas big = HudRenderer::hudCanvas(1920, 1080, render::GuiScalePreference::Auto);
     EXPECT_NEAR(big.scale, 4.0f / 3.0f, 1e-6f);
     EXPECT_EQ(big.width, 1440);
     EXPECT_EQ(big.height, 810);
     // A fixed preference wins over the window size.
-    EXPECT_NEAR(HudRenderer::hudScale(kW, kH, ui::GuiScalePreference::Scale1x), 1.0f / 3.0f, 1e-6f);
-    EXPECT_NEAR(HudRenderer::hudScale(kW, kH, ui::GuiScalePreference::Scale4x), 4.0f / 3.0f, 1e-6f);
+    EXPECT_NEAR(HudRenderer::hudScale(kW, kH, render::GuiScalePreference::Scale1x), 1.0f / 3.0f, 1e-6f);
+    EXPECT_NEAR(HudRenderer::hudScale(kW, kH, render::GuiScalePreference::Scale4x), 4.0f / 3.0f, 1e-6f);
 }
 
 // Window clicks map back through the canvas onto the slot drawn there, at every scale.
@@ -221,11 +221,11 @@ TEST(HudInventoryLayout, SlotsMapBackAtEveryGuiScale) {
         InventoryRegion region;
         size_t count;
     };
-    const ui::InventoryLayoutKey layout{3, game::ScreenKind::Workbench3x3, true};
+    const ui::InventoryLayoutKey layout{3, ui::ScreenKind::Workbench3x3, true};
     for (const Window win : {Window{1280, 720}, Window{1920, 1080}, Window{854, 480}, Window{2560, 1440}}) {
-        for (const ui::GuiScalePreference pref :
-             {ui::GuiScalePreference::Auto, ui::GuiScalePreference::Scale1x, ui::GuiScalePreference::Scale2x,
-              ui::GuiScalePreference::Scale3x, ui::GuiScalePreference::Scale4x}) {
+        for (const render::GuiScalePreference pref :
+             {render::GuiScalePreference::Auto, render::GuiScalePreference::Scale1x, render::GuiScalePreference::Scale2x,
+              render::GuiScalePreference::Scale3x, render::GuiScalePreference::Scale4x}) {
             const ui::HudCanvas c = HudRenderer::hudCanvas(win.w, win.h, pref);
             ASSERT_GT(c.width, 0);
             for (const Slots s : {Slots{InventoryRegion::CraftingGrid, 9}, Slots{InventoryRegion::CraftingResult, 1},

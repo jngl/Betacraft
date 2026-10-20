@@ -38,7 +38,7 @@ bool floorAndWall(int32_t x, int32_t y, int32_t /*z*/) {
 }
 
 void collide(Registry& reg) {
-    VoxelCollisionSystem::update(reg, [](const physics::AABB& box) {
+    VoxelCollisionSystem::update(reg, [](const math::AABB& box) {
         return VoxelCollisionSystem::gridCollides(box, floorAndWall);
     });
 }

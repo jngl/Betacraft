@@ -4,7 +4,7 @@
 #include "gameplay/Health.hpp"
 #include "gameplay/ItemIds.hpp"
 #include "gameplay/Survival.hpp"
-#include "physics/AABB.hpp"
+#include "math/AABB.hpp"
 #include "world/Block.hpp"
 #include "world/World.hpp"
 
@@ -76,8 +76,8 @@ public:
     [[nodiscard]] float getYaw() const noexcept { return m_yaw; }
     [[nodiscard]] float getPitch() const noexcept { return m_pitch; }
 
-    [[nodiscard]] AABB getAABB() const noexcept;
-    [[nodiscard]] static AABB getAABBAt(const glm::vec3& pos) noexcept;
+    [[nodiscard]] math::AABB getAABB() const noexcept;
+    [[nodiscard]] static math::AABB getAABBAt(const glm::vec3& pos) noexcept;
 
     [[nodiscard]] const glm::vec3& getVelocity() const noexcept { return m_velocity; }
 
@@ -241,7 +241,7 @@ public:
     [[nodiscard]] int32_t& armorDamageRemainder() noexcept { return m_armorDamageRemainder; }
 
 private:
-    [[nodiscard]] bool collidesWithWorld(const AABB& box, const world::World& world) const noexcept;
+    [[nodiscard]] bool collidesWithWorld(const math::AABB& box, const world::World& world) const noexcept;
 
     glm::vec3 m_position{8.5f, 80.0f, 8.5f};
     glm::vec3 m_prevPosition{8.5f, 80.0f, 8.5f};

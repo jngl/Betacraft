@@ -4,7 +4,7 @@
 #include "world/BlockShapes.hpp"
 #include <glm/glm.hpp>
 
-namespace betacraft::physics {
+namespace betacraft::math {
 
 struct AABB {
     glm::vec3 min{0.0f};
@@ -102,4 +102,4 @@ struct AABB {
     }
 };
 
-} // namespace betacraft::physics
+} // namespace betacraft::math

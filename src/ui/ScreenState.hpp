@@ -17,12 +17,4 @@ enum class ScreenState : uint8_t {
     Loading      // S7.8/S7.9: a world being opened (migration progress bar)
 };
 
-enum class GuiScalePreference : uint8_t {
-    Auto = 0,
-    Scale1x = 1,
-    Scale2x = 2,
-    Scale3x = 3,
-    Scale4x = 4
-};
-
 } // namespace betacraft::ui

@@ -1,10 +1,10 @@
-#include "lighting/DynamicLightUniformBuffer.hpp"
+#include "render/DynamicLightUniformBuffer.hpp"
 
 #include "core/Logger.hpp"
 
 #include <cstring>
 
-namespace betacraft::lighting {
+namespace betacraft::render {
 
 namespace {
 
@@ -48,14 +48,14 @@ bool DynamicLightUniformBuffer::initialize() noexcept {
     bc_glGenBuffers(1, &m_ubo);
     bc_glBindBuffer(GL_UNIFORM_BUFFER, m_ubo);
     // Allocate once; per-frame updates use glBufferSubData to avoid buffer orphaning churn.
-    bc_glBufferData(GL_UNIFORM_BUFFER, static_cast<GLsizeiptr>(ubo::kBlockSize), nullptr, GL_DYNAMIC_DRAW);
+    bc_glBufferData(GL_UNIFORM_BUFFER, static_cast<GLsizeiptr>(lighting::ubo::kBlockSize), nullptr, GL_DYNAMIC_DRAW);
     bc_glBindBuffer(GL_UNIFORM_BUFFER, 0);
     m_hasUpload = false;
 
     // Start from a valid empty block (count = 0) so a shader sampling it before the first
     // frame reads no garbage.
-    UboBuffer empty{};
-    packDynamicLightUbo({}, {}, glm::vec2(1.0f), empty);
+    lighting::UboBuffer empty{};
+    lighting::packDynamicLightUbo({}, {}, glm::vec2(1.0f), empty);
     upload(empty);
     bindBase();
     return true;
@@ -65,15 +65,15 @@ bool DynamicLightUniformBuffer::bindProgram(GLuint program) noexcept {
     if (program == 0 || s_glGetUniformBlockIndex == nullptr || s_glUniformBlockBinding == nullptr) {
         return false;
     }
-    const GLuint index = s_glGetUniformBlockIndex(program, kUboBlockName);
+    const GLuint index = s_glGetUniformBlockIndex(program, lighting::kUboBlockName);
     if (index == GL_INVALID_INDEX) {
         return false;
     }
-    s_glUniformBlockBinding(program, index, kUboBindingPoint);
+    s_glUniformBlockBinding(program, index, lighting::kUboBindingPoint);
     return true;
 }
 
-void DynamicLightUniformBuffer::upload(const UboBuffer& bytes) noexcept {
+void DynamicLightUniformBuffer::upload(const lighting::UboBuffer& bytes) noexcept {
     if (m_ubo == 0) {
         return;
     }
@@ -90,7 +90,7 @@ void DynamicLightUniformBuffer::upload(const UboBuffer& bytes) noexcept {
 
 void DynamicLightUniformBuffer::bindBase() const noexcept {
     if (m_ubo != 0 && s_glBindBufferBase != nullptr) {
-        s_glBindBufferBase(GL_UNIFORM_BUFFER, kUboBindingPoint, m_ubo);
+        s_glBindBufferBase(GL_UNIFORM_BUFFER, lighting::kUboBindingPoint, m_ubo);
     }
 }
 
@@ -102,4 +102,4 @@ void DynamicLightUniformBuffer::destroy() noexcept {
     m_hasUpload = false;
 }
 
-} // namespace betacraft::lighting
+} // namespace betacraft::render

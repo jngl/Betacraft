@@ -2,7 +2,7 @@
 // RenderShape), their boxes, and the geometry the shared shape mesher builds for them.
 #include "gameplay/Harvesting.hpp"
 #include "gameplay/ItemIds.hpp"
-#include "physics/AABB.hpp"
+#include "math/AABB.hpp"
 #include "render/BlockShapeMesher.hpp"
 #include "world/Block.hpp"
 #include "world/BlockShapes.hpp"
@@ -121,10 +121,10 @@ TEST(RedstoneBlocks, AttachmentAndBoxes) {
     EXPECT_EQ(negZ.z1, world::kButtonDepth);
     EXPECT_LT(negZ.y1 - negZ.y0, 16);
 
-    const physics::AABB wire = physics::AABB::selectionBox(0, 0, 0, BlockId::RedstoneWire, 5);
+    const math::AABB wire = math::AABB::selectionBox(0, 0, 0, BlockId::RedstoneWire, 5);
     EXPECT_FLOAT_EQ(wire.max.y, 1.0f / 16.0f);
     EXPECT_FLOAT_EQ(wire.min.x, 0.0f);
-    const physics::AABB plate = physics::AABB::selectionBox(0, 0, 0, BlockId::StonePressurePlate, 0);
+    const math::AABB plate = math::AABB::selectionBox(0, 0, 0, BlockId::StonePressurePlate, 0);
     EXPECT_FLOAT_EQ(plate.min.x, 1.0f / 16.0f);
     EXPECT_FLOAT_EQ(plate.max.z, 15.0f / 16.0f);
     // Lever off and on lean their handles opposite ways.

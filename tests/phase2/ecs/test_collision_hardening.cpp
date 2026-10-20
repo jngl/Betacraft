@@ -38,7 +38,7 @@ struct Cell {
 TEST(EcsCollisionHardening, GridCollidesKeepsCellsOfHugeBoxesInRangeAndOnTheRightSide) {
     for (const float far : {1.0e30f, -1.0e30f, 3.0e9f, -3.0e9f, std::numeric_limits<float>::max()}) {
         std::vector<Cell> visited;
-        const physics::AABB box{{far, far, far}, {far, far, far}};
+        const math::AABB box{{far, far, far}, {far, far, far}};
         (void)VoxelCollisionSystem::gridCollides(box, [&](int32_t x, int32_t y, int32_t z) {
             visited.push_back({x, y, z});
             return false;
@@ -67,7 +67,7 @@ bool floorAndWall(int32_t x, int32_t y, int32_t /*z*/) {
 
 struct CountingCollider {
     size_t* calls;
-    bool operator()(const physics::AABB& box) const {
+    bool operator()(const math::AABB& box) const {
         ++*calls;
         return VoxelCollisionSystem::gridCollides(box, floorAndWall);
     }

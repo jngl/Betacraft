@@ -1,5 +1,5 @@
 #include "physics/Raycaster.hpp"
-#include "physics/AABB.hpp"
+#include "math/AABB.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -12,7 +12,7 @@ namespace {
 bool intersectRayAABB(
     const glm::vec3& origin,
     const glm::vec3& dir,
-    const AABB& box,
+    const math::AABB& box,
     float maxDist,
     float& outT,
     core::FaceDir& outFace
@@ -122,7 +122,7 @@ RaycastHit Raycaster::cast(
             float subT = dist;
             core::FaceDir subFace = steppedFace;
             if (wholeCell ||
-                intersectRayAABB(origin, dir, AABB::selectionBox(x, y, z, id, meta), maxDistance, subT, subFace)) {
+                intersectRayAABB(origin, dir, math::AABB::selectionBox(x, y, z, id, meta), maxDistance, subT, subFace)) {
                 result.hit = true;
                 result.blockPos = {x, y, z};
                 result.face = wholeCell ? steppedFace : subFace;

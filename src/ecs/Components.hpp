@@ -5,7 +5,7 @@
 #include "ecs/Entity.hpp"
 #include "gameplay/ItemIds.hpp"
 #include "gameplay/MobDefs.hpp"
-#include "physics/AABB.hpp"
+#include "math/AABB.hpp"
 #include "physics/Player.hpp"
 #include "world/Block.hpp"
 
@@ -67,9 +67,9 @@ struct AABBColliderComp {
     float width{core::EngineConfig::PLAYER_WIDTH};
     float height{core::EngineConfig::PLAYER_HEIGHT};
 
-    [[nodiscard]] constexpr physics::AABB boundsAt(const glm::vec3& feet) const noexcept {
+    [[nodiscard]] constexpr math::AABB boundsAt(const glm::vec3& feet) const noexcept {
         const float halfW = width * 0.5f;
-        return physics::AABB{
+        return math::AABB{
             .min = {feet.x - halfW, feet.y, feet.z - halfW},
             .max = {feet.x + halfW, feet.y + height, feet.z + halfW}
         };

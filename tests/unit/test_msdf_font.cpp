@@ -2,13 +2,12 @@
 #include <gmock/gmock.h>
 
 #include "render/TextRenderer.hpp"
-#include "ui/BitmapFont.hpp"
+#include "render/BitmapFont.hpp"
 
 #include <glm/glm.hpp>
 #include <string>
 
 using namespace betacraft::render;
-using namespace betacraft::ui;
 
 TEST(MsdfFontTest, MedianFilterLogic) {
     // Median of 3 channels: max(min(r, g), min(max(r, g), b))

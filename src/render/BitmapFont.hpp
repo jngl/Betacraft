@@ -6,7 +6,7 @@
 #include <string_view>
 #include <vector>
 
-namespace betacraft::ui {
+namespace betacraft::render {
 
 struct UiQuadVertex {
     glm::vec2 pos;
@@ -34,4 +34,4 @@ public:
     [[nodiscard]] static const std::array<uint8_t, GLYPH_HEIGHT>& getGlyphRows(char c) noexcept;
 };
 
-} // namespace betacraft::ui
+} // namespace betacraft::render

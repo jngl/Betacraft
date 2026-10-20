@@ -41,7 +41,7 @@ struct Grid {
 void runPhysics(Registry& reg, const Grid& grid) {
     MobAISystem::update(reg, DT);
     MovementPhysicsSystem::update(reg, DT);
-    VoxelCollisionSystem::update(reg, [&](const physics::AABB& box) {
+    VoxelCollisionSystem::update(reg, [&](const math::AABB& box) {
         return VoxelCollisionSystem::gridCollides(box, grid);
     });
     (void)HealthSystem::update(reg, DT);
@@ -165,7 +165,7 @@ TEST(PlayerProxy, CollidedHorizontallyTriggersJump) {
             jumped = true;
         }
         MovementPhysicsSystem::update(reg, DT);
-        VoxelCollisionSystem::update(reg, [&](const physics::AABB& box) {
+        VoxelCollisionSystem::update(reg, [&](const math::AABB& box) {
             return VoxelCollisionSystem::gridCollides(box, grid);
         });
     }
@@ -191,14 +191,14 @@ TEST(PlayerProxy, CollisionFlagFollowsTheLastSweep) {
     auto& t = reg.get<TransformComp>(mob);
     t.prevPos = t.pos;
     t.pos.x += 2.0f; // straight into the wall
-    VoxelCollisionSystem::update(reg, [&](const physics::AABB& box) {
+    VoxelCollisionSystem::update(reg, [&](const math::AABB& box) {
         return VoxelCollisionSystem::gridCollides(box, grid);
     });
     EXPECT_TRUE(reg.get<VelocityComp>(mob).collidedHorizontally);
     EXPECT_NEAR(t.pos.x, 2.0f - 0.3f, 1e-3f);
     t.prevPos = t.pos;
     t.pos.x -= 0.5f; // away from it
-    VoxelCollisionSystem::update(reg, [&](const physics::AABB& box) {
+    VoxelCollisionSystem::update(reg, [&](const math::AABB& box) {
         return VoxelCollisionSystem::gridCollides(box, grid);
     });
     EXPECT_FALSE(reg.get<VelocityComp>(mob).collidedHorizontally);

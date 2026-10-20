@@ -2,7 +2,7 @@
 
 #include "audio/AudioEngine.hpp"
 #include "core/Config.hpp"
-#include "ui/BitmapFont.hpp"
+#include "render/BitmapFont.hpp"
 #include "ui/ScreenState.hpp"
 
 #include <vector>
@@ -26,7 +26,7 @@ public:
     void render(
         int windowWidth,
         int windowHeight,
-        std::vector<UiQuadVertex>& outVerts,
+        std::vector<render::UiQuadVertex>& outVerts,
         float mouseX,
         float mouseY
     );

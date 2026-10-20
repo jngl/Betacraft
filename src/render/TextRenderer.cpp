@@ -84,9 +84,9 @@ TextRenderer::~TextRenderer() noexcept {
 int TextRenderer::calculateGuiScale(
     int windowWidth,
     int windowHeight,
-    ui::GuiScalePreference pref
+    GuiScalePreference pref
 ) noexcept {
-    if (pref != ui::GuiScalePreference::Auto) {
+    if (pref != GuiScalePreference::Auto) {
         return std::clamp(static_cast<int>(pref), 1, 4);
     }
     int scale = 1;
@@ -136,7 +136,7 @@ float TextRenderer::measureTextWidth(std::string_view text, float scale) noexcep
 }
 
 void TextRenderer::appendText(
-    std::vector<ui::UiQuadVertex>& outVerts,
+    std::vector<UiQuadVertex>& outVerts,
     std::string_view text,
     float x,
     float y,
@@ -157,10 +157,10 @@ void TextRenderer::appendText(
                 const float y1 = py + m.planeHeight * scale;
 
                 // 2 Triangles: (0, 1, 2) and (0, 2, 3) -> exactly 1 quad (6 vertices)
-                const ui::UiQuadVertex v0{{x0, y0}, {m.u0, m.v0}, col, 1.0f};
-                const ui::UiQuadVertex v1{{x1, y0}, {m.u1, m.v0}, col, 1.0f};
-                const ui::UiQuadVertex v2{{x1, y1}, {m.u1, m.v1}, col, 1.0f};
-                const ui::UiQuadVertex v3{{x0, y1}, {m.u0, m.v1}, col, 1.0f};
+                const UiQuadVertex v0{{x0, y0}, {m.u0, m.v0}, col, 1.0f};
+                const UiQuadVertex v1{{x1, y0}, {m.u1, m.v0}, col, 1.0f};
+                const UiQuadVertex v2{{x1, y1}, {m.u1, m.v1}, col, 1.0f};
+                const UiQuadVertex v3{{x0, y1}, {m.u0, m.v1}, col, 1.0f};
 
                 outVerts.push_back(v0);
                 outVerts.push_back(v1);
@@ -203,14 +203,14 @@ bool TextRenderer::initialize() {
         const char c = static_cast<char>(32 + idx);
         if (c == ' ') continue;
 
-        const auto& rows = ui::BitmapFont::getGlyphRows(c);
+        const auto& rows = BitmapFont::getGlyphRows(c);
         std::vector<GlyphBox> onBoxes;
         onBoxes.reserve(35);
 
-        for (int gy = 0; gy < ui::BitmapFont::GLYPH_HEIGHT; ++gy) {
+        for (int gy = 0; gy < BitmapFont::GLYPH_HEIGHT; ++gy) {
             const uint8_t rowBits = rows[static_cast<size_t>(gy)];
             if (rowBits == 0) continue;
-            for (int gx = 0; gx < ui::BitmapFont::GLYPH_WIDTH; ++gx) {
+            for (int gx = 0; gx < BitmapFont::GLYPH_WIDTH; ++gx) {
                 if ((rowBits & (1U << (4 - gx))) != 0U) {
                     const float bx0 = 6.0f + static_cast<float>(gx) * 4.0f;
                     const float by0 = 9.6f + static_cast<float>(gy) * 6.4f;
@@ -282,7 +282,7 @@ bool TextRenderer::initialize() {
     bc_glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 
     // Vertex layout: pos (vec2), uv (vec2), color (vec4), useTexture (float)
-    constexpr GLsizei stride = sizeof(ui::UiQuadVertex);
+    constexpr GLsizei stride = sizeof(UiQuadVertex);
     bc_glEnableVertexAttribArray(0);
     bc_glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<const void*>(0));
 
@@ -323,7 +323,7 @@ void TextRenderer::shutdown() noexcept {
 }
 
 void TextRenderer::renderBatch(
-    const std::vector<ui::UiQuadVertex>& vertices,
+    const std::vector<UiQuadVertex>& vertices,
     const glm::mat4& orthoProjection
 ) {
     if (!m_initialized || vertices.empty()) return;
@@ -343,7 +343,7 @@ void TextRenderer::renderBatch(
 
     bc_glBindVertexArray(m_vao);
     bc_glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-    bc_glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertices.size() * sizeof(ui::UiQuadVertex)), vertices.data(), GL_DYNAMIC_DRAW);
+    bc_glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertices.size() * sizeof(UiQuadVertex)), vertices.data(), GL_DYNAMIC_DRAW);
 
     glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(vertices.size()));
 

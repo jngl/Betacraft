@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "audio/MpscRingBuffer.hpp"
+#include "core/MpscRingBuffer.hpp"
 
 #include <array>
 #include <atomic>
@@ -9,7 +9,7 @@
 #include <thread>
 #include <vector>
 
-using namespace betacraft::audio;
+using namespace betacraft::core;
 
 struct DummyAudioCmd {
     uint32_t soundId{0};

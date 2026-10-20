@@ -4,11 +4,11 @@
 #include "core/Types.hpp"
 #include "gameplay/ItemIds.hpp"
 #include "lighting/DynamicLightFrame.hpp"
-#include "lighting/DynamicLightUniformBuffer.hpp"
 #include "math/Frustum.hpp"
 #include "physics/Player.hpp"
 #include "physics/Raycaster.hpp"
 #include "render/ChunkMesher.hpp"
+#include "render/DynamicLightUniformBuffer.hpp"
 #include "render/MobModels.hpp"
 #include "render/ParticleSystem.hpp"
 #include "render/Shader.hpp"
@@ -147,7 +147,7 @@ private:
     ShaderProgram m_chunkShader;
     ShaderProgram m_dynamicShader;
     ShaderProgram m_lineShader;
-    lighting::DynamicLightUniformBuffer m_dynamicLightUbo;
+    DynamicLightUniformBuffer m_dynamicLightUbo;
     lighting::DynamicLightFrame m_dynamicLightFrame;
 
     std::unordered_map<streaming::SectionCoord, ChunkMeshGL> m_sectionMeshes;

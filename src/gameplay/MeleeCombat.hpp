@@ -4,7 +4,7 @@
 #include "gameplay/Health.hpp"
 #include "gameplay/ItemStack.hpp"
 #include "gameplay/Knockback.hpp"
-#include "physics/AABB.hpp"
+#include "math/AABB.hpp"
 
 #include <cstddef>
 #include <optional>
@@ -49,7 +49,7 @@ MeleeResult performMeleeAttack(const AttackerState& attacker, ItemStack& weapon,
 // Slab test. Returns the ray parameter of the entry point (0 if the origin is inside), in
 // units of |direction|; nullopt on miss, behind the origin, or degenerate direction.
 [[nodiscard]] std::optional<float> rayAabbDistance(const glm::vec3& origin, const glm::vec3& direction,
-                                                   const physics::AABB& box) noexcept;
+                                                   const math::AABB& box) noexcept;
 
 struct TargetHit {
     size_t index{0};     // Index into the candidate span
@@ -59,7 +59,7 @@ struct TargetHit {
 // Nearest candidate hit by the look ray within maxDistance (inclusive). Pass
 // min(reach, distance to the first solid block) so walls occlude entities.
 [[nodiscard]] std::optional<TargetHit> pickMeleeTarget(const glm::vec3& eye, const glm::vec3& look,
-                                                       std::span<const physics::AABB> candidates,
+                                                       std::span<const math::AABB> candidates,
                                                        float maxDistance = kDefaultMeleeReach) noexcept;
 
 } // namespace betacraft::gameplay

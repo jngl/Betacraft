@@ -39,7 +39,7 @@ void TextField::setText(std::string_view text) {
     (void)insertText(text);
 }
 
-void TextField::render(std::vector<UiQuadVertex>& out, float x, float y, float width, float height,
+void TextField::render(std::vector<render::UiQuadVertex>& out, float x, float y, float width, float height,
                        bool caretVisible) const {
     // Beta GuiTextField: a light grey frame (white-ish when focused) around a black box.
     const glm::vec4 border = m_focused ? glm::vec4(1.0f, 1.0f, 1.0f, 1.0f) : glm::vec4(0.63f, 0.63f, 0.63f, 1.0f);
@@ -55,11 +55,11 @@ void TextField::render(std::vector<UiQuadVertex>& out, float x, float y, float w
     render::TextRenderer::appendText(out, shown, x + 6.0f, ty, kScale, glm::vec4(0.88f, 0.88f, 0.88f, 1.0f), true);
 }
 
-void appendSolidQuad(std::vector<UiQuadVertex>& out, float x0, float y0, float x1, float y1, const glm::vec4& color) {
-    const UiQuadVertex v0{{x0, y0}, {0.0f, 0.0f}, color, 0.0f};
-    const UiQuadVertex v1{{x1, y0}, {0.0f, 0.0f}, color, 0.0f};
-    const UiQuadVertex v2{{x1, y1}, {0.0f, 0.0f}, color, 0.0f};
-    const UiQuadVertex v3{{x0, y1}, {0.0f, 0.0f}, color, 0.0f};
+void appendSolidQuad(std::vector<render::UiQuadVertex>& out, float x0, float y0, float x1, float y1, const glm::vec4& color) {
+    const render::UiQuadVertex v0{{x0, y0}, {0.0f, 0.0f}, color, 0.0f};
+    const render::UiQuadVertex v1{{x1, y0}, {0.0f, 0.0f}, color, 0.0f};
+    const render::UiQuadVertex v2{{x1, y1}, {0.0f, 0.0f}, color, 0.0f};
+    const render::UiQuadVertex v3{{x0, y1}, {0.0f, 0.0f}, color, 0.0f};
     out.push_back(v0);
     out.push_back(v1);
     out.push_back(v2);
@@ -68,7 +68,7 @@ void appendSolidQuad(std::vector<UiQuadVertex>& out, float x0, float y0, float x
     out.push_back(v3);
 }
 
-void appendMenuButton(std::vector<UiQuadVertex>& out, const MenuButton& button, std::string_view label, bool hovered,
+void appendMenuButton(std::vector<render::UiQuadVertex>& out, const MenuButton& button, std::string_view label, bool hovered,
                       bool enabled) {
     const bool lit = hovered && enabled;
     appendSolidQuad(out, button.x - 2.0f, button.y - 2.0f, button.x + button.width + 2.0f,

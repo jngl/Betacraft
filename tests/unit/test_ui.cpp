@@ -1,7 +1,7 @@
 #include "physics/Player.hpp"
 #include "audio/AudioEngine.hpp"
 #include "tests/test_helpers.hpp"
-#include "ui/BitmapFont.hpp"
+#include "render/BitmapFont.hpp"
 #include "ui/CraftingSystem.hpp"
 #include "ui/CreateWorldScreen.hpp"
 #include "ui/DeathScreen.hpp"
@@ -22,6 +22,7 @@
 
 using namespace betacraft;
 using namespace betacraft::ui;
+using namespace betacraft::render;
 using namespace testing;
 
 TEST(BitmapFontTest, MeasurementAndGlyphVertices) {

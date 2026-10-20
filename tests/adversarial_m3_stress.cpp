@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "audio/MpscRingBuffer.hpp"
+#include "core/MpscRingBuffer.hpp"
 #include "audio/AudioEngine.hpp"
 #include "render/TextRenderer.hpp"
 #include "ui/InputManager.hpp"
@@ -38,7 +38,7 @@ struct HeavyPayload {
 // ============================================================================
 
 TEST(AdversarialM3Stress, Mpsc16ProducersHighContentionStress) {
-    audio::MpscRingBuffer<HeavyPayload, 512> ring;
+    core::MpscRingBuffer<HeavyPayload, 512> ring;
     constexpr int numProducers = 16;
     constexpr int itemsPerProducer = 10000;
     constexpr int totalItems = numProducers * itemsPerProducer;
@@ -97,7 +97,7 @@ TEST(AdversarialM3Stress, Mpsc16ProducersHighContentionStress) {
 }
 
 TEST(AdversarialM3Stress, MpscMillionItemSequentialWraparound) {
-    audio::MpscRingBuffer<uint32_t, 64> ring;
+    core::MpscRingBuffer<uint32_t, 64> ring;
     constexpr uint32_t iterations = 1000000;
 
     for (uint32_t i = 0; i < iterations; ++i) {
@@ -110,7 +110,7 @@ TEST(AdversarialM3Stress, MpscMillionItemSequentialWraparound) {
 }
 
 TEST(AdversarialM3Stress, MpscCacheLineAlignment) {
-    audio::MpscRingBuffer<uint32_t, 512> ring;
+    core::MpscRingBuffer<uint32_t, 512> ring;
     const uintptr_t ringAddr = reinterpret_cast<uintptr_t>(&ring);
     EXPECT_EQ(ringAddr % 64, 0u);
 }
@@ -138,28 +138,28 @@ TEST(AdversarialM3Stress, MsdfMedianMathEdgeCases) {
 
 TEST(AdversarialM3Stress, VirtualGuiScaleFuzzingExtremes) {
     // Negative, zero, and minimum dimensions must not divide by zero or infinite loop
-    EXPECT_EQ(render::TextRenderer::calculateGuiScale(0, 0, ui::GuiScalePreference::Auto), 1);
-    EXPECT_EQ(render::TextRenderer::calculateGuiScale(-100, -100, ui::GuiScalePreference::Auto), 1);
-    EXPECT_EQ(render::TextRenderer::calculateGuiScale(1, 1, ui::GuiScalePreference::Auto), 1);
+    EXPECT_EQ(render::TextRenderer::calculateGuiScale(0, 0, render::GuiScalePreference::Auto), 1);
+    EXPECT_EQ(render::TextRenderer::calculateGuiScale(-100, -100, render::GuiScalePreference::Auto), 1);
+    EXPECT_EQ(render::TextRenderer::calculateGuiScale(1, 1, render::GuiScalePreference::Auto), 1);
 
     // Minecraft classic threshold values: (320*k, 240*k)
-    EXPECT_EQ(render::TextRenderer::calculateGuiScale(319, 239, ui::GuiScalePreference::Auto), 1);
-    EXPECT_EQ(render::TextRenderer::calculateGuiScale(320, 240, ui::GuiScalePreference::Auto), 1);
-    EXPECT_EQ(render::TextRenderer::calculateGuiScale(639, 479, ui::GuiScalePreference::Auto), 1);
-    EXPECT_EQ(render::TextRenderer::calculateGuiScale(640, 480, ui::GuiScalePreference::Auto), 2);
-    EXPECT_EQ(render::TextRenderer::calculateGuiScale(960, 720, ui::GuiScalePreference::Auto), 3);
-    EXPECT_EQ(render::TextRenderer::calculateGuiScale(1280, 960, ui::GuiScalePreference::Auto), 4);
-    EXPECT_EQ(render::TextRenderer::calculateGuiScale(1920, 1080, ui::GuiScalePreference::Auto), 4);
+    EXPECT_EQ(render::TextRenderer::calculateGuiScale(319, 239, render::GuiScalePreference::Auto), 1);
+    EXPECT_EQ(render::TextRenderer::calculateGuiScale(320, 240, render::GuiScalePreference::Auto), 1);
+    EXPECT_EQ(render::TextRenderer::calculateGuiScale(639, 479, render::GuiScalePreference::Auto), 1);
+    EXPECT_EQ(render::TextRenderer::calculateGuiScale(640, 480, render::GuiScalePreference::Auto), 2);
+    EXPECT_EQ(render::TextRenderer::calculateGuiScale(960, 720, render::GuiScalePreference::Auto), 3);
+    EXPECT_EQ(render::TextRenderer::calculateGuiScale(1280, 960, render::GuiScalePreference::Auto), 4);
+    EXPECT_EQ(render::TextRenderer::calculateGuiScale(1920, 1080, render::GuiScalePreference::Auto), 4);
 
     // Ultra-high resolutions (4K, 8K, 16K, massive synthetic) must clamp to 4
-    EXPECT_EQ(render::TextRenderer::calculateGuiScale(3840, 2160, ui::GuiScalePreference::Auto), 4);
-    EXPECT_EQ(render::TextRenderer::calculateGuiScale(7680, 4320, ui::GuiScalePreference::Auto), 4);
-    EXPECT_EQ(render::TextRenderer::calculateGuiScale(100000, 100000, ui::GuiScalePreference::Auto), 4);
+    EXPECT_EQ(render::TextRenderer::calculateGuiScale(3840, 2160, render::GuiScalePreference::Auto), 4);
+    EXPECT_EQ(render::TextRenderer::calculateGuiScale(7680, 4320, render::GuiScalePreference::Auto), 4);
+    EXPECT_EQ(render::TextRenderer::calculateGuiScale(100000, 100000, render::GuiScalePreference::Auto), 4);
 }
 
 TEST(AdversarialM3Stress, TextRendererStringEdgeCases) {
     // Empty text
-    std::vector<ui::UiQuadVertex> verts;
+    std::vector<render::UiQuadVertex> verts;
     render::TextRenderer::appendText(verts, "", 0.0f, 0.0f, 1.0f, glm::vec4(1.0f), false);
     EXPECT_TRUE(verts.empty());
     EXPECT_FLOAT_EQ(render::TextRenderer::measureTextWidth("", 1.0f), 0.0f);

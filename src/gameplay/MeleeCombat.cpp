@@ -35,7 +35,7 @@ MeleeResult performMeleeAttack(const AttackerState& attacker, ItemStack& weapon,
 }
 
 std::optional<float> rayAabbDistance(const glm::vec3& origin, const glm::vec3& direction,
-                                     const physics::AABB& box) noexcept {
+                                     const math::AABB& box) noexcept {
     if (!isFinite(origin) || !isFinite(direction) || glm::dot(direction, direction) <= 0.0f) {
         return std::nullopt;
     }
@@ -68,7 +68,7 @@ std::optional<float> rayAabbDistance(const glm::vec3& origin, const glm::vec3& d
 }
 
 std::optional<TargetHit> pickMeleeTarget(const glm::vec3& eye, const glm::vec3& look,
-                                         std::span<const physics::AABB> candidates,
+                                         std::span<const math::AABB> candidates,
                                          float maxDistance) noexcept {
     if (!isFinite(look) || glm::dot(look, look) <= 0.0f) {
         return std::nullopt;

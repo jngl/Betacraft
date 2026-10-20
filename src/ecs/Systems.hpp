@@ -4,7 +4,7 @@
 #include "core/Config.hpp"
 #include "ecs/Components.hpp"
 #include "ecs/Registry.hpp"
-#include "physics/AABB.hpp"
+#include "math/AABB.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -80,7 +80,7 @@ public:
     // True when box overlaps a solid unit cell; isSolid(x, y, z) -> bool. Touching faces do not
     // count, matching Player::collidesWithWorld.
     template<typename IsSolid>
-    [[nodiscard]] static bool gridCollides(const physics::AABB& box, IsSolid&& isSolid) {
+    [[nodiscard]] static bool gridCollides(const math::AABB& box, IsSolid&& isSolid) {
         const int32_t minX = toCell(box.min.x);
         const int32_t maxX = toCell(box.max.x - 1e-5f);
         const int32_t minY = toCell(box.min.y);
@@ -99,10 +99,10 @@ public:
         return false;
     }
 
-    // Generic form: boxCollides(const physics::AABB&) -> bool. Keeps the system testable
+    // Generic form: boxCollides(const math::AABB&) -> bool. Keeps the system testable
     // without a World and lets callers plug in any geometry source.
     template<typename BoxCollides>
-        requires std::is_invocable_r_v<bool, BoxCollides&, const physics::AABB&>
+        requires std::is_invocable_r_v<bool, BoxCollides&, const math::AABB&>
     static void update(Registry& reg, BoxCollides&& boxCollides) {
         reg.view<TransformComp, VelocityComp, AABBColliderComp>().each(
             [&](TransformComp& t, VelocityComp& v, AABBColliderComp& c) {
@@ -110,7 +110,7 @@ public:
             });
     }
 
-    // World form: uses the real block shapes (slabs, cactus...) via physics::AABB::fromBlock.
+    // World form: uses the real block shapes (slabs, cactus...) via math::AABB::fromBlock.
     static void update(Registry& reg, const world::World& world);
     // World form for `entities` only (see MovementPhysicsSystem's subset update).
     static void update(Registry& reg, std::span<const EntityId> entities, const world::World& world);
@@ -119,7 +119,7 @@ private:
     // The world form's geometry: the real block shapes of the solid cells a box overlaps.
     struct WorldBoxCollides {
         const world::World* world;
-        [[nodiscard]] bool operator()(const physics::AABB& box) const;
+        [[nodiscard]] bool operator()(const math::AABB& box) const;
     };
 
     [[nodiscard]] static bool isFinite(const glm::vec3& p) noexcept {

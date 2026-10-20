@@ -37,16 +37,16 @@ void Player::rotate(float deltaYawDeg, float deltaPitchDeg) noexcept {
     m_pitch = std::clamp(m_pitch + deltaPitchDeg, -89.4f, 89.4f);
 }
 
-AABB Player::getAABBAt(const glm::vec3& pos) noexcept {
+math::AABB Player::getAABBAt(const glm::vec3& pos) noexcept {
     constexpr float halfW = core::EngineConfig::PLAYER_WIDTH * 0.5f;
     constexpr float h = core::EngineConfig::PLAYER_HEIGHT;
-    return AABB{
+    return math::AABB{
         .min = {pos.x - halfW, pos.y, pos.z - halfW},
         .max = {pos.x + halfW, pos.y + h, pos.z + halfW}
     };
 }
 
-AABB Player::getAABB() const noexcept {
+math::AABB Player::getAABB() const noexcept {
     return getAABBAt(m_position);
 }
 
@@ -130,7 +130,7 @@ glm::mat4 Player::getViewMatrix() const noexcept {
     return getInterpolatedViewMatrix(m_renderAlpha);
 }
 
-bool Player::collidesWithWorld(const AABB& box, const world::World& world) const noexcept {
+bool Player::collidesWithWorld(const math::AABB& box, const world::World& world) const noexcept {
     const int32_t minX = static_cast<int32_t>(std::floor(box.min.x));
     const int32_t maxX = static_cast<int32_t>(std::floor(box.max.x - 1e-5f));
     // One cell lower than the box: a fence's collision box rises 0.5 into the cell above it
@@ -150,7 +150,7 @@ bool Player::collidesWithWorld(const AABB& box, const world::World& world) const
                 const uint8_t meta = world::shapeDependsOnMetadata(world::BlockRegistry::get(id).shape)
                     ? world.getMetadata(x, y, z)
                     : uint8_t{0};
-                const bool hit = AABB::forEachBlockBox(x, y, z, id, meta, [&](AABB blockBox) {
+                const bool hit = math::AABB::forEachBlockBox(x, y, z, id, meta, [&](math::AABB blockBox) {
                     if (id == world::BlockId::Cactus) {
                         // Beta BlockCactus.getCollisionBoundingBox is also 1/16 short on top
                         // (the selection box is not), so standing on a cactus is contact too.
@@ -287,14 +287,14 @@ StepEvent Player::fixedUpdate(float dt, const PlayerInput& input, const world::W
     if (m_sneaking && m_onGround) {
         constexpr float stepCheck = 0.06f;
         if (delta.x != 0.0f) {
-            const AABB shiftedX = getAABBAt(m_position + glm::vec3(delta.x, -stepCheck, 0.0f));
+            const math::AABB shiftedX = getAABBAt(m_position + glm::vec3(delta.x, -stepCheck, 0.0f));
             if (!collidesWithWorld(shiftedX, world)) {
                 delta.x = 0.0f;
                 m_velocity.x = 0.0f;
             }
         }
         if (delta.z != 0.0f) {
-            const AABB shiftedZ = getAABBAt(m_position + glm::vec3(0.0f, -stepCheck, delta.z));
+            const math::AABB shiftedZ = getAABBAt(m_position + glm::vec3(0.0f, -stepCheck, delta.z));
             if (!collidesWithWorld(shiftedZ, world)) {
                 delta.z = 0.0f;
                 m_velocity.z = 0.0f;
@@ -340,7 +340,7 @@ StepEvent Player::fixedUpdate(float dt, const PlayerInput& input, const world::W
             m_velocity.y = 0.0f;
         }
     } else {
-        const AABB groundProbe = getAABBAt(m_position + glm::vec3(0.0f, -0.02f, 0.0f));
+        const math::AABB groundProbe = getAABBAt(m_position + glm::vec3(0.0f, -0.02f, 0.0f));
         m_onGround = collidesWithWorld(groundProbe, world);
     }
 
@@ -404,7 +404,7 @@ StepEvent Player::fixedUpdate(float dt, const PlayerInput& input, const world::W
     // Beta Entity.moveEntity: every cell of the box shrunk by 0.001 gets
     // onEntityCollidedWithBlock; the cactus collision box is inset so contact reaches it.
     {
-        const AABB box = getAABB();
+        const math::AABB box = getAABB();
         constexpr float shrink = 0.001f;
         const int32_t x0 = static_cast<int32_t>(std::floor(box.min.x + shrink));
         const int32_t x1 = static_cast<int32_t>(std::floor(box.max.x - shrink));

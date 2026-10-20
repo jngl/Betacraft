@@ -1,8 +1,8 @@
-#include "ui/BitmapFont.hpp"
+#include "render/BitmapFont.hpp"
 
 #include <cctype>
 
-namespace betacraft::ui {
+namespace betacraft::render {
 
 namespace {
 
@@ -152,4 +152,4 @@ void BitmapFont::appendText(
     emitPass(x, y, color);
 }
 
-} // namespace betacraft::ui
+} // namespace betacraft::render

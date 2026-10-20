@@ -7,7 +7,7 @@
 #include "world/Chunk.hpp"
 #include "world/World.hpp"
 #include "physics/Player.hpp"
-#include "physics/AABB.hpp"
+#include "math/AABB.hpp"
 
 #include <vector>
 #include <random>

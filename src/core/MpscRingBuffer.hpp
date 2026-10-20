@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <utility>
 
-namespace betacraft::audio {
+namespace betacraft::core {
 
 template<typename T, size_t Capacity = 512>
 class alignas(64) MpscRingBuffer {
@@ -83,4 +83,4 @@ private:
     alignas(64) size_t m_head{0};
 };
 
-} // namespace betacraft::audio
+} // namespace betacraft::core

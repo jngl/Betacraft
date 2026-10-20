@@ -20,7 +20,7 @@ public:
     void render(
         int windowWidth,
         int windowHeight,
-        std::vector<UiQuadVertex>& outVerts,
+        std::vector<render::UiQuadVertex>& outVerts,
         float mouseX,
         float mouseY,
         ScreenState activeState,
