@@ -18,7 +18,6 @@ using namespace betacraft;
 using namespace betacraft::physics;
 using namespace betacraft::world;
 using namespace betacraft::voxel;
-using namespace betacraft::render;
 using namespace betacraft::streaming;
 
 // ============================================================================

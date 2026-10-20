@@ -411,7 +411,8 @@ ChunkMeshData ChunkMesher::buildMesh(
                                                      world.getSkyLight(sx, sy, sz), world.getBlockLight(sx, sy, sz)};
                     };
                     streaming::emitDetailedShape(targetBuffer, def, chunk.getMetadata(lx, y, lz),
-                                                 static_cast<uint32_t>(lx), localY, static_cast<uint32_t>(lz), secY, sample);
+                                                 static_cast<uint32_t>(lx), localY, static_cast<uint32_t>(lz), secY,
+                                                 sample);
                     continue;
                 }
 

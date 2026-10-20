@@ -34,7 +34,8 @@ public:
     ChunkMeshGL& operator=(ChunkMeshGL&& other) noexcept;
 
     void upload(const ChunkMeshData& data);
-    void upload(const std::vector<streaming::PackedChunkVertex>& opaque, const std::vector<streaming::PackedChunkVertex>& translucent);
+    void upload(const std::vector<streaming::PackedChunkVertex>& opaque,
+                const std::vector<streaming::PackedChunkVertex>& translucent);
     void drawOpaque() const noexcept;
     void drawTranslucent() const noexcept;
 

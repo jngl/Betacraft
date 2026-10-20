@@ -14,7 +14,6 @@
 #include "world/World.hpp"
 
 using namespace betacraft;
-using namespace betacraft::render;
 using namespace betacraft::streaming;
 using namespace betacraft::world;
 using namespace betacraft::voxel;
