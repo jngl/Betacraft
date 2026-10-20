@@ -552,7 +552,7 @@ bool World::persistChunk(const voxel::Chunk& chunk) {
     // ever reach the store; a write outside them is a regression the F3 counter shows.
     if (!persistSimulationEdits(coord)) {
         ++m_storageStats.unsolicitedBundleWrites;
-        core::Logger::warn("World", "voxel::Chunk ", coord.x, ",", coord.z, " saved without any player edit around it");
+        core::Logger::warn("World", "Chunk ", coord.x, ",", coord.z, " saved without any player edit around it");
     }
     // S7.6: serialised here, compressed and written by the I/O worker.
     m_io->enqueueSave({coord, m_storage.encodeChunkBundle(bundle)});
@@ -708,7 +708,7 @@ void World::pumpStreaming() {
         if (voxel::Chunk* chunk = getChunkMutable(failed.coord)) {
             chunk->setModified(true);
         } else {
-            core::Logger::error("World", "voxel::Chunk ", failed.coord.x, ",", failed.coord.z,
+            core::Logger::error("World", "Chunk ", failed.coord.x, ",", failed.coord.z,
                                 " could not be saved and is no longer loaded");
         }
     }
