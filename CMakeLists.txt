@@ -35,9 +35,26 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 target_link_libraries(miniaudio_lib PUBLIC Threads::Threads ${CMAKE_DL_LIBS} m)
 
+enable_testing()
+
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.tar.gz
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+# Extracted modules (modules/<m>, ADR 0001). Each one is its own static library and test
+# executable; betacraft_core below holds what has not been extracted yet.
+include(cmake/BetacraftModule.cmake)
+add_subdirectory(modules/core)
+add_subdirectory(modules/math)
+
 set(BETACRAFT_CORE_SOURCES
-    src/core/Logger.cpp
-    src/math/PerlinNoise.cpp
     src/voxel/Block.cpp
     src/voxel/PalettedSection.cpp
     src/voxel/Chunk.cpp
@@ -113,6 +130,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 target_link_libraries(betacraft_core PUBLIC
+    betacraft::core
+    betacraft::math
     PkgConfig::SDL2
     OpenGL::GL
     miniaudio_lib
@@ -132,22 +151,7 @@ endif()
 add_executable(betacraft src/main.cpp)
 target_link_libraries(betacraft PRIVATE betacraft_core)
 
-enable_testing()
-
-include(FetchContent)
-FetchContent_Declare(
-    googletest
-    URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.tar.gz
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
 set(UNIT_TEST_SOURCES
-    tests/unit/test_core.cpp
-    tests/unit/test_math.cpp
     tests/unit/test_physics.cpp
     tests/unit/test_world_block.cpp
     tests/unit/test_world_chunk.cpp
@@ -164,7 +168,6 @@ set(UNIT_TEST_SOURCES
     tests/unit/test_shared_ebo.cpp
     tests/unit/test_differential_lighting.cpp
     tests/unit/test_adversarial_m2.cpp
-    tests/unit/test_mpsc_ring_buffer.cpp
     tests/unit/test_msdf_font.cpp
     tests/unit/test_input_rebind.cpp
     tests/unit/test_adversarial_m3.cpp
@@ -226,7 +229,9 @@ target_link_libraries(betacraft_mock_tests PRIVATE betacraft_core GTest::gtest G
 add_test(NAME MockTests COMMAND betacraft_mock_tests)
 
 # 5. All-in-one test suite target
+get_property(MODULE_TEST_SOURCES GLOBAL PROPERTY BETACRAFT_MODULE_TEST_SOURCES)
 add_executable(betacraft_all_tests
+    ${MODULE_TEST_SOURCES}
     ${UNIT_TEST_SOURCES}
     ${INTEGRATION_TEST_SOURCES}
     ${E2E_TEST_SOURCES}

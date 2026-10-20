@@ -87,16 +87,16 @@ Data Flow:
 - `class TextRenderer`: MSDF shader and atlas rendering text quads.
 
 ## Code Layout
-- `src/core/`: Engine configuration, math types, input types.
+- `modules/<m>/{include/<m>,src,test}`: extracted modules, one static library and test executable each (ADR 0001). `modules/core/`: engine configuration, coordinate types, `Logger`, `MpscRingBuffer.hpp`. `modules/math/`: `AABB`, `Frustum`, `PerlinNoise`.
 - `src/physics/`: Player physics, bounding boxes, fixed timestep integration.
-- `src/voxel/`: block and chunk data, depending only on `core`: `Block`, `BlockShapes.hpp`, `BlockEntity.hpp`, `BlockEntityStore`, `PalettedSection`, `Chunk`, `ScheduledTicks`, `SectionCoord.hpp`.
+- `src/voxel/`: block and chunk data, depending only on `core`: `Block`, `BlockShapes.hpp`, `BlockBoxes.hpp`, `BlockEntity.hpp`, `BlockEntityStore`, `PalettedSection`, `Chunk`, `ScheduledTicks`, `SectionCoord.hpp`.
 - `src/world/`: the orchestrator above `worldgen`, `storage`, `fluids`, `redstone` and `gameplay`: `World`, `WorldGen`, `BlockTicks`, `Weather`, `DifferentialLightingEngine`, `ChunkGenPipeline`.
 - `src/streaming/`: GL-free asynchronous meshing: `PackedChunkVertex.hpp/cpp`, `BlockShapeMesher.hpp`, `SnapshotMesher`, `AsyncChunkPipeline`, `WorldMeshStreamer`.
 - `src/render/`: `ChunkMesher.hpp/cpp`, `WorldRenderer.hpp/cpp`, `TextRenderer.hpp/cpp`, `GLHeaders.hpp/cpp`.
-- `src/audio/`: `MpscRingBuffer.hpp`, `AudioEngine.hpp/cpp`.
+- `src/audio/`: `AudioEngine.hpp/cpp`.
 - `src/ui/`: `ScreenState.hpp`, `TitleScreen.hpp/cpp`, `OptionsMenu.hpp/cpp`, `InputManager.hpp/cpp`.
 - `shaders/`: `chunk_vertex.glsl`, `chunk_fragment.glsl`, `msdf_vertex.glsl`, `msdf_fragment.glsl`.
-- `tests/unit/`: Dedicated GoogleTest unit test suites (`test_physics_fixed_step.cpp`, `test_paletted_section.cpp`, `test_packed_chunk_vertex.cpp`, `test_shared_ebo.cpp`, `test_differential_lighting.cpp`, `test_mpsc_ring_buffer.cpp`, `test_msdf_font.cpp`, `test_input_rebind.cpp`).
+- `tests/unit/`: Dedicated GoogleTest unit test suites (`test_physics_fixed_step.cpp`, `test_paletted_section.cpp`, `test_packed_chunk_vertex.cpp`, `test_shared_ebo.cpp`, `test_differential_lighting.cpp`, `test_msdf_font.cpp`, `test_input_rebind.cpp`).
 - `tests/e2e/`: Opaque-box acceptance test suites.
 
 ---

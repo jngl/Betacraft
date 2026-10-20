@@ -13,6 +13,7 @@
 #include "streaming/BlockShapeMesher.hpp"
 #include "streaming/SectionNeighborhoodSnapshot18.hpp"
 #include "streaming/SnapshotMesher.hpp"
+#include "voxel/BlockBoxes.hpp"
 #include "voxel/BlockShapes.hpp"
 
 #include <glm/glm.hpp>
@@ -37,7 +38,7 @@ void expectBox(const AABB& box, const glm::vec3& min, const glm::vec3& max, cons
 
 std::vector<AABB> collisionBoxes(BlockId id, uint8_t meta) {
     std::vector<AABB> out;
-    (void)AABB::forEachBlockBox(0, 0, 0, id, meta, [&](const AABB& b) {
+    (void)voxel::forEachBlockAABB(0, 0, 0, id, meta, [&](const AABB& b) {
         out.push_back(b);
         return false;
     });
@@ -85,10 +86,10 @@ TEST(S5ShapeBoxes, NewShapesAppendedAtTheEndOfRenderShape) {
 TEST(S5ShapeBoxes, LadderIsTwoSixteenthsAgainstItsWall) {
     voxel::BlockRegistry::initialize();
     constexpr float t = 2.0f / 16.0f;
-    expectBox(AABB::fromBlock(0, 0, 0, BlockId::Ladder, 2), {0, 0, 1 - t}, {1, 1, 1}, "meta 2 (+Z wall)");
-    expectBox(AABB::fromBlock(0, 0, 0, BlockId::Ladder, 3), {0, 0, 0}, {1, 1, t}, "meta 3 (-Z wall)");
-    expectBox(AABB::fromBlock(0, 0, 0, BlockId::Ladder, 4), {1 - t, 0, 0}, {1, 1, 1}, "meta 4 (+X wall)");
-    expectBox(AABB::fromBlock(0, 0, 0, BlockId::Ladder, 5), {0, 0, 0}, {t, 1, 1}, "meta 5 (-X wall)");
+    expectBox(voxel::blockAABB(0, 0, 0, BlockId::Ladder, 2), {0, 0, 1 - t}, {1, 1, 1}, "meta 2 (+Z wall)");
+    expectBox(voxel::blockAABB(0, 0, 0, BlockId::Ladder, 3), {0, 0, 0}, {1, 1, t}, "meta 3 (-Z wall)");
+    expectBox(voxel::blockAABB(0, 0, 0, BlockId::Ladder, 4), {1 - t, 0, 0}, {1, 1, 1}, "meta 4 (+X wall)");
+    expectBox(voxel::blockAABB(0, 0, 0, BlockId::Ladder, 5), {0, 0, 0}, {t, 1, 1}, "meta 5 (-X wall)");
     EXPECT_EQ(voxel::ladderSupportOffset(4), glm::ivec3(1, 0, 0));
     EXPECT_EQ(voxel::ladderMetaForClickedFace(core::FaceDir::NegX), std::optional<uint8_t>{4});
     EXPECT_EQ(voxel::ladderMetaForClickedFace(core::FaceDir::PosY), std::nullopt);
@@ -107,25 +108,25 @@ TEST(S5ShapeBoxes, DoorIsThreeSixteenthsByOrientationAndState) {
         const uint8_t state = (meta & voxel::kDoorOpenBit) != 0 ? (meta & 3) : ((meta + 3) & 3);
         EXPECT_EQ(voxel::doorState(meta), state) << int(meta);
         const glm::vec3* box = byState[state];
-        expectBox(AABB::fromBlock(0, 0, 0, BlockId::WoodDoor, meta), box[0], box[1], "door");
+        expectBox(voxel::blockAABB(0, 0, 0, BlockId::WoodDoor, meta), box[0], box[1], "door");
     }
     // Opening turns the slab a quarter: orientation 0 closed is along X, open along Z.
-    expectBox(AABB::fromBlock(0, 0, 0, BlockId::WoodDoor, 0), {0, 0, 0}, {t, 1, 1}, "closed");
-    expectBox(AABB::fromBlock(0, 0, 0, BlockId::WoodDoor, voxel::kDoorOpenBit), {0, 0, 0}, {1, 1, t}, "open");
+    expectBox(voxel::blockAABB(0, 0, 0, BlockId::WoodDoor, 0), {0, 0, 0}, {t, 1, 1}, "closed");
+    expectBox(voxel::blockAABB(0, 0, 0, BlockId::WoodDoor, voxel::kDoorOpenBit), {0, 0, 0}, {1, 1, t}, "open");
     // The upper half (bit 3) has the same box.
-    expectBox(AABB::fromBlock(0, 0, 0, BlockId::WoodDoor, voxel::kDoorUpperBit | voxel::kDoorOpenBit), {0, 0, 0},
+    expectBox(voxel::blockAABB(0, 0, 0, BlockId::WoodDoor, voxel::kDoorUpperBit | voxel::kDoorOpenBit), {0, 0, 0},
               {1, 1, t}, "open upper half");
 }
 
 TEST(S5ShapeBoxes, BedFenceFarmlandCropsAndStairs) {
     voxel::BlockRegistry::initialize();
-    expectBox(AABB::fromBlock(3, 4, 5, BlockId::Bed, 0), {3, 4, 5}, {4, 4 + 9.0f / 16.0f, 6}, "bed");
-    expectBox(AABB::fromBlock(3, 4, 5, BlockId::Bed, voxel::kBedHeadBit | 2), {3, 4, 5}, {4, 4 + 9.0f / 16.0f, 6},
+    expectBox(voxel::blockAABB(3, 4, 5, BlockId::Bed, 0), {3, 4, 5}, {4, 4 + 9.0f / 16.0f, 6}, "bed");
+    expectBox(voxel::blockAABB(3, 4, 5, BlockId::Bed, voxel::kBedHeadBit | 2), {3, 4, 5}, {4, 4 + 9.0f / 16.0f, 6},
               "bed head");
-    expectBox(AABB::fromBlock(3, 4, 5, BlockId::Fence, 0), {3, 4, 5}, {4, 5.5f, 6}, "fence collides 1.5 high");
-    expectBox(AABB::selectionBox(3, 4, 5, BlockId::Fence, 0), {3, 4, 5}, {4, 5, 6}, "fence picks as a cube");
-    expectBox(AABB::fromBlock(3, 4, 5, BlockId::Farmland, 7), {3, 4, 5}, {4, 4 + 15.0f / 16.0f, 6}, "farmland");
-    expectBox(AABB::selectionBox(3, 4, 5, BlockId::Crops, 7), {3, 4, 5}, {4, 4.25f, 6}, "crops pick slab");
+    expectBox(voxel::blockAABB(3, 4, 5, BlockId::Fence, 0), {3, 4, 5}, {4, 5.5f, 6}, "fence collides 1.5 high");
+    expectBox(voxel::selectionAABB(3, 4, 5, BlockId::Fence, 0), {3, 4, 5}, {4, 5, 6}, "fence picks as a cube");
+    expectBox(voxel::blockAABB(3, 4, 5, BlockId::Farmland, 7), {3, 4, 5}, {4, 4 + 15.0f / 16.0f, 6}, "farmland");
+    expectBox(voxel::selectionAABB(3, 4, 5, BlockId::Crops, 7), {3, 4, 5}, {4, 4.25f, 6}, "crops pick slab");
     EXPECT_FALSE(voxel::BlockRegistry::isSolid(BlockId::Crops));
     EXPECT_TRUE(collisionBoxes(BlockId::Crops, 7).empty()) << "crops do not collide";
     EXPECT_EQ(collisionBoxes(BlockId::Fence, 0).size(), 1U);
@@ -149,7 +150,7 @@ TEST(S5ShapeBoxes, BedFenceFarmlandCropsAndStairs) {
             }
             EXPECT_NEAR(volume, 0.75f, 1e-5f) << "stairs fill three quarters of the cell";
             EXPECT_TRUE(foundHigh) << "meta " << int(meta);
-            expectBox(AABB::fromBlock(0, 0, 0, id, meta), {0, 0, 0}, {1, 1, 1}, "stairs outline");
+            expectBox(voxel::blockAABB(0, 0, 0, id, meta), {0, 0, 0}, {1, 1, 1}, "stairs outline");
         }
     }
     // Beta onBlockPlacedBy: the high step on the far side of the look direction.
@@ -161,9 +162,9 @@ TEST(S5ShapeBoxes, BedFenceFarmlandCropsAndStairs) {
 
 TEST(S5ShapeBoxes, OldSignatureReadsMetadataZero) {
     voxel::BlockRegistry::initialize();
-    expectBox(AABB::fromBlock(1, 2, 3, BlockId::WoodDoor), AABB::fromBlock(1, 2, 3, BlockId::WoodDoor, 0).min,
-              AABB::fromBlock(1, 2, 3, BlockId::WoodDoor, 0).max, "door");
-    expectBox(AABB::fromBlock(1, 2, 3, BlockId::CobbleSlab), {1, 2, 3}, {2, 2.5f, 4}, "slab unchanged");
+    expectBox(voxel::blockAABB(1, 2, 3, BlockId::WoodDoor), voxel::blockAABB(1, 2, 3, BlockId::WoodDoor, 0).min,
+              voxel::blockAABB(1, 2, 3, BlockId::WoodDoor, 0).max, "door");
+    expectBox(voxel::blockAABB(1, 2, 3, BlockId::CobbleSlab), {1, 2, 3}, {2, 2.5f, 4}, "slab unchanged");
 }
 
 // --- Player against the shapes ------------------------------------------------------------

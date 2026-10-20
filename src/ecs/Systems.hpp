@@ -110,7 +110,7 @@ public:
             });
     }
 
-    // World form: uses the real block shapes (slabs, cactus...) via math::AABB::fromBlock.
+    // World form: uses the real block shapes (slabs, cactus...) via voxel::blockAABB.
     static void update(Registry& reg, const world::World& world);
     // World form for `entities` only (see MovementPhysicsSystem's subset update).
     static void update(Registry& reg, std::span<const EntityId> entities, const world::World& world);

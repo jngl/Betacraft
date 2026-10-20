@@ -1,5 +1,6 @@
 #include "physics/Raycaster.hpp"
 #include "math/AABB.hpp"
+#include "voxel/BlockBoxes.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -122,7 +123,7 @@ RaycastHit Raycaster::cast(
             float subT = dist;
             core::FaceDir subFace = steppedFace;
             if (wholeCell ||
-                intersectRayAABB(origin, dir, math::AABB::selectionBox(x, y, z, id, meta), maxDistance, subT, subFace)) {
+                intersectRayAABB(origin, dir, voxel::selectionAABB(x, y, z, id, meta), maxDistance, subT, subFace)) {
                 result.hit = true;
                 result.blockPos = {x, y, z};
                 result.face = wholeCell ? steppedFace : subFace;
