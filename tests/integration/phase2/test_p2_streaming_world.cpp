@@ -236,7 +236,7 @@ TEST_F(P2StreamingWorld, BlockEditRemeshesNeighbourSectionsAndConvergesToTheNewW
 
     const SectionSet uploaded = gpu.uploadedSet();
     for (const voxel::SectionCoord c : nonEmptyAmong({{0, 2, 0}, {0, 3, 0}, {1, 2, 0}, {1, 3, 0},
-                                               {0, 2, 1}, {0, 3, 1}, {1, 2, 1}, {1, 3, 1}})) {
+                                                      {0, 2, 1}, {0, 3, 1}, {1, 2, 1}, {1, 3, 1}})) {
         EXPECT_TRUE(uploaded.contains(c)) << "not re-meshed: " << c.x << "," << c.y << "," << c.z;
     }
     EXPECT_FALSE(uploaded.contains(voxel::SectionCoord{-2, 7, -2})) << "far section re-meshed";

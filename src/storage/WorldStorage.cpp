@@ -487,7 +487,7 @@ void WorldStorage::quarantineChunk(core::ChunkCoord coord) const {
 }
 
 std::vector<world::BlockEntityEntry> WorldStorage::decodeBundleBlockEntities(core::ChunkCoord coord,
-                                                                            const ChunkBundle& bundle) const {
+                                                                             const ChunkBundle& bundle) const {
     if (bundle.blockEntities.empty()) {
         return {};
     }

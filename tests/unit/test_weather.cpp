@@ -147,13 +147,13 @@ TEST(WeatherTest, LevelDataRoundtripWeather) {
     storage::WorldLevelData data{};
     data.seed = 42ULL;
     data.weather = storage::WeatherState{.raining = true,
-                                .thundering = true,
-                                .rainTime = 12345,
-                                .thunderTime = 678,
-                                .rainStrength = 0.4375f,
-                                .prevRainStrength = 0.435f,
-                                .thunderStrength = 0.1f,
-                                .prevThunderStrength = 0.0975f};
+                                         .thundering = true,
+                                         .rainTime = 12345,
+                                         .thunderTime = 678,
+                                         .rainStrength = 0.4375f,
+                                         .prevRainStrength = 0.435f,
+                                         .thunderStrength = 0.1f,
+                                         .prevThunderStrength = 0.0975f};
     const std::string text = storage::encodeLevelData(data);
     EXPECT_EQ(text.rfind("BETACRAFT_LEVEL_V2\n", 0), 0U) << "new keys, no version change";
     EXPECT_NE(text.find("weather.raining 1\n"), std::string::npos) << text;
@@ -272,8 +272,8 @@ TEST(WeatherTest, RainAndThunderDarkenTheSky) {
 
 TEST(WeatherTest, LightningOddsAndThunderDelay) {
     storage::WeatherState storm{.raining = true, .thundering = true, .rainTime = 100000, .thunderTime = 100000,
-                       .rainStrength = 1.0f, .prevRainStrength = 1.0f, .thunderStrength = 1.0f,
-                       .prevThunderStrength = 1.0f};
+                                .rainStrength = 1.0f, .prevRainStrength = 1.0f, .thunderStrength = 1.0f,
+                                .prevThunderStrength = 1.0f};
     gameplay::SplitMix64 rng(99);
     int32_t strikes = 0;
     constexpr int32_t kTicks = 200000;

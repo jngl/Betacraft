@@ -265,8 +265,8 @@ TEST(PersistenceIntegrationTest, LevelDatWithoutArmorKeysLoads) {
 
     // Malformed or misplaced armor lines never put a wrong item in a slot.
     ASSERT_EQ(storage::decodeLevelData("BETACRAFT_LEVEL_V2\narmor 7 306 1 0\narmor 0 1 1 0\narmor 1 306 1 0\n"
-                                     "armor 2 312 1 9999\narmor x\n",
-                                     data),
+                                       "armor 2 312 1 9999\narmor x\n",
+                                       data),
               storage::LevelLoadStatus::Ok);
     game::restorePlayer(player, *data.player);
     EXPECT_TRUE(player.getArmorSlot(0).isEmpty()) << "stone is no helmet";

@@ -162,7 +162,7 @@ public:
     void quarantineChunk(core::ChunkCoord coord) const;
     // The bundle's block entities; an unreadable record is quarantined like a .be was.
     [[nodiscard]] std::vector<world::BlockEntityEntry> decodeBundleBlockEntities(core::ChunkCoord coord,
-                                                                                const ChunkBundle& bundle) const;
+                                                                                 const ChunkBundle& bundle) const;
     // Makes every region write durable (data fsynced, then headers).
     bool flush() const;
     // Flushes and closes the open region files.

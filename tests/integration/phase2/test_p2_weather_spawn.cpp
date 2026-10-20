@@ -45,13 +45,13 @@ constexpr float kNoon = 0.25f;
 
 [[nodiscard]] storage::WeatherState fullStorm() {
     return storage::WeatherState{.raining = true,
-                               .thundering = true,
-                               .rainTime = 100000,
-                               .thunderTime = 100000,
-                               .rainStrength = 1.0f,
-                               .prevRainStrength = 1.0f,
-                               .thunderStrength = 1.0f,
-                               .prevThunderStrength = 1.0f};
+                                 .thundering = true,
+                                 .rainTime = 100000,
+                                 .thunderTime = 100000,
+                                 .rainStrength = 1.0f,
+                                 .prevRainStrength = 1.0f,
+                                 .thunderStrength = 1.0f,
+                                 .prevThunderStrength = 1.0f};
 }
 
 [[nodiscard]] storage::WeatherState fullRain() {

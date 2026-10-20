@@ -9,6 +9,6 @@ The engine was one static library (`betacraft_core`) whose source directories in
 
 ## Consequences
 
-- `world` is split in two. **`voxel`** holds block and chunk data (`Block`, `BlockShapes`, `BlockEntity`, `PalettedSection`, `Chunk`, `ScheduledTicks`, `SectionCoord`) at the bottom of the graph. **`world`** keeps the orchestrator (`World`, `WorldGen`, block ticks, weather, lighting engine, `ChunkGenPipeline`) *above* `worldgen`, `storage`, `fluids`, `redstone` and `gameplay`. Most modules that "needed the world" only needed `voxel`.
+- `world` is split in two. **`voxel`** holds block and chunk data (`Block`, `BlockShapes`, `BlockEntity`, `BlockEntityStore`, `PalettedSection`, `Chunk`, `ScheduledTicks`, `SectionCoord`) at the bottom of the graph. **`world`** keeps the orchestrator (`World`, `WorldGen`, block ticks, weather, lighting engine, `ChunkGenPipeline`) *above* `worldgen`, `storage`, `fluids`, `redstone` and `gameplay`. Most modules that "needed the world" only needed `voxel`.
 - A file's namespace follows its module (`betacraft::voxel::BlockId`, `betacraft::math::AABB`, `betacraft::ui::ScreenKind`). An include path or namespace always says where the code lives.
 - `streaming` only holds GL-free meshing (it takes `PackedChunkVertex` and `BlockShapeMesher` from `render`). `render` depends on it, never the other way round. `lighting` stays GL-free: its uniform buffer lives in `render`.

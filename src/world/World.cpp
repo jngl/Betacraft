@@ -638,11 +638,10 @@ void World::unloadDistantChunks(int32_t centerCX, int32_t centerCZ, int32_t radi
 
 // --- S7.7 asynchronous streaming ----------------------------------------------------------
 
-world::ChunkGenPipeline& World::genPipeline() {
+ChunkGenPipeline& World::genPipeline() {
     if (!m_genPipeline) {
         m_sharedGen = std::make_shared<const WorldGen>(m_worldGen.getSeed());
-        m_genPipeline = std::make_unique<world::ChunkGenPipeline>(m_sharedGen,
-                                                                      world::ChunkGenConfig{m_genWorkers});
+        m_genPipeline = std::make_unique<ChunkGenPipeline>(m_sharedGen, ChunkGenConfig{m_genWorkers});
     }
     return *m_genPipeline;
 }

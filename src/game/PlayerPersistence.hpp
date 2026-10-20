@@ -13,12 +13,12 @@ namespace betacraft::game {
 // screen keeps outside the inventory (InventoryCrafting::pendingStacks): they are merged
 // into a copy of the player first, so saving with the screen open loses nothing.
 [[nodiscard]] storage::PlayerSaveData capturePlayer(const physics::Player& player,
-                                                  std::span<const physics::InventorySlot> pending = {});
+                                                    std::span<const physics::InventorySlot> pending = {});
 // Same, and the pending stacks a full inventory cannot take are appended to `overflow`
 // (the caller drops them in the world) instead of vanishing.
 [[nodiscard]] storage::PlayerSaveData capturePlayer(const physics::Player& player,
-                                                  std::span<const physics::InventorySlot> pending,
-                                                  std::vector<physics::InventorySlot>* overflow);
+                                                    std::span<const physics::InventorySlot> pending,
+                                                    std::vector<physics::InventorySlot>* overflow);
 
 // Applies a saved snapshot, clamping every value: counts to [1, maxStackSize], health to
 // [0, 20], air to [0, 300], fire (S3.1 `player.fire`) to [0, 600], the selected slot to the

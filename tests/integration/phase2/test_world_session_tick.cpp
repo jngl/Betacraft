@@ -99,13 +99,13 @@ TEST_F(WorldSessionTick, TheTickThePlayerDiesScattersTheGridTheCursorAndTheInven
 // in the events, within 64 blocks of the player, on top of a rainy column.
 TEST_F(WorldSessionTick, AThunderstormReturnsLightningStrikes) {
     m_session->setWeather(storage::WeatherState{.raining = true,
-                                              .thundering = true,
-                                              .rainTime = 100000,
-                                              .thunderTime = 100000,
-                                              .rainStrength = 1.0f,
-                                              .prevRainStrength = 1.0f,
-                                              .thunderStrength = 1.0f,
-                                              .prevThunderStrength = 1.0f});
+                                                .thundering = true,
+                                                .rainTime = 100000,
+                                                .thunderTime = 100000,
+                                                .rainStrength = 1.0f,
+                                                .prevRainStrength = 1.0f,
+                                                .thunderStrength = 1.0f,
+                                                .prevThunderStrength = 1.0f});
     std::optional<glm::vec3> strike;
     for (int32_t t = 0; t < 4000 && !strike; ++t) {
         strike = tickIdle().lightningStrike;
@@ -160,13 +160,13 @@ TEST_F(WorldSessionTick, ThunderLetsHostilesSpawnOnTheSunlitSurfaceAtNoon) {
     // Long timers: neither weather changes during the run.
     EXPECT_EQ(sunlitHostilesWithin(storage::WeatherState{.rainTime = 100000, .thunderTime = 100000}, 1500), 0);
     EXPECT_GT(sunlitHostilesWithin(storage::WeatherState{.raining = true,
-                                                       .thundering = true,
-                                                       .rainTime = 100000,
-                                                       .thunderTime = 100000,
-                                                       .rainStrength = 1.0f,
-                                                       .prevRainStrength = 1.0f,
-                                                       .thunderStrength = 1.0f,
-                                                       .prevThunderStrength = 1.0f},
+                                                         .thundering = true,
+                                                         .rainTime = 100000,
+                                                         .thunderTime = 100000,
+                                                         .rainStrength = 1.0f,
+                                                         .prevRainStrength = 1.0f,
+                                                         .thunderStrength = 1.0f,
+                                                         .prevThunderStrength = 1.0f},
                                    1500),
               0);
 }

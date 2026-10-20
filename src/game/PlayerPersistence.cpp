@@ -27,7 +27,7 @@ storage::PlayerSaveData capturePlayer(const physics::Player& player, std::span<c
 }
 
 storage::PlayerSaveData capturePlayer(const physics::Player& player, std::span<const physics::InventorySlot> pending,
-                                    std::vector<physics::InventorySlot>* overflow) {
+                                      std::vector<physics::InventorySlot>* overflow) {
     physics::Player copy = player;
     for (const physics::InventorySlot& stack : pending) {
         if (stack.isEmpty()) continue;
