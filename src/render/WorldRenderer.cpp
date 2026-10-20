@@ -3,6 +3,7 @@
 #include "core/Logger.hpp"
 #include "lighting/DynamicLightsGlsl.hpp"
 #include "math/AABB.hpp"
+#include "voxel/BlockBoxes.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -709,7 +710,7 @@ void WorldRenderer::renderSelectionAndCrack(
     const physics::RaycastHit& hit,
     int32_t crackStage
 ) {
-    const math::AABB box = math::AABB::selectionBox(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z, hit.blockId, hit.blockMeta)
+    const math::AABB box = voxel::selectionAABB(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z, hit.blockId, hit.blockMeta)
                                   .expanded(glm::vec3(0.003f));
     const glm::vec3 p0 = box.min;
     const glm::vec3 p1 = box.max;

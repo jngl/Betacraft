@@ -5,6 +5,7 @@
 #include "math/AABB.hpp"
 #include "streaming/BlockShapeMesher.hpp"
 #include "voxel/Block.hpp"
+#include "voxel/BlockBoxes.hpp"
 #include "voxel/BlockShapes.hpp"
 
 #include <gtest/gtest.h>
@@ -121,10 +122,10 @@ TEST(RedstoneBlocks, AttachmentAndBoxes) {
     EXPECT_EQ(negZ.z1, voxel::kButtonDepth);
     EXPECT_LT(negZ.y1 - negZ.y0, 16);
 
-    const math::AABB wire = math::AABB::selectionBox(0, 0, 0, BlockId::RedstoneWire, 5);
+    const math::AABB wire = voxel::selectionAABB(0, 0, 0, BlockId::RedstoneWire, 5);
     EXPECT_FLOAT_EQ(wire.max.y, 1.0f / 16.0f);
     EXPECT_FLOAT_EQ(wire.min.x, 0.0f);
-    const math::AABB plate = math::AABB::selectionBox(0, 0, 0, BlockId::StonePressurePlate, 0);
+    const math::AABB plate = voxel::selectionAABB(0, 0, 0, BlockId::StonePressurePlate, 0);
     EXPECT_FLOAT_EQ(plate.min.x, 1.0f / 16.0f);
     EXPECT_FLOAT_EQ(plate.max.z, 15.0f / 16.0f);
     // Lever off and on lean their handles opposite ways.

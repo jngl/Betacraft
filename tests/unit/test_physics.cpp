@@ -3,6 +3,7 @@
 #include "physics/Raycaster.hpp"
 #include "tests/test_helpers.hpp"
 #include "voxel/Block.hpp"
+#include "voxel/BlockBoxes.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>
@@ -46,7 +47,7 @@ TEST(AABBTest, IntersectionAndTransformation) {
 TEST(AABBTest, FromBlockShapes) {
     voxel::BlockRegistry::initialize();
 
-    const auto cube = AABB::fromBlock(5, 10, 15, voxel::BlockId::Stone);
+    const auto cube = voxel::blockAABB(5, 10, 15, voxel::BlockId::Stone);
     EXPECT_FLOAT_EQ(cube.min.x, 5.0f);
     EXPECT_FLOAT_EQ(cube.min.y, 10.0f);
     EXPECT_FLOAT_EQ(cube.min.z, 15.0f);
@@ -54,14 +55,14 @@ TEST(AABBTest, FromBlockShapes) {
     EXPECT_FLOAT_EQ(cube.max.y, 11.0f);
     EXPECT_FLOAT_EQ(cube.max.z, 16.0f);
 
-    const auto slab = AABB::fromBlock(5, 10, 15, voxel::BlockId::CobbleSlab);
+    const auto slab = voxel::blockAABB(5, 10, 15, voxel::BlockId::CobbleSlab);
     EXPECT_FLOAT_EQ(slab.max.y, 10.5f);
 
-    const auto cactus = AABB::fromBlock(0, 0, 0, voxel::BlockId::Cactus);
+    const auto cactus = voxel::blockAABB(0, 0, 0, voxel::BlockId::Cactus);
     EXPECT_GT(cactus.min.x, 0.0f);
     EXPECT_LT(cactus.max.x, 1.0f);
 
-    const auto torch = AABB::fromBlock(0, 0, 0, voxel::BlockId::Torch);
+    const auto torch = voxel::blockAABB(0, 0, 0, voxel::BlockId::Torch);
     EXPECT_NEAR(torch.min.x, 0.375f, 1e-4f);
     EXPECT_NEAR(torch.max.x, 0.625f, 1e-4f);
 }

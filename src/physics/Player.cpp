@@ -1,6 +1,7 @@
 #include "physics/Player.hpp"
 
 #include "gameplay/Armor.hpp"
+#include "voxel/BlockBoxes.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -150,7 +151,7 @@ bool Player::collidesWithWorld(const math::AABB& box, const world::World& world)
                 const uint8_t meta = voxel::shapeDependsOnMetadata(voxel::BlockRegistry::get(id).shape)
                     ? world.getMetadata(x, y, z)
                     : uint8_t{0};
-                const bool hit = math::AABB::forEachBlockBox(x, y, z, id, meta, [&](math::AABB blockBox) {
+                const bool hit = voxel::forEachBlockAABB(x, y, z, id, meta, [&](math::AABB blockBox) {
                     if (id == voxel::BlockId::Cactus) {
                         // Beta BlockCactus.getCollisionBoundingBox is also 1/16 short on top
                         // (the selection box is not), so standing on a cactus is contact too.

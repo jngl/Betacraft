@@ -1,6 +1,7 @@
 #include "ecs/Systems.hpp"
 
 #include "voxel/Block.hpp"
+#include "voxel/BlockBoxes.hpp"
 #include "world/World.hpp"
 
 #include <algorithm>
@@ -71,7 +72,7 @@ bool VoxelCollisionSystem::WorldBoxCollides::operator()(const math::AABB& box) c
         const uint8_t meta = voxel::shapeDependsOnMetadata(voxel::BlockRegistry::get(id).shape)
             ? world->getMetadata(x, y, z)
             : uint8_t{0};
-        return math::AABB::forEachBlockBox(x, y, z, id, meta,
+        return voxel::forEachBlockAABB(x, y, z, id, meta,
                                            [&](const math::AABB& b) { return box.intersects(b); });
     });
 }

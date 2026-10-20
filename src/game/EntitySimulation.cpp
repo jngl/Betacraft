@@ -16,6 +16,7 @@
 #include "gameplay/Knockback.hpp"
 #include "gameplay/MobSpawnRules.hpp"
 #include "gameplay/Survival.hpp"
+#include "voxel/BlockBoxes.hpp"
 #include "voxel/BlockShapes.hpp"
 #include "world/BlockTicks.hpp"
 #include "world/World.hpp"
@@ -1068,7 +1069,7 @@ std::optional<voxel::BlockId> placeHeldBlock(world::World& world, physics::Playe
     }
     const uint8_t meta = *placedMeta;
     if (voxel::BlockRegistry::get(block).solid &&
-        player.getAABB().intersects(math::AABB::fromBlock(pos.x, pos.y, pos.z, block, meta))) {
+        player.getAABB().intersects(voxel::blockAABB(pos.x, pos.y, pos.z, block, meta))) {
         return std::nullopt;
     }
     if (!world.setBlockWithMetadata(pos.x, pos.y, pos.z, block, meta)) {
