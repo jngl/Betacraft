@@ -53,8 +53,8 @@
 #define BETACRAFT_HAS_PROD_DIFF_LIGHTING 0
 #endif
 
-#if __has_include("audio/MpscRingBuffer.hpp")
-#include "audio/MpscRingBuffer.hpp"
+#if __has_include("core/MpscRingBuffer.hpp")
+#include "core/MpscRingBuffer.hpp"
 #define BETACRAFT_HAS_PROD_MPSC_RING_BUFFER 1
 #else
 #define BETACRAFT_HAS_PROD_MPSC_RING_BUFFER 0

@@ -151,7 +151,7 @@ std::vector<MenuButton> CreateWorldScreen::layoutButtons(int windowWidth, int wi
     };
 }
 
-void CreateWorldScreen::render(int windowWidth, int windowHeight, std::vector<UiQuadVertex>& outVerts, float mouseX,
+void CreateWorldScreen::render(int windowWidth, int windowHeight, std::vector<render::UiQuadVertex>& outVerts, float mouseX,
                                float mouseY, bool caretVisible) const {
     const float sw = static_cast<float>(windowWidth);
     const float sh = static_cast<float>(windowHeight);

@@ -27,7 +27,7 @@ struct Grid {
 void step(Registry& reg, const Grid& grid) {
     MobAISystem::update(reg, DT);
     MovementPhysicsSystem::update(reg, DT);
-    VoxelCollisionSystem::update(reg, [&](const physics::AABB& box) {
+    VoxelCollisionSystem::update(reg, [&](const math::AABB& box) {
         return VoxelCollisionSystem::gridCollides(box, grid);
     });
 }

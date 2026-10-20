@@ -2,7 +2,7 @@
 
 #include "audio/AudioEngine.hpp"
 #include "core/Config.hpp"
-#include "ui/BitmapFont.hpp"
+#include "render/BitmapFont.hpp"
 #include "ui/TextField.hpp"
 #include "ui/TitleScreen.hpp"
 
@@ -57,7 +57,7 @@ public:
     [[nodiscard]] core::NewWorldParams params(uint64_t randomSeed) const;
     [[nodiscard]] std::filesystem::path folder(const std::filesystem::path& savesRoot) const;
 
-    void render(int windowWidth, int windowHeight, std::vector<UiQuadVertex>& outVerts, float mouseX, float mouseY,
+    void render(int windowWidth, int windowHeight, std::vector<render::UiQuadVertex>& outVerts, float mouseX, float mouseY,
                 bool caretVisible) const;
     CreateWorldChoice handleMouseClick(float mouseX, float mouseY, int windowWidth, int windowHeight,
                                        audio::AudioEngine& audio);

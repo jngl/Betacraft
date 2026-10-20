@@ -1,7 +1,7 @@
 // P4.2 — adapter from block ids (World or any block source) to the acoustic solidity query.
 #include "acoustics/OcclusionScheduler.hpp"
 #include "acoustics/WorldSolidity.hpp"
-#include "audio/MpscRingBuffer.hpp"
+#include "core/MpscRingBuffer.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>
@@ -103,7 +103,7 @@ TEST_F(WorldSolidityTest, WorldInstantiationCompilesAndUnloadedChunksAreOpenAir)
 }
 
 TEST(OcclusionMpsc, UpdatesRoundTripThroughProjectMpscQueue) {
-    betacraft::audio::MpscRingBuffer<OcclusionUpdate, 64> queue;
+    betacraft::core::MpscRingBuffer<OcclusionUpdate, 64> queue;
     const OcclusionUpdate sent{42u, 0.5f, 1234.0f, 3u, true};
     ASSERT_TRUE(queue.push(sent));
     OcclusionUpdate received{};

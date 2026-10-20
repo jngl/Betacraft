@@ -136,7 +136,7 @@ void WorldSelectScreen::scroll(int wheelY, int windowHeight) noexcept {
     clampScroll(windowHeight);
 }
 
-void WorldSelectScreen::render(int windowWidth, int windowHeight, std::vector<UiQuadVertex>& outVerts, float mouseX,
+void WorldSelectScreen::render(int windowWidth, int windowHeight, std::vector<render::UiQuadVertex>& outVerts, float mouseX,
                                float mouseY) const {
     const float sw = static_cast<float>(windowWidth);
     const float sh = static_cast<float>(windowHeight);
@@ -256,7 +256,7 @@ WorldSelectChoice WorldSelectScreen::handleKeyDown(SDL_Keycode key, audio::Audio
     }
 }
 
-void appendLoadingScreen(std::vector<UiQuadVertex>& outVerts, int windowWidth, int windowHeight,
+void appendLoadingScreen(std::vector<render::UiQuadVertex>& outVerts, int windowWidth, int windowHeight,
                          std::string_view title, std::string_view status, std::optional<float> progress) {
     const float sw = static_cast<float>(windowWidth);
     const float sh = static_cast<float>(windowHeight);

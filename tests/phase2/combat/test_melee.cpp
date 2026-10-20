@@ -8,7 +8,7 @@
 #include <random>
 
 using namespace betacraft::gameplay;
-using betacraft::physics::AABB;
+using betacraft::math::AABB;
 using betacraft::world::BlockId;
 
 namespace {

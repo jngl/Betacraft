@@ -153,14 +153,14 @@ protected:
     world::FurnaceData& placeFurnace() {
         EXPECT_TRUE(m_world->setBlock(kContainerPos, BlockId::Furnace));
         auto& f = std::get<world::FurnaceData>(m_world->blockEntities().getOrCreate(kContainerPos, BlockId::Furnace));
-        EXPECT_TRUE(m_ui.openContainer(game::ScreenKind::Furnace, kContainerPos, m_player).empty());
+        EXPECT_TRUE(m_ui.openContainer(ui::ScreenKind::Furnace, kContainerPos, m_player).empty());
         return f;
     }
 
     world::ChestData& placeChest() {
         EXPECT_TRUE(m_world->setBlock(kContainerPos, BlockId::Chest));
         auto& c = std::get<world::ChestData>(m_world->blockEntities().getOrCreate(kContainerPos, BlockId::Chest));
-        EXPECT_TRUE(m_ui.openContainer(game::ScreenKind::Chest, kContainerPos, m_player).empty());
+        EXPECT_TRUE(m_ui.openContainer(ui::ScreenKind::Chest, kContainerPos, m_player).empty());
         return c;
     }
 
@@ -172,7 +172,7 @@ protected:
 
 TEST_F(ContainerScreenTest, FurnaceOutputIsTakeOnly) {
     world::FurnaceData& f = placeFurnace();
-    EXPECT_EQ(m_ui.kind(), game::ScreenKind::Furnace);
+    EXPECT_EQ(m_ui.kind(), ui::ScreenKind::Furnace);
     ASSERT_TRUE(m_ui.containerPos().has_value());
     EXPECT_EQ(m_ui.containerSlotCount(), 3U);
 
@@ -180,34 +180,34 @@ TEST_F(ContainerScreenTest, FurnaceOutputIsTakeOnly) {
     m_player.setInventorySlot(0, {BlockId::IronOre, 8});
     m_player.setInventorySlot(1, {items::Coal, 1});
     ASSERT_TRUE(m_ui.clickInventorySlot(m_player, 0));
-    EXPECT_TRUE(m_ui.clickContainerSlot(*m_world, game::kFurnaceInputSlot));
+    EXPECT_TRUE(m_ui.clickContainerSlot(*m_world, ui::kFurnaceInputSlot));
     ASSERT_TRUE(m_ui.clickInventorySlot(m_player, 1));
-    EXPECT_TRUE(m_ui.clickContainerSlot(*m_world, game::kFurnaceFuelSlot));
+    EXPECT_TRUE(m_ui.clickContainerSlot(*m_world, ui::kFurnaceFuelSlot));
     EXPECT_EQ(f.input, (world::StoredStack{toItemId(BlockId::IronOre), 8, 0}));
     EXPECT_EQ(f.fuel, (world::StoredStack{items::Coal, 1, 0}));
-    EXPECT_EQ(m_ui.containerSlot(*m_world, game::kFurnaceInputSlot), InventorySlot(BlockId::IronOre, 8));
+    EXPECT_EQ(m_ui.containerSlot(*m_world, ui::kFurnaceInputSlot), InventorySlot(BlockId::IronOre, 8));
 
     // Nothing can be put down in (or swapped into) the output.
     m_player.setInventorySlot(2, {items::IronIngot, 5});
     ASSERT_TRUE(m_ui.clickInventorySlot(m_player, 2));
-    EXPECT_FALSE(m_ui.clickContainerSlot(*m_world, game::kFurnaceOutputSlot));
-    EXPECT_FALSE(m_ui.clickContainerSlot(*m_world, game::kFurnaceOutputSlot, SlotButton::Right));
+    EXPECT_FALSE(m_ui.clickContainerSlot(*m_world, ui::kFurnaceOutputSlot));
+    EXPECT_FALSE(m_ui.clickContainerSlot(*m_world, ui::kFurnaceOutputSlot, SlotButton::Right));
     EXPECT_TRUE(f.output.empty());
     f.output = {toItemId(BlockId::Stone), 3, 0};
-    EXPECT_FALSE(m_ui.clickContainerSlot(*m_world, game::kFurnaceOutputSlot)); // no swap
+    EXPECT_FALSE(m_ui.clickContainerSlot(*m_world, ui::kFurnaceOutputSlot)); // no swap
     EXPECT_EQ(m_ui.carried(), InventorySlot(items::IronIngot, 5));
 
     // A matching cursor stack takes the whole output; an empty cursor picks it up.
     f.output = {items::IronIngot, 3, 0};
-    EXPECT_TRUE(m_ui.clickContainerSlot(*m_world, game::kFurnaceOutputSlot));
+    EXPECT_TRUE(m_ui.clickContainerSlot(*m_world, ui::kFurnaceOutputSlot));
     EXPECT_EQ(m_ui.carried(), InventorySlot(items::IronIngot, 8));
     EXPECT_TRUE(f.output.empty());
     ASSERT_TRUE(m_ui.clickInventorySlot(m_player, 2));
     f.output = {items::IronIngot, 6, 0};
-    EXPECT_TRUE(m_ui.clickContainerSlot(*m_world, game::kFurnaceOutputSlot, SlotButton::Right));
+    EXPECT_TRUE(m_ui.clickContainerSlot(*m_world, ui::kFurnaceOutputSlot, SlotButton::Right));
     EXPECT_EQ(m_ui.carried(), InventorySlot(items::IronIngot, 3));
     EXPECT_EQ(f.output, (world::StoredStack{items::IronIngot, 3, 0}));
-    EXPECT_FALSE(m_ui.clickContainerSlot(*m_world, game::kFurnaceSlotCount)); // out of range
+    EXPECT_FALSE(m_ui.clickContainerSlot(*m_world, ui::kFurnaceSlotCount)); // out of range
 }
 
 TEST_F(ContainerScreenTest, ChestSlotsMergeAndSwapLikeInventory) {
@@ -247,7 +247,7 @@ TEST_F(ContainerScreenTest, ContainerClickAfterBlockRemovedClosesScreen) {
 
     EXPECT_FALSE(m_ui.clickContainerSlot(*m_world, 3));
     EXPECT_FALSE(m_ui.containerPos().has_value());
-    EXPECT_EQ(m_ui.kind(), game::ScreenKind::Inventory2x2);
+    EXPECT_EQ(m_ui.kind(), ui::ScreenKind::Inventory2x2);
     EXPECT_TRUE(m_ui.carried().isEmpty()); // nothing was duplicated out of the dropped chest
     EXPECT_TRUE(m_ui.containerSlot(*m_world, 3).isEmpty());
 }
@@ -346,7 +346,7 @@ TEST_F(ContainerScreenTest, ShiftClickWithFurnaceOpenOnlySwapsMainAndHotbar) {
     EXPECT_EQ(m_player.getInventorySlot(9), InventorySlot(BlockId::IronOre, 8));
 
     f.output = {items::IronIngot, 5, 0};
-    EXPECT_TRUE(m_ui.shiftClickContainerSlot(m_player, *m_world, game::kFurnaceOutputSlot));
+    EXPECT_TRUE(m_ui.shiftClickContainerSlot(m_player, *m_world, ui::kFurnaceOutputSlot));
     EXPECT_TRUE(f.output.empty());
     EXPECT_EQ(m_player.countItem(items::IronIngot), 5);
 }

@@ -56,7 +56,7 @@ TEST(EcsComponents, ColliderDefaultsMatchPlayerHitbox) {
 
 TEST(EcsComponents, ColliderBoundsAreFeetAnchored) {
     const AABBColliderComp c{0.6f, 1.8f};
-    const physics::AABB box = c.boundsAt({10.0f, 64.0f, -3.0f});
+    const math::AABB box = c.boundsAt({10.0f, 64.0f, -3.0f});
     EXPECT_FLOAT_EQ(box.min.x, 9.7f);
     EXPECT_FLOAT_EQ(box.max.x, 10.3f);
     EXPECT_FLOAT_EQ(box.min.y, 64.0f);
@@ -64,7 +64,7 @@ TEST(EcsComponents, ColliderBoundsAreFeetAnchored) {
     EXPECT_FLOAT_EQ(box.min.z, -3.3f);
     EXPECT_FLOAT_EQ(box.max.z, -2.7f);
     // Must agree with the legacy Player hitbox so the later migration is behaviour-preserving.
-    const physics::AABB legacy = physics::Player::getAABBAt({10.0f, 64.0f, -3.0f});
+    const math::AABB legacy = physics::Player::getAABBAt({10.0f, 64.0f, -3.0f});
     EXPECT_FLOAT_EQ(box.min.x, legacy.min.x);
     EXPECT_FLOAT_EQ(box.max.y, legacy.max.y);
 }

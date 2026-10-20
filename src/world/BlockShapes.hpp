@@ -9,7 +9,7 @@
 #include <optional>
 
 // S5.4 metadata-dependent shapes (Beta 1.7.3 block bounds), in sixteenths of a block so the
-// meshers can emit them exactly (PackedChunkVertex fine offsets) and physics::AABB can turn
+// meshers can emit them exactly (PackedChunkVertex fine offsets) and math::AABB can turn
 // them into boxes. One table feeds collision, selection and both meshers.
 
 namespace betacraft::world {

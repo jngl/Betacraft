@@ -63,20 +63,20 @@ constexpr float kPanelH = 460.0f;
 constexpr float kSlot = 38.0f;
 constexpr float kResultSlot = 48.0f;
 
-[[nodiscard]] constexpr game::ScreenKind gridKind(int gridDim) noexcept {
-    return gridDim >= 3 ? game::ScreenKind::Workbench3x3 : game::ScreenKind::Inventory2x2;
+[[nodiscard]] constexpr ScreenKind gridKind(int gridDim) noexcept {
+    return gridDim >= 3 ? ScreenKind::Workbench3x3 : ScreenKind::Inventory2x2;
 }
 
-[[nodiscard]] size_t containerSlotCount(game::ScreenKind kind) noexcept {
+[[nodiscard]] size_t containerSlotCount(ScreenKind kind) noexcept {
     switch (kind) {
-        case game::ScreenKind::Furnace: return game::kFurnaceSlotCount;
-        case game::ScreenKind::Chest: return 27;
+        case ScreenKind::Furnace: return kFurnaceSlotCount;
+        case ScreenKind::Chest: return 27;
         default: return 0;
     }
 }
 
 void pushRect(
-    std::vector<UiQuadVertex>& out,
+    std::vector<render::UiQuadVertex>& out,
     float x0,
     float y0,
     float x1,
@@ -92,7 +92,7 @@ void pushRect(
 }
 
 void pushBeveledSlot(
-    std::vector<UiQuadVertex>& out,
+    std::vector<render::UiQuadVertex>& out,
     float x,
     float y,
     float size,
@@ -110,7 +110,7 @@ void pushBeveledSlot(
 }
 
 void pushItemIcon(
-    std::vector<UiQuadVertex>& out,
+    std::vector<render::UiQuadVertex>& out,
     gameplay::ItemId id,
     float x,
     float y,
@@ -137,7 +137,7 @@ void pushItemIcon(
 }
 
 // Item icon plus Beta's stack decorations: the count, and a durability bar on worn tools.
-void pushSlotContents(std::vector<UiQuadVertex>& out, const physics::InventorySlot& slot, float x, float y,
+void pushSlotContents(std::vector<render::UiQuadVertex>& out, const physics::InventorySlot& slot, float x, float y,
                       float size, float inset, float countScale) {
     if (slot.isEmpty()) return;
     pushItemIcon(out, slot.id, x + inset, y + inset, size - 2.0f * inset);
@@ -154,13 +154,13 @@ void pushSlotContents(std::vector<UiQuadVertex>& out, const physics::InventorySl
     }
     if (slot.count > 1) {
         const std::string cnt = std::to_string(slot.count);
-        const float cw = BitmapFont::measureTextWidth(cnt, countScale);
-        BitmapFont::appendText(out, cnt, x + size - cw - 4.0f, y + size - 8.0f * countScale - 2.0f, countScale,
+        const float cw = render::BitmapFont::measureTextWidth(cnt, countScale);
+        render::BitmapFont::appendText(out, cnt, x + size - cw - 4.0f, y + size - 8.0f * countScale - 2.0f, countScale,
                                glm::vec4(1.0f));
     }
 }
 
-void pushHeartIcon(std::vector<UiQuadVertex>& out, float x, float y, float s, int fillState, bool blink = false) {
+void pushHeartIcon(std::vector<render::UiQuadVertex>& out, float x, float y, float s, int fillState, bool blink = false) {
     // fillState: 0 = empty, 1 = half, 2 = full
     static constexpr uint8_t heartMask[7] = {
         0b0110110,
@@ -192,7 +192,7 @@ void pushHeartIcon(std::vector<UiQuadVertex>& out, float x, float y, float s, in
 }
 
 // S6.7 armor bar icon (a chestplate): fillState 0 = empty, 1 = half, 2 = full.
-void pushArmorIcon(std::vector<UiQuadVertex>& out, float x, float y, float s, int fillState) {
+void pushArmorIcon(std::vector<render::UiQuadVertex>& out, float x, float y, float s, int fillState) {
     static constexpr uint8_t plateMask[7] = {
         0b1100011,
         0b1111111,
@@ -213,7 +213,7 @@ void pushArmorIcon(std::vector<UiQuadVertex>& out, float x, float y, float s, in
 }
 
 // One atlas tile drawn with a flat tint (the ghost outline of an empty armor slot).
-void pushTileIcon(std::vector<UiQuadVertex>& out, uint8_t tile, float x, float y, float size, const glm::vec4& tint) {
+void pushTileIcon(std::vector<render::UiQuadVertex>& out, uint8_t tile, float x, float y, float size, const glm::vec4& tint) {
     const glm::vec4 uv = render::TextureAtlas::getTileUV(tile);
     out.push_back({{x, y},               {uv.x, uv.y}, tint, 1.0f});
     out.push_back({{x + size, y},        {uv.z, uv.y}, tint, 1.0f});
@@ -223,7 +223,7 @@ void pushTileIcon(std::vector<UiQuadVertex>& out, uint8_t tile, float x, float y
     out.push_back({{x, y + size},        {uv.x, uv.w}, tint, 1.0f});
 }
 
-void pushBubbleIcon(std::vector<UiQuadVertex>& out, float x, float y, float s) {
+void pushBubbleIcon(std::vector<render::UiQuadVertex>& out, float x, float y, float s) {
     pushRect(out, x + s, y, x + 5 * s, y + 6 * s, glm::vec4(0.25f, 0.65f, 0.98f, 0.90f));
     pushRect(out, x, y + s, x + 6 * s, y + 5 * s, glm::vec4(0.25f, 0.65f, 0.98f, 0.90f));
     pushRect(out, x + s, y + s, x + 3 * s, y + 3 * s, glm::vec4(0.85f, 0.96f, 1.0f, 0.95f));
@@ -272,13 +272,13 @@ bool HudRenderer::initialize() {
     bc_glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 
     bc_glEnableVertexAttribArray(0);
-    bc_glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(UiQuadVertex), reinterpret_cast<const void*>(offsetof(UiQuadVertex, pos)));
+    bc_glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(render::UiQuadVertex), reinterpret_cast<const void*>(offsetof(render::UiQuadVertex, pos)));
     bc_glEnableVertexAttribArray(1);
-    bc_glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(UiQuadVertex), reinterpret_cast<const void*>(offsetof(UiQuadVertex, uv)));
+    bc_glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(render::UiQuadVertex), reinterpret_cast<const void*>(offsetof(render::UiQuadVertex, uv)));
     bc_glEnableVertexAttribArray(2);
-    bc_glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(UiQuadVertex), reinterpret_cast<const void*>(offsetof(UiQuadVertex, color)));
+    bc_glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(render::UiQuadVertex), reinterpret_cast<const void*>(offsetof(render::UiQuadVertex, color)));
     bc_glEnableVertexAttribArray(3);
-    bc_glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(UiQuadVertex), reinterpret_cast<const void*>(offsetof(UiQuadVertex, useTexture)));
+    bc_glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(render::UiQuadVertex), reinterpret_cast<const void*>(offsetof(render::UiQuadVertex, useTexture)));
 
     bc_glBindVertexArray(0);
     return true;
@@ -296,7 +296,7 @@ void HudRenderer::render(
     const float sw = static_cast<float>(screenWidth);
     const float sh = static_cast<float>(screenHeight);
 
-    std::vector<UiQuadVertex> verts;
+    std::vector<render::UiQuadVertex> verts;
     verts.reserve(16384);
 
     // 1. Underwater blue tint overlay
@@ -318,19 +318,19 @@ void HudRenderer::render(
     }
     if (!ctx.statusMessage.empty() && ctx.statusAlpha > 0.0f) {
         constexpr float kMsgScale = 2.0f;
-        const float w = BitmapFont::measureTextWidth(ctx.statusMessage, kMsgScale);
+        const float w = render::BitmapFont::measureTextWidth(ctx.statusMessage, kMsgScale);
         const float a = std::clamp(ctx.statusAlpha, 0.0f, 1.0f);
         const float x = (sw - w) * 0.5f;
         const float y = sh - 140.0f;
         pushRect(verts, x - 6.0f, y - 4.0f, x + w + 6.0f, y + 8.0f * kMsgScale + 4.0f, glm::vec4(0.0f, 0.0f, 0.0f, 0.45f * a));
-        BitmapFont::appendText(verts, ctx.statusMessage, x, y, kMsgScale, glm::vec4(1.0f, 1.0f, 1.0f, a));
+        render::BitmapFont::appendText(verts, ctx.statusMessage, x, y, kMsgScale, glm::vec4(1.0f, 1.0f, 1.0f, a));
     }
 
     // 2. Iconic Top-Left "Minecraft Beta 1.7.3" Watermark & F3 Debug Screen
     constexpr float fontScale = 2.0f;
     if (!ctx.showDebug) {
-        BitmapFont::appendText(verts, "Minecraft Beta 1.7.3", 10.0f, 10.0f, fontScale, glm::vec4(1.0f));
-        BitmapFont::appendText(
+        render::BitmapFont::appendText(verts, "Minecraft Beta 1.7.3", 10.0f, 10.0f, fontScale, glm::vec4(1.0f));
+        render::BitmapFont::appendText(
             verts,
             ctx.creative ? "[F3] Debug  [E] Inventory/Craft  [F] Fly  [T] Time  [L] Smooth Light  [M] Music"
                          : "[F3] Debug  [E] Inventory/Craft  [L] Smooth Light  [M] Music",
@@ -373,24 +373,24 @@ void HudRenderer::render(
             l6 << "Target: None  |  Time [T]: " << std::fixed << std::setprecision(2) << ctx.timeOfDay;
         }
 
-        BitmapFont::appendText(verts, l1.str(), 10.0f, 10.0f, fontScale, glm::vec4(1.0f));
-        BitmapFont::appendText(verts, l2.str(), 10.0f, 30.0f, fontScale, glm::vec4(0.9f, 0.9f, 0.9f, 1.0f));
-        BitmapFont::appendText(verts, l3.str(), 10.0f, 50.0f, fontScale, glm::vec4(0.95f, 0.95f, 0.7f, 1.0f));
-        BitmapFont::appendText(verts, l4.str(), 10.0f, 70.0f, fontScale, glm::vec4(0.75f, 0.95f, 0.75f, 1.0f));
-        BitmapFont::appendText(verts, l5.str(), 10.0f, 90.0f, fontScale, glm::vec4(0.75f, 0.88f, 1.0f, 1.0f));
-        BitmapFont::appendText(verts, l6.str(), 10.0f, 110.0f, fontScale, glm::vec4(0.95f, 0.82f, 0.65f, 1.0f));
-        BitmapFont::appendText(verts, mobDebugLine(ctx.mobs, feetLight), 10.0f, 130.0f, fontScale,
+        render::BitmapFont::appendText(verts, l1.str(), 10.0f, 10.0f, fontScale, glm::vec4(1.0f));
+        render::BitmapFont::appendText(verts, l2.str(), 10.0f, 30.0f, fontScale, glm::vec4(0.9f, 0.9f, 0.9f, 1.0f));
+        render::BitmapFont::appendText(verts, l3.str(), 10.0f, 50.0f, fontScale, glm::vec4(0.95f, 0.95f, 0.7f, 1.0f));
+        render::BitmapFont::appendText(verts, l4.str(), 10.0f, 70.0f, fontScale, glm::vec4(0.75f, 0.95f, 0.75f, 1.0f));
+        render::BitmapFont::appendText(verts, l5.str(), 10.0f, 90.0f, fontScale, glm::vec4(0.75f, 0.88f, 1.0f, 1.0f));
+        render::BitmapFont::appendText(verts, l6.str(), 10.0f, 110.0f, fontScale, glm::vec4(0.95f, 0.82f, 0.65f, 1.0f));
+        render::BitmapFont::appendText(verts, mobDebugLine(ctx.mobs, feetLight), 10.0f, 130.0f, fontScale,
                                glm::vec4(0.95f, 0.7f, 0.7f, 1.0f));
         // Red as soon as a chunk was saved without any player edit around it (bug 8).
-        BitmapFont::appendText(verts, storageDebugLine(ctx.storage), 10.0f, 150.0f, fontScale,
+        render::BitmapFont::appendText(verts, storageDebugLine(ctx.storage), 10.0f, 150.0f, fontScale,
                                ctx.storage.unsolicitedWrites == 0 ? glm::vec4(0.8f, 0.8f, 0.95f, 1.0f)
                                                                   : glm::vec4(1.0f, 0.3f, 0.3f, 1.0f));
         // S7.10: red while an integration over the last seconds broke the 8 ms budget.
-        BitmapFont::appendText(verts, streamingDebugLine(ctx.storage), 10.0f, 170.0f, fontScale,
+        render::BitmapFont::appendText(verts, streamingDebugLine(ctx.storage), 10.0f, 170.0f, fontScale,
                                ctx.storage.maxIntegrationMs <= kIntegrationHitchMs ? glm::vec4(0.8f, 0.9f, 0.95f, 1.0f)
                                                                                     : glm::vec4(1.0f, 0.3f, 0.3f, 1.0f));
         if (!ctx.weather.empty()) {
-            BitmapFont::appendText(verts, ctx.weather, 10.0f, 190.0f, fontScale, glm::vec4(0.7f, 0.8f, 1.0f, 1.0f));
+            render::BitmapFont::appendText(verts, ctx.weather, 10.0f, 190.0f, fontScale, glm::vec4(0.7f, 0.8f, 1.0f, 1.0f));
         }
     }
 
@@ -450,9 +450,9 @@ void HudRenderer::render(
     const physics::InventorySlot held = player.getHeldItem();
     if (!held.isEmpty()) {
         const std::string name = render::itemAppearance(held.id).name;
-        const float tw = BitmapFont::measureTextWidth(name, 2.0f);
+        const float tw = render::BitmapFont::measureTextWidth(name, 2.0f);
         const float nameY = hotbarY - (armorPoints > 0 ? 60.0f : 42.0f); // Above the armor bar
-        BitmapFont::appendText(verts, name, (sw - tw) * 0.5f, nameY, 2.0f, glm::vec4(1.0f, 0.98f, 0.82f, 1.0f));
+        render::BitmapFont::appendText(verts, name, (sw - tw) * 0.5f, nameY, 2.0f, glm::vec4(1.0f, 0.98f, 0.82f, 1.0f));
     }
 
     // Hotbar slots
@@ -470,7 +470,7 @@ void HudRenderer::render(
         pushRect(verts, 0.0f, 0.0f, sw, sh, glm::vec4(0.05f, 0.05f, 0.07f, 0.72f));
 
         const CraftingScreenView& craft = ctx.crafting;
-        const bool container = game::isContainerScreen(craft.kind);
+        const bool container = isContainerScreen(craft.kind);
         const InventoryLayoutKey layout{craft.gridDim, craft.kind, ctx.creative && !container};
         const SlotRect panel = inventorySlotRect(InventoryRegion::None, 0, screenWidth, screenHeight, layout);
         const float px = panel.x;
@@ -487,25 +487,25 @@ void HudRenderer::render(
 
         const glm::vec4 titleCol(1.0f, 0.96f, 0.72f, 1.0f);
         const char* title = craft.gridDim >= 3 ? "WORKBENCH (3X3)" : "CRAFTING (2X2)";
-        if (craft.kind == game::ScreenKind::Furnace) title = "FURNACE";
-        if (craft.kind == game::ScreenKind::Chest) title = "CHEST";
-        BitmapFont::appendText(verts, title, px + 16.0f, py + 12.0f, 2.0f, titleCol);
+        if (craft.kind == ScreenKind::Furnace) title = "FURNACE";
+        if (craft.kind == ScreenKind::Chest) title = "CHEST";
+        render::BitmapFont::appendText(verts, title, px + 16.0f, py + 12.0f, 2.0f, titleCol);
         if (layout.palette) {
-            BitmapFont::appendText(verts, "BETA 1.7.3 BLOCK PALETTE (CLICK TO EQUIP)", px + 340.0f, py + 12.0f, 2.0f, titleCol);
+            render::BitmapFont::appendText(verts, "BETA 1.7.3 BLOCK PALETTE (CLICK TO EQUIP)", px + 340.0f, py + 12.0f, 2.0f, titleCol);
         }
 
         // Container screens (S2.6): the block entity's slots in the palette area.
         const glm::vec4 gaugeBack(0.30f, 0.30f, 0.32f, 0.95f);
-        if (craft.kind == game::ScreenKind::Chest) {
+        if (craft.kind == ScreenKind::Chest) {
             for (size_t i = 0; i < containerSlotCount(craft.kind); ++i) {
                 const SlotRect r = inventorySlotRect(InventoryRegion::Container, i, screenWidth, screenHeight, layout);
                 pushBeveledSlot(verts, r.x, r.y, r.size, hovered(r));
                 pushSlotContents(verts, craft.container[i], r.x, r.y, r.size, 6.0f, 1.5f);
             }
-        } else if (craft.kind == game::ScreenKind::Furnace) {
-            const SlotRect in = inventorySlotRect(InventoryRegion::Container, game::kFurnaceInputSlot, screenWidth,
+        } else if (craft.kind == ScreenKind::Furnace) {
+            const SlotRect in = inventorySlotRect(InventoryRegion::Container, kFurnaceInputSlot, screenWidth,
                                                   screenHeight, layout);
-            const SlotRect out = inventorySlotRect(InventoryRegion::Container, game::kFurnaceOutputSlot, screenWidth,
+            const SlotRect out = inventorySlotRect(InventoryRegion::Container, kFurnaceOutputSlot, screenWidth,
                                                    screenHeight, layout);
             // Flame between input and fuel, filled from the bottom (Beta GuiFurnace).
             const float fx0 = in.x + in.size * 0.5f - 9.0f;
@@ -521,10 +521,10 @@ void HudRenderer::render(
             const float cook = std::clamp(craft.cookProgress, 0.0f, 1.0f);
             pushRect(verts, ax0, ay - 4.0f, ax1, ay + 4.0f, gaugeBack);
             pushRect(verts, ax0, ay - 4.0f, ax0 + (ax1 - ax0) * cook, ay + 4.0f, glm::vec4(0.95f, 0.95f, 0.95f, 0.98f));
-            for (size_t i = 0; i < game::kFurnaceSlotCount; ++i) {
+            for (size_t i = 0; i < kFurnaceSlotCount; ++i) {
                 const SlotRect r = inventorySlotRect(InventoryRegion::Container, i, screenWidth, screenHeight, layout);
                 pushBeveledSlot(verts, r.x, r.y, r.size, hovered(r));
-                pushSlotContents(verts, craft.container[i], r.x, r.y, r.size, i == game::kFurnaceOutputSlot ? 7.0f : 6.0f,
+                pushSlotContents(verts, craft.container[i], r.x, r.y, r.size, i == kFurnaceOutputSlot ? 7.0f : 6.0f,
                                  1.5f);
             }
         }
@@ -544,11 +544,11 @@ void HudRenderer::render(
             pushBeveledSlot(verts, res.x, res.y, res.size, hovered(res));
             pushSlotContents(verts, craft.result, res.x, res.y, res.size, 7.0f, 1.6f);
             if (!craft.result.isEmpty()) {
-                BitmapFont::appendText(verts, render::itemAppearance(craft.result.id).name, px + 16.0f,
+                render::BitmapFont::appendText(verts, render::itemAppearance(craft.result.id).name, px + 16.0f,
                                        res.y + res.size + 14.0f, 1.6f, glm::vec4(0.45f, 1.0f, 0.45f, 1.0f));
             }
         }
-        BitmapFont::appendText(verts, "LEFT: TAKE/PLACE STACK  RIGHT: HALF/ONE", px + 16.0f, py + kPanelH - 26.0f, 1.4f,
+        render::BitmapFont::appendText(verts, "LEFT: TAKE/PLACE STACK  RIGHT: HALF/ONE", px + 16.0f, py + kPanelH - 26.0f, 1.4f,
                                glm::vec4(0.92f, 0.92f, 0.92f, 0.9f));
 
         // Right Top: 36-item Creative / Block Palette (9x4 grid)
@@ -560,7 +560,7 @@ void HudRenderer::render(
         }
 
         // Right Bottom: Player Inventory (3 rows of 9 backpack slots + 1 row of 9 hotbar slots)
-        BitmapFont::appendText(verts, "PLAYER INVENTORY", px + 340.0f, py + 205.0f, 1.7f, glm::vec4(0.95f));
+        render::BitmapFont::appendText(verts, "PLAYER INVENTORY", px + 340.0f, py + 205.0f, 1.7f, glm::vec4(0.95f));
         for (size_t i = 0; i < physics::Player::TOTAL_INVENTORY_SIZE; ++i) {
             const SlotRect r = inventorySlotRect(InventoryRegion::Inventory, i, screenWidth, screenHeight, layout);
             pushBeveledSlot(verts, r.x, r.y, r.size, hovered(r));
@@ -568,7 +568,7 @@ void HudRenderer::render(
         }
 
         // S6.7 armor column; an empty slot shows the faint outline of its piece.
-        for (size_t i = 0; craft.kind == game::ScreenKind::Inventory2x2 && i < physics::Player::ARMOR_SLOT_COUNT; ++i) {
+        for (size_t i = 0; craft.kind == ScreenKind::Inventory2x2 && i < physics::Player::ARMOR_SLOT_COUNT; ++i) {
             const SlotRect r = inventorySlotRect(InventoryRegion::Armor, i, screenWidth, screenHeight, layout);
             pushBeveledSlot(verts, r.x, r.y, r.size, hovered(r));
             const physics::InventorySlot piece = player.getArmorSlot(i);
@@ -607,7 +607,7 @@ void HudRenderer::render(
                 constexpr float kTipScale = 1.6f;
                 constexpr float kLineH = 8.0f * kTipScale + 4.0f;
                 float tw = 0.0f;
-                for (const std::string& line : lines) tw = std::max(tw, BitmapFont::measureTextWidth(line, kTipScale));
+                for (const std::string& line : lines) tw = std::max(tw, render::BitmapFont::measureTextWidth(line, kTipScale));
                 const float th = kLineH * static_cast<float>(lines.size());
                 const float tx = std::min(mx + 14.0f, sw - tw - 8.0f);
                 const float ty = std::max(my - th - 6.0f, 4.0f);
@@ -615,7 +615,7 @@ void HudRenderer::render(
                 pushRect(verts, tx - 4.0f, ty - 4.0f, tx + tw + 4.0f, ty + th, glm::vec4(0.06f, 0.0f, 0.06f, 0.94f));
                 for (size_t i = 0; i < lines.size(); ++i) {
                     const glm::vec4 col = i == 0 ? glm::vec4(1.0f) : glm::vec4(0.66f, 0.66f, 0.66f, 1.0f);
-                    BitmapFont::appendText(verts, lines[i], tx, ty + static_cast<float>(i) * kLineH, kTipScale, col);
+                    render::BitmapFont::appendText(verts, lines[i], tx, ty + static_cast<float>(i) * kLineH, kTipScale, col);
                 }
             }
         }
@@ -637,7 +637,7 @@ void HudRenderer::render(
     bc_glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
     bc_glBufferData(
         GL_ARRAY_BUFFER,
-        static_cast<GLsizeiptr>(verts.size() * sizeof(UiQuadVertex)),
+        static_cast<GLsizeiptr>(verts.size() * sizeof(render::UiQuadVertex)),
         verts.data(),
         GL_DYNAMIC_DRAW
     );
@@ -648,11 +648,11 @@ void HudRenderer::render(
     glEnable(GL_CULL_FACE);
 }
 
-float HudRenderer::hudScale(int32_t windowWidth, int32_t windowHeight, GuiScalePreference pref) noexcept {
+float HudRenderer::hudScale(int32_t windowWidth, int32_t windowHeight, render::GuiScalePreference pref) noexcept {
     return static_cast<float>(render::TextRenderer::calculateGuiScale(windowWidth, windowHeight, pref)) / 3.0f;
 }
 
-HudCanvas HudRenderer::hudCanvas(int32_t windowWidth, int32_t windowHeight, GuiScalePreference pref) noexcept {
+HudCanvas HudRenderer::hudCanvas(int32_t windowWidth, int32_t windowHeight, render::GuiScalePreference pref) noexcept {
     const float scale = hudScale(windowWidth, windowHeight, pref);
     const auto toCanvas = [scale](int32_t v) {
         return std::max<int32_t>(1, static_cast<int32_t>(std::lround(static_cast<float>(v) / scale)));
@@ -707,17 +707,17 @@ SlotRect HudRenderer::inventorySlotRect(InventoryRegion region, size_t index, in
         case InventoryRegion::Container: {
             // The palette area: 9 columns of kSlot fit it exactly.
             const float top = py + 36.0f;
-            if (layout.kind == game::ScreenKind::Chest) {
+            if (layout.kind == ScreenKind::Chest) {
                 if (index >= containerSlotCount(layout.kind)) return {};
                 return {rightX + static_cast<float>(index % 9) * kSlot, top + static_cast<float>(index / 9) * kSlot, kSlot};
             }
-            if (layout.kind == game::ScreenKind::Furnace) {
+            if (layout.kind == ScreenKind::Furnace) {
                 // Beta GuiFurnace: input above the flame above the fuel, arrow, larger output.
                 const float colX = rightX + 2.5f * kSlot;
                 switch (index) {
-                    case game::kFurnaceInputSlot: return {colX, top, kSlot};
-                    case game::kFurnaceFuelSlot: return {colX, top + 2.0f * kSlot, kSlot};
-                    case game::kFurnaceOutputSlot:
+                    case kFurnaceInputSlot: return {colX, top, kSlot};
+                    case kFurnaceFuelSlot: return {colX, top + 2.0f * kSlot, kSlot};
+                    case kFurnaceOutputSlot:
                         return {rightX + 6.0f * kSlot, top + 1.5f * kSlot - kResultSlot * 0.5f, kResultSlot};
                     default: return {};
                 }
@@ -726,7 +726,7 @@ SlotRect HudRenderer::inventorySlotRect(InventoryRegion region, size_t index, in
         }
         case InventoryRegion::Armor:
             // S6.7: a column left of the inventory rows, helmet at the top (Beta GuiInventory).
-            if (layout.kind != game::ScreenKind::Inventory2x2 || index >= physics::Player::ARMOR_SLOT_COUNT) return {};
+            if (layout.kind != ScreenKind::Inventory2x2 || index >= physics::Player::ARMOR_SLOT_COUNT) return {};
             return {rightX - kSlot - 14.0f, py + 228.0f + static_cast<float>(index) * kSlot, kSlot};
         case InventoryRegion::Inventory: {
             // Slots 9..35 in the top 3 rows, the hotbar 0..8 in a separate bottom row.
@@ -759,7 +759,7 @@ InventoryHit HudRenderer::hitTestInventory(int32_t mouseX, int32_t mouseY, int32
         }
         return std::nullopt;
     };
-    if (game::isContainerScreen(layout.kind)) {
+    if (isContainerScreen(layout.kind)) {
         if (const auto hit = scan(InventoryRegion::Container, containerSlotCount(layout.kind))) return *hit;
     } else {
         const auto dim = static_cast<size_t>(std::clamp(layout.gridDim, 2, 3));
@@ -770,7 +770,7 @@ InventoryHit HudRenderer::hitTestInventory(int32_t mouseX, int32_t mouseY, int32
         }
     }
     if (const auto hit = scan(InventoryRegion::Inventory, physics::Player::TOTAL_INVENTORY_SIZE)) return *hit;
-    if (layout.kind == game::ScreenKind::Inventory2x2) {
+    if (layout.kind == ScreenKind::Inventory2x2) {
         if (const auto hit = scan(InventoryRegion::Armor, physics::Player::ARMOR_SLOT_COUNT)) return *hit;
     }
     return {};

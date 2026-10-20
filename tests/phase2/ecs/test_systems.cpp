@@ -38,7 +38,7 @@ bool floorBelowZero(int32_t /*x*/, int32_t y, int32_t /*z*/) {
 
 void tick(Registry& reg, auto&& isSolid, float dt = DT) {
     MovementPhysicsSystem::update(reg, dt);
-    VoxelCollisionSystem::update(reg, [&](const physics::AABB& box) {
+    VoxelCollisionSystem::update(reg, [&](const math::AABB& box) {
         return VoxelCollisionSystem::gridCollides(box, isSolid);
     });
 }

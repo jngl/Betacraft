@@ -114,7 +114,7 @@ bool floorBelowZero(int32_t /*x*/, int32_t y, int32_t /*z*/) {
 
 void tick(Registry& reg, const MovementParams& params = {}) {
     MovementPhysicsSystem::update(reg, DT, params);
-    VoxelCollisionSystem::update(reg, [](const physics::AABB& box) {
+    VoxelCollisionSystem::update(reg, [](const math::AABB& box) {
         return VoxelCollisionSystem::gridCollides(box, floorBelowZero);
     });
 }
@@ -244,7 +244,7 @@ void walkTicks(Registry& reg, int n) {
     for (int i = 0; i < n; ++i) {
         PlayerControlSystem::update(reg, DT);
         MovementPhysicsSystem::update(reg, DT);
-        VoxelCollisionSystem::update(reg, [](const physics::AABB& box) {
+        VoxelCollisionSystem::update(reg, [](const math::AABB& box) {
             return VoxelCollisionSystem::gridCollides(box, ledge);
         });
     }

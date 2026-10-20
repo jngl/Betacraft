@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ui/BitmapFont.hpp"
-#include "ui/ScreenState.hpp"
+#include "render/BitmapFont.hpp"
 #include "render/GLHeaders.hpp"
+#include "render/GuiScale.hpp"
 #include "render/Shader.hpp"
 
 #include <algorithm>
@@ -50,13 +50,13 @@ public:
     [[nodiscard]] static int calculateGuiScale(
         int windowWidth,
         int windowHeight,
-        ui::GuiScalePreference pref = ui::GuiScalePreference::Auto
+        GuiScalePreference pref = GuiScalePreference::Auto
     ) noexcept;
 
     [[nodiscard]] static float measureTextWidth(std::string_view text, float scale) noexcept;
 
     static void appendText(
-        std::vector<ui::UiQuadVertex>& outVerts,
+        std::vector<UiQuadVertex>& outVerts,
         std::string_view text,
         float x,
         float y,
@@ -66,7 +66,7 @@ public:
     );
 
     void renderBatch(
-        const std::vector<ui::UiQuadVertex>& vertices,
+        const std::vector<UiQuadVertex>& vertices,
         const glm::mat4& orthoProjection
     );
 

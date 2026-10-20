@@ -2,7 +2,7 @@
 
 #include "core/Types.hpp"
 #include "gameplay/SplitMix64.hpp"
-#include "physics/AABB.hpp"
+#include "math/AABB.hpp"
 
 #include <glm/glm.hpp>
 
@@ -153,7 +153,7 @@ template <class IsSolid>
 // Beta World.getBlockDensity: the fraction of sample points of `box` (a grid spaced
 // 1 / (size x 2 + 1) along each axis, corners included) that see `centre` without a solid
 // cell in between. 1 in the open, 0 behind a wall.
-[[nodiscard]] float exposure(const glm::vec3& centre, const physics::AABB& box, auto&& isSolid) {
+[[nodiscard]] float exposure(const glm::vec3& centre, const math::AABB& box, auto&& isSolid) {
     const glm::vec3 size = box.max - box.min;
     const glm::vec3 spacing(1.0f / (size.x * 2.0f + 1.0f), 1.0f / (size.y * 2.0f + 1.0f),
                             1.0f / (size.z * 2.0f + 1.0f));

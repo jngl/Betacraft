@@ -4,10 +4,10 @@
 #include "lighting/DynamicLightUbo.hpp"
 #include "render/GLHeaders.hpp"
 
-namespace betacraft::lighting {
+namespace betacraft::render {
 
 // Thin OpenGL owner of the DynamicLightBlock UBO. Requires a current GL 3.3 context and
-// render::initOpenGLFunctions() to have succeeded. Deliberately NOT exercised by unit tests:
+// initOpenGLFunctions() to have succeeded. Deliberately NOT exercised by unit tests:
 // all logic worth testing lives in the CPU-side packer/culler; this class only moves bytes.
 //
 // Per frame (render thread):
@@ -20,7 +20,7 @@ public:
     DynamicLightUniformBuffer() noexcept = default;
     ~DynamicLightUniformBuffer() noexcept;
 
-    // Loads the UBO entry points (kept local to this module, GLHeaders is not extended) and
+    // Loads the UBO entry points (kept local to this class, GLHeaders is not extended) and
     // allocates the GPU buffer. Returns false if the driver lacks uniform buffer support.
     [[nodiscard]] bool initialize() noexcept;
 
@@ -28,7 +28,7 @@ public:
     // program does not declare the block (e.g. the include was not injected).
     [[nodiscard]] static bool bindProgram(GLuint program) noexcept;
 
-    void upload(const UboBuffer& bytes) noexcept;
+    void upload(const lighting::UboBuffer& bytes) noexcept;
     void bindBase() const noexcept;
     void destroy() noexcept;
 
@@ -36,8 +36,8 @@ public:
 
 private:
     GLuint m_ubo{0};
-    UboBuffer m_lastUploaded{};
+    lighting::UboBuffer m_lastUploaded{};
     bool m_hasUpload{false};
 };
 
-} // namespace betacraft::lighting
+} // namespace betacraft::render

@@ -152,7 +152,7 @@ private:
     // whatever the inventory cannot take back is thrown in front of the player.
     void openInventoryScreen(crafting::GridSize grid);
     // Furnace or chest screen on the block entity at `pos` (created on first open).
-    void openContainerScreen(ScreenKind kind, const core::BlockPos& pos);
+    void openContainerScreen(ui::ScreenKind kind, const core::BlockPos& pos);
     // gameTick: an open container screen closes beyond 8 blocks (Beta canInteractWith) or
     // once its block entity is gone (broken, chunk unloaded).
     void closeContainerIfOutOfReach();

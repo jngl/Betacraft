@@ -3,8 +3,8 @@
 #include "crafting/CraftingGrid.hpp"
 #include "crafting/RecipeRegistry.hpp"
 #include "core/Types.hpp"
-#include "game/ScreenKind.hpp"
 #include "physics/Player.hpp"
+#include "ui/ScreenKind.hpp"
 #include "world/BlockEntity.hpp"
 
 #include <cstddef>
@@ -44,9 +44,9 @@ public:
     // Opens a furnace or chest screen on the block entity at `pos` (create it first with
     // BlockEntityStore::getOrCreate). The grid and the cursor go back to the player as in
     // open(); what does not fit is returned. Any other kind opens the matching grid.
-    [[nodiscard]] std::vector<physics::InventorySlot> openContainer(ScreenKind kind, core::BlockPos pos,
+    [[nodiscard]] std::vector<physics::InventorySlot> openContainer(ui::ScreenKind kind, core::BlockPos pos,
                                                                     physics::Player& player);
-    [[nodiscard]] ScreenKind kind() const noexcept { return m_kind; }
+    [[nodiscard]] ui::ScreenKind kind() const noexcept { return m_kind; }
     // Position of the opened furnace / chest, nullopt for the grid screens.
     [[nodiscard]] std::optional<core::BlockPos> containerPos() const noexcept { return m_containerPos; }
     // Slots of the opened container: 3 for a furnace (kFurnace*Slot), 27 for a chest, else 0.
@@ -116,7 +116,7 @@ private:
     crafting::RecipeRegistry m_book;
     crafting::CraftingGrid m_grid{crafting::GridSize::Inventory2x2};
     physics::InventorySlot m_carried{};
-    ScreenKind m_kind{ScreenKind::Inventory2x2};
+    ui::ScreenKind m_kind{ui::ScreenKind::Inventory2x2};
     std::optional<core::BlockPos> m_containerPos;
 };
 

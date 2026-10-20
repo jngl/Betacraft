@@ -2,7 +2,7 @@
 #include "core/Types.hpp"
 #include "game/StarterKit.hpp"
 #include "math/PerlinNoise.hpp"
-#include "physics/AABB.hpp"
+#include "math/AABB.hpp"
 #include "physics/Player.hpp"
 #include "physics/Raycaster.hpp"
 #include "render/ChunkMesher.hpp"

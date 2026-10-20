@@ -143,7 +143,7 @@ TEST(Explosion, DamageIsHighestAtTheCentreAndZeroAtTwicePower) {
 }
 
 TEST(Explosion, ExposureIsZeroBehindAWallAndOneInTheOpen) {
-    const physics::AABB mob{{4.7f, 0.0f, 0.2f}, {5.3f, 1.8f, 0.8f}};
+    const math::AABB mob{{4.7f, 0.0f, 0.2f}, {5.3f, 1.8f, 0.8f}};
     const glm::vec3 centre{0.5f, 0.5f, 0.5f};
     const auto open = [](int32_t, int32_t, int32_t) { return false; };
     EXPECT_FLOAT_EQ(gameplay::exposure(centre, mob, open), 1.0f);

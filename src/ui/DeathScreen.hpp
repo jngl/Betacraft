@@ -1,7 +1,7 @@
 #pragma once
 
 #include "audio/AudioEngine.hpp"
-#include "ui/BitmapFont.hpp"
+#include "render/BitmapFont.hpp"
 #include "ui/TitleScreen.hpp"
 
 #include <cstdint>
@@ -17,7 +17,7 @@ public:
     void render(
         int windowWidth,
         int windowHeight,
-        std::vector<UiQuadVertex>& outVerts,
+        std::vector<render::UiQuadVertex>& outVerts,
         float mouseX,
         float mouseY
     ) const;

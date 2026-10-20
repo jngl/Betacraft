@@ -6,9 +6,9 @@
 #include "lighting/DynamicLightFrame.hpp"
 #include "lighting/DynamicLightManager.hpp"
 #include "lighting/DynamicLightUbo.hpp"
-#include "lighting/DynamicLightUniformBuffer.hpp"
 #include "lighting/DynamicLightsGlsl.hpp"
 #include "render/ChunkMesher.hpp"
+#include "render/DynamicLightUniformBuffer.hpp"
 #include "render/PackedChunkVertex.hpp"
 #include "render/Shader.hpp"
 #include "render/WorldRenderer.hpp"
@@ -123,13 +123,13 @@ TEST(P2DynLightShader, ChunkProgramCompilesAndBindsTheBlockWhenGlIsAvailable) {
         GTEST_SKIP() << "OpenGL 3.3 Core context not available in this test environment.";
     }
 
-    lighting::DynamicLightUniformBuffer ubo;
+    render::DynamicLightUniformBuffer ubo;
     ASSERT_TRUE(ubo.initialize());
 
     render::ShaderProgram program;
     ASSERT_TRUE(program.compileFromSource(
         render::WorldRenderer::chunkVertexShaderSource(), render::WorldRenderer::chunkFragmentShaderSource()));
-    EXPECT_TRUE(lighting::DynamicLightUniformBuffer::bindProgram(program.getHandle()));
+    EXPECT_TRUE(render::DynamicLightUniformBuffer::bindProgram(program.getHandle()));
 
     // The driver's std140 size must be the byte count the packer uploads.
     auto* getIndex = reinterpret_cast<PFNGLGETUNIFORMBLOCKINDEXPROC>(SDL_GL_GetProcAddress("glGetUniformBlockIndex"));
@@ -216,12 +216,12 @@ TEST(P2DynLightShader, HeldTorchBrightensAnUnlitWallAtNightOnTheGpu) {
     OffscreenTarget target;
     ASSERT_TRUE(target.create());
 
-    lighting::DynamicLightUniformBuffer ubo;
+    render::DynamicLightUniformBuffer ubo;
     ASSERT_TRUE(ubo.initialize());
     render::ShaderProgram program;
     ASSERT_TRUE(program.compileFromSource(
         render::WorldRenderer::chunkVertexShaderSource(), render::WorldRenderer::chunkFragmentShaderSource()));
-    ASSERT_TRUE(lighting::DynamicLightUniformBuffer::bindProgram(program.getHandle()));
+    ASSERT_TRUE(render::DynamicLightUniformBuffer::bindProgram(program.getHandle()));
 
     // White 1x1 atlas so the pixel is pure lighting.
     GLuint white = 0;

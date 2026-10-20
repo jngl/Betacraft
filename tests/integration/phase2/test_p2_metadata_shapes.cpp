@@ -1,5 +1,5 @@
 // Sprint 5 (S5.4, S5.9, S5.10) metadata-dependent shapes: collision and pick boxes from
-// physics::AABB (ladder, door, bed, fence, farmland, crops, stairs), the player walking
+// math::AABB (ladder, door, bed, fence, farmland, crops, stairs), the player walking
 // through an open door but not a closed one nor over a fence, the 18^3 snapshot carrying the
 // metadata, metadata edits re-meshing only shaped blocks, and both meshers emitting the same
 // sub-block geometry.
@@ -7,7 +7,7 @@
 
 #include "gameplay/ItemIds.hpp"
 
-#include "physics/AABB.hpp"
+#include "math/AABB.hpp"
 #include "physics/Raycaster.hpp"
 #include "render/BlockShapeMesher.hpp"
 #include "render/ChunkMesher.hpp"
@@ -21,7 +21,7 @@
 
 using namespace betacraft;
 using namespace betacraft::test::p2gameplay;
-using physics::AABB;
+using math::AABB;
 
 namespace {
 

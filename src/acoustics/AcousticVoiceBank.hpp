@@ -3,7 +3,7 @@
 #include "acoustics/AcousticCommand.hpp"
 #include "acoustics/AuxReverbBus.hpp"
 #include "acoustics/VoiceAcousticFilter.hpp"
-#include "audio/MpscRingBuffer.hpp"
+#include "core/MpscRingBuffer.hpp"
 
 #include <algorithm>
 #include <array>
@@ -95,7 +95,7 @@ private:
     std::array<VoiceAcousticFilter, MAX_VOICES> m_voices;
     std::array<uint32_t, MAX_VOICES> m_handles{}; // INVALID_VOICE_HANDLE = free slot
     AuxReverbBus m_bus;
-    audio::MpscRingBuffer<AcousticCommand, QUEUE_CAPACITY> m_queue;
+    core::MpscRingBuffer<AcousticCommand, QUEUE_CAPACITY> m_queue;
     uint64_t m_rejected{0};
     uint64_t m_stale{0};
 };

@@ -112,7 +112,7 @@ std::vector<MobMeleeHit> meleeContactImpl(ecs::Registry& reg, const world::World
                 return;
             }
             const float height = mobHeight(reg, e, mob.kind);
-            const physics::AABB target = playerBox->boundsAt(player->pos);
+            const math::AABB target = playerBox->boundsAt(player->pos);
             if (!(target.max.y > t.pos.y && target.min.y < t.pos.y + height)) {
                 return;
             }

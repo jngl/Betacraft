@@ -3,7 +3,7 @@
 #include "game/ItemBridge.hpp"
 #include "gameplay/Crops.hpp"
 #include "gameplay/ItemIds.hpp"
-#include "physics/AABB.hpp"
+#include "math/AABB.hpp"
 #include "world/BlockShapes.hpp"
 #include "world/World.hpp"
 
@@ -30,7 +30,7 @@ using world::BlockId;
 // The player must not end up inside the new block (Beta only checks this for ItemBlock; kept
 // here so a door or a bed never traps the player).
 [[nodiscard]] bool overlapsPlayer(const physics::Player& player, const core::BlockPos& p, BlockId id, uint8_t meta) {
-    return player.getAABB().intersects(physics::AABB::fromBlock(p.x, p.y, p.z, id, meta));
+    return player.getAABB().intersects(math::AABB::fromBlock(p.x, p.y, p.z, id, meta));
 }
 
 // Beta ItemDoor.onItemUse (`door`: WoodDoor or IronDoor).

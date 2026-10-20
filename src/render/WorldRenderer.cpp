@@ -2,7 +2,7 @@
 #include "render/ItemAppearance.hpp"
 #include "core/Logger.hpp"
 #include "lighting/DynamicLightsGlsl.hpp"
-#include "physics/AABB.hpp"
+#include "math/AABB.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -409,7 +409,7 @@ bool WorldRenderer::initialize() {
     // The chunk shader reads DynamicLightBlock unconditionally; without a bound buffer it
     // would sample undefined memory, so a missing UBO is as fatal as a failed compile.
     if (!m_dynamicLightUbo.initialize() ||
-        !lighting::DynamicLightUniformBuffer::bindProgram(m_chunkShader.getHandle())) {
+        !DynamicLightUniformBuffer::bindProgram(m_chunkShader.getHandle())) {
         core::Logger::error("WorldRenderer", "Dynamic light uniform buffer unavailable.");
         return false;
     }
@@ -709,7 +709,7 @@ void WorldRenderer::renderSelectionAndCrack(
     const physics::RaycastHit& hit,
     int32_t crackStage
 ) {
-    const physics::AABB box = physics::AABB::selectionBox(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z, hit.blockId, hit.blockMeta)
+    const math::AABB box = math::AABB::selectionBox(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z, hit.blockId, hit.blockMeta)
                                   .expanded(glm::vec3(0.003f));
     const glm::vec3 p0 = box.min;
     const glm::vec3 p1 = box.max;

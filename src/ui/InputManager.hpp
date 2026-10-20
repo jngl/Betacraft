@@ -1,6 +1,7 @@
 #pragma once
 
 #include "physics/Player.hpp"
+#include "render/GuiScale.hpp"
 #include "ui/ScreenState.hpp"
 
 #include <SDL2/SDL.h>
@@ -58,8 +59,8 @@ public:
     [[nodiscard]] int getRenderDistance() const noexcept { return m_renderDistance; }
     void setRenderDistance(int rd) noexcept { m_renderDistance = rd; }
 
-    [[nodiscard]] GuiScalePreference getGuiScalePreference() const noexcept { return m_guiScalePref; }
-    void setGuiScalePreference(GuiScalePreference pref) noexcept { m_guiScalePref = pref; }
+    [[nodiscard]] render::GuiScalePreference getGuiScalePreference() const noexcept { return m_guiScalePref; }
+    void setGuiScalePreference(render::GuiScalePreference pref) noexcept { m_guiScalePref = pref; }
 
     // S3.8 mouse sensitivity, 0..1 (Beta mouseSensitivity, default 0.5), key mouse_sensitivity.
     [[nodiscard]] float getMouseSensitivity() const noexcept { return m_mouseSensitivity; }
@@ -91,7 +92,7 @@ private:
 
     float m_fov{70.0f};
     int m_renderDistance{8};
-    GuiScalePreference m_guiScalePref{GuiScalePreference::Auto};
+    render::GuiScalePreference m_guiScalePref{render::GuiScalePreference::Auto};
     float m_mouseSensitivity{0.5f};
     float m_musicVolume{1.0f};
     float m_soundVolume{1.0f};

@@ -58,11 +58,11 @@ void MovementPhysicsSystem::update(Registry& reg, std::span<const EntityId> enti
     }
 }
 
-bool VoxelCollisionSystem::WorldBoxCollides::operator()(const physics::AABB& box) const {
+bool VoxelCollisionSystem::WorldBoxCollides::operator()(const math::AABB& box) const {
     // Same cell walk as gridCollides (range-checked casts), refined by the real block shape.
     // The scan reaches one cell below the box: a fence's 1.5-high box rises into the cell
     // above its own. Each solid cell then contributes its collision boxes (two for stairs).
-    const physics::AABB scan{box.min - glm::vec3(0.0f, 1.0f, 0.0f), box.max};
+    const math::AABB scan{box.min - glm::vec3(0.0f, 1.0f, 0.0f), box.max};
     return gridCollides(scan, [&](int32_t x, int32_t y, int32_t z) {
         const world::BlockId id = world->getBlock(x, y, z);
         if (!world::BlockRegistry::isSolid(id)) {
@@ -71,8 +71,8 @@ bool VoxelCollisionSystem::WorldBoxCollides::operator()(const physics::AABB& box
         const uint8_t meta = world::shapeDependsOnMetadata(world::BlockRegistry::get(id).shape)
             ? world->getMetadata(x, y, z)
             : uint8_t{0};
-        return physics::AABB::forEachBlockBox(x, y, z, id, meta,
-                                              [&](const physics::AABB& b) { return box.intersects(b); });
+        return math::AABB::forEachBlockBox(x, y, z, id, meta,
+                                           [&](const math::AABB& b) { return box.intersects(b); });
     });
 }
 

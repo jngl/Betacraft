@@ -2,7 +2,7 @@
 
 #include "acoustics/AcousticCommand.hpp"
 #include "acoustics/AcousticVoiceBank.hpp"
-#include "audio/MpscRingBuffer.hpp"
+#include "core/MpscRingBuffer.hpp"
 #include "core/Types.hpp"
 #include "world/Block.hpp"
 #include "miniaudio.h"
@@ -147,7 +147,7 @@ public:
         return i < m_soundBuffers.size() ? std::span<const float>(m_soundBuffers[i]) : std::span<const float>{};
     }
 
-    [[nodiscard]] const MpscRingBuffer<AudioCommand, 512>& getCommandQueue() const noexcept { return m_commandQueue; }
+    [[nodiscard]] const core::MpscRingBuffer<AudioCommand, 512>& getCommandQueue() const noexcept { return m_commandQueue; }
 
 private:
     struct ActiveVoice {
@@ -174,7 +174,7 @@ private:
     std::array<std::vector<float>, static_cast<size_t>(SoundEffect::Count)> m_soundBuffers{};
     // One acoustic filter per mixer voice: slot i of the bank is voice i.
     std::array<ActiveVoice, acoustics::AcousticVoiceBank::MAX_VOICES> m_voices{};
-    MpscRingBuffer<AudioCommand, 512> m_commandQueue;
+    core::MpscRingBuffer<AudioCommand, 512> m_commandQueue;
     // ~100 KB of filter and FDN state, allocated once here, never in the callback.
     std::unique_ptr<acoustics::AcousticVoiceBank> m_acoustics;
     acoustics::VoiceHandleAllocator m_handles;

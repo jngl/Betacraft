@@ -492,7 +492,7 @@ bool EntitySimulation::useHeldItemOnEntity(physics::Player& player, ecs::EntityI
 
 std::optional<ecs::EntityId> EntitySimulation::meleeTarget(const physics::Player& player,
                                                       const physics::RaycastHit& blockTarget) {
-    std::vector<physics::AABB> boxes;
+    std::vector<math::AABB> boxes;
     std::vector<ecs::EntityId> ids;
     m_entities.view<ecs::TransformComp, ecs::AABBColliderComp, ecs::HealthComp>().each(
         [&](ecs::EntityId e, const ecs::TransformComp& t, const ecs::AABBColliderComp& c, const ecs::HealthComp&) {
@@ -928,7 +928,7 @@ void EntitySimulation::explode(world::World& world, physics::Player& player, glm
 
 size_t EntitySimulation::tickPressurePlates(world::World& world, const physics::Player& player) {
     size_t contacts = 0;
-    const auto touch = [&](const physics::AABB& box, bool living) {
+    const auto touch = [&](const math::AABB& box, bool living) {
         // Plates lie in the cell at the feet (they do not collide).
         const auto y = static_cast<int32_t>(std::floor(box.min.y));
         for (int32_t x = static_cast<int32_t>(std::floor(box.min.x)); x <= static_cast<int32_t>(std::floor(box.max.x)); ++x) {
@@ -941,7 +941,7 @@ size_t EntitySimulation::tickPressurePlates(world::World& world, const physics::
                 const auto fx = static_cast<float>(x);
                 const auto fy = static_cast<float>(y);
                 const auto fz = static_cast<float>(z);
-                const physics::AABB trigger{{fx + 0.125f, fy, fz + 0.125f}, {fx + 0.875f, fy + 0.25f, fz + 0.875f}};
+                const math::AABB trigger{{fx + 0.125f, fy, fz + 0.125f}, {fx + 0.875f, fy + 0.25f, fz + 0.875f}};
                 if (box.intersects(trigger)) {
                     (void)world.reportPlateContact({x, y, z});
                     ++contacts;
@@ -964,7 +964,7 @@ size_t EntitySimulation::tickPressurePlates(world::World& world, const physics::
 }
 
 int32_t EntitySimulation::pickUpItems(physics::Player& player) {
-    const physics::AABB reach = player.getAABB().expanded({PICKUP_REACH_XZ, 0.0f, PICKUP_REACH_XZ});
+    const math::AABB reach = player.getAABB().expanded({PICKUP_REACH_XZ, 0.0f, PICKUP_REACH_XZ});
     int32_t picked = 0;
     m_entities.view<ecs::TransformComp, ecs::AABBColliderComp, ecs::ItemDropComp>().each(
         [&](ecs::EntityId e, const ecs::TransformComp& t, const ecs::AABBColliderComp& c, ecs::ItemDropComp& item) {
@@ -1068,7 +1068,7 @@ std::optional<world::BlockId> placeHeldBlock(world::World& world, physics::Playe
     }
     const uint8_t meta = *placedMeta;
     if (world::BlockRegistry::get(block).solid &&
-        player.getAABB().intersects(physics::AABB::fromBlock(pos.x, pos.y, pos.z, block, meta))) {
+        player.getAABB().intersects(math::AABB::fromBlock(pos.x, pos.y, pos.z, block, meta))) {
         return std::nullopt;
     }
     if (!world.setBlockWithMetadata(pos.x, pos.y, pos.z, block, meta)) {

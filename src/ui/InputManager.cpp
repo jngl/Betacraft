@@ -31,7 +31,7 @@ void InputManager::resetToDefaults() noexcept {
 
     m_fov = 70.0f;
     m_renderDistance = 8;
-    m_guiScalePref = GuiScalePreference::Auto;
+    m_guiScalePref = render::GuiScalePreference::Auto;
     m_mouseSensitivity = 0.5f;
     m_musicVolume = 1.0f;
     m_soundVolume = 1.0f;
@@ -207,7 +207,7 @@ bool InputManager::loadFromFile(const std::filesystem::path& path) {
                 m_renderDistance = std::stoi(val);
             } else if (key == "gui_scale" || key == "guiScale") {
                 const int s = std::clamp(std::stoi(val), 0, 4);
-                m_guiScalePref = static_cast<GuiScalePreference>(s);
+                m_guiScalePref = static_cast<render::GuiScalePreference>(s);
             } else if (key == "mouse_sensitivity" || key == "mouseSensitivity") {
                 setMouseSensitivity(std::stof(val));
             } else if (key == "music_volume" || key == "musicVolume") {

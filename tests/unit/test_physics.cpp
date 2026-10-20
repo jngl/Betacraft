@@ -1,4 +1,4 @@
-#include "physics/AABB.hpp"
+#include "math/AABB.hpp"
 #include "physics/Player.hpp"
 #include "physics/Raycaster.hpp"
 #include "tests/test_helpers.hpp"
@@ -10,6 +10,7 @@
 
 using namespace betacraft;
 using namespace betacraft::physics;
+using namespace betacraft::math;
 using namespace testing;
 
 TEST(AABBTest, IntersectionAndTransformation) {

@@ -10,17 +10,17 @@ namespace betacraft::ui {
 namespace {
 
 void pushSolidQuad(
-    std::vector<UiQuadVertex>& out,
+    std::vector<render::UiQuadVertex>& out,
     float x0,
     float y0,
     float x1,
     float y1,
     const glm::vec4& color
 ) {
-    const UiQuadVertex v0{{x0, y0}, {0.0f, 0.0f}, color, 0.0f};
-    const UiQuadVertex v1{{x1, y0}, {0.0f, 0.0f}, color, 0.0f};
-    const UiQuadVertex v2{{x1, y1}, {0.0f, 0.0f}, color, 0.0f};
-    const UiQuadVertex v3{{x0, y1}, {0.0f, 0.0f}, color, 0.0f};
+    const render::UiQuadVertex v0{{x0, y0}, {0.0f, 0.0f}, color, 0.0f};
+    const render::UiQuadVertex v1{{x1, y0}, {0.0f, 0.0f}, color, 0.0f};
+    const render::UiQuadVertex v2{{x1, y1}, {0.0f, 0.0f}, color, 0.0f};
+    const render::UiQuadVertex v3{{x0, y1}, {0.0f, 0.0f}, color, 0.0f};
 
     out.push_back(v0);
     out.push_back(v1);
@@ -87,7 +87,7 @@ std::vector<MenuButton> OptionsMenu::layoutKeybindButtons(
 void OptionsMenu::render(
     int windowWidth,
     int windowHeight,
-    std::vector<UiQuadVertex>& outVerts,
+    std::vector<render::UiQuadVertex>& outVerts,
     float mouseX,
     float mouseY,
     ScreenState activeState,
@@ -135,10 +135,10 @@ void OptionsMenu::render(
             } else if (btn.id == 3) {
                 const auto pref = input.getGuiScalePreference();
                 std::string sName = "Auto";
-                if (pref == GuiScalePreference::Scale1x) sName = "1x";
-                else if (pref == GuiScalePreference::Scale2x) sName = "2x";
-                else if (pref == GuiScalePreference::Scale3x) sName = "3x";
-                else if (pref == GuiScalePreference::Scale4x) sName = "4x";
+                if (pref == render::GuiScalePreference::Scale1x) sName = "1x";
+                else if (pref == render::GuiScalePreference::Scale2x) sName = "2x";
+                else if (pref == render::GuiScalePreference::Scale3x) sName = "3x";
+                else if (pref == render::GuiScalePreference::Scale4x) sName = "4x";
                 labelStr = "GUI Scale: " + sName;
             } else if (btn.id == 7) {
                 labelStr = "Sensitivity: " + std::to_string(static_cast<int>(std::lround(input.getMouseSensitivity() * 100.0f))) + "%";
@@ -209,7 +209,7 @@ bool OptionsMenu::handleMouseClick(
                 } else if (btn.id == 3) { // GUI Scale
                     int nextPref = static_cast<int>(input.getGuiScalePreference()) + 1;
                     if (nextPref > 4) nextPref = 0;
-                    input.setGuiScalePreference(static_cast<GuiScalePreference>(nextPref));
+                    input.setGuiScalePreference(static_cast<render::GuiScalePreference>(nextPref));
                     (void)input.saveToFile(m_optionsPath);
                 } else if (btn.id == 7) { // Mouse sensitivity, 10 % steps, wraps after 100 %
                     const int step = static_cast<int>(std::lround(input.getMouseSensitivity() * 10.0f)) + 1;

@@ -100,7 +100,7 @@ TEST(InputRebindTest, OptionsFilePersistenceAndRecovery) {
     originalInput.setBinding(GameAction::MoveLeft, SDL_SCANCODE_Q);
     originalInput.setFov(85.0f);
     originalInput.setRenderDistance(12);
-    originalInput.setGuiScalePreference(GuiScalePreference::Scale3x);
+    originalInput.setGuiScalePreference(betacraft::render::GuiScalePreference::Scale3x);
     originalInput.setMusicVolume(0.5f);
     originalInput.setSoundVolume(0.8f);
 
@@ -114,7 +114,7 @@ TEST(InputRebindTest, OptionsFilePersistenceAndRecovery) {
     EXPECT_EQ(loadedInput.getPrimaryBinding(GameAction::MoveLeft), SDL_SCANCODE_Q);
     EXPECT_FLOAT_EQ(loadedInput.getFov(), 85.0f);
     EXPECT_EQ(loadedInput.getRenderDistance(), 12);
-    EXPECT_EQ(loadedInput.getGuiScalePreference(), GuiScalePreference::Scale3x);
+    EXPECT_EQ(loadedInput.getGuiScalePreference(), betacraft::render::GuiScalePreference::Scale3x);
     EXPECT_FLOAT_EQ(loadedInput.getMusicVolume(), 0.5f);
     EXPECT_FLOAT_EQ(loadedInput.getSoundVolume(), 0.8f);
 

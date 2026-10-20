@@ -257,7 +257,7 @@ TEST(EcsMobAI, ChasingMobCatchesUpThroughFullPipeline) {
     const EntityId player = EntityFactory::spawnPlayer(reg, {8.5f, 0.0f, 6.5f});
     const EntityId mob = spawnMobAt(reg, {0.5f, 0.0f, 0.5f});
     chase(reg, mob, player);
-    const auto floor = [](const physics::AABB& box) {
+    const auto floor = [](const math::AABB& box) {
         return VoxelCollisionSystem::gridCollides(box, [](int32_t, int32_t y, int32_t) { return y < 0; });
     };
     for (int i = 0; i < 200; ++i) { // 10 s, enough for 10 blocks at 2.3 blocks/s

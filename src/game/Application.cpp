@@ -63,12 +63,12 @@ namespace {
 }
 
 // The screen a right click on `block` opens (step 2 of the right-click order), if any.
-[[nodiscard]] std::optional<ScreenKind> activatedScreen(world::BlockId block) noexcept {
+[[nodiscard]] std::optional<ui::ScreenKind> activatedScreen(world::BlockId block) noexcept {
     switch (block) {
-        case world::BlockId::CraftingTable: return ScreenKind::Workbench3x3;
+        case world::BlockId::CraftingTable: return ui::ScreenKind::Workbench3x3;
         case world::BlockId::Furnace:
-        case world::BlockId::LitFurnace: return ScreenKind::Furnace;
-        case world::BlockId::Chest: return ScreenKind::Chest;
+        case world::BlockId::LitFurnace: return ui::ScreenKind::Furnace;
+        case world::BlockId::Chest: return ui::ScreenKind::Chest;
         default: return std::nullopt;
     }
 }
@@ -622,7 +622,7 @@ void Application::openInventoryScreen(crafting::GridSize grid) {
     setMouseCaptured(false);
 }
 
-void Application::openContainerScreen(ScreenKind kind, const core::BlockPos& pos) {
+void Application::openContainerScreen(ui::ScreenKind kind, const core::BlockPos& pos) {
     const world::BlockId block = world().getBlock(pos);
     if (!world::hasBlockEntity(block)) {
         return;
@@ -672,7 +672,7 @@ ui::HudCanvas Application::hudCanvas() const noexcept {
 
 void Application::handleInventoryClick(int32_t mouseX, int32_t mouseY, SlotButton button) {
     InventoryCrafting& screen = m_session->crafting();
-    const bool container = isContainerScreen(screen.kind());
+    const bool container = ui::isContainerScreen(screen.kind());
     const ui::InventoryLayoutKey layout{static_cast<int>(screen.gridSize()), screen.kind(),
                                         player().isCreative() && !container};
     // The inventory is laid out in the GUI Scale canvas (S3.7): window points map back first.
@@ -772,8 +772,8 @@ void Application::handleRightClickAction() {
         if (activateDoorOrBed()) {
             return;
         }
-        if (const std::optional<ScreenKind> screen = activatedScreen(m_inWorld.state.currentTarget.blockId)) {
-            if (*screen == ScreenKind::Workbench3x3) {
+        if (const std::optional<ui::ScreenKind> screen = activatedScreen(m_inWorld.state.currentTarget.blockId)) {
+            if (*screen == ui::ScreenKind::Workbench3x3) {
                 openInventoryScreen(crafting::GridSize::Workbench3x3);
             } else {
                 openContainerScreen(*screen, m_inWorld.state.currentTarget.blockPos);
@@ -1376,7 +1376,7 @@ void Application::renderScreens() {
             hudCtx
         );
     } else if (m_screenState == ui::ScreenState::TitleScreen) {
-        std::vector<ui::UiQuadVertex> verts;
+        std::vector<render::UiQuadVertex> verts;
         m_titleScreen.render(
             m_config.windowWidth,
             m_config.windowHeight,
@@ -1391,7 +1391,7 @@ void Application::renderScreens() {
         );
         m_textRenderer.renderBatch(verts, ortho);
     } else if (m_screenState == ui::ScreenState::OptionsMenu || m_screenState == ui::ScreenState::KeybindingMenu) {
-        std::vector<ui::UiQuadVertex> verts;
+        std::vector<render::UiQuadVertex> verts;
         m_optionsMenu.render(
             m_config.windowWidth,
             m_config.windowHeight,
@@ -1408,7 +1408,7 @@ void Application::renderScreens() {
         );
         m_textRenderer.renderBatch(verts, ortho);
     } else if (m_screenState == ui::ScreenState::DeathScreen) {
-        std::vector<ui::UiQuadVertex> verts;
+        std::vector<render::UiQuadVertex> verts;
         m_deathScreen.render(canvas.width, canvas.height, verts, static_cast<float>(canvas.toCanvasX(m_mouseX)),
                              static_cast<float>(canvas.toCanvasY(m_mouseY)));
         const glm::mat4 ortho = glm::ortho(
@@ -1418,15 +1418,15 @@ void Application::renderScreens() {
         );
         m_textRenderer.renderBatch(verts, ortho);
     } else if (m_screenState == ui::ScreenState::PauseMenu) {
-        std::vector<ui::UiQuadVertex> verts;
+        std::vector<render::UiQuadVertex> verts;
         const float sw = static_cast<float>(m_config.windowWidth);
         const float sh = static_cast<float>(m_config.windowHeight);
 
         // Dark translucent tint
-        const ui::UiQuadVertex v0{{0.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.65f}, 0.0f};
-        const ui::UiQuadVertex v1{{sw, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.65f}, 0.0f};
-        const ui::UiQuadVertex v2{{sw, sh}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.65f}, 0.0f};
-        const ui::UiQuadVertex v3{{0.0f, sh}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.65f}, 0.0f};
+        const render::UiQuadVertex v0{{0.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.65f}, 0.0f};
+        const render::UiQuadVertex v1{{sw, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.65f}, 0.0f};
+        const render::UiQuadVertex v2{{sw, sh}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.65f}, 0.0f};
+        const render::UiQuadVertex v3{{0.0f, sh}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.65f}, 0.0f};
         verts.push_back(v0); verts.push_back(v1); verts.push_back(v2);
         verts.push_back(v0); verts.push_back(v2); verts.push_back(v3);
 
@@ -1442,10 +1442,10 @@ void Application::renderScreens() {
         auto drawPauseBtn = [&](float by, const char* label) {
             const bool hov = (m_mouseX >= btnX && m_mouseX <= btnX + btnW && m_mouseY >= by && m_mouseY <= by + btnH);
             const glm::vec4 bcol = hov ? glm::vec4(0.42f, 0.42f, 0.50f, 1.0f) : glm::vec4(0.22f, 0.22f, 0.25f, 1.0f);
-            const ui::UiQuadVertex b0{{btnX, by}, {0.0f, 0.0f}, bcol, 0.0f};
-            const ui::UiQuadVertex b1{{btnX + btnW, by}, {0.0f, 0.0f}, bcol, 0.0f};
-            const ui::UiQuadVertex b2{{btnX + btnW, by + btnH}, {0.0f, 0.0f}, bcol, 0.0f};
-            const ui::UiQuadVertex b3{{btnX, by + btnH}, {0.0f, 0.0f}, bcol, 0.0f};
+            const render::UiQuadVertex b0{{btnX, by}, {0.0f, 0.0f}, bcol, 0.0f};
+            const render::UiQuadVertex b1{{btnX + btnW, by}, {0.0f, 0.0f}, bcol, 0.0f};
+            const render::UiQuadVertex b2{{btnX + btnW, by + btnH}, {0.0f, 0.0f}, bcol, 0.0f};
+            const render::UiQuadVertex b3{{btnX, by + btnH}, {0.0f, 0.0f}, bcol, 0.0f};
             verts.push_back(b0); verts.push_back(b1); verts.push_back(b2);
             verts.push_back(b0); verts.push_back(b2); verts.push_back(b3);
 
@@ -1465,7 +1465,7 @@ void Application::renderScreens() {
         m_textRenderer.renderBatch(verts, ortho);
     } else if (m_screenState == ui::ScreenState::WorldSelect || m_screenState == ui::ScreenState::CreateWorld ||
                m_screenState == ui::ScreenState::Loading) {
-        std::vector<ui::UiQuadVertex> verts;
+        std::vector<render::UiQuadVertex> verts;
         const float mx = static_cast<float>(m_mouseX);
         const float my = static_cast<float>(m_mouseY);
         if (m_screenState == ui::ScreenState::WorldSelect) {
@@ -1612,7 +1612,7 @@ void Application::presentLoadingFrame(std::string_view title, std::string_view s
     int framebufferHeight = m_config.windowHeight;
     SDL_GL_GetDrawableSize(m_window, &framebufferWidth, &framebufferHeight);
     clearFrame(framebufferWidth, framebufferHeight);
-    std::vector<ui::UiQuadVertex> verts;
+    std::vector<render::UiQuadVertex> verts;
     ui::appendLoadingScreen(verts, m_config.windowWidth, m_config.windowHeight, title, status, progress);
     const glm::mat4 ortho = glm::ortho(0.0f, static_cast<float>(m_config.windowWidth),
                                        static_cast<float>(m_config.windowHeight), 0.0f, -1.0f, 1.0f);

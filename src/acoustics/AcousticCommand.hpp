@@ -39,7 +39,7 @@ enum class AcousticCommandType : uint8_t {
 };
 
 // Producer -> audio thread message for the acoustic layer. Trivially copyable and 32 bytes so it
-// travels through audio::MpscRingBuffer by value; one flat struct instead of a variant keeps the
+// travels through core::MpscRingBuffer by value; one flat struct instead of a variant keeps the
 // queue cell small and the consumer branch-light. Voice commands address `voiceHandle`; a command
 // whose handle is no longer bound to any slot (the sound ended or was stolen) is dropped as stale.
 //

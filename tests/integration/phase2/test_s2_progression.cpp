@@ -161,19 +161,19 @@ TEST_F(S2Progression, FromALogToADiamond) {
     floor.face = core::FaceDir::PosY;
     ASSERT_EQ(game::placeHeldBlock(world(), player(), floor), std::optional<BlockId>{BlockId::Furnace});
     (void)world().blockEntities().getOrCreate(furnacePos, BlockId::Furnace);
-    EXPECT_TRUE(ui().openContainer(game::ScreenKind::Furnace, furnacePos, player()).empty());
+    EXPECT_TRUE(ui().openContainer(ui::ScreenKind::Furnace, furnacePos, player()).empty());
     ASSERT_TRUE(ui().clickInventorySlot(player(), findSlot(toItemId(BlockId::IronOre))));
-    ASSERT_TRUE(ui().clickContainerSlot(world(), game::kFurnaceInputSlot));
+    ASSERT_TRUE(ui().clickContainerSlot(world(), ui::kFurnaceInputSlot));
     ASSERT_TRUE(ui().clickInventorySlot(player(), findSlot(items::Coal)));
-    ASSERT_TRUE(ui().clickContainerSlot(world(), game::kFurnaceFuelSlot));
+    ASSERT_TRUE(ui().clickContainerSlot(world(), ui::kFurnaceFuelSlot));
     EXPECT_TRUE(ui().close(player()).empty());
 
     tickIdle(3 * crafting::kSmeltTicks + 2);
     EXPECT_EQ(world().getBlock(furnacePos), BlockId::LitFurnace) << "coal burns 1600 ticks";
-    EXPECT_TRUE(ui().openContainer(game::ScreenKind::Furnace, furnacePos, player()).empty());
-    EXPECT_EQ(ui().containerSlot(world(), game::kFurnaceOutputSlot), physics::InventorySlot(items::IronIngot, 3));
-    EXPECT_TRUE(ui().containerSlot(world(), game::kFurnaceInputSlot).isEmpty());
-    ASSERT_TRUE(ui().clickContainerSlot(world(), game::kFurnaceOutputSlot));
+    EXPECT_TRUE(ui().openContainer(ui::ScreenKind::Furnace, furnacePos, player()).empty());
+    EXPECT_EQ(ui().containerSlot(world(), ui::kFurnaceOutputSlot), physics::InventorySlot(items::IronIngot, 3));
+    EXPECT_TRUE(ui().containerSlot(world(), ui::kFurnaceInputSlot).isEmpty());
+    ASSERT_TRUE(ui().clickContainerSlot(world(), ui::kFurnaceOutputSlot));
     ASSERT_TRUE(ui().clickInventorySlot(player(), firstEmpty()));
     EXPECT_TRUE(ui().close(player()).empty());
     ASSERT_EQ(player().countItem(items::IronIngot), 3);

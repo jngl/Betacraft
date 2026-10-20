@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui/BitmapFont.hpp"
+#include "render/BitmapFont.hpp"
 #include "ui/TitleScreen.hpp"
 
 #include <cstddef>
@@ -43,7 +43,7 @@ public:
 
     // Black box with a grey border (white when focused) and the text; the caret '_' blinks
     // after it while focused (`caretVisible`).
-    void render(std::vector<UiQuadVertex>& out, float x, float y, float width, float height, bool caretVisible) const;
+    void render(std::vector<render::UiQuadVertex>& out, float x, float y, float width, float height, bool caretVisible) const;
 
 private:
     std::string m_text;
@@ -53,9 +53,9 @@ private:
 };
 
 // Shared drawing of the S7.8 menu screens.
-void appendSolidQuad(std::vector<UiQuadVertex>& out, float x0, float y0, float x1, float y1, const glm::vec4& color);
+void appendSolidQuad(std::vector<render::UiQuadVertex>& out, float x0, float y0, float x1, float y1, const glm::vec4& color);
 // A title-screen style button; a disabled one is darker and never highlighted.
-void appendMenuButton(std::vector<UiQuadVertex>& out, const MenuButton& button, std::string_view label, bool hovered,
+void appendMenuButton(std::vector<render::UiQuadVertex>& out, const MenuButton& button, std::string_view label, bool hovered,
                       bool enabled = true);
 [[nodiscard]] bool isInside(const MenuButton& button, float x, float y) noexcept;
 

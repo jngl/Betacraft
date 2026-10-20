@@ -45,7 +45,7 @@ void faceAlong(ecs::TransformComp& t, const glm::vec3& v) noexcept {
 
 struct Candidate {
     ecs::EntityId entity;
-    physics::AABB box;
+    math::AABB box;
 };
 
 } // namespace
@@ -101,7 +101,7 @@ ArrowTickResult tickArrows(ecs::Registry& reg, const world::World& world, ecs::E
         });
 
     std::vector<ecs::EntityId> remove;
-    std::vector<physics::AABB> boxes;
+    std::vector<math::AABB> boxes;
     std::vector<ecs::EntityId> ids;
     for (const ecs::EntityId e : arrows) {
         if (!reg.valid(e)) {
