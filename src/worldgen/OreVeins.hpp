@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <numbers>
 
-namespace betacraft::world { class Chunk; }
+namespace betacraft::voxel { class Chunk; }
 
 namespace betacraft::worldgen {
 
@@ -22,7 +22,7 @@ namespace betacraft::worldgen {
 // chunk's pass-1 blocks and the seed, independent of the generation order, and seamless across
 // borders. Ore only ever replaces Stone.
 struct OreVeinSpec {
-    world::BlockId ore{world::BlockId::Stone};
+    voxel::BlockId ore{voxel::BlockId::Stone};
     int32_t count{0}; // Veins per chunk
     int32_t size{0};  // WorldGenMinable numberOfBlocks
     int32_t yRange{128}; // y = rand(yRange)
@@ -31,14 +31,14 @@ struct OreVeinSpec {
 
 // Beta populate order: dirt, gravel, coal, iron, gold, redstone, diamond, lapis.
 inline constexpr std::array<OreVeinSpec, 8> kBetaOreVeins{{
-    {world::BlockId::Dirt, 20, 32, 128, false},
-    {world::BlockId::Gravel, 10, 32, 128, false},
-    {world::BlockId::CoalOre, 20, 16, 128, false},
-    {world::BlockId::IronOre, 20, 8, 64, false},
-    {world::BlockId::GoldOre, 2, 8, 32, false},
-    {world::BlockId::RedstoneOre, 8, 7, 16, false},
-    {world::BlockId::DiamondOre, 1, 7, 16, false},
-    {world::BlockId::LapisOre, 1, 6, 16, true},
+    {voxel::BlockId::Dirt, 20, 32, 128, false},
+    {voxel::BlockId::Gravel, 10, 32, 128, false},
+    {voxel::BlockId::CoalOre, 20, 16, 128, false},
+    {voxel::BlockId::IronOre, 20, 8, 64, false},
+    {voxel::BlockId::GoldOre, 2, 8, 32, false},
+    {voxel::BlockId::RedstoneOre, 8, 7, 16, false},
+    {voxel::BlockId::DiamondOre, 1, 7, 16, false},
+    {voxel::BlockId::LapisOre, 1, 6, 16, true},
 }};
 
 inline constexpr uint64_t kOreVeinSalt = 0x0BE5EED5A17C0DE5ULL;
@@ -124,6 +124,6 @@ void forEachOreVeinCell(uint64_t seed, core::ChunkCoord source, Cell&& cell, con
 
 // Pass 1, after the caves (WorldGen::generateChunk): the veins of the 9 chunks around this one,
 // in increasing (z, x) chunk order, clipped to it; a cell becomes ore only while it is Stone.
-void placeOreVeins(world::Chunk& chunk, uint64_t seed);
+void placeOreVeins(voxel::Chunk& chunk, uint64_t seed);
 
 } // namespace betacraft::worldgen

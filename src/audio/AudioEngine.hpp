@@ -101,10 +101,10 @@ public:
 
     // Without `acoustics` a sound is non-spatial: dry, unoccluded, no reverb (and gets no handle).
     PlayedVoice playSound(SoundEffect effect, float volume, float pitch, const Acoustics& acoustics = std::nullopt);
-    PlayedVoice playBlockStep(world::SoundCategory category, const Acoustics& acoustics = std::nullopt);
-    PlayedVoice playBlockDigHit(world::SoundCategory category, const Acoustics& acoustics = std::nullopt);
-    PlayedVoice playBlockBreak(world::SoundCategory category, const Acoustics& acoustics = std::nullopt);
-    PlayedVoice playBlockPlace(world::SoundCategory category, const Acoustics& acoustics = std::nullopt);
+    PlayedVoice playBlockStep(voxel::SoundCategory category, const Acoustics& acoustics = std::nullopt);
+    PlayedVoice playBlockDigHit(voxel::SoundCategory category, const Acoustics& acoustics = std::nullopt);
+    PlayedVoice playBlockBreak(voxel::SoundCategory category, const Acoustics& acoustics = std::nullopt);
+    PlayedVoice playBlockPlace(voxel::SoundCategory category, const Acoustics& acoustics = std::nullopt);
     PlayedVoice playWaterSplash(const Acoustics& acoustics = std::nullopt);
     PlayedVoice playPistonSound(const Acoustics& acoustics = std::nullopt);
     PlayedVoice playLavaFizz(float volumeScale, const Acoustics& acoustics = std::nullopt);

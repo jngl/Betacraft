@@ -58,6 +58,7 @@ void testPerlinDeterminism() {
 
 void testBlockRegistry() {
     using namespace betacraft::world;
+    using namespace betacraft::voxel;
     BlockRegistry::initialize();
 
     BC_ASSERT(!BlockRegistry::isSolid(BlockId::Air));
@@ -72,6 +73,7 @@ void testBlockRegistry() {
 
 void testChunkSerializationAndLighting() {
     using namespace betacraft::world;
+    using namespace betacraft::voxel;
     Chunk c1({2, -3});
     c1.setBlock(4, 10, 4, BlockId::Stone);
     c1.setBlock(5, 10, 4, BlockId::Torch);
@@ -106,12 +108,12 @@ void testWorldRaycastingAndPiston() {
     for (int z = 2; z <= 12; ++z) {
         for (int x = 2; x <= 12; ++x) {
             for (int y = 102; y <= 110; ++y) {
-                w.setBlock(x, y, z, world::BlockId::Air);
+                w.setBlock(x, y, z, voxel::BlockId::Air);
             }
         }
     }
 
-    w.setBlock(5, 105, 5, world::BlockId::Cobblestone);
+    w.setBlock(5, 105, 5, voxel::BlockId::Cobblestone);
     const auto hit = physics::Raycaster::cast(w, {5.5f, 105.5f, 2.5f}, {0.0f, 0.0f, 1.0f}, 5.0f);
     BC_ASSERT(hit.hit);
     BC_ASSERT(hit.blockPos == (core::BlockPos{5, 105, 5}));
@@ -119,10 +121,10 @@ void testWorldRaycastingAndPiston() {
     BC_ASSERT(hit.face == core::FaceDir::NegZ);
 
     // Test Beta 1.7 Piston pushing Cobblestone along +Z
-    w.setBlock(5, 105, 4, world::BlockId::Piston);
+    w.setBlock(5, 105, 4, voxel::BlockId::Piston);
     BC_ASSERT(w.triggerPistonPush({5, 105, 4}, core::FaceDir::PosZ));
-    BC_ASSERT(w.getBlock(5, 105, 5) == world::BlockId::Air);
-    BC_ASSERT(w.getBlock(5, 105, 6) == world::BlockId::Cobblestone);
+    BC_ASSERT(w.getBlock(5, 105, 5) == voxel::BlockId::Air);
+    BC_ASSERT(w.getBlock(5, 105, 6) == voxel::BlockId::Cobblestone);
 
     // Test ChunkMesher builds non-empty Smooth Lighting mesh
     const auto* chunkPtr = w.getChunk({0, 0});
@@ -138,14 +140,14 @@ void testCraftingAndTextureAtlas() {
     physics::Player player;
     // A new Player is empty-handed (Survival); the Creative kit holds the logs crafted here.
     game::applyStarterKit(player, core::GameMode::Creative);
-    const int32_t initialPlanks = player.countItem(world::BlockId::OakPlanks);
+    const int32_t initialPlanks = player.countItem(voxel::BlockId::OakPlanks);
     const auto recipes = ui::CraftingSystem::getRecipes();
     BC_ASSERT(!recipes.empty());
 
     // First recipe crafts 4 Oak Planks from 1 Oak Log (player starts with 32 OakLog in slot 9)
     BC_ASSERT(ui::CraftingSystem::canCraft(recipes[0], player));
     BC_ASSERT(ui::CraftingSystem::craft(recipes[0], player));
-    BC_ASSERT(player.countItem(world::BlockId::OakPlanks) == initialPlanks + 4);
+    BC_ASSERT(player.countItem(voxel::BlockId::OakPlanks) == initialPlanks + 4);
 
     // Procedural 256x256 RGBA atlas generation
     const auto rgba = render::TextureAtlas::generateProceduralAtlasRGBA();
@@ -164,17 +166,17 @@ void testWaterExitJump() {
     for (int z = 3; z <= 8; ++z) {
         for (int x = 3; x <= 8; ++x) {
             for (int y = 60; y <= 75; ++y) {
-                w.setBlock(x, y, z, world::BlockId::Air);
+                w.setBlock(x, y, z, voxel::BlockId::Air);
             }
-            w.setBlock(x, 62, z, world::BlockId::Stone);
+            w.setBlock(x, 62, z, voxel::BlockId::Stone);
         }
     }
-    w.setBlock(5, 63, 5, world::BlockId::Water);
-    w.setBlock(5, 64, 5, world::BlockId::Water);
+    w.setBlock(5, 63, 5, voxel::BlockId::Water);
+    w.setBlock(5, 64, 5, voxel::BlockId::Water);
     for (int sx = 6; sx <= 12; ++sx) {
-        w.setBlock(sx, 63, 5, world::BlockId::Stone);
-        w.setBlock(sx, 64, 5, world::BlockId::Stone);
-        w.setBlock(sx, 65, 5, world::BlockId::Grass); // Top at y = 66.0f (1 full block above water level)
+        w.setBlock(sx, 63, 5, voxel::BlockId::Stone);
+        w.setBlock(sx, 64, 5, voxel::BlockId::Stone);
+        w.setBlock(sx, 65, 5, voxel::BlockId::Grass); // Top at y = 66.0f (1 full block above water level)
     }
 
     physics::Player player;

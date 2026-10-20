@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <queue>
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 
 Chunk::Chunk(core::ChunkCoord coord) noexcept
     : m_coord(coord) {
@@ -462,4 +462,4 @@ bool Chunk::deserializeRLE(std::span<const uint8_t> data) {
     return true;
 }
 
-} // namespace betacraft::world
+} // namespace betacraft::voxel

@@ -21,7 +21,7 @@
 
 namespace betacraft::test::worldsession {
 
-using world::BlockId;
+using voxel::BlockId;
 
 // High above the generated terrain of the test seed, on a glass floor laid by the fixture.
 using glassfloor::kFloorY;
@@ -40,7 +40,7 @@ using glassfloor::kY;
 class WorldSessionSupport : public ::testing::Test {
 protected:
     void SetUp() override {
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         m_session = game::WorldSession::open(openOptions(m_dir.path()));
         ASSERT_NE(m_session, nullptr);
         ASSERT_TRUE(m_session->awaitingGameMode());

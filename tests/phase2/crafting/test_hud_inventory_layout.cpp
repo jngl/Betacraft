@@ -68,7 +68,7 @@ TEST(HudInventoryLayout, SlotsDoNotOverlapAndOutsideClicksHitNothing) {
 }
 
 TEST(HudInventoryLayout, PaletteClicksStillEquipAndOtherSlotsAreLeftToTheGame) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     physics::Player player;
     HudRenderer hud;
     player.setSelectedSlot(0);
@@ -81,7 +81,7 @@ TEST(HudInventoryLayout, PaletteClicksStillEquipAndOtherSlotsAreLeftToTheGame) {
     const ui::SlotRect pal = HudRenderer::inventorySlotRect(InventoryRegion::Palette, 1, kW, kH, 2);
     EXPECT_TRUE(hud.handleInventoryClick(static_cast<int32_t>(pal.x + 5.0f), static_cast<int32_t>(pal.y + 5.0f),
                                          kW, kH, player));
-    EXPECT_EQ(player.getHeldItem().id, world::BlockId::Grass);
+    EXPECT_EQ(player.getHeldItem().id, voxel::BlockId::Grass);
 }
 
 // S1.3: Survival draws no palette, so its slots are not clickable either; the rest of the
@@ -257,7 +257,7 @@ TEST(HudInventoryLayout, SlotsMapBackAtEveryGuiScale) {
 // S3.6: the tooltip names the hovered item; a tool adds its remaining durability.
 TEST(HudInventoryLayout, TooltipShowsNameAndToolDurability) {
     EXPECT_TRUE(HudRenderer::inventoryTooltip({}).empty());
-    const std::vector<std::string> dirt = HudRenderer::inventoryTooltip({world::BlockId::Dirt, 12});
+    const std::vector<std::string> dirt = HudRenderer::inventoryTooltip({voxel::BlockId::Dirt, 12});
     ASSERT_EQ(dirt.size(), 1U);
     EXPECT_FALSE(dirt[0].empty());
     const std::vector<std::string> pick =

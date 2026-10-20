@@ -9,7 +9,7 @@
 using namespace betacraft;
 using gameplay::MobCategory;
 using gameplay::SplitMix64;
-using world::BlockId;
+using voxel::BlockId;
 
 TEST(MobSpawnRules, SkylightSubtractedIsZeroAtNoonElevenAtMidnightAndMonotonic) {
     EXPECT_EQ(gameplay::skylightSubtracted(0.25f), 0);

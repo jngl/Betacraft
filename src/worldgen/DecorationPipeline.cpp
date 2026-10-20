@@ -12,7 +12,7 @@ DecorationPipeline::DecorationPipeline(uint64_t worldSeed, ChunkAccess& chunks) 
     : m_planner(worldSeed), m_chunks(chunks) {}
 
 std::vector<core::ChunkCoord> DecorationPipeline::onTerrainReady(core::ChunkCoord coord) {
-    world::Chunk* chunk = m_chunks.findChunk(coord);
+    voxel::Chunk* chunk = m_chunks.findChunk(coord);
     if (chunk == nullptr) return {};
 
     if (const auto known = m_states.find(coord); known != m_states.end()) {
@@ -44,7 +44,7 @@ std::vector<core::ChunkCoord> DecorationPipeline::onDecoratedChunkLoaded(core::C
 }
 
 std::vector<core::ChunkCoord> DecorationPipeline::onDecoratedChunkLoaded(core::ChunkCoord coord,
-                                                                       const world::Chunk& pass1Copy) {
+                                                                       const voxel::Chunk& pass1Copy) {
     if (pass1Copy.getCoord() != coord || m_states.contains(coord)) return {};
     return onDecoratedChunkLoaded(coord, m_planner.plan(pass1Copy));
 }
@@ -101,7 +101,7 @@ bool DecorationPipeline::tryDecorate(core::ChunkCoord coord) {
     // Gate: all 9 plans of the neighbourhood must exist, and all 9 chunks must be resident
     // (conditional features read their neighbours' pass-1 water; never guess).
     std::array<ChunkState*, 9> states{};
-    std::array<world::Chunk*, 9> chunks{};
+    std::array<voxel::Chunk*, 9> chunks{};
     size_t i = 0;
     for (int32_t dz = -1; dz <= 1; ++dz) {
         for (int32_t dx = -1; dx <= 1; ++dx, ++i) {
@@ -113,17 +113,17 @@ bool DecorationPipeline::tryDecorate(core::ChunkCoord coord) {
             if (chunks[i] == nullptr) return false;
         }
     }
-    world::Chunk& chunk = *chunks[4];
+    voxel::Chunk& chunk = *chunks[4];
 
     // Sea-level water is pass-1 data that decoration never alters, so it reads the same
     // whether a neighbour is decorated yet or not: conditions resolve order-independently.
     auto isWaterAt = [&](int32_t wx, int32_t y, int32_t wz) noexcept {
-        const int32_t dx = core::floorDiv(wx, world::Chunk::WIDTH) - coord.x;
-        const int32_t dz = core::floorDiv(wz, world::Chunk::DEPTH) - coord.z;
+        const int32_t dx = core::floorDiv(wx, voxel::Chunk::WIDTH) - coord.x;
+        const int32_t dz = core::floorDiv(wz, voxel::Chunk::DEPTH) - coord.z;
         if (dx < -1 || dx > 1 || dz < -1 || dz > 1) return false; // unreachable: overhang <= 2
-        const world::Chunk& c = *chunks[static_cast<size_t>((dz + 1) * 3 + (dx + 1))];
-        return c.getBlock(core::floorMod(wx, world::Chunk::WIDTH), y, core::floorMod(wz, world::Chunk::DEPTH)) ==
-               world::BlockId::Water;
+        const voxel::Chunk& c = *chunks[static_cast<size_t>((dz + 1) * 3 + (dx + 1))];
+        return c.getBlock(core::floorMod(wx, voxel::Chunk::WIDTH), y, core::floorMod(wz, voxel::Chunk::DEPTH)) ==
+               voxel::BlockId::Water;
     };
 
     for (const ChunkState* st : states) {

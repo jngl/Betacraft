@@ -25,7 +25,7 @@ using SnapPtr = std::shared_ptr<const Snap>;
 inline SnapPtr stoneCube() {
     return Snap::captureFrom([](int32_t x, int32_t y, int32_t z) -> std::optional<VoxelSample> {
         const bool on = x == 4 && y == 4 && z == 4;
-        return VoxelSample{static_cast<world::BlockStateId>(on ? world::BlockId::Stone : world::BlockId::Air), 15, 0};
+        return VoxelSample{static_cast<voxel::BlockStateId>(on ? voxel::BlockId::Stone : voxel::BlockId::Air), 15, 0};
     });
 }
 

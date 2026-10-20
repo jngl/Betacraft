@@ -19,7 +19,7 @@ namespace betacraft::streaming {
 
 // One voxel as seen by a capture source. Light values are 0..15 (clamped on capture).
 struct VoxelSample {
-    world::BlockStateId state{static_cast<world::BlockStateId>(world::BlockId::Air)};
+    voxel::BlockStateId state{static_cast<voxel::BlockStateId>(voxel::BlockId::Air)};
     uint8_t skyLight{15};
     uint8_t blockLight{0};
     uint8_t meta{0}; // 4-bit block metadata (S5.4: door state, ladder side, crop stage...)
@@ -28,7 +28,7 @@ struct VoxelSample {
 // Value used for voxels whose source is absent (unloaded neighbour chunk) or for reads
 // outside the 18^3 cube. Mirrors World's own fallback for missing chunks: open air under
 // full sky, so border faces render and are lit as if facing the void.
-inline constexpr VoxelSample kMissingVoxel{static_cast<world::BlockStateId>(world::BlockId::Air), 15, 0};
+inline constexpr VoxelSample kMissingVoxel{static_cast<voxel::BlockStateId>(voxel::BlockId::Air), 15, 0};
 
 // Immutable 18x18x18 copy of a 16^3 section plus a 1-voxel guard border on all six sides.
 // Captured synchronously on the main/tick thread, then shared with mesher workers as
@@ -55,13 +55,13 @@ public:
     }
 
     // Reads outside [-1, 16]^3 return kMissingVoxel instead of touching foreign memory.
-    [[nodiscard]] world::BlockStateId getBlockState(int32_t lx, int32_t ly, int32_t lz) const noexcept {
-        return inRange(lx, ly, lz) ? static_cast<world::BlockStateId>(m_blockStates[voxelIndex(lx, ly, lz)] & kStateMask)
+    [[nodiscard]] voxel::BlockStateId getBlockState(int32_t lx, int32_t ly, int32_t lz) const noexcept {
+        return inRange(lx, ly, lz) ? static_cast<voxel::BlockStateId>(m_blockStates[voxelIndex(lx, ly, lz)] & kStateMask)
                                    : kMissingVoxel.state;
     }
-    [[nodiscard]] world::BlockId getBlock(int32_t lx, int32_t ly, int32_t lz) const noexcept {
+    [[nodiscard]] voxel::BlockId getBlock(int32_t lx, int32_t ly, int32_t lz) const noexcept {
         // Same narrowing as PalettedSection::getBlock (block id lives in the low byte).
-        return static_cast<world::BlockId>(getBlockState(lx, ly, lz) & 0xFFu);
+        return static_cast<voxel::BlockId>(getBlockState(lx, ly, lz) & 0xFFu);
     }
     [[nodiscard]] uint8_t getSkyLight(int32_t lx, int32_t ly, int32_t lz) const noexcept {
         return inRange(lx, ly, lz) ? static_cast<uint8_t>((m_lightData[voxelIndex(lx, ly, lz)] >> 4u) & 0x0Fu)
@@ -95,7 +95,7 @@ public:
                     const VoxelSample v = sample.value_or(kMissingVoxel);
                     snap->setVoxelDirect(voxelIndex(lx, ly, lz), v.state, v.skyLight, v.blockLight, v.meta);
                     if (interiorEmpty && isInterior(lx, ly, lz) &&
-                        v.state != static_cast<world::BlockStateId>(world::BlockId::Air)) {
+                        v.state != static_cast<voxel::BlockStateId>(voxel::BlockId::Air)) {
                         interiorEmpty = false;
                     }
                 }
@@ -119,13 +119,13 @@ private:
     // S5.4: the metadata nibble rides in the top 4 bits of the stored state (states hold a
     // block id, below 256), which keeps the snapshot at its 17 KB footprint.
     static constexpr uint32_t kMetaShift = 12;
-    static constexpr world::BlockStateId kStateMask = (1u << kMetaShift) - 1u;
+    static constexpr voxel::BlockStateId kStateMask = (1u << kMetaShift) - 1u;
 
-    [[nodiscard]] static constexpr world::BlockStateId packState(world::BlockStateId state, uint8_t meta) noexcept {
-        return static_cast<world::BlockStateId>((state & kStateMask) | ((meta & 0x0Fu) << kMetaShift));
+    [[nodiscard]] static constexpr voxel::BlockStateId packState(voxel::BlockStateId state, uint8_t meta) noexcept {
+        return static_cast<voxel::BlockStateId>((state & kStateMask) | ((meta & 0x0Fu) << kMetaShift));
     }
 
-    void setVoxelDirect(size_t index, world::BlockStateId block, uint8_t skyLight, uint8_t blkLight,
+    void setVoxelDirect(size_t index, voxel::BlockStateId block, uint8_t skyLight, uint8_t blkLight,
                         uint8_t meta = 0) noexcept {
         m_blockStates[index] = packState(block, meta);
         m_lightData[index] = static_cast<uint8_t>(((skyLight > 15 ? 15 : skyLight) << 4u) |
@@ -137,7 +137,7 @@ private:
         m_lightData.fill(static_cast<uint8_t>(((v.skyLight & 0x0Fu) << 4u) | (v.blockLight & 0x0Fu)));
     }
 
-    std::array<world::BlockStateId, TOTAL_VOXELS> m_blockStates{}; // 11 664 bytes (state | meta << 12)
+    std::array<voxel::BlockStateId, TOTAL_VOXELS> m_blockStates{}; // 11 664 bytes (state | meta << 12)
     std::array<uint8_t, TOTAL_VOXELS> m_lightData{};               //  5 832 bytes (sky << 4 | block)
     bool m_interiorEmpty{true};
 };

@@ -11,7 +11,7 @@
 #include <optional>
 #include <vector>
 
-namespace betacraft::world { class Chunk; }
+namespace betacraft::voxel { class Chunk; }
 
 namespace betacraft::worldgen {
 
@@ -49,7 +49,7 @@ struct DungeonInfo {
 // 7..9) whose floor and ceiling are solid and whose walls open 1..5 times onto air; walls of
 // cobblestone, a floor of mossy cobblestone 3 times in 4, a MobSpawner in the middle and up to
 // 2 chests (Chest, meta kChestLootPendingMeta) against a wall. Returns the rooms placed.
-std::vector<DungeonInfo> placeDungeons(world::Chunk& chunk, uint64_t seed, const HeightSampler& heights);
+std::vector<DungeonInfo> placeDungeons(voxel::Chunk& chunk, uint64_t seed, const HeightSampler& heights);
 
 struct LootStack {
     gameplay::ItemId id{gameplay::kNoItem};
@@ -62,7 +62,7 @@ struct LootStack {
 
 // The 27 slots of the dungeon chest at `pos`: 8 pickCheckLootItem draws, each into a random
 // slot, seeded by hash(worldSeed, pos). The same chest always gets the same loot.
-[[nodiscard]] std::array<world::StoredStack, world::kChestSlots> rollDungeonChestLoot(uint64_t worldSeed,
+[[nodiscard]] std::array<voxel::StoredStack, voxel::kChestSlots> rollDungeonChestLoot(uint64_t worldSeed,
                                                                                      core::BlockPos pos) noexcept;
 
 } // namespace betacraft::worldgen

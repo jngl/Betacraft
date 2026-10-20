@@ -8,7 +8,7 @@
 #include <tuple>
 #include <vector>
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 class Chunk;
 }
 
@@ -90,11 +90,11 @@ template <typename IsWater>
     return t == FeatureType::OakTree || t == FeatureType::BirchTree || t == FeatureType::PineTree;
 }
 
-[[nodiscard]] constexpr world::BlockId featureLogBlock(FeatureType t) noexcept {
+[[nodiscard]] constexpr voxel::BlockId featureLogBlock(FeatureType t) noexcept {
     switch (t) {
-        case FeatureType::BirchTree: return world::BlockId::BirchLog;
-        case FeatureType::PineTree:  return world::BlockId::PineLog;
-        default:                     return world::BlockId::OakLog;
+        case FeatureType::BirchTree: return voxel::BlockId::BirchLog;
+        case FeatureType::PineTree:  return voxel::BlockId::PineLog;
+        default:                     return voxel::BlockId::OakLog;
     }
 }
 
@@ -115,7 +115,7 @@ template <typename IsWater>
 // Geometry is a port of the legacy WorldGen::placeTree crowns (Beta 1.7.3 look).
 template <typename Fn>
 constexpr void forEachFeatureBlock(const Feature& f, Fn&& emit) {
-    using world::BlockId;
+    using voxel::BlockId;
     const core::BlockPos o = f.origin;
     const int32_t h = static_cast<int32_t>(f.height);
 
@@ -173,8 +173,8 @@ constexpr void forEachFeatureBlock(const Feature& f, Fn&& emit) {
 }
 
 // Decoration layering priority; -1 = terrain (never overwritten by decoration).
-[[nodiscard]] constexpr int decorationPriority(world::BlockId b) noexcept {
-    using world::BlockId;
+[[nodiscard]] constexpr int decorationPriority(voxel::BlockId b) noexcept {
+    using voxel::BlockId;
     switch (b) {
         case BlockId::Air: return 0;
         case BlockId::TallGrass: case BlockId::Dandelion: case BlockId::Rose: case BlockId::DeadBush: return 1;
@@ -188,8 +188,8 @@ constexpr void forEachFeatureBlock(const Feature& f, Fn&& emit) {
 // Commutative, associative merge of a decoration proposal into an existing block: the
 // result of applying any set of proposals is independent of their order, which is what
 // makes overlapping trees from different chunks identical whatever the load order.
-[[nodiscard]] constexpr world::BlockId mergeDecoration(world::BlockId existing, world::BlockId proposed) noexcept {
-    using world::BlockId;
+[[nodiscard]] constexpr voxel::BlockId mergeDecoration(voxel::BlockId existing, voxel::BlockId proposed) noexcept {
+    using voxel::BlockId;
     if (proposed == BlockId::Dirt) {
         // Only soil conversion under trunks; never creates floating dirt.
         return (existing == BlockId::Grass || existing == BlockId::SnowGrass) ? BlockId::Dirt : existing;
@@ -205,7 +205,7 @@ constexpr void forEachFeatureBlock(const Feature& f, Fn&& emit) {
 
 // Writes the part of `f` inside `chunk` through mergeDecoration. Returns the number of
 // voxels changed. Writes are generation output: not flagged as player modifications.
-uint32_t rasterizeFeature(const Feature& f, world::Chunk& chunk) noexcept;
+uint32_t rasterizeFeature(const Feature& f, voxel::Chunk& chunk) noexcept;
 
 // Tier 1 planner. Exactly one RNG draw per column in a fixed scan order, from a stream
 // seeded by (world seed, chunk coord): plans never depend on chunk generation order.
@@ -216,7 +216,7 @@ public:
     [[nodiscard]] uint64_t getSeed() const noexcept { return m_seed; }
 
     // `chunk` must hold pass-1 terrain only (terrain + caves, no decoration yet).
-    [[nodiscard]] FeaturePlan plan(const world::Chunk& chunk) const;
+    [[nodiscard]] FeaturePlan plan(const voxel::Chunk& chunk) const;
 
 private:
     uint64_t m_seed;

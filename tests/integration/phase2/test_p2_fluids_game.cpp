@@ -16,10 +16,10 @@
 using namespace betacraft;
 using fluids::FluidEvent;
 using fluids::FluidEventKind;
-using world::BlockId;
+using voxel::BlockId;
 
 TEST(P2FluidsInput, StarterInventoryCarriesPlaceableWaterAndLavaSources) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     // Only the Creative kit carries fluid sources (S1.2); Survival starts empty-handed.
     physics::Player survival;
     game::applyStarterKit(survival, core::GameMode::Survival);
@@ -30,9 +30,9 @@ TEST(P2FluidsInput, StarterInventoryCarriesPlaceableWaterAndLavaSources) {
     EXPECT_GT(player.countItem(BlockId::Water), 0);
     EXPECT_GT(player.countItem(BlockId::Lava), 0);
     // handleRightClickAction refuses item-only entries and needs a replaceable target.
-    EXPECT_FALSE(world::BlockRegistry::get(BlockId::Water).isItemOnly);
-    EXPECT_FALSE(world::BlockRegistry::get(BlockId::Lava).isItemOnly);
-    EXPECT_TRUE(world::BlockRegistry::get(BlockId::Water).replaceable) << "placing a block into water removes it";
+    EXPECT_FALSE(voxel::BlockRegistry::get(BlockId::Water).isItemOnly);
+    EXPECT_FALSE(voxel::BlockRegistry::get(BlockId::Lava).isItemOnly);
+    EXPECT_TRUE(voxel::BlockRegistry::get(BlockId::Water).replaceable) << "placing a block into water removes it";
 }
 
 TEST(P2FluidsGame, NoFizzEventsMeansSilence) {

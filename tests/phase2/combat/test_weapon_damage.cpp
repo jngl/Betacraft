@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 using namespace betacraft::gameplay;
-using betacraft::world::BlockId;
+using betacraft::voxel::BlockId;
 
 namespace {
 ItemStack tool(ToolType type, ToolMaterial mat) {

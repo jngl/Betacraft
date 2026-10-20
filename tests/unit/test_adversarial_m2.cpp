@@ -13,6 +13,7 @@
 using namespace betacraft;
 using namespace betacraft::render;
 using namespace betacraft::world;
+using namespace betacraft::voxel;
 
 // ============================================================================
 // SUITE 1: PackedChunkVertex Boundary Bit Patterns & Fuzzing

@@ -32,8 +32,8 @@ void tickTimer(bool& flag, int32_t& time, int32_t activeMin, int32_t activeRange
     return next;
 }
 
-[[nodiscard]] bool stopsRain(BlockId id) noexcept {
-    return BlockRegistry::isSolid(id) || BlockRegistry::isLiquid(id);
+[[nodiscard]] bool stopsRain(voxel::BlockId id) noexcept {
+    return voxel::BlockRegistry::isSolid(id) || voxel::BlockRegistry::isLiquid(id);
 }
 
 } // namespace
@@ -62,11 +62,11 @@ void cycleWeather(storage::WeatherState& state, gameplay::SplitMix64& rng) {
     state.thunderTime = drawDuration(state.thundering, kThunderMinTicks, kThunderRangeTicks, rng);
 }
 
-Precipitation precipitationAt(BiomeId biome) noexcept {
+Precipitation precipitationAt(voxel::BiomeId biome) noexcept {
     switch (biome) {
-        case BiomeId::Taiga:
-        case BiomeId::Tundra: return Precipitation::Snow;
-        case BiomeId::Desert: return Precipitation::None;
+        case voxel::BiomeId::Taiga:
+        case voxel::BiomeId::Tundra: return Precipitation::Snow;
+        case voxel::BiomeId::Desert: return Precipitation::None;
         default: return Precipitation::Rain;
     }
 }
@@ -92,18 +92,18 @@ bool isThundering(const storage::WeatherState& state) noexcept {
 }
 
 int32_t precipitationHeight(const World& world, int32_t x, int32_t z) noexcept {
-    const Chunk* chunk = world.getChunk({core::floorDiv(x, Chunk::WIDTH), core::floorDiv(z, Chunk::DEPTH)});
+    const voxel::Chunk* chunk = world.getChunk({core::floorDiv(x, voxel::Chunk::WIDTH), core::floorDiv(z, voxel::Chunk::DEPTH)});
     if (chunk == nullptr) {
         return 0;
     }
-    const int32_t lx = core::floorMod(x, Chunk::WIDTH);
-    const int32_t lz = core::floorMod(z, Chunk::DEPTH);
-    for (int32_t s = static_cast<int32_t>(Chunk::SECTIONS_PER_CHUNK) - 1; s >= 0; --s) {
+    const int32_t lx = core::floorMod(x, voxel::Chunk::WIDTH);
+    const int32_t lz = core::floorMod(z, voxel::Chunk::DEPTH);
+    for (int32_t s = static_cast<int32_t>(voxel::Chunk::SECTIONS_PER_CHUNK) - 1; s >= 0; --s) {
         // Sections of air (most of the sky) are skipped without reading a voxel.
         if (!chunk->getSection(static_cast<size_t>(s)).mayContain(stopsRain)) {
             continue;
         }
-        for (int32_t y = s * PalettedSection::SIZE + PalettedSection::SIZE - 1; y >= s * PalettedSection::SIZE; --y) {
+        for (int32_t y = s * voxel::PalettedSection::SIZE + voxel::PalettedSection::SIZE - 1; y >= s * voxel::PalettedSection::SIZE; --y) {
             if (stopsRain(chunk->getBlock(lx, y, lz))) {
                 return y + 1;
             }

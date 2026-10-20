@@ -22,7 +22,7 @@
 
 using namespace betacraft::lighting;
 namespace glsl = dynlight_test::glsl;
-using betacraft::world::BlockId;
+using betacraft::voxel::BlockId;
 
 namespace {
 

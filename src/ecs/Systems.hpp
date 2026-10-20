@@ -454,7 +454,7 @@ public:
     static EntityId spawnPlayer(Registry& reg, const glm::vec3& feetPos);
     static EntityId spawnItemDrop(Registry& reg, const glm::vec3& pos, gameplay::ItemId id, int32_t count,
                                   const glm::vec3& initialVelocity = glm::vec3(0.0f), int32_t damage = 0);
-    static EntityId spawnItemDrop(Registry& reg, const glm::vec3& pos, world::BlockId id, int32_t count,
+    static EntityId spawnItemDrop(Registry& reg, const glm::vec3& pos, voxel::BlockId id, int32_t count,
                                   const glm::vec3& initialVelocity = glm::vec3(0.0f)) {
         return spawnItemDrop(reg, pos, gameplay::toItemId(id), count, initialVelocity);
     }

@@ -385,48 +385,48 @@ void AudioEngine::stopAll() {
     });
 }
 
-PlayedVoice AudioEngine::playBlockStep(world::SoundCategory category, const Acoustics& acoustics) {
+PlayedVoice AudioEngine::playBlockStep(voxel::SoundCategory category, const Acoustics& acoustics) {
     switch (category) {
-        case world::SoundCategory::Grass: return triggerSound(SoundEffect::StepGrass, 0.22f, 0.90f, 1.12f, acoustics);
-        case world::SoundCategory::Dirt:  return triggerSound(SoundEffect::StepDirt,  0.22f, 0.90f, 1.12f, acoustics);
-        case world::SoundCategory::Wood:  return triggerSound(SoundEffect::StepWood,  0.25f, 0.90f, 1.10f, acoustics);
-        case world::SoundCategory::Sand:  return triggerSound(SoundEffect::StepSand,  0.22f, 0.92f, 1.12f, acoustics);
-        case world::SoundCategory::Cloth: return triggerSound(SoundEffect::StepCloth, 0.20f, 0.92f, 1.12f, acoustics);
+        case voxel::SoundCategory::Grass: return triggerSound(SoundEffect::StepGrass, 0.22f, 0.90f, 1.12f, acoustics);
+        case voxel::SoundCategory::Dirt:  return triggerSound(SoundEffect::StepDirt,  0.22f, 0.90f, 1.12f, acoustics);
+        case voxel::SoundCategory::Wood:  return triggerSound(SoundEffect::StepWood,  0.25f, 0.90f, 1.10f, acoustics);
+        case voxel::SoundCategory::Sand:  return triggerSound(SoundEffect::StepSand,  0.22f, 0.92f, 1.12f, acoustics);
+        case voxel::SoundCategory::Cloth: return triggerSound(SoundEffect::StepCloth, 0.20f, 0.92f, 1.12f, acoustics);
         default:                          return triggerSound(SoundEffect::StepStone, 0.24f, 0.90f, 1.10f, acoustics);
     }
 }
 
-PlayedVoice AudioEngine::playBlockDigHit(world::SoundCategory category, const Acoustics& acoustics) {
+PlayedVoice AudioEngine::playBlockDigHit(voxel::SoundCategory category, const Acoustics& acoustics) {
     switch (category) {
-        case world::SoundCategory::Grass: return triggerSound(SoundEffect::StepGrass, 0.18f, 0.75f, 0.92f, acoustics);
-        case world::SoundCategory::Wood:  return triggerSound(SoundEffect::StepWood,  0.20f, 0.75f, 0.92f, acoustics);
+        case voxel::SoundCategory::Grass: return triggerSound(SoundEffect::StepGrass, 0.18f, 0.75f, 0.92f, acoustics);
+        case voxel::SoundCategory::Wood:  return triggerSound(SoundEffect::StepWood,  0.20f, 0.75f, 0.92f, acoustics);
         default:                          return triggerSound(SoundEffect::StepStone, 0.20f, 0.75f, 0.92f, acoustics);
     }
 }
 
-PlayedVoice AudioEngine::playBlockBreak(world::SoundCategory category, const Acoustics& acoustics) {
+PlayedVoice AudioEngine::playBlockBreak(voxel::SoundCategory category, const Acoustics& acoustics) {
     switch (category) {
-        case world::SoundCategory::Grass:
-        case world::SoundCategory::Dirt:
-        case world::SoundCategory::Sand:
-        case world::SoundCategory::Cloth:
+        case voxel::SoundCategory::Grass:
+        case voxel::SoundCategory::Dirt:
+        case voxel::SoundCategory::Sand:
+        case voxel::SoundCategory::Cloth:
             return triggerSound(SoundEffect::BreakGrass, 0.42f, 0.85f, 1.05f, acoustics);
-        case world::SoundCategory::Wood:
+        case voxel::SoundCategory::Wood:
             return triggerSound(SoundEffect::BreakWood, 0.45f, 0.85f, 1.05f, acoustics);
-        case world::SoundCategory::Glass:
+        case voxel::SoundCategory::Glass:
             return triggerSound(SoundEffect::BreakGlass, 0.45f, 0.92f, 1.10f, acoustics);
         default:
             return triggerSound(SoundEffect::BreakStone, 0.45f, 0.84f, 1.04f, acoustics);
     }
 }
 
-PlayedVoice AudioEngine::playBlockPlace(world::SoundCategory category, const Acoustics& acoustics) {
+PlayedVoice AudioEngine::playBlockPlace(voxel::SoundCategory category, const Acoustics& acoustics) {
     switch (category) {
-        case world::SoundCategory::Wood:
+        case voxel::SoundCategory::Wood:
             return triggerSound(SoundEffect::BreakWood, 0.38f, 1.05f, 1.22f, acoustics);
-        case world::SoundCategory::Grass:
-        case world::SoundCategory::Dirt:
-        case world::SoundCategory::Sand:
+        case voxel::SoundCategory::Grass:
+        case voxel::SoundCategory::Dirt:
+        case voxel::SoundCategory::Sand:
             return triggerSound(SoundEffect::BreakGrass, 0.38f, 1.05f, 1.22f, acoustics);
         default:
             return triggerSound(SoundEffect::BreakStone, 0.38f, 1.05f, 1.22f, acoustics);

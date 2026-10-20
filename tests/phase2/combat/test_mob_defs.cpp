@@ -57,7 +57,7 @@ TEST(MobDefs, BetaValues) {
     const gameplay::MobDef& sheep = mobDef(MobKind::Sheep);
     EXPECT_EQ(sheep.maxHealth, 8);
     EXPECT_FLOAT_EQ(sheep.height, 1.3f);
-    EXPECT_EQ(sheep.drops[0].item, gameplay::toItemId(world::BlockId::Wool));
+    EXPECT_EQ(sheep.drops[0].item, gameplay::toItemId(voxel::BlockId::Wool));
     EXPECT_EQ(sheep.drops[0].min, 1);
     EXPECT_EQ(sheep.drops[0].max, 1);
 

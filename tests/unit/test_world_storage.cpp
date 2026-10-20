@@ -13,7 +13,7 @@
 #include <string_view>
 
 using namespace betacraft::storage;
-using namespace betacraft::world;
+using namespace betacraft::voxel;
 using namespace testing;
 
 TEST(WorldStorageTest, DirectoryAndLevelDataPersistence) {

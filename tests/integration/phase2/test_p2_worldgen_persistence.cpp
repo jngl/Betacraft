@@ -23,7 +23,7 @@ namespace {
 
 class P2WorldgenPersistence : public ::testing::Test {
 protected:
-    void SetUp() override { world::BlockRegistry::initialize(); }
+    void SetUp() override { voxel::BlockRegistry::initialize(); }
 };
 
 struct EdgeTree {

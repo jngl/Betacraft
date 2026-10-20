@@ -22,7 +22,7 @@ using game::WorldSession;
 
 class WorldSessionLifecycle : public ::testing::Test {
 protected:
-    void SetUp() override { world::BlockRegistry::initialize(); }
+    void SetUp() override { voxel::BlockRegistry::initialize(); }
 
     [[nodiscard]] std::unique_ptr<WorldSession> open() { return WorldSession::open(openOptions(m_dir.path())); }
     [[nodiscard]] bool levelDatExists() const { return std::filesystem::exists(m_dir.path() / "level.dat"); }
@@ -42,7 +42,7 @@ TEST_F(WorldSessionLifecycle, NewCreativeWorldGetsTheCreativeKit) {
     session->startNewWorld(core::GameMode::Creative);
     EXPECT_FALSE(session->awaitingGameMode());
     EXPECT_TRUE(session->player().isCreative());
-    EXPECT_GT(session->player().countItem(world::BlockId::Cobblestone), 0);
+    EXPECT_GT(session->player().countItem(voxel::BlockId::Cobblestone), 0);
     EXPECT_TRUE(levelDatExists()) << "the first level.dat is written with the mode";
 }
 

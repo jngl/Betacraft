@@ -15,6 +15,7 @@
 using namespace betacraft;
 using namespace betacraft::render;
 using namespace betacraft::world;
+using namespace betacraft::voxel;
 
 static int g_testsPassed = 0;
 static int g_testsFailed = 0;

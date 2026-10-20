@@ -22,7 +22,7 @@ namespace {
 
 [[nodiscard]] bool waterAt(const world::World& world, const glm::vec3& p) noexcept {
     const core::BlockPos c = cellOf(p);
-    return world::isWaterBlock(world.getBlock(c.x, c.y, c.z));
+    return voxel::isWaterBlock(world.getBlock(c.x, c.y, c.z));
 }
 
 [[nodiscard]] bool isAlive(const ecs::Registry& reg, ecs::EntityId e) noexcept {

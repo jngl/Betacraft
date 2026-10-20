@@ -102,7 +102,7 @@ TEST(PhysicsFixedStepTest, DeterminismAcrossFramerates) {
     world.ensureChunkLoaded({1, 1});
     for (int32_t x = 0; x < 32; ++x) {
         for (int32_t z = 0; z < 32; ++z) {
-            world.setBlock(x, 60, z, world::BlockId::Stone);
+            world.setBlock(x, 60, z, voxel::BlockId::Stone);
         }
     }
 
@@ -180,7 +180,7 @@ TEST(PhysicsFixedStepTest, BobbingMovesCameraButNotGameplayEye) {
     world.ensureChunkLoaded({1, 0});
     for (int32_t x = 0; x < 32; ++x) {
         for (int32_t z = 0; z < 16; ++z) {
-            world.setBlock(x, 119, z, world::BlockId::Stone);
+            world.setBlock(x, 119, z, voxel::BlockId::Stone);
         }
     }
 

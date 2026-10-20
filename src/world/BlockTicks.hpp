@@ -38,12 +38,12 @@ inline constexpr int32_t kMaxPlantColumnHeight = 3;
 // Handler per block id; nullptr for blocks without random ticks.
 extern const std::array<RandomTickFn, 256> kRandomTick;
 
-[[nodiscard]] inline bool hasRandomTick(BlockId id) noexcept {
+[[nodiscard]] inline bool hasRandomTick(voxel::BlockId id) noexcept {
     return kRandomTick[static_cast<size_t>(id)] != nullptr;
 }
 
-[[nodiscard]] constexpr bool isLogBlock(BlockId id) noexcept {
-    return id == BlockId::OakLog || id == BlockId::BirchLog || id == BlockId::PineLog;
+[[nodiscard]] constexpr bool isLogBlock(voxel::BlockId id) noexcept {
+    return id == voxel::BlockId::OakLog || id == voxel::BlockId::BirchLog || id == voxel::BlockId::PineLog;
 }
 
 // Beta BlockSapling.growTree with WorldGenTrees: an oak 4..6 logs high grows from the sapling

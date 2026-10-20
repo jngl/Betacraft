@@ -15,7 +15,7 @@
 
 using namespace betacraft;
 using namespace betacraft::test::p2worldgen;
-using world::Chunk;
+using voxel::Chunk;
 
 namespace {
 
@@ -37,7 +37,7 @@ namespace {
 } // namespace
 
 TEST(P2StorageLegacyMigration, MigratedSaveLoadsIdenticalToLegacy) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s7_migration_");
     const auto legacySave = copyReference(dir, "legacy");
     const auto migratedSave = copyReference(dir, "migrated");
@@ -64,19 +64,19 @@ TEST(P2StorageLegacyMigration, MigratedSaveLoadsIdenticalToLegacy) {
         EXPECT_EQ(legacy.isChunkDecorated(c), migrated.isChunkDecorated(c)) << "chunk " << c.x << "," << c.z;
         EXPECT_EQ(countDecoration(a), countDecoration(b)) << "chunk " << c.x << "," << c.z;
     }
-    EXPECT_EQ(migrated.getBlock(8, 120, 8), world::BlockId::Glass);
-    EXPECT_EQ(migrated.getBlock(2 * 16 + 8, 120, 8), world::BlockId::Glass);
+    EXPECT_EQ(migrated.getBlock(8, 120, 8), voxel::BlockId::Glass);
+    EXPECT_EQ(migrated.getBlock(2 * 16 + 8, 120, 8), voxel::BlockId::Glass);
 
     ASSERT_EQ(migrated.blockEntities().size(), 2U);
     for (const core::BlockPos pos : {core::BlockPos{4, 121, 4}, core::BlockPos{6, 121, 4}}) {
-        const world::BlockEntity* a = legacy.blockEntities().find(pos);
-        const world::BlockEntity* b = migrated.blockEntities().find(pos);
+        const voxel::BlockEntity* a = legacy.blockEntities().find(pos);
+        const voxel::BlockEntity* b = migrated.blockEntities().find(pos);
         ASSERT_NE(a, nullptr);
         ASSERT_NE(b, nullptr);
         EXPECT_EQ(*a, *b);
     }
-    EXPECT_EQ(std::get<world::ChestData>(*migrated.blockEntities().find({4, 121, 4})).slots[5],
-              (world::StoredStack{265, 12, 0}));
+    EXPECT_EQ(std::get<voxel::ChestData>(*migrated.blockEntities().find({4, 121, 4})).slots[5],
+              (voxel::StoredStack{265, 12, 0}));
 
     storage::WorldLevelData before;
     storage::WorldLevelData after;
@@ -94,15 +94,15 @@ TEST(P2StorageLegacyMigration, MigratedSaveLoadsIdenticalToLegacy) {
 // Without migration (it failed or has not run yet), the facade still reads the legacy files
 // and writes edits to the regions, which take precedence from then on.
 TEST(P2StorageLegacyMigration, UnmigratedSaveReadsThroughFacade) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s7_migration_");
     const auto save = copyReference(dir, "world");
     {
         world::World w(kSeed, save);
         loadAll(w, squareRegion({0, 0}, 2));
-        EXPECT_EQ(w.getBlock(8, 120, 8), world::BlockId::Glass);
+        EXPECT_EQ(w.getBlock(8, 120, 8), voxel::BlockId::Glass);
         EXPECT_EQ(w.blockEntities().size(), 2U);
-        ASSERT_TRUE(w.setBlock(8, 121, 8, world::BlockId::Obsidian));
+        ASSERT_TRUE(w.setBlock(8, 121, 8, voxel::BlockId::Obsidian));
         w.saveModifiedChunks(storage::WorldLevelData{});
         EXPECT_EQ(w.storageFormat(), storage::kLegacyStorageFormat) << "chunks/ still to migrate";
         EXPECT_TRUE(w.needsStorageMigration(storage::kLegacyStorageFormat));
@@ -115,7 +115,7 @@ TEST(P2StorageLegacyMigration, UnmigratedSaveReadsThroughFacade) {
 
     world::World w(kSeed, save);
     loadAll(w, squareRegion({0, 0}, 2));
-    EXPECT_EQ(w.getBlock(8, 121, 8), world::BlockId::Obsidian);
-    EXPECT_EQ(w.getBlock(8, 120, 8), world::BlockId::Glass);
+    EXPECT_EQ(w.getBlock(8, 121, 8), voxel::BlockId::Obsidian);
+    EXPECT_EQ(w.getBlock(8, 120, 8), voxel::BlockId::Glass);
     EXPECT_EQ(w.blockEntities().size(), 2U);
 }

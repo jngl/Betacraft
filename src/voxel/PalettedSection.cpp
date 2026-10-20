@@ -1,6 +1,6 @@
 #include "voxel/PalettedSection.hpp"
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 
 PalettedSection::PalettedSection(BlockId singleBlock, uint8_t uniformSky, uint8_t uniformBlock) noexcept
     : m_bitsPerVoxel(0),
@@ -326,4 +326,4 @@ size_t PalettedSection::getMemoryFootprintBytes() const noexcept {
     return b;
 }
 
-} // namespace betacraft::world
+} // namespace betacraft::voxel

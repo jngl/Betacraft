@@ -40,8 +40,8 @@ struct RedstoneEvent {
 };
 
 // Blocks the engine evaluates or schedules (sources, wire, torches and the consumers).
-[[nodiscard]] constexpr bool isRedstoneComponent(world::BlockId id) noexcept {
-    using world::BlockId;
+[[nodiscard]] constexpr bool isRedstoneComponent(voxel::BlockId id) noexcept {
+    using voxel::BlockId;
     switch (id) {
         case BlockId::RedstoneWire:
         case BlockId::Lever:
@@ -60,8 +60,8 @@ struct RedstoneEvent {
 }
 
 // Blocks whose scheduled updates belong to the engine.
-[[nodiscard]] constexpr bool hasRedstoneScheduledTick(world::BlockId id) noexcept {
-    using world::BlockId;
+[[nodiscard]] constexpr bool hasRedstoneScheduledTick(voxel::BlockId id) noexcept {
+    using voxel::BlockId;
     return id == BlockId::RedstoneTorchOff || id == BlockId::RedstoneTorchOn || id == BlockId::StoneButton ||
            id == BlockId::StonePressurePlate || id == BlockId::WoodPressurePlate;
 }
@@ -87,7 +87,7 @@ struct RedstoneEvent {
 // powers are kept aside and written once a network has settled. tick() spends at most
 // maxEvaluationsPerTick evaluations and carries the rest over.
 //
-// Delayed updates (torches, buttons, plates) go to a world::ScheduledTickQueue: the World's
+// Delayed updates (torches, buttons, plates) go to a voxel::ScheduledTickQueue: the World's
 // own queue when one is shared (its owner then calls runScheduledTick for the due entries of
 // redstone blocks), otherwise one the engine drains itself in tick().
 class RedstoneEngine {
@@ -98,7 +98,7 @@ public:
     static constexpr uint32_t kPlateTicks = 20;
     static constexpr uint8_t kMaxPower = 15;
 
-    explicit RedstoneEngine(IRedstoneVoxelAccess& access, world::ScheduledTickQueue* sharedQueue = nullptr,
+    explicit RedstoneEngine(IRedstoneVoxelAccess& access, voxel::ScheduledTickQueue* sharedQueue = nullptr,
                             uint32_t maxEvaluationsPerTick = kMaxEvaluationsPerTick);
 
     RedstoneEngine(const RedstoneEngine&) = delete;
@@ -143,7 +143,7 @@ public:
     // change or scheduled update).
     [[nodiscard]] size_t pendingWork() const noexcept;
     [[nodiscard]] bool idle() const noexcept { return pendingWork() == 0; }
-    [[nodiscard]] const world::ScheduledTickQueue& scheduledTicks() const noexcept { return *m_queue; }
+    [[nodiscard]] const voxel::ScheduledTickQueue& scheduledTicks() const noexcept { return *m_queue; }
     // Forgets queued work, overlay and burnout history (the World's seed or save changed).
     void clear() noexcept;
 
@@ -153,7 +153,7 @@ private:
         uint8_t oldPower{0};
     };
 
-    [[nodiscard]] world::BlockId block(const core::BlockPos& p) const noexcept { return m_access.getBlock(p); }
+    [[nodiscard]] voxel::BlockId block(const core::BlockPos& p) const noexcept { return m_access.getBlock(p); }
     [[nodiscard]] uint8_t meta(const core::BlockPos& p) const noexcept { return m_access.getMetadata(p); }
     [[nodiscard]] bool normalCube(const core::BlockPos& p) const noexcept { return m_access.isNormalCube(p); }
 
@@ -161,7 +161,7 @@ private:
     [[nodiscard]] uint8_t wirePower(const core::BlockPos& p) const;
     void setWirePower(const core::BlockPos& p, uint8_t power);
     [[nodiscard]] bool isWire(const core::BlockPos& p) const noexcept {
-        return block(p) == world::BlockId::RedstoneWire;
+        return block(p) == voxel::BlockId::RedstoneWire;
     }
     // The wire cells `p` exchanges power with (4 sides, one up, one down); returns the count.
     size_t connectedWires(const core::BlockPos& p, std::array<core::BlockPos, 4>& out) const;
@@ -190,11 +190,11 @@ private:
     void evaluateDoor(const core::BlockPos& p);
     void evaluatePiston(const core::BlockPos& p);
     void writeMetadata(const core::BlockPos& p, uint8_t value);
-    void writeBlock(const core::BlockPos& p, world::BlockId id, uint8_t value);
+    void writeBlock(const core::BlockPos& p, voxel::BlockId id, uint8_t value);
 
     IRedstoneVoxelAccess& m_access;
-    world::ScheduledTickQueue m_ownQueue;
-    world::ScheduledTickQueue* m_queue;
+    voxel::ScheduledTickQueue m_ownQueue;
+    voxel::ScheduledTickQueue* m_queue;
     bool m_sharedQueue;
     uint32_t m_budget;
     uint64_t m_now{0};
@@ -213,7 +213,7 @@ private:
     std::unordered_set<core::BlockPos> m_poweredDoors;            // Lower halves held open by power
     TorchBurnoutTracker m_burnout;
     std::vector<RedstoneEvent> m_events;
-    std::vector<world::ScheduledTickQueue::Entry> m_due; // Reused by tick()
+    std::vector<voxel::ScheduledTickQueue::Entry> m_due; // Reused by tick()
     RedstoneTickStats m_stats{}; // Switches since the last tick() returned
 };
 

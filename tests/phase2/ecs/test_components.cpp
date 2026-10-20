@@ -71,7 +71,7 @@ TEST(EcsComponents, ColliderBoundsAreFeetAnchored) {
 
 TEST(EcsComponents, ItemDropDefaults) {
     const ItemDropComp item{};
-    EXPECT_EQ(item.id, world::BlockId::Air);
+    EXPECT_EQ(item.id, voxel::BlockId::Air);
     EXPECT_EQ(item.count, 1);
     EXPECT_FLOAT_EQ(item.ageSeconds, 0.0f);
     EXPECT_GT(item.pickupDelaySeconds, 0.0f);

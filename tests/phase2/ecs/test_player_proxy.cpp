@@ -88,7 +88,7 @@ TEST(PlayerProxy, NoSystemMovesTheProxy) {
 }
 
 TEST(PlayerProxy, MeleeTargetNeverReturnsTheProxy) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     game::EntitySimulation session{3ULL};
     physics::Player player;
     player.setPosition({0.5f, 64.0f, 0.5f});
@@ -215,7 +215,7 @@ namespace {
 // No chunk is loaded, so World::getBlock reads air everywhere: line of sight is always clear.
 struct EmptyWorld {
     EmptyWorld() {
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         world = std::make_unique<world::World>(7ULL, dir.path());
     }
     test::TempDir dir{"betacraft_proxy_world_"};
@@ -269,11 +269,11 @@ TEST(PlayerProxy, NoAcquisitionOutOfRangeOrBehindAWall) {
     reg.get<MobAIComp>(far).stateTimer = 1.0e6f;
     reg.get<MobAIComp>(hidden).stateTimer = 1.0e6f;
     // A stone wall between the hidden zombie and the player, from the feet to above the eyes.
-    world::Chunk& chunk = w.world->ensureChunkLoaded({0, 0});
-    for (int32_t y = 0; y < world::Chunk::HEIGHT; ++y) {
-        for (int32_t z = 0; z < world::Chunk::DEPTH; ++z) {
-            for (int32_t x = 0; x < world::Chunk::WIDTH; ++x) {
-                chunk.setBlock(x, y, z, (z == 4 && y >= 64 && y <= 67) ? world::BlockId::Stone : world::BlockId::Air,
+    voxel::Chunk& chunk = w.world->ensureChunkLoaded({0, 0});
+    for (int32_t y = 0; y < voxel::Chunk::HEIGHT; ++y) {
+        for (int32_t z = 0; z < voxel::Chunk::DEPTH; ++z) {
+            for (int32_t x = 0; x < voxel::Chunk::WIDTH; ++x) {
+                chunk.setBlock(x, y, z, (z == 4 && y >= 64 && y <= 67) ? voxel::BlockId::Stone : voxel::BlockId::Air,
                                false);
             }
         }
@@ -284,8 +284,8 @@ TEST(PlayerProxy, NoAcquisitionOutOfRangeOrBehindAWall) {
 
     // The wall goes away: the zombie behind it now sees the player.
     for (int32_t y = 64; y <= 67; ++y) {
-        for (int32_t x = 0; x < world::Chunk::WIDTH; ++x) {
-            chunk.setBlock(x, y, 4, world::BlockId::Air, false);
+        for (int32_t x = 0; x < voxel::Chunk::WIDTH; ++x) {
+            chunk.setBlock(x, y, 4, voxel::BlockId::Air, false);
         }
     }
     acquire(reg, *w.world, proxy, core::GameMode::Survival, 0, game::kTargetSearchIntervalTicks);
@@ -356,11 +356,11 @@ TEST(PlayerProxy, MeleeContactThroughAWallNeedsLineOfSight) {
     // Beta EntityCreature only attacks a target it can see: a zombie pressed against the
     // other side of a one-block wall must not hit the player through it.
     EmptyWorld w;
-    world::Chunk& chunk = w.world->ensureChunkLoaded({0, 0});
-    for (int32_t y = 0; y < world::Chunk::HEIGHT; ++y) {
-        for (int32_t z = 0; z < world::Chunk::DEPTH; ++z) {
-            for (int32_t x = 0; x < world::Chunk::WIDTH; ++x) {
-                chunk.setBlock(x, y, z, (x == 4 && y >= 64 && y <= 66) ? world::BlockId::Stone : world::BlockId::Air,
+    voxel::Chunk& chunk = w.world->ensureChunkLoaded({0, 0});
+    for (int32_t y = 0; y < voxel::Chunk::HEIGHT; ++y) {
+        for (int32_t z = 0; z < voxel::Chunk::DEPTH; ++z) {
+            for (int32_t x = 0; x < voxel::Chunk::WIDTH; ++x) {
+                chunk.setBlock(x, y, z, (x == 4 && y >= 64 && y <= 66) ? voxel::BlockId::Stone : voxel::BlockId::Air,
                                false);
             }
         }
@@ -377,8 +377,8 @@ TEST(PlayerProxy, MeleeContactThroughAWallNeedsLineOfSight) {
 
     // The wall goes away: the same contact now lands.
     for (int32_t y = 64; y <= 66; ++y) {
-        for (int32_t z = 0; z < world::Chunk::DEPTH; ++z) {
-            chunk.setBlock(4, y, z, world::BlockId::Air, false);
+        for (int32_t z = 0; z < voxel::Chunk::DEPTH; ++z) {
+            chunk.setBlock(4, y, z, voxel::BlockId::Air, false);
         }
     }
     const std::vector<game::MobMeleeHit> hits = game::meleeContact(reg, *w.world, proxy);

@@ -123,7 +123,7 @@ void tick(Registry& reg, const MovementParams& params = {}) {
 
 TEST(EcsBetaParity, AirborneItemLosesTwoPercentPerTickOnEveryAxis) {
     Registry reg;
-    const EntityId e = EntityFactory::spawnItemDrop(reg, {0.5f, 50.0f, 0.5f}, world::BlockId::Dirt, 1,
+    const EntityId e = EntityFactory::spawnItemDrop(reg, {0.5f, 50.0f, 0.5f}, voxel::BlockId::Dirt, 1,
                                                     {10.0f, 10.0f, -10.0f});
     MovementParams noGravity;
     noGravity.gravity = 0.0f;
@@ -139,7 +139,7 @@ TEST(EcsBetaParity, AirborneItemLosesTwoPercentPerTickOnEveryAxis) {
 
 TEST(EcsBetaParity, GroundedItemStopsSlidingWithinAFewTicks) {
     Registry reg;
-    const EntityId e = EntityFactory::spawnItemDrop(reg, {0.5f, 0.0f, 0.5f}, world::BlockId::Dirt, 1,
+    const EntityId e = EntityFactory::spawnItemDrop(reg, {0.5f, 0.0f, 0.5f}, voxel::BlockId::Dirt, 1,
                                                     {4.0f, 0.0f, 0.0f});
     tick(reg);
     ASSERT_TRUE(reg.get<VelocityComp>(e).onGround);

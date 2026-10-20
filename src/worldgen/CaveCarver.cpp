@@ -69,8 +69,8 @@ ColumnContext CaveCarver::resolveColumn(const ColumnSampler& sampler, int32_t wx
     return guardColumn(sampler.sampleColumn(wx, wz), neighbours);
 }
 
-ColumnContext CaveCarver::scanColumn(const world::Chunk& chunk, int32_t lx, int32_t lz) noexcept {
-    return scanColumnBlocks([&](int32_t y) noexcept { return chunk.getBlock(lx, y, lz); }, world::Chunk::HEIGHT);
+ColumnContext CaveCarver::scanColumn(const voxel::Chunk& chunk, int32_t lx, int32_t lz) noexcept {
+    return scanColumnBlocks([&](int32_t y) noexcept { return chunk.getBlock(lx, y, lz); }, voxel::Chunk::HEIGHT);
 }
 
 bool CaveCarver::excavatesAt(int32_t wx, int32_t wy, int32_t wz, const ColumnSampler& sampler,
@@ -80,19 +80,19 @@ bool CaveCarver::excavatesAt(int32_t wx, int32_t wy, int32_t wz, const ColumnSam
     return palette.providesLava() || getExcavationFill(wx, wy, wz) != CaveFill::Lava;
 }
 
-CarveStats CaveCarver::carveChunk(world::Chunk& chunk, const ColumnSampler& sampler,
+CarveStats CaveCarver::carveChunk(voxel::Chunk& chunk, const ColumnSampler& sampler,
                                   const CaveFillPalette& palette) const noexcept {
     CarveStats stats{};
-    const int32_t baseX = chunk.getCoord().x * world::Chunk::WIDTH;
-    const int32_t baseZ = chunk.getCoord().z * world::Chunk::DEPTH;
+    const int32_t baseX = chunk.getCoord().x * voxel::Chunk::WIDTH;
+    const int32_t baseZ = chunk.getCoord().z * voxel::Chunk::DEPTH;
 
-    for (int32_t lz = 0; lz < world::Chunk::DEPTH; ++lz) {
-        for (int32_t lx = 0; lx < world::Chunk::WIDTH; ++lx) {
+    for (int32_t lz = 0; lz < voxel::Chunk::DEPTH; ++lz) {
+        for (int32_t lx = 0; lx < voxel::Chunk::WIDTH; ++lx) {
             const int32_t wx = baseX + lx;
             const int32_t wz = baseZ + lz;
             // One guarded column lookup per column, not per voxel.
             const ColumnContext column = resolveColumn(sampler, wx, wz);
-            const int32_t yMax = std::min(world::Chunk::HEIGHT - 1,
+            const int32_t yMax = std::min(voxel::Chunk::HEIGHT - 1,
                                           column.surfaceHeight - static_cast<int32_t>(LAND_CEILING_OFFSET) - 1);
             // Same decision as isAquiferSeal, hoisted: 5 aquifer samples per column, not per voxel.
             const bool sealColumn = isAquiferSealColumn(wx, wz);

@@ -13,7 +13,7 @@ using namespace betacraft;
 using namespace testing;
 
 TEST(PersistenceIntegrationTest, ModifySaveAndReloadWorld) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir tempDir;
 
     // Phase 1: create world, load chunks, modify blocks
@@ -22,9 +22,9 @@ TEST(PersistenceIntegrationTest, ModifySaveAndReloadWorld) {
         world1.ensureChunkLoaded({0, 0});
         world1.ensureChunkLoaded({-1, 2});
 
-        world1.setBlock(5, 75, 5, world::BlockId::TNT);
-        world1.setBlock(5, 76, 5, world::BlockId::Torch);
-        world1.setBlock(-10, 68, 35, world::BlockId::DiamondOre);
+        world1.setBlock(5, 75, 5, voxel::BlockId::TNT);
+        world1.setBlock(5, 76, 5, voxel::BlockId::Torch);
+        world1.setBlock(-10, 68, 35, voxel::BlockId::DiamondOre);
 
         const storage::WorldLevelData saveLevel{
             .seed = 173173ULL,
@@ -52,41 +52,41 @@ TEST(PersistenceIntegrationTest, ModifySaveAndReloadWorld) {
 
         // Load modified chunk and check blocks
         world2.ensureChunkLoaded({0, 0});
-        EXPECT_EQ(world2.getBlock(5, 75, 5), world::BlockId::TNT);
-        EXPECT_EQ(world2.getBlock(5, 76, 5), world::BlockId::Torch);
+        EXPECT_EQ(world2.getBlock(5, 75, 5), voxel::BlockId::TNT);
+        EXPECT_EQ(world2.getBlock(5, 76, 5), voxel::BlockId::Torch);
 
         world2.ensureChunkLoaded({-1, 2});
-        EXPECT_EQ(world2.getBlock(-10, 68, 35), world::BlockId::DiamondOre);
+        EXPECT_EQ(world2.getBlock(-10, 68, 35), voxel::BlockId::DiamondOre);
     }
 }
 
 // S5.4: the metadata of the shaped blocks (door state, ladder side, crop stage) survives a
 // save cycle through the chunk RLE (format v2 carries the nibble).
 TEST(PersistenceIntegrationTest, ShapedBlockMetadataSurvivesRestart) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir tempDir;
     constexpr uint8_t kOpenDoor = 0x4 | 0x1;
     {
         world::World world1(173173ULL, tempDir.path());
         world1.ensureChunkLoaded({0, 0});
-        ASSERT_TRUE(world1.setBlockWithMetadata(3, 100, 3, world::BlockId::WoodDoor, kOpenDoor));
-        ASSERT_TRUE(world1.setBlockWithMetadata(3, 101, 3, world::BlockId::WoodDoor, 0x8 | kOpenDoor));
-        ASSERT_TRUE(world1.setBlock(6, 100, 3, world::BlockId::Stone));
-        ASSERT_TRUE(world1.setBlockWithMetadata(5, 100, 3, world::BlockId::Ladder, 4));
-        ASSERT_TRUE(world1.setBlock(8, 100, 3, world::BlockId::Farmland));
-        ASSERT_TRUE(world1.setBlockWithMetadata(8, 101, 3, world::BlockId::Crops, 5));
+        ASSERT_TRUE(world1.setBlockWithMetadata(3, 100, 3, voxel::BlockId::WoodDoor, kOpenDoor));
+        ASSERT_TRUE(world1.setBlockWithMetadata(3, 101, 3, voxel::BlockId::WoodDoor, 0x8 | kOpenDoor));
+        ASSERT_TRUE(world1.setBlock(6, 100, 3, voxel::BlockId::Stone));
+        ASSERT_TRUE(world1.setBlockWithMetadata(5, 100, 3, voxel::BlockId::Ladder, 4));
+        ASSERT_TRUE(world1.setBlock(8, 100, 3, voxel::BlockId::Farmland));
+        ASSERT_TRUE(world1.setBlockWithMetadata(8, 101, 3, voxel::BlockId::Crops, 5));
         world1.saveModifiedChunks(storage::WorldLevelData{.seed = 173173ULL});
     }
     {
         world::World world2(173173ULL, tempDir.path());
         world2.ensureChunkLoaded({0, 0});
-        EXPECT_EQ(world2.getBlock(3, 100, 3), world::BlockId::WoodDoor);
+        EXPECT_EQ(world2.getBlock(3, 100, 3), voxel::BlockId::WoodDoor);
         EXPECT_EQ(world2.getMetadata(3, 100, 3), kOpenDoor);
-        EXPECT_EQ(world2.getBlock(3, 101, 3), world::BlockId::WoodDoor);
+        EXPECT_EQ(world2.getBlock(3, 101, 3), voxel::BlockId::WoodDoor);
         EXPECT_EQ(world2.getMetadata(3, 101, 3), 0x8 | kOpenDoor);
-        EXPECT_EQ(world2.getBlock(5, 100, 3), world::BlockId::Ladder);
+        EXPECT_EQ(world2.getBlock(5, 100, 3), voxel::BlockId::Ladder);
         EXPECT_EQ(world2.getMetadata(5, 100, 3), 4);
-        EXPECT_EQ(world2.getBlock(8, 101, 3), world::BlockId::Crops);
+        EXPECT_EQ(world2.getBlock(8, 101, 3), voxel::BlockId::Crops);
         EXPECT_EQ(world2.getMetadata(8, 101, 3), 5);
     }
 }
@@ -94,7 +94,7 @@ TEST(PersistenceIntegrationTest, ShapedBlockMetadataSurvivesRestart) {
 // S5.8: the bed the player slept in (level.dat key "bed") and the spawn point next to it
 // survive a restart; a level.dat without the key has no bed spawn.
 TEST(PersistenceIntegrationTest, BedSpawnSurvivesRestart) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir tempDir;
     {
         world::World world1(173173ULL, tempDir.path());
@@ -120,14 +120,14 @@ TEST(PersistenceIntegrationTest, BedSpawnSurvivesRestart) {
 // S1.7: the player's inventory (wear included), health, air, selection, mode and the spawn
 // point survive a restart through level.dat V2, even saved with the crafting screen open.
 TEST(PersistenceIntegrationTest, PlayerInventoryHealthSpawnSurviveRestart) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir tempDir;
     const glm::vec3 spawn{8.5f, 70.01f, 8.5f};
 
     physics::Player before;
     before.setGameMode(core::GameMode::Survival);
     before.setInventorySlot(0, physics::InventorySlot{gameplay::items::StonePickaxe, 1, 37}); // Worn
-    before.setInventorySlot(3, {world::BlockId::Cobblestone, 40});
+    before.setInventorySlot(3, {voxel::BlockId::Cobblestone, 40});
     before.setInventorySlot(20, physics::InventorySlot{gameplay::items::IronIngot, 7});
     before.setSelectedSlot(3);
     before.setHealth(13);
@@ -135,14 +135,14 @@ TEST(PersistenceIntegrationTest, PlayerInventoryHealthSpawnSurviveRestart) {
 
     // The crafting screen is open: two planks in the grid and torches on the cursor.
     game::InventoryCrafting screen;
-    before.setInventorySlot(30, {world::BlockId::OakPlanks, 2});
-    before.setInventorySlot(31, {world::BlockId::Torch, 5});
+    before.setInventorySlot(30, {voxel::BlockId::OakPlanks, 2});
+    before.setInventorySlot(31, {voxel::BlockId::Torch, 5});
     (void)screen.open(crafting::GridSize::Inventory2x2, before);
     ASSERT_TRUE(screen.clickInventorySlot(before, 30));
     ASSERT_TRUE(screen.clickGridSlot(0));
     ASSERT_TRUE(screen.clickInventorySlot(before, 31));
-    ASSERT_EQ(before.countItem(world::BlockId::OakPlanks), 0);
-    ASSERT_EQ(before.countItem(world::BlockId::Torch), 0);
+    ASSERT_EQ(before.countItem(voxel::BlockId::OakPlanks), 0);
+    ASSERT_EQ(before.countItem(voxel::BlockId::Torch), 0);
     const std::vector<physics::InventorySlot> pending = screen.pendingStacks();
     ASSERT_EQ(pending.size(), 2U);
 
@@ -174,10 +174,10 @@ TEST(PersistenceIntegrationTest, PlayerInventoryHealthSpawnSurviveRestart) {
     EXPECT_EQ(after.breath().air, 150);
     EXPECT_EQ(after.getSelectedSlot(), 3);
     EXPECT_EQ(after.getInventorySlot(0), (physics::InventorySlot{gameplay::items::StonePickaxe, 1, 37}));
-    EXPECT_EQ(after.getInventorySlot(3), (physics::InventorySlot{world::BlockId::Cobblestone, 40}));
+    EXPECT_EQ(after.getInventorySlot(3), (physics::InventorySlot{voxel::BlockId::Cobblestone, 40}));
     EXPECT_EQ(after.getInventorySlot(20), (physics::InventorySlot{gameplay::items::IronIngot, 7}));
-    EXPECT_EQ(after.countItem(world::BlockId::OakPlanks), 2) << "the grid was saved";
-    EXPECT_EQ(after.countItem(world::BlockId::Torch), 5) << "the cursor stack was saved";
+    EXPECT_EQ(after.countItem(voxel::BlockId::OakPlanks), 2) << "the grid was saved";
+    EXPECT_EQ(after.countItem(voxel::BlockId::Torch), 5) << "the cursor stack was saved";
     // The open screen itself was not touched by the capture.
     EXPECT_EQ(screen.pendingStacks().size(), 2U);
 }
@@ -185,18 +185,18 @@ TEST(PersistenceIntegrationTest, PlayerInventoryHealthSpawnSurviveRestart) {
 // restorePlayer never trusts the file: counts, health, air and selection are clamped and
 // unknown ids empty their slot.
 TEST(PersistenceIntegrationTest, RestorePlayerClampsSavedValues) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     storage::PlayerSaveData data{};
     data.health = 99;
     data.air = -500;
     data.selectedSlot = 42;
-    data.inventory[0] = {static_cast<uint16_t>(world::BlockId::Cobblestone), 500, 0};
+    data.inventory[0] = {static_cast<uint16_t>(voxel::BlockId::Cobblestone), 500, 0};
     data.inventory[1] = {gameplay::items::IronSword, 9, 12};
     data.inventory[2] = {1000, 3, 0};  // No such item
-    data.inventory[3] = {static_cast<uint16_t>(world::BlockId::Dirt), 0, 0};
+    data.inventory[3] = {static_cast<uint16_t>(voxel::BlockId::Dirt), 0, 0};
 
     physics::Player player;
-    player.setInventorySlot(3, {world::BlockId::Stone, 1});
+    player.setInventorySlot(3, {voxel::BlockId::Stone, 1});
     game::restorePlayer(player, data);
     EXPECT_EQ(player.getHealth(), 20);
     EXPECT_EQ(player.breath().air, 0);
@@ -214,7 +214,7 @@ TEST(PersistenceIntegrationTest, RestorePlayerClampsSavedValues) {
 // S6.8: worn armor round-trips through level.dat (`armor` keys, no version change), and a
 // level.dat without them loads with the armor slots empty.
 TEST(PersistenceIntegrationTest, ArmorSurvivesRestart) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir tempDir;
     const gameplay::ItemId helmet = gameplay::armorItemId(gameplay::ArmorMaterial::Iron, gameplay::ArmorSlot::Helmet);
     const gameplay::ItemId boots = gameplay::armorItemId(gameplay::ArmorMaterial::Diamond, gameplay::ArmorSlot::Boots);

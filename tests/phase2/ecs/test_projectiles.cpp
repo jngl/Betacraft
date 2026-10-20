@@ -30,7 +30,7 @@ constexpr int32_t kY = 120; // Open sky above the generated terrain
 class ProjectilesTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         m_world = std::make_unique<world::World>(173ULL, m_dir.path());
         for (int cx = -1; cx <= 1; ++cx)
             for (int cz = -1; cz <= 1; ++cz) m_world->ensureChunkLoaded({cx, cz});
@@ -92,8 +92,8 @@ TEST_F(ProjectilesTest, ArrowsFallWithBetaGravityAndDrag) {
 }
 
 TEST_F(ProjectilesTest, ArrowsStickInBlocksThenVanishAfter1200Ticks) {
-    ASSERT_TRUE(m_world->setBlock(4, kY, 0, world::BlockId::Stone));
-    ASSERT_TRUE(m_world->setBlock(4, kY - 1, 0, world::BlockId::Stone));
+    ASSERT_TRUE(m_world->setBlock(4, kY, 0, voxel::BlockId::Stone));
+    ASSERT_TRUE(m_world->setBlock(4, kY - 1, 0, voxel::BlockId::Stone));
     const EntityId arrow = game::spawnArrow(m_reg, {0.5f, kY + 0.5f, 0.5f}, {12.0f, 0.0f, 0.0f}, NULL_ENTITY);
     int32_t stuck = 0;
     for (int i = 0; i < 20 && stuck == 0; ++i) stuck += step().stuck;
@@ -113,19 +113,19 @@ TEST_F(ProjectilesTest, ArrowsStickInBlocksThenVanishAfter1200Ticks) {
 }
 
 TEST_F(ProjectilesTest, AStuckArrowFallsWhenItsBlockGoes) {
-    ASSERT_TRUE(m_world->setBlock(2, kY, 0, world::BlockId::Stone));
+    ASSERT_TRUE(m_world->setBlock(2, kY, 0, voxel::BlockId::Stone));
     const EntityId arrow = game::spawnArrow(m_reg, {0.5f, kY + 0.5f, 0.5f}, {12.0f, 0.0f, 0.0f}, NULL_ENTITY);
     for (int i = 0; i < 20; ++i) (void)step();
     ASSERT_TRUE(m_reg.get<ArrowComp>(arrow).inGround);
     const float stuckY = m_reg.get<TransformComp>(arrow).pos.y;
-    ASSERT_TRUE(m_world->setBlock(2, kY, 0, world::BlockId::Air));
+    ASSERT_TRUE(m_world->setBlock(2, kY, 0, voxel::BlockId::Air));
     for (int i = 0; i < 5; ++i) (void)step();
     EXPECT_FALSE(m_reg.get<ArrowComp>(arrow).inGround);
     EXPECT_LT(m_reg.get<TransformComp>(arrow).pos.y, stuckY - 0.2f);
 }
 
 TEST_F(ProjectilesTest, ArrowsPassThroughTallGrassAndFlowers) {
-    ASSERT_TRUE(m_world->setBlock(2, kY, 0, world::BlockId::TallGrass));
+    ASSERT_TRUE(m_world->setBlock(2, kY, 0, voxel::BlockId::TallGrass));
     const EntityId arrow = game::spawnArrow(m_reg, {0.5f, kY + 0.5f, 0.5f}, {12.0f, 0.0f, 0.0f}, NULL_ENTITY);
     for (int i = 0; i < 2; ++i) (void)step();
     EXPECT_FALSE(m_reg.get<ArrowComp>(arrow).inGround);

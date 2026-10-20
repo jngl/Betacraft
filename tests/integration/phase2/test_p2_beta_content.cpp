@@ -165,8 +165,8 @@ TEST_F(S6BetaContent, FullBucketPoursASourceThatFlows) {
     EXPECT_EQ(m_player.getHeldItem().id, items::Bucket);
     // The simulation woke up: the source spills down onto the floor.
     for (int i = 0; i < 40; ++i) (void)m_world->tick();
-    EXPECT_TRUE(world::isWaterBlock(m_world->getBlock(4, kY, 2)));
-    EXPECT_TRUE(world::isWaterBlock(m_world->getBlock(4, kEyeY, 2)));
+    EXPECT_TRUE(voxel::isWaterBlock(m_world->getBlock(4, kY, 2)));
+    EXPECT_TRUE(voxel::isWaterBlock(m_world->getBlock(4, kEyeY, 2)));
 }
 
 TEST_F(S6BetaContent, FullBucketSeesThroughLiquidsAndNeedsAReplaceableCell) {
@@ -177,7 +177,7 @@ TEST_F(S6BetaContent, FullBucketSeesThroughLiquidsAndNeedsAReplaceableCell) {
     const std::optional<game::ItemUseResult> poured = game::useHeldBucket(*m_world, m_player);
     ASSERT_TRUE(poured.has_value());
     EXPECT_EQ(poured->pos, (core::BlockPos{5, kEyeY, 2}));
-    EXPECT_TRUE(world::isLavaBlock(m_world->getBlock(5, kEyeY, 2)));
+    EXPECT_TRUE(voxel::isLavaBlock(m_world->getBlock(5, kEyeY, 2)));
 
     // Pouring into a source of the same liquid changes nothing and keeps the bucket full.
     hold({items::LavaBucket, 1, 0});
@@ -323,7 +323,7 @@ TEST_F(S6BetaContent, ExplosionDropsADoorAtMostOnce) {
         clearItems();
         ASSERT_TRUE(m_world->setBlock(8, kY - 1, 8, BlockId::Stone));
         ASSERT_TRUE(m_world->setBlockWithMetadata(8, kY, 8, BlockId::WoodDoor, 0));
-        ASSERT_TRUE(m_world->setBlockWithMetadata(8, kY + 1, 8, BlockId::WoodDoor, world::kDoorUpperBit));
+        ASSERT_TRUE(m_world->setBlockWithMetadata(8, kY + 1, 8, BlockId::WoodDoor, voxel::kDoorUpperBit));
         m_session.explode(*m_world, m_player, {9.5f, kY + 0.5f, 8.5f}, game::kTntPower, ecs::NULL_ENTITY);
         // The stone under it may go first: the door then breaks for lack of support and drops
         // on the next tick, while the blast skips its now empty cells.
@@ -777,21 +777,21 @@ TEST_F(S6BetaContent, DungeonChestDrawsTheSameLootOnFirstAccess) {
     const core::BlockPos pos{6, kY, 6};
     ASSERT_TRUE(m_world->setBlockWithMetadata(pos.x, pos.y, pos.z, BlockId::Chest, worldgen::kChestLootPendingMeta));
     const auto expected = worldgen::rollDungeonChestLoot(m_world->getSeed(), pos);
-    ASSERT_TRUE(std::any_of(expected.begin(), expected.end(), [](const world::StoredStack& s) { return !s.empty(); }))
+    ASSERT_TRUE(std::any_of(expected.begin(), expected.end(), [](const voxel::StoredStack& s) { return !s.empty(); }))
         << "pick a position whose chest is not empty";
 
     ASSERT_TRUE(game::fillDungeonChest(*m_world, pos));
     EXPECT_EQ(m_world->getMetadata(pos), 0);
-    const world::BlockEntity* entity = m_world->blockEntities().find(pos);
+    const voxel::BlockEntity* entity = m_world->blockEntities().find(pos);
     ASSERT_NE(entity, nullptr);
-    const auto* chest = std::get_if<world::ChestData>(entity);
+    const auto* chest = std::get_if<voxel::ChestData>(entity);
     ASSERT_NE(chest, nullptr);
     EXPECT_EQ(chest->slots, expected);
 
     // Second access: nothing is drawn again (the player may have emptied it).
-    std::get<world::ChestData>(m_world->blockEntities().getOrCreate(pos, BlockId::Chest)).slots = {};
+    std::get<voxel::ChestData>(m_world->blockEntities().getOrCreate(pos, BlockId::Chest)).slots = {};
     EXPECT_FALSE(game::fillDungeonChest(*m_world, pos));
-    EXPECT_EQ(std::get<world::ChestData>(*m_world->blockEntities().find(pos)).slots, world::ChestData{}.slots);
+    EXPECT_EQ(std::get<voxel::ChestData>(*m_world->blockEntities().find(pos)).slots, voxel::ChestData{}.slots);
     // An ordinary chest is left alone.
     const core::BlockPos plain{8, kY, 6};
     ASSERT_TRUE(m_world->setBlock(plain, BlockId::Chest));
@@ -805,7 +805,7 @@ TEST_F(S6BetaContent, BreakingAnUnopenedDungeonChestSpillsItsLoot) {
     ASSERT_TRUE(m_world->setBlockWithMetadata(pos.x, pos.y, pos.z, BlockId::Chest, worldgen::kChestLootPendingMeta));
     const auto loot = worldgen::rollDungeonChestLoot(m_world->getSeed(), pos);
     int32_t total = 0;
-    for (const world::StoredStack& s : loot) total += s.count;
+    for (const voxel::StoredStack& s : loot) total += s.count;
     ASSERT_GT(total, 0);
     hold({items::IronAxe, 1, 0});
     const MineResult r = mine(pos);
@@ -887,7 +887,7 @@ TEST_F(S6BetaContent, SpawnerKindsFollowBeta) {
 }
 
 TEST_F(S6BetaContent, MobSpawnerBlockIsBetas) {
-    const world::BlockDef& def = world::BlockRegistry::get(BlockId::MobSpawner);
+    const voxel::BlockDef& def = voxel::BlockRegistry::get(BlockId::MobSpawner);
     EXPECT_EQ(static_cast<int>(BlockId::MobSpawner), 52);
     EXPECT_FLOAT_EQ(def.hardness, 5.0f);
     EXPECT_TRUE(def.solid);

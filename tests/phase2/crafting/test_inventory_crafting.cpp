@@ -24,7 +24,7 @@ using game::InventoryCrafting;
 using game::SlotButton;
 using physics::InventorySlot;
 using physics::Player;
-using world::BlockId;
+using voxel::BlockId;
 namespace items = gameplay::items;
 using gameplay::toItemId;
 
@@ -145,21 +145,21 @@ class ContainerScreenTest : public InventoryCraftingTest {
 protected:
     void SetUp() override {
         InventoryCraftingTest::SetUp();
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         m_world = std::make_unique<world::World>(1234ULL, m_dir.path());
         (void)m_world->ensureChunkLoaded({0, 0});
     }
 
-    world::FurnaceData& placeFurnace() {
+    voxel::FurnaceData& placeFurnace() {
         EXPECT_TRUE(m_world->setBlock(kContainerPos, BlockId::Furnace));
-        auto& f = std::get<world::FurnaceData>(m_world->blockEntities().getOrCreate(kContainerPos, BlockId::Furnace));
+        auto& f = std::get<voxel::FurnaceData>(m_world->blockEntities().getOrCreate(kContainerPos, BlockId::Furnace));
         EXPECT_TRUE(m_ui.openContainer(ui::ScreenKind::Furnace, kContainerPos, m_player).empty());
         return f;
     }
 
-    world::ChestData& placeChest() {
+    voxel::ChestData& placeChest() {
         EXPECT_TRUE(m_world->setBlock(kContainerPos, BlockId::Chest));
-        auto& c = std::get<world::ChestData>(m_world->blockEntities().getOrCreate(kContainerPos, BlockId::Chest));
+        auto& c = std::get<voxel::ChestData>(m_world->blockEntities().getOrCreate(kContainerPos, BlockId::Chest));
         EXPECT_TRUE(m_ui.openContainer(ui::ScreenKind::Chest, kContainerPos, m_player).empty());
         return c;
     }
@@ -171,7 +171,7 @@ protected:
 } // namespace
 
 TEST_F(ContainerScreenTest, FurnaceOutputIsTakeOnly) {
-    world::FurnaceData& f = placeFurnace();
+    voxel::FurnaceData& f = placeFurnace();
     EXPECT_EQ(m_ui.kind(), ui::ScreenKind::Furnace);
     ASSERT_TRUE(m_ui.containerPos().has_value());
     EXPECT_EQ(m_ui.containerSlotCount(), 3U);
@@ -183,8 +183,8 @@ TEST_F(ContainerScreenTest, FurnaceOutputIsTakeOnly) {
     EXPECT_TRUE(m_ui.clickContainerSlot(*m_world, ui::kFurnaceInputSlot));
     ASSERT_TRUE(m_ui.clickInventorySlot(m_player, 1));
     EXPECT_TRUE(m_ui.clickContainerSlot(*m_world, ui::kFurnaceFuelSlot));
-    EXPECT_EQ(f.input, (world::StoredStack{toItemId(BlockId::IronOre), 8, 0}));
-    EXPECT_EQ(f.fuel, (world::StoredStack{items::Coal, 1, 0}));
+    EXPECT_EQ(f.input, (voxel::StoredStack{toItemId(BlockId::IronOre), 8, 0}));
+    EXPECT_EQ(f.fuel, (voxel::StoredStack{items::Coal, 1, 0}));
     EXPECT_EQ(m_ui.containerSlot(*m_world, ui::kFurnaceInputSlot), InventorySlot(BlockId::IronOre, 8));
 
     // Nothing can be put down in (or swapped into) the output.
@@ -206,13 +206,13 @@ TEST_F(ContainerScreenTest, FurnaceOutputIsTakeOnly) {
     f.output = {items::IronIngot, 6, 0};
     EXPECT_TRUE(m_ui.clickContainerSlot(*m_world, ui::kFurnaceOutputSlot, SlotButton::Right));
     EXPECT_EQ(m_ui.carried(), InventorySlot(items::IronIngot, 3));
-    EXPECT_EQ(f.output, (world::StoredStack{items::IronIngot, 3, 0}));
+    EXPECT_EQ(f.output, (voxel::StoredStack{items::IronIngot, 3, 0}));
     EXPECT_FALSE(m_ui.clickContainerSlot(*m_world, ui::kFurnaceSlotCount)); // out of range
 }
 
 TEST_F(ContainerScreenTest, ChestSlotsMergeAndSwapLikeInventory) {
-    world::ChestData& c = placeChest();
-    EXPECT_EQ(m_ui.containerSlotCount(), world::kChestSlots);
+    voxel::ChestData& c = placeChest();
+    EXPECT_EQ(m_ui.containerSlotCount(), voxel::kChestSlots);
     c.slots[0] = {toItemId(BlockId::Dirt), 30, 0};
     c.slots[26] = {toItemId(BlockId::Sand), 5, 0};
     m_player.setInventorySlot(0, {BlockId::Dirt, 40});
@@ -220,15 +220,15 @@ TEST_F(ContainerScreenTest, ChestSlotsMergeAndSwapLikeInventory) {
 
     ASSERT_TRUE(m_ui.clickInventorySlot(m_player, 0));                // pick up 40 dirt
     EXPECT_TRUE(m_ui.clickContainerSlot(*m_world, 0));                // merge up to 64
-    EXPECT_EQ(c.slots[0], (world::StoredStack{toItemId(BlockId::Dirt), 64, 0}));
+    EXPECT_EQ(c.slots[0], (voxel::StoredStack{toItemId(BlockId::Dirt), 64, 0}));
     EXPECT_EQ(m_ui.carried(), InventorySlot(BlockId::Dirt, 6));
     EXPECT_TRUE(m_ui.clickContainerSlot(*m_world, 26));               // different item: swap
-    EXPECT_EQ(c.slots[26], (world::StoredStack{toItemId(BlockId::Dirt), 6, 0}));
+    EXPECT_EQ(c.slots[26], (voxel::StoredStack{toItemId(BlockId::Dirt), 6, 0}));
     EXPECT_EQ(m_ui.carried(), InventorySlot(BlockId::Sand, 5));
     EXPECT_TRUE(m_ui.clickContainerSlot(*m_world, 13, SlotButton::Right)); // put down one
-    EXPECT_EQ(c.slots[13], (world::StoredStack{toItemId(BlockId::Sand), 1, 0}));
+    EXPECT_EQ(c.slots[13], (voxel::StoredStack{toItemId(BlockId::Sand), 1, 0}));
     EXPECT_EQ(m_ui.carried(), InventorySlot(BlockId::Sand, 4));
-    EXPECT_FALSE(m_ui.clickContainerSlot(*m_world, world::kChestSlots));
+    EXPECT_FALSE(m_ui.clickContainerSlot(*m_world, voxel::kChestSlots));
 
     // Every change marked the chunk for saving.
     EXPECT_TRUE(m_world->getChunk({0, 0})->isModified());
@@ -240,7 +240,7 @@ TEST_F(ContainerScreenTest, ChestSlotsMergeAndSwapLikeInventory) {
 }
 
 TEST_F(ContainerScreenTest, ContainerClickAfterBlockRemovedClosesScreen) {
-    world::ChestData& c = placeChest();
+    voxel::ChestData& c = placeChest();
     c.slots[3] = {toItemId(BlockId::Cobblestone), 10, 0};
     ASSERT_TRUE(m_world->setBlock(kContainerPos, BlockId::Air));
     EXPECT_EQ(m_world->blockEntities().find(kContainerPos), nullptr);
@@ -315,7 +315,7 @@ TEST_F(InventoryCraftingTest, ShiftClickResultCraftsMax) {
 }
 
 TEST_F(ContainerScreenTest, ShiftClickChestRoundTrip) {
-    world::ChestData& c = placeChest();
+    voxel::ChestData& c = placeChest();
     c.slots[5] = {toItemId(BlockId::Cobblestone), 50, 0};
     m_player.setInventorySlot(3, {BlockId::Cobblestone, 30});
     m_world->getChunkMutable({0, 0})->setModified(false);
@@ -323,8 +323,8 @@ TEST_F(ContainerScreenTest, ShiftClickChestRoundTrip) {
     // Inventory -> chest: merge into the 50, then the first empty chest slot.
     EXPECT_TRUE(m_ui.shiftClickInventorySlot(m_player, m_world.get(), 3));
     EXPECT_TRUE(m_player.getInventorySlot(3).isEmpty());
-    EXPECT_EQ(c.slots[5], (world::StoredStack{toItemId(BlockId::Cobblestone), 64, 0}));
-    EXPECT_EQ(c.slots[0], (world::StoredStack{toItemId(BlockId::Cobblestone), 16, 0}));
+    EXPECT_EQ(c.slots[5], (voxel::StoredStack{toItemId(BlockId::Cobblestone), 64, 0}));
+    EXPECT_EQ(c.slots[0], (voxel::StoredStack{toItemId(BlockId::Cobblestone), 16, 0}));
     EXPECT_TRUE(m_world->getChunk({0, 0})->isModified());
 
     // Chest -> inventory: main inventory first.
@@ -339,7 +339,7 @@ TEST_F(ContainerScreenTest, ShiftClickChestRoundTrip) {
 }
 
 TEST_F(ContainerScreenTest, ShiftClickWithFurnaceOpenOnlySwapsMainAndHotbar) {
-    world::FurnaceData& f = placeFurnace();
+    voxel::FurnaceData& f = placeFurnace();
     m_player.setInventorySlot(0, {BlockId::IronOre, 8});
     EXPECT_TRUE(m_ui.shiftClickInventorySlot(m_player, m_world.get(), 0));
     EXPECT_TRUE(f.input.empty());
@@ -383,14 +383,14 @@ namespace {
 
 // Every item the player, the screen (grid, cursor) and the chest hold, by id.
 std::map<gameplay::ItemId, int64_t> countAll(const Player& player, const InventoryCrafting& ui,
-                                             const world::ChestData& chest) {
+                                             const voxel::ChestData& chest) {
     std::map<gameplay::ItemId, int64_t> total;
     for (size_t i = 0; i < Player::TOTAL_INVENTORY_SIZE; ++i) {
         const InventorySlot s = player.getInventorySlot(i);
         if (!s.isEmpty()) total[s.id] += s.count;
     }
     for (const InventorySlot& s : ui.pendingStacks()) total[s.id] += s.count;
-    for (const world::StoredStack& s : chest.slots) {
+    for (const voxel::StoredStack& s : chest.slots) {
         if (!s.empty()) total[s.id] += s.count;
     }
     return total;
@@ -399,7 +399,7 @@ std::map<gameplay::ItemId, int64_t> countAll(const Player& player, const Invento
 } // namespace
 
 TEST_F(ContainerScreenTest, ShiftClickConservesItemCount) {
-    world::ChestData& c = placeChest();
+    voxel::ChestData& c = placeChest();
     gameplay::SplitMix64 rng{0xC0FFEEULL};
     const gameplay::ItemId pool[] = {toItemId(BlockId::Dirt), toItemId(BlockId::Cobblestone),
                                      toItemId(BlockId::Sand), items::StonePickaxe, items::Stick};

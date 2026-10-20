@@ -30,15 +30,15 @@ public:
     IRedstoneVoxelAccess& operator=(const IRedstoneVoxelAccess&) = delete;
 
     [[nodiscard]] virtual bool isLoaded(const core::BlockPos& pos) const noexcept = 0;
-    [[nodiscard]] virtual world::BlockId getBlock(const core::BlockPos& pos) const noexcept = 0;
+    [[nodiscard]] virtual voxel::BlockId getBlock(const core::BlockPos& pos) const noexcept = 0;
     [[nodiscard]] virtual uint8_t getMetadata(const core::BlockPos& pos) const noexcept = 0;
-    virtual void setBlock(const core::BlockPos& pos, world::BlockId id, uint8_t meta) = 0;
+    virtual void setBlock(const core::BlockPos& pos, voxel::BlockId id, uint8_t meta) = 0;
     virtual void setMetadata(const core::BlockPos& pos, uint8_t meta) = 0;
     virtual bool pushPiston(const core::BlockPos& pos, core::FaceDir dir) = 0;
 
     // Beta World.isBlockNormalCube: what conducts strong power and blocks wire steps.
     [[nodiscard]] virtual bool isNormalCube(const core::BlockPos& pos) const noexcept {
-        return world::isNormalCube(getBlock(pos));
+        return voxel::isNormalCube(getBlock(pos));
     }
 };
 
@@ -58,13 +58,13 @@ public:
     [[nodiscard]] bool isLoaded(const core::BlockPos& p) const noexcept override {
         return p.x >= 0 && p.y >= 0 && p.z >= 0 && p.x < m_sx && p.y < m_sy && p.z < m_sz;
     }
-    [[nodiscard]] world::BlockId getBlock(const core::BlockPos& p) const noexcept override {
-        return isLoaded(p) ? m_cells[indexOf(p)].block : world::BlockId::Air;
+    [[nodiscard]] voxel::BlockId getBlock(const core::BlockPos& p) const noexcept override {
+        return isLoaded(p) ? m_cells[indexOf(p)].block : voxel::BlockId::Air;
     }
     [[nodiscard]] uint8_t getMetadata(const core::BlockPos& p) const noexcept override {
         return isLoaded(p) ? m_cells[indexOf(p)].meta : uint8_t{0};
     }
-    void setBlock(const core::BlockPos& p, world::BlockId id, uint8_t meta) override {
+    void setBlock(const core::BlockPos& p, voxel::BlockId id, uint8_t meta) override {
         if (isLoaded(p)) {
             m_cells[indexOf(p)] = {id, static_cast<uint8_t>(meta & 0x0F)};
             ++m_writes;
@@ -82,7 +82,7 @@ public:
     }
 
     // Inclusive box fill (clipped).
-    void fill(const core::BlockPos& from, const core::BlockPos& to, world::BlockId id, uint8_t meta = 0) {
+    void fill(const core::BlockPos& from, const core::BlockPos& to, voxel::BlockId id, uint8_t meta = 0) {
         for (int32_t y = from.y; y <= to.y; ++y)
             for (int32_t z = from.z; z <= to.z; ++z)
                 for (int32_t x = from.x; x <= to.x; ++x) setBlock({x, y, z}, id, meta);
@@ -93,7 +93,7 @@ public:
 
 private:
     struct Cell {
-        world::BlockId block{world::BlockId::Air};
+        voxel::BlockId block{voxel::BlockId::Air};
         uint8_t meta{0};
     };
 

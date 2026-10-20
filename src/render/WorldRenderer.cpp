@@ -311,7 +311,7 @@ void pushItemModel(
 ) {
     const size_t first = verts.size();
     const float halfDepth = look.flat ? halfSize * 0.14f : halfSize;
-    const bool slab = look.block && world::BlockRegistry::get(*look.block).shape == world::RenderShape::Slab;
+    const bool slab = look.block && voxel::BlockRegistry::get(*look.block).shape == voxel::RenderShape::Slab;
     pushCubeFaces(
         verts,
         glm::vec3(-halfSize, -halfSize, -halfDepth),
@@ -374,7 +374,7 @@ void appendFallingBlock(std::vector<ChunkVertex>& out, const world::World& world
 }
 
 glm::mat4 cameraProjection(const core::EngineConfig& config, float aspect) noexcept {
-    const float maxDrawDist = static_cast<float>(config.renderDistanceChunks * world::Chunk::WIDTH);
+    const float maxDrawDist = static_cast<float>(config.renderDistanceChunks * voxel::Chunk::WIDTH);
     return glm::perspective(glm::radians(config.fovDegrees), aspect, config.nearPlane, std::max(160.0f, maxDrawDist + 32.0f));
 }
 
@@ -535,8 +535,8 @@ RenderStats WorldRenderer::renderWorld(
     stats.totalChunks = world.getChunks().size();
 
     const glm::vec3 eyePos = player.getCameraEyePosition(player.getRenderAlpha());
-    const int32_t playerCX = core::floorDiv(static_cast<int32_t>(std::floor(eyePos.x)), world::Chunk::WIDTH);
-    const int32_t playerCZ = core::floorDiv(static_cast<int32_t>(std::floor(eyePos.z)), world::Chunk::DEPTH);
+    const int32_t playerCX = core::floorDiv(static_cast<int32_t>(std::floor(eyePos.x)), voxel::Chunk::WIDTH);
+    const int32_t playerCZ = core::floorDiv(static_cast<int32_t>(std::floor(eyePos.z)), voxel::Chunk::DEPTH);
 
     // Meshing runs on the pipeline's workers; this thread only captures dirty sections and
     // uploads finished meshes within the frame budget. Unloaded columns come back as
@@ -565,7 +565,7 @@ RenderStats WorldRenderer::renderWorld(
     glDepthFunc(GL_LEQUAL);
 
     const glm::mat4 view = player.getViewMatrix();
-    const float maxDrawDist = static_cast<float>(config.renderDistanceChunks * world::Chunk::WIDTH);
+    const float maxDrawDist = static_cast<float>(config.renderDistanceChunks * voxel::Chunk::WIDTH);
     const glm::mat4 proj = cameraProjection(config, aspect);
     const glm::mat4 viewProj = proj * view;
 
@@ -627,7 +627,7 @@ RenderStats WorldRenderer::renderWorld(
 
     for (const auto& [coord, mesh] : visibleMeshes) {
         // Vertices carry their section index (word 1), so the origin is the column's.
-        m_chunkShader.setIVec3("u_sectionOriginWorld", {coord.x * world::Chunk::WIDTH, 0, coord.z * world::Chunk::DEPTH});
+        m_chunkShader.setIVec3("u_sectionOriginWorld", {coord.x * voxel::Chunk::WIDTH, 0, coord.z * voxel::Chunk::DEPTH});
         mesh->drawOpaque();
     }
 
@@ -689,7 +689,7 @@ RenderStats WorldRenderer::renderWorld(
     m_chunkShader.setInt("uAlphaCutout", 0);
 
     for (const auto& [coord, mesh] : visibleMeshes) {
-        m_chunkShader.setIVec3("u_sectionOriginWorld", {coord.x * world::Chunk::WIDTH, 0, coord.z * world::Chunk::DEPTH});
+        m_chunkShader.setIVec3("u_sectionOriginWorld", {coord.x * voxel::Chunk::WIDTH, 0, coord.z * voxel::Chunk::DEPTH});
         mesh->drawTranslucent();
     }
 

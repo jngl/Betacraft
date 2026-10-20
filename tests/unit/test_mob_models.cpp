@@ -38,7 +38,7 @@ Bounds boundsOf(const std::vector<ChunkVertex>& verts, size_t first = 0, size_t 
 class MobModelsTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         m_world = std::make_unique<world::World>(173ULL, m_dir.path());
         m_world->ensureChunkLoaded({0, 0});
         for (int y = 100; y < 104; ++y) {

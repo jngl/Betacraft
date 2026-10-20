@@ -33,7 +33,7 @@ constexpr core::ChunkCoord kSeaCenter{-5, 8};
 
 class P2WorldgenCaves : public ::testing::Test {
 protected:
-    void SetUp() override { world::BlockRegistry::initialize(); }
+    void SetUp() override { voxel::BlockRegistry::initialize(); }
 };
 
 // Water-body facts of a resident column, read from the generated (carved, decorated) blocks.
@@ -161,7 +161,7 @@ TEST_F(P2WorldgenCaves, CaveCarverIsTheOnlySourceOfCavities) {
                         if (carver.getExcavationFill(wx, y, wz) == CaveFill::Lava && b == BlockId::Lava) ++lava;
                     } else {
                         // Air below sea level that the carver did not dig is a legacy tube cave.
-                        if (b == BlockId::Air || world::isLavaBlock(b)) legacy.add(at(wx, y, wz, b));
+                        if (b == BlockId::Air || voxel::isLavaBlock(b)) legacy.add(at(wx, y, wz, b));
                     }
                 }
             }
@@ -187,7 +187,7 @@ TEST_F(P2WorldgenCaves, MagmaBandIsFilledWithLavaAndNothingAboveIt) {
         for (int32_t y = 0; y < Chunk::HEIGHT; ++y)
             for (int32_t lz = 0; lz < Chunk::DEPTH; ++lz)
                 for (int32_t lx = 0; lx < Chunk::WIDTH; ++lx) {
-                    if (!world::isLavaBlock(chunk.getBlock(lx, y, lz))) continue;
+                    if (!voxel::isLavaBlock(chunk.getBlock(lx, y, lz))) continue;
                     ++lava;
                     const bool inBand = y > CaveCarver::BEDROCK_GUARD_MAX_Y && y <= CaveCarver::LAVA_MAX_Y;
                     // Metadata 0 is a source block under the World fluid convention.
@@ -203,7 +203,7 @@ TEST_F(P2WorldgenCaves, MagmaBandIsFilledWithLavaAndNothingAboveIt) {
         for (int32_t y = 6; y <= CaveCarver::LAVA_MAX_Y && !lit; ++y)
             for (int32_t lz = 0; lz < Chunk::DEPTH && !lit; ++lz)
                 for (int32_t lx = 0; lx < Chunk::WIDTH && !lit; ++lx)
-                    lit = world::isLavaBlock(chunk.getBlock(lx, y, lz)) && chunk.getBlockLight(lx, y, lz) == 15;
+                    lit = voxel::isLavaBlock(chunk.getBlock(lx, y, lz)) && chunk.getBlockLight(lx, y, lz) == 15;
     }
     EXPECT_TRUE(lit);
 }

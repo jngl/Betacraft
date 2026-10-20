@@ -13,14 +13,14 @@
 using namespace betacraft;
 using lighting::DynamicLightManager;
 using lighting::LightSource;
-using world::BlockId;
+using voxel::BlockId;
 
 namespace {
 
 class P2DynLightCollect : public ::testing::Test {
 protected:
     void SetUp() override {
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         player.setPosition({4.5f, 70.0f, -3.5f});
         player.resetInterpolationHistory();
         player.setRotation(-90.0f, 0.0f);

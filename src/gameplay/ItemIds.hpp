@@ -11,23 +11,23 @@ namespace betacraft::gameplay {
 
 // The engine's single item id scheme. The tools/combat code (this module) owns it and the
 // crafting module (src/crafting/ItemIds.hpp) re-exports it, so both always agree:
-//  * 0..255 : world::BlockId values, unchanged. 54 (Chest) and 62 (lit furnace) are real
+//  * 0..255 : voxel::BlockId values, unchanged. 54 (Chest) and 62 (lit furnace) are real
 //             blocks with Beta's block ids.
 //  * 256..  : vanilla Beta 1.7.3 item numbers, the canonical form of every item (S2.10,
 //             items_scheme 2). Stick, coal and the four pickaxes moved there too.
 //  * items::legacy::* are the item-only BlockIds 100..105 that older saves (items_scheme 1)
 //             and the unmigrated ui::CraftingSystem use for those six items. The loaders fold
 //             them onto the Beta numbers with canonicalize(); nothing produces them any more.
-//             No new item is ever added to world::BlockId.
+//             No new item is ever added to voxel::BlockId.
 using ItemId = uint16_t;
 inline constexpr ItemId kNoItem = 0;
 
-[[nodiscard]] constexpr ItemId toItemId(world::BlockId id) noexcept {
+[[nodiscard]] constexpr ItemId toItemId(voxel::BlockId id) noexcept {
     return static_cast<ItemId>(id);
 }
 
 namespace items {
-inline constexpr ItemId Chest = toItemId(world::BlockId::Chest);
+inline constexpr ItemId Chest = toItemId(voxel::BlockId::Chest);
 inline constexpr ItemId IronShovel = 256;
 inline constexpr ItemId IronPickaxe = 257;
 inline constexpr ItemId IronAxe = 258;
@@ -104,12 +104,12 @@ inline constexpr ItemId Stick = items::Stick;
 } // namespace beta
 // items_scheme 1 ids of those items (item-only BlockIds): read from old saves, never produced.
 namespace legacy {
-inline constexpr ItemId Stick = toItemId(world::BlockId::Stick);
-inline constexpr ItemId Coal = toItemId(world::BlockId::CoalItem);
-inline constexpr ItemId WoodPickaxe = toItemId(world::BlockId::WoodPickaxe);
-inline constexpr ItemId StonePickaxe = toItemId(world::BlockId::StonePickaxe);
-inline constexpr ItemId IronPickaxe = toItemId(world::BlockId::IronPickaxe);
-inline constexpr ItemId DiamondPickaxe = toItemId(world::BlockId::DiamondPickaxe);
+inline constexpr ItemId Stick = toItemId(voxel::BlockId::Stick);
+inline constexpr ItemId Coal = toItemId(voxel::BlockId::CoalItem);
+inline constexpr ItemId WoodPickaxe = toItemId(voxel::BlockId::WoodPickaxe);
+inline constexpr ItemId StonePickaxe = toItemId(voxel::BlockId::StonePickaxe);
+inline constexpr ItemId IronPickaxe = toItemId(voxel::BlockId::IronPickaxe);
+inline constexpr ItemId DiamondPickaxe = toItemId(voxel::BlockId::DiamondPickaxe);
 inline constexpr ItemId First = Stick;
 inline constexpr ItemId Last = DiamondPickaxe;
 } // namespace legacy
@@ -165,22 +165,22 @@ inline constexpr std::array<std::array<ItemId, 5>, 5> kToolTable{{
 struct Alias {
     ItemId legacy; // items_scheme 1 id (item-only BlockId)
     ItemId canonical;
-    world::BlockId block; // Its BlockDef still holds the name and the sprite
+    voxel::BlockId block; // Its BlockDef still holds the name and the sprite
 };
 
 inline constexpr std::array<Alias, 6> kAliases{{
-    {items::legacy::Stick, items::Stick, world::BlockId::Stick},
-    {items::legacy::Coal, items::Coal, world::BlockId::CoalItem},
-    {items::legacy::WoodPickaxe, items::WoodPickaxe, world::BlockId::WoodPickaxe},
-    {items::legacy::StonePickaxe, items::StonePickaxe, world::BlockId::StonePickaxe},
-    {items::legacy::IronPickaxe, items::IronPickaxe, world::BlockId::IronPickaxe},
-    {items::legacy::DiamondPickaxe, items::DiamondPickaxe, world::BlockId::DiamondPickaxe},
+    {items::legacy::Stick, items::Stick, voxel::BlockId::Stick},
+    {items::legacy::Coal, items::Coal, voxel::BlockId::CoalItem},
+    {items::legacy::WoodPickaxe, items::WoodPickaxe, voxel::BlockId::WoodPickaxe},
+    {items::legacy::StonePickaxe, items::StonePickaxe, voxel::BlockId::StonePickaxe},
+    {items::legacy::IronPickaxe, items::IronPickaxe, voxel::BlockId::IronPickaxe},
+    {items::legacy::DiamondPickaxe, items::DiamondPickaxe, voxel::BlockId::DiamondPickaxe},
 }};
 
 // Every BlockId from 100 up is one of the six legacy items: nothing else may join them.
-static_assert(static_cast<size_t>(world::BlockId::Count) == items::legacy::Last + 1U,
-              "no new item in world::BlockId: use a Beta item number (>= 256) in gameplay::items");
-static_assert(static_cast<size_t>(world::BlockId::Count) <= 256, "block ids must fit below the item range");
+static_assert(static_cast<size_t>(voxel::BlockId::Count) == items::legacy::Last + 1U,
+              "no new item in voxel::BlockId: use a Beta item number (>= 256) in gameplay::items");
+static_assert(static_cast<size_t>(voxel::BlockId::Count) <= 256, "block ids must fit below the item range");
 
 // Beta 1.7.3 Item.maxStackSize overrides for non-tool items, by vanilla item id.
 [[nodiscard]] constexpr int32_t betaItemStackLimit(ItemId id) noexcept {
@@ -252,7 +252,7 @@ static_assert(static_cast<size_t>(world::BlockId::Count) <= 256, "block ids must
 
 // The item-only BlockDef that describes a former legacy item (name, sprite), for the
 // renderer; nullopt for every other id.
-[[nodiscard]] constexpr std::optional<world::BlockId> legacyItemBlock(ItemId id) noexcept {
+[[nodiscard]] constexpr std::optional<voxel::BlockId> legacyItemBlock(ItemId id) noexcept {
     const ItemId c = canonicalize(id);
     for (const detail::Alias& a : detail::kAliases) {
         if (a.canonical == c) {
@@ -300,7 +300,7 @@ static_assert(static_cast<size_t>(world::BlockId::Count) <= 256, "block ids must
 
 } // namespace betacraft::gameplay
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 
 // Item ids below 256 are block ids, so an inventory or drop id compares against a BlockId
 // directly (found by ADL on BlockId; C++20 also rewrites the reversed and != forms).
@@ -308,4 +308,4 @@ namespace betacraft::world {
     return item == gameplay::toItemId(block);
 }
 
-} // namespace betacraft::world
+} // namespace betacraft::voxel

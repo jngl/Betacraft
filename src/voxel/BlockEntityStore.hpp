@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 
 // Blocks that carry a block entity (Beta BlockContainer).
 [[nodiscard]] constexpr bool hasBlockEntity(BlockId id) noexcept {
@@ -80,4 +80,4 @@ inline constexpr uint32_t kBlockEntityFormatVersion = 1;
 [[nodiscard]] std::optional<std::vector<BlockEntityEntry>> decodeBlockEntities(core::ChunkCoord coord,
                                                                                std::span<const uint8_t> bytes);
 
-} // namespace betacraft::world
+} // namespace betacraft::voxel

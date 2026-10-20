@@ -105,14 +105,14 @@ struct DynamicLight {
 // Emission (0..15) of a block or ITEM (held / dropped), read from BlockRegistry (Torch = 14,
 // Glowstone = 15) except where the registry departs from Beta 1.7.3 item behaviour (redstone
 // ore does not glow as an item).
-[[nodiscard]] uint8_t emissionOf(world::BlockId id) noexcept;
+[[nodiscard]] uint8_t emissionOf(voxel::BlockId id) noexcept;
 
 // Visual tint per emitter; warm torch matches the 1.0/0.94/0.82 static torch tint of the chunk
 // fragment shader (PACKED_CHUNK_FS in WorldRenderer.cpp).
-[[nodiscard]] glm::vec3 emitterColor(world::BlockId id) noexcept;
+[[nodiscard]] glm::vec3 emitterColor(voxel::BlockId id) noexcept;
 
 // Builds the light emitted by a glowing block/item, or nullopt when it does not glow.
-[[nodiscard]] std::optional<DynamicLight> makeEmitterLight(world::BlockId id, const glm::vec3& position,
+[[nodiscard]] std::optional<DynamicLight> makeEmitterLight(voxel::BlockId id, const glm::vec3& position,
                                                            LightSource source) noexcept;
 
 // CPU reference of computeDynamicLight() in dynamic_lights.glsl: sums the contributions of the

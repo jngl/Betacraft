@@ -23,18 +23,18 @@ public:
     explicit DifferentialLightingEngine(World& world) noexcept : m_world(world) {}
 
     // Event hooks for block placing and breaking
-    void onBlockPlaced(const glm::ivec3& pos, BlockId newState) noexcept;
-    void onBlockDestroyed(const glm::ivec3& pos, BlockId oldState) noexcept;
+    void onBlockPlaced(const glm::ivec3& pos, voxel::BlockId newState) noexcept;
+    void onBlockDestroyed(const glm::ivec3& pos, voxel::BlockId oldState) noexcept;
 
     // 3-pass hybrid skylight extinction for obstructed vertical solar column
     void onSkylightColumnObstructed(int32_t wx, int32_t wz, int32_t yHigh, int32_t yLow) noexcept;
 
     // Direct interface for lighting source update and block change
     void updateLightSource(int32_t wx, int32_t wy, int32_t wz, uint8_t newEmission) noexcept;
-    void setBlockAndUpdateLighting(int32_t wx, int32_t wy, int32_t wz, BlockId newBlock, BlockId oldBlock = BlockId::Air) noexcept;
+    void setBlockAndUpdateLighting(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId newBlock, voxel::BlockId oldBlock = voxel::BlockId::Air) noexcept;
 
     // Static convenience helpers
-    static void setBlockAndUpdateLighting(World& world, int32_t wx, int32_t wy, int32_t wz, BlockId newBlock) noexcept;
+    static void setBlockAndUpdateLighting(World& world, int32_t wx, int32_t wy, int32_t wz, voxel::BlockId newBlock) noexcept;
     static void updateLightSource(World& world, int32_t wx, int32_t wy, int32_t wz, uint8_t newEmission) noexcept;
 
     // Mathematical analytical bounds (Fiche 2, P3.2)

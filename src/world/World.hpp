@@ -57,7 +57,7 @@ public:
     void updateChunksAround(const glm::vec3& centerPos, int32_t radiusChunks, int32_t maxNewPerCall = 3);
     // Loads (save queue first, then disk) or generates the chunk right away. Stays synchronous
     // for findSafeSpawnPosition, respawn, startup and tests; cancels any async request of it.
-    Chunk& ensureChunkLoaded(core::ChunkCoord coord);
+    voxel::Chunk& ensureChunkLoaded(core::ChunkCoord coord);
 
     // S7.7 asynchronous streaming. requestChunksAround asks the I/O worker for every missing
     // chunk within the radius (nearest first); those absent from disk go to the pass-1
@@ -100,8 +100,8 @@ public:
     };
     static constexpr size_t kIntegrationWindow = 120; // Calls (about two seconds of frames)
     [[nodiscard]] StreamingStats getStreamingStats() const;
-    [[nodiscard]] const Chunk* getChunk(core::ChunkCoord coord) const noexcept;
-    [[nodiscard]] Chunk* getChunkMutable(core::ChunkCoord coord) noexcept;
+    [[nodiscard]] const voxel::Chunk* getChunk(core::ChunkCoord coord) const noexcept;
+    [[nodiscard]] voxel::Chunk* getChunkMutable(core::ChunkCoord coord) noexcept;
 
     // P3.4 pass 2 (trees, flora) runs on a chunk once its 3x3 neighbourhood is resident;
     // until then the chunk holds pass-1 terrain + caves only.
@@ -142,13 +142,13 @@ public:
     // (Beta World.scheduleBlockUpdate). Ignored (false) when `pos` already has one pending;
     // the update does nothing if the block changed in the meantime. Not persisted.
     bool scheduleBlockTick(core::BlockPos pos, int32_t delayTicks);
-    [[nodiscard]] const ScheduledTickQueue& getScheduledTicks() const noexcept { return m_scheduledTicks; }
+    [[nodiscard]] const voxel::ScheduledTickQueue& getScheduledTicks() const noexcept { return m_scheduledTicks; }
 
     // S5.3: sand and gravel the scheduled update found over air or liquid: the cell is already
     // air, whoever runs the game tick spawns the falling entity (EntitySimulation::tickFallingBlocks).
     struct FallingBlockSpawn {
         core::BlockPos pos{};
-        BlockId id{BlockId::Air};
+        voxel::BlockId id{voxel::BlockId::Air};
     };
     [[nodiscard]] std::vector<FallingBlockSpawn> takeFallingBlockSpawns() noexcept;
     // Beta BlockSand.tickRate: sand and gravel fall 3 ticks after a change around them.
@@ -171,17 +171,17 @@ public:
     // Fluid type from the block id, level from the Beta metadata; dry for anything else.
     [[nodiscard]] fluids::FluidState getFluid(core::BlockPos pos) const noexcept;
 
-    [[nodiscard]] const std::unordered_map<core::ChunkCoord, std::unique_ptr<Chunk>>& getChunks() const noexcept {
+    [[nodiscard]] const std::unordered_map<core::ChunkCoord, std::unique_ptr<voxel::Chunk>>& getChunks() const noexcept {
         return m_chunks;
     }
 
-    [[nodiscard]] BlockId getBlock(int32_t wx, int32_t wy, int32_t wz) const noexcept;
-    [[nodiscard]] BlockId getBlock(core::BlockPos pos) const noexcept {
+    [[nodiscard]] voxel::BlockId getBlock(int32_t wx, int32_t wy, int32_t wz) const noexcept;
+    [[nodiscard]] voxel::BlockId getBlock(core::BlockPos pos) const noexcept {
         return getBlock(pos.x, pos.y, pos.z);
     }
 
-    bool setBlock(int32_t wx, int32_t wy, int32_t wz, BlockId id);
-    bool setBlock(core::BlockPos pos, BlockId id) {
+    bool setBlock(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId id);
+    bool setBlock(core::BlockPos pos, voxel::BlockId id) {
         return setBlock(pos.x, pos.y, pos.z, id);
     }
 
@@ -196,7 +196,7 @@ public:
     }
     bool setMetadata(int32_t wx, int32_t wy, int32_t wz, uint8_t meta);
     // setBlock (relighting, support checks) followed by setMetadata, as one edit.
-    bool setBlockWithMetadata(int32_t wx, int32_t wy, int32_t wz, BlockId id, uint8_t meta);
+    bool setBlockWithMetadata(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId id, uint8_t meta);
 
     // Flora, torches, cactus, crops and doors that an edit turned to air because it removed the
     // block they stand on (Beta canBlockStay), ladders whose wall went, and blocks broken by
@@ -205,7 +205,7 @@ public:
     // tick spawns their drops (Beta dropBlockAsItem).
     struct UnsupportedBreak {
         core::BlockPos pos{};
-        BlockId block{BlockId::Air};
+        voxel::BlockId block{voxel::BlockId::Air};
         uint8_t meta{0}; // Its metadata when it broke (crop stage: S5.7 drops)
     };
     [[nodiscard]] std::vector<UnsupportedBreak> takeUnsupportedBreaks() noexcept;
@@ -213,14 +213,14 @@ public:
     // S2.4 block entities (furnaces, chests) of the resident chunks. They follow their chunk
     // to and from disk (.be file) and leave the store when an edit replaces their block with
     // an incompatible one (furnace <-> lit furnace keeps it), whatever caused the edit.
-    [[nodiscard]] BlockEntityStore& blockEntities() noexcept { return m_blockEntities; }
-    [[nodiscard]] const BlockEntityStore& blockEntities() const noexcept { return m_blockEntities; }
+    [[nodiscard]] voxel::BlockEntityStore& blockEntities() noexcept { return m_blockEntities; }
+    [[nodiscard]] const voxel::BlockEntityStore& blockEntities() const noexcept { return m_blockEntities; }
     // Call after changing an entity's contents: the chunk is saved (and player-touched).
     void markBlockEntityChanged(core::BlockPos pos) noexcept;
     struct RemovedBlockEntity {
         core::BlockPos pos{};
-        BlockId block{BlockId::Air}; // The block that carried it
-        BlockEntity entity{};
+        voxel::BlockId block{voxel::BlockId::Air}; // The block that carried it
+        voxel::BlockEntity entity{};
     };
     // Entities whose block was removed or replaced since the last call, oldest first. Whoever
     // runs the game tick spawns their contents as drops (Beta BlockChest/BlockFurnace.onBlockRemoval).
@@ -235,12 +235,12 @@ public:
     void setSkyLight(int32_t wx, int32_t wy, int32_t wz, uint8_t val) noexcept;
     void setBlockLight(int32_t wx, int32_t wy, int32_t wz, uint8_t val) noexcept;
 
-    void syncBorderLighting(Chunk& chunkA, Chunk& chunkB) noexcept;
+    void syncBorderLighting(voxel::Chunk& chunkA, voxel::Chunk& chunkB) noexcept;
     void syncChunkLightingWithNeighbors(core::ChunkCoord coord) noexcept;
 
     [[nodiscard]] glm::vec3 getGrassTint(int32_t wx, int32_t wz) const noexcept;
     [[nodiscard]] glm::vec3 getFoliageTint(int32_t wx, int32_t wz) const noexcept;
-    [[nodiscard]] BiomeId getBiomeAt(int32_t wx, int32_t wz) const noexcept;
+    [[nodiscard]] voxel::BiomeId getBiomeAt(int32_t wx, int32_t wz) const noexcept;
 
     [[nodiscard]] glm::vec3 findSafeSpawnPosition() noexcept;
     // Feet position at or above `pos` (same column) where feet and head cells are free of
@@ -292,7 +292,7 @@ private:
     // Raw edits without waking the fluid simulator (used by it, through FluidAccess).
     // applyBlockEdit returns how many cells of the column from wy upwards changed: the
     // block itself plus any flora or torches it no longer supports.
-    int32_t applyBlockEdit(int32_t wx, int32_t wy, int32_t wz, BlockId id, EditOrigin origin);
+    int32_t applyBlockEdit(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId id, EditOrigin origin);
     bool applyMetadataEdit(int32_t wx, int32_t wy, int32_t wz, uint8_t meta, EditOrigin origin);
     // Whether a simulation edit in `coord` is saved: the chunk or one of its 8 neighbours is
     // player-touched. Generated fluid elsewhere is re-simulated on reload instead
@@ -303,7 +303,7 @@ private:
     void scheduleUnsettledFluids(core::ChunkCoord coord);
     // Hands an edit at (wx, wy, wz) from `oldId` to `newId` to the redstone engine when it can
     // matter to a circuit.
-    void notifyRedstone(int32_t wx, int32_t wy, int32_t wz, BlockId oldId, BlockId newId);
+    void notifyRedstone(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId oldId, voxel::BlockId newId);
     // S8.7: the redstone blocks of a chunk read from disk (RedstoneEngine::onBlockLoaded).
     void rescheduleRedstone(core::ChunkCoord coord);
     // Marks the sections of adjacent columns whose meshes see voxel (lx, wy, lz) of `coord`.
@@ -313,14 +313,14 @@ private:
                                                                     std::optional<worldgen::DecorationRecord> record);
     void relightDecoratedChunk(core::ChunkCoord coord) noexcept;
     // Encodes the chunk's bundle (main thread) and queues it on the I/O worker.
-    bool persistChunk(const Chunk& chunk);
+    bool persistChunk(const voxel::Chunk& chunk);
     // Deserializes `bundle`'s blocks into `chunk`; an unreadable chunk is quarantined and
     // `chunk` reset to an empty one. True when the chunk came from disk.
-    bool deserializeBundle(std::optional<storage::ChunkBundle>& bundle, std::unique_ptr<Chunk>& chunk);
+    bool deserializeBundle(std::optional<storage::ChunkBundle>& bundle, std::unique_ptr<voxel::Chunk>& chunk);
     // The body shared by every load path (main thread): makes the chunk resident, restores its
     // block entities, registers it for decoration, lights it and dirties its neighbours.
     // `lit`: pass-1 lighting already computed (generation worker).
-    Chunk& integrateChunk(std::unique_ptr<Chunk> chunk, bool loadedFromDisk, std::optional<storage::ChunkBundle> bundle,
+    voxel::Chunk& integrateChunk(std::unique_ptr<voxel::Chunk> chunk, bool loadedFromDisk, std::optional<storage::ChunkBundle> bundle,
                           bool lit);
     // Saves edited chunks beyond radius + 3 of the centre chunk and drops them.
     void unloadDistantChunks(int32_t centerCX, int32_t centerCZ, int32_t radiusChunks);
@@ -332,7 +332,7 @@ private:
 
     // Sand and gravel at `pos` and just above it get a falling check (S5.3).
     void scheduleFallingChecks(int32_t wx, int32_t wy, int32_t wz);
-    void runScheduledTick(const ScheduledTickQueue::Entry& entry);
+    void runScheduledTick(const voxel::ScheduledTickQueue::Entry& entry);
     // Beta BlockLog/BlockLeaves.onBlockRemoval: leaves within `radius` start checking for decay.
     void flagLeavesForDecay(int32_t wx, int32_t wy, int32_t wz, int32_t radius, EditOrigin origin);
     // S5.5: ladders hanging on (wx, wy, wz), which stopped being a normal cube, and a door
@@ -340,12 +340,12 @@ private:
     void breakDetachedWallBlocks(int32_t wx, int32_t wy, int32_t wz, EditOrigin origin);
     // S5.6/S5.8: the other half of the door or bed (`id`, metadata `meta`) that was at
     // (wx, wy, wz) goes too, without a drop of its own.
-    void removeOtherHalf(int32_t wx, int32_t wy, int32_t wz, BlockId id, uint8_t meta, EditOrigin origin);
+    void removeOtherHalf(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId id, uint8_t meta, EditOrigin origin);
 
     WorldGen m_worldGen;
     storage::WorldStorage m_storage;
     bool m_saveDisabled{false};
-    std::unordered_map<core::ChunkCoord, std::unique_ptr<Chunk>> m_chunks;
+    std::unordered_map<core::ChunkCoord, std::unique_ptr<voxel::Chunk>> m_chunks;
     std::unique_ptr<DifferentialLightingEngine> m_diffLighting;
     std::unique_ptr<worldgen::ChunkAccess> m_chunkAccess;
     std::unique_ptr<worldgen::DecorationPipeline> m_decoration;
@@ -356,10 +356,10 @@ private:
     bool m_redstoneEnabled{true};
     redstone::RedstoneTickStats m_redstoneStats{};
     std::vector<UnsupportedBreak> m_unsupportedBreaks;
-    BlockEntityStore m_blockEntities;
+    voxel::BlockEntityStore m_blockEntities;
     std::vector<RemovedBlockEntity> m_removedBlockEntities;
-    ScheduledTickQueue m_scheduledTicks;
-    std::vector<ScheduledTickQueue::Entry> m_dueTicks; // Reused by tick()
+    voxel::ScheduledTickQueue m_scheduledTicks;
+    std::vector<voxel::ScheduledTickQueue::Entry> m_dueTicks; // Reused by tick()
     uint64_t m_tickCount{0};
     std::vector<FallingBlockSpawn> m_fallingBlockSpawns;
     int32_t m_skylightSubtracted{0};

@@ -11,7 +11,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 using namespace betacraft::lighting;
-using betacraft::world::BlockId;
+using betacraft::voxel::BlockId;
 
 namespace {
 

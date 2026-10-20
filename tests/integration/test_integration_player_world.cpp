@@ -17,7 +17,7 @@ TEST(PlayerWorldIntegrationTest, GravityLandingAndGroundState) {
     // Solid floor in sky at y = 100 to avoid pre-generated ground
     for (int x = 0; x < 16; ++x) {
         for (int z = 0; z < 16; ++z) {
-            world.setBlock(x, 100, z, world::BlockId::Stone);
+            world.setBlock(x, 100, z, voxel::BlockId::Stone);
         }
     }
 
@@ -43,7 +43,7 @@ TEST(PlayerWorldIntegrationTest, SneakLedgeProtection) {
     // Platform at y = 60 from x=4 to x=8, and air at x > 8
     for (int z = 4; z <= 12; ++z) {
         for (int x = 4; x <= 8; ++x) {
-            world.setBlock(x, 60, z, world::BlockId::Cobblestone);
+            world.setBlock(x, 60, z, voxel::BlockId::Cobblestone);
         }
     }
 
@@ -80,17 +80,17 @@ TEST(PlayerWorldIntegrationTest, WaterExitJumpOntoShore) {
     for (int z = 3; z <= 8; ++z) {
         for (int x = 3; x <= 8; ++x) {
             for (int y = 60; y <= 70; ++y) {
-                world.setBlock(x, y, z, world::BlockId::Air);
+                world.setBlock(x, y, z, voxel::BlockId::Air);
             }
-            world.setBlock(x, 62, z, world::BlockId::Stone);
+            world.setBlock(x, 62, z, voxel::BlockId::Stone);
         }
     }
-    world.setBlock(5, 63, 5, world::BlockId::Water);
-    world.setBlock(5, 64, 5, world::BlockId::Water);
+    world.setBlock(5, 63, 5, voxel::BlockId::Water);
+    world.setBlock(5, 64, 5, voxel::BlockId::Water);
     for (int sx = 6; sx <= 10; ++sx) {
-        world.setBlock(sx, 63, 5, world::BlockId::Stone);
-        world.setBlock(sx, 64, 5, world::BlockId::Stone);
-        world.setBlock(sx, 65, 5, world::BlockId::Grass);
+        world.setBlock(sx, 63, 5, voxel::BlockId::Stone);
+        world.setBlock(sx, 64, 5, voxel::BlockId::Stone);
+        world.setBlock(sx, 65, 5, voxel::BlockId::Grass);
     }
 
     physics::Player player;

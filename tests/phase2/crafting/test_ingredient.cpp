@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 
 using namespace betacraft::crafting;
-using betacraft::world::BlockId;
+using betacraft::voxel::BlockId;
 
 namespace {
 constexpr ItemId kPlanks = toItemId(BlockId::OakPlanks);

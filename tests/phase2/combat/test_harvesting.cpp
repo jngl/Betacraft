@@ -8,8 +8,8 @@
 #include <limits>
 
 using namespace betacraft::gameplay;
-using betacraft::world::BlockId;
-using betacraft::world::BlockRegistry;
+using betacraft::voxel::BlockId;
+using betacraft::voxel::BlockRegistry;
 
 namespace {
 ItemStack tool(ToolType type, ToolMaterial mat) {
@@ -29,7 +29,7 @@ std::vector<BlockId> placeableBlocks() {
     for (int i = 1; i < static_cast<int>(BlockId::Count); ++i) {
         const auto id = static_cast<BlockId>(i);
         const auto& def = BlockRegistry::get(id);
-        const bool registered = def.id == id && def.name != betacraft::world::BlockDef{}.name;
+        const bool registered = def.id == id && def.name != betacraft::voxel::BlockDef{}.name;
         if (registered && !def.isItemOnly) {
             ids.push_back(id);
         }
@@ -49,7 +49,7 @@ TEST(HarvestTable, CoversEveryRegisteredBlock) {
 TEST(HarvestTable, EveryRegisteredBlockHasADeliberateRule) {
     // Pins {effective tool, required tool, harvest level} for every placeable block, so a new
     // block (e.g. a stone stair) cannot silently fall back to "hand-harvestable": adding one
-    // to world::BlockRegistry makes this test fail until a rule is chosen here.
+    // to voxel::BlockRegistry makes this test fail until a rule is chosen here.
     struct Expected {
         BlockId id;
         ToolType effective;

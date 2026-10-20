@@ -20,7 +20,7 @@ constexpr std::array<MobDef, static_cast<size_t>(MobKind::Count)> kMobDefs{{
     {MobKind::Pig, MobCategory::Passive, 10, 0.9f, 0.9f, 1.68f, 0, false,
      {{{items::RawPorkchop, 0, 2}, {}}}, "Pig", 10, false, false, {}, {}, {0.9f, 0.9f, 0.9f}},
     {MobKind::Sheep, MobCategory::Passive, 8, 0.9f, 1.3f, 1.68f, 0, false,
-     {{{toItemId(world::BlockId::Wool), 1, 1}, {}}}, "Sheep", 12, false, false, {}, {}, {0.9f, 1.3f, 0.9f}},
+     {{{toItemId(voxel::BlockId::Wool), 1, 1}, {}}}, "Sheep", 12, false, false, {}, {}, {0.9f, 1.3f, 0.9f}},
     {MobKind::Zombie, MobCategory::Hostile, 20, 0.6f, 1.8f, 1.2f, 5, true,
      {{{items::Feather, 0, 2}, {}}}, "Zombie", 10, false, false, {}, {}, {0.6f, 1.8f, 0.6f}},
     {MobKind::Skeleton, MobCategory::Hostile, 20, 0.6f, 1.8f, 1.68f, 0, true,

@@ -10,7 +10,7 @@ namespace betacraft::gameplay {
 
 namespace {
 
-using world::BlockId;
+using voxel::BlockId;
 
 // Hardness is stored as float (0.6f * 30 = 18.0000007): tolerate representation error, in
 // ticks, so exact multiples do not round up to an extra tick.
@@ -103,7 +103,7 @@ struct DropRule {
         case BlockId::RedstoneWire: return {items::Redstone, 1, 1, 1};
         case BlockId::Crops:       return {}; // rollCropHarvest, from the stage
         default: {
-            const BlockId drop = world::BlockRegistry::get(id).dropId;
+            const BlockId drop = voxel::BlockRegistry::get(id).dropId;
             // canonicalize: coal ore and dead bushes name the legacy item BlockIds.
             return drop == BlockId::Air ? DropRule{} : DropRule{canonicalize(toItemId(drop)), 1, 1, 1};
         }
@@ -137,11 +137,11 @@ constexpr uint64_t kBonusSeedSalt = 0xA99E5EEDB0A05ULL;
 
 } // namespace
 
-BlockHarvestInfo harvestInfo(world::BlockId block) noexcept {
-    const world::BlockDef& def = world::BlockRegistry::get(block);
+BlockHarvestInfo harvestInfo(voxel::BlockId block) noexcept {
+    const voxel::BlockDef& def = voxel::BlockRegistry::get(block);
     // BlockRegistry fills unregistered slots with a default def still named "Air"; item-only
     // ids (tools, sticks) never exist in the world. Neither can be mined.
-    const bool unregistered = def.id != block || def.name == world::BlockDef{}.name;
+    const bool unregistered = def.id != block || def.name == voxel::BlockDef{}.name;
     if (block == BlockId::Air || unregistered || def.isItemOnly) {
         return {};
     }
@@ -215,24 +215,24 @@ DigResult computeDig(const BlockHarvestInfo& block, const ItemStack& held,
     return result;
 }
 
-DigResult computeDig(world::BlockId block, const ItemStack& held, DigConditions conditions) noexcept {
+DigResult computeDig(voxel::BlockId block, const ItemStack& held, DigConditions conditions) noexcept {
     return computeDig(harvestInfo(block), held, conditions);
 }
 
 namespace {
 
 // The drops of a harvested block (the tool check already passed), into `outcome`.
-void rollHarvestDrops(world::BlockId block, uint64_t dropSeed, uint8_t meta, BlockBreakOutcome& outcome) noexcept {
+void rollHarvestDrops(voxel::BlockId block, uint64_t dropSeed, uint8_t meta, BlockBreakOutcome& outcome) noexcept {
     outcome.drop = rollDrop(dropRule(block), dropSeed);
     if (const std::optional<DropRule> bonus = bonusDropRule(block)) {
         outcome.bonusDrop = rollDrop(*bonus, dropSeed ^ kBonusSeedSalt);
     }
-    if (block == world::BlockId::Gravel) {
+    if (block == voxel::BlockId::Gravel) {
         // S6.6 Beta BlockGravel.idDropped: flint 1 time in 10, the gravel otherwise.
         SplitMix64 rng(dropSeed);
         outcome.drop = makeStack(rng.nextInt(kGravelFlintOneIn) == 0 ? items::Flint : toItemId(block), 1);
     }
-    if (block == world::BlockId::Crops) {
+    if (block == voxel::BlockId::Crops) {
         // S5.7: wheat when ripe as the drop, the seeds as the second stack.
         SplitMix64 rng(dropSeed);
         const CropHarvest harvest = rollCropHarvest(meta, rng);
@@ -245,7 +245,7 @@ void rollHarvestDrops(world::BlockId block, uint64_t dropSeed, uint8_t meta, Blo
 
 } // namespace
 
-BlockBreakOutcome breakBlockWith(world::BlockId block, ItemStack& held, uint64_t dropSeed, uint8_t meta) noexcept {
+BlockBreakOutcome breakBlockWith(voxel::BlockId block, ItemStack& held, uint64_t dropSeed, uint8_t meta) noexcept {
     const BlockHarvestInfo info = harvestInfo(block);
     BlockBreakOutcome outcome{};
     if (!info.breakable()) {
@@ -255,15 +255,15 @@ BlockBreakOutcome breakBlockWith(world::BlockId block, ItemStack& held, uint64_t
     // Decide the drop before wear: the use that breaks the tool still harvests the block.
     if (canHarvest(info, held)) {
         rollHarvestDrops(block, dropSeed, meta, outcome);
-        outcome.meltsIntoWater = block == world::BlockId::Ice; // Only harvestBlock melts it
+        outcome.meltsIntoWater = block == voxel::BlockId::Ice; // Only harvestBlock melts it
     }
     outcome.toolWear = onBlockBroken(held);
     return outcome;
 }
 
-BlockBreakOutcome explosionDrops(world::BlockId block, uint64_t dropSeed, uint8_t meta) noexcept {
+BlockBreakOutcome explosionDrops(voxel::BlockId block, uint64_t dropSeed, uint8_t meta) noexcept {
     BlockBreakOutcome outcome{};
-    if (block == world::BlockId::Air || world::BlockRegistry::isLiquid(block)) {
+    if (block == voxel::BlockId::Air || voxel::BlockRegistry::isLiquid(block)) {
         return outcome;
     }
     outcome.broken = true;

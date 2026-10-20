@@ -72,7 +72,7 @@ Data Flow:
 - `SharedEBO`: Global `GLuint` buffer loaded once with index pattern `[0, 1, 2, 0, 2, 3]`.
 
 ### M2 ↔ DifferentialLightingEngine
-- `void DifferentialLightingEngine::setBlockAndUpdateLighting(world::World& world, int wx, int wy, int wz, world::BlockId newBlock);`
+- `void DifferentialLightingEngine::setBlockAndUpdateLighting(world::World& world, int wx, int wy, int wz, voxel::BlockId newBlock);`
 - `void DifferentialLightingEngine::updateLightSource(world::World& world, int wx, int wy, int wz, uint8_t newEmission);`
 - Analytical bound: `max_voxels <= 4991`.
 
@@ -171,9 +171,9 @@ Phase 2 Data Flow:
 - Systems: `MovementPhysicsSystem::update(reg, dt)`, `VoxelCollisionSystem::update(reg, world)`, `HealthSystem::applyDamage(reg, e, amount, knockback)` / `update(reg, dt) -> dead list`, `MobAISystem::update(reg, dt)`, `ItemDropSystem`, `EntityRenderInterpolationSystem::collect(reg, alpha, out)`, `PlayerControlSystem::update(reg, dt)`. `EntityFactory::spawnPlayer / spawnItemDrop / spawnMob`. Roadmap-name aliases also exist, for example `CollisionResolutionSystem` and `CombatDamageSystem`.
 
 ### Sprint 2.2 ↔ Gameplay (`src/gameplay/`)
-- `BlockHarvestInfo harvestInfo(world::BlockId);`, `bool canHarvest(const BlockHarvestInfo&, const ItemStack&);`, `DigResult computeDig(world::BlockId, const ItemStack& held, DigConditions);`.
+- `BlockHarvestInfo harvestInfo(voxel::BlockId);`, `bool canHarvest(const BlockHarvestInfo&, const ItemStack&);`, `DigResult computeDig(voxel::BlockId, const ItemStack& held, DigConditions);`.
 - `MiningProgress::click(target, dig)` / `advance(target, dig)` / `reset()` / `crackStage()` (-1 or 0..9).
-- `BlockBreakOutcome breakBlockWith(world::BlockId, ItemStack& held, uint64_t dropSeed = 0);`: drop, wear and `meltsIntoWater`. A tool breaks when `damage > maxDamage` (maxDamage + 1 uses, as in Beta).
+- `BlockBreakOutcome breakBlockWith(voxel::BlockId, ItemStack& held, uint64_t dropSeed = 0);`: drop, wear and `meltsIntoWater`. A tool breaks when `damage > maxDamage` (maxDamage + 1 uses, as in Beta).
 - `int32_t weaponDamage(const ItemStack&);`, `MeleeResult performMeleeAttack(const AttackerState&, ItemStack& weapon, TargetState&, ...);`, `std::optional<TargetHit> pickMeleeTarget(eye, look, std::span<const math::AABB>, float maxDistance);`.
 - `gameplay::ItemId` (`uint16_t`): `toItemId(BlockId)`, `canonicalize`, `toVanillaId`, `toolItemId(kind, material)`, `toolInfo`, `maxStackSize`.
 
@@ -190,7 +190,7 @@ Phase 2 Data Flow:
 - `World` facade: `FluidTickStats World::tick();`, `std::vector<FluidEvent> World::takeFluidEvents();`, `FluidState World::getFluid(BlockPos) const;`. `World` configures `maxUpdatesPerTick = 256` and `randomSeed = world seed`.
 
 ### Sprint 2.3 ↔ Worldgen (`src/worldgen/`)
-- `explicit CaveCarver(uint64_t seed);`, `CarveStats carveChunk(world::Chunk&, const ColumnSampler&, ...);` (pass 1, after surface and ores), `static ColumnContext scanColumn(const world::Chunk&, lx, lz);`, `static constexpr float computeVerticalEnvelope(int32_t wy, const ColumnContext&);`. Constants: `BEDROCK_GUARD_MAX_Y = 5`, `CHEESE_MAX_Y = 50`, `LAVA_MAX_Y = 10`, aquifers Y 11..32, `AQUIFER_THRESHOLD = 0.42`.
+- `explicit CaveCarver(uint64_t seed);`, `CarveStats carveChunk(voxel::Chunk&, const ColumnSampler&, ...);` (pass 1, after surface and ores), `static ColumnContext scanColumn(const voxel::Chunk&, lx, lz);`, `static constexpr float computeVerticalEnvelope(int32_t wy, const ColumnContext&);`. Constants: `BEDROCK_GUARD_MAX_Y = 5`, `CHEESE_MAX_Y = 50`, `LAVA_MAX_Y = 10`, aquifers Y 11..32, `AQUIFER_THRESHOLD = 0.42`.
 - `DecorationPipeline(uint64_t worldSeed, ChunkAccess&)`: `onTerrainReady(coord)`, `onUndecoratedChunkLoaded(coord, plan)`, `onDecoratedChunkLoaded(coord, plan)`, `onChunkUnloaded(coord, PlanRetention)`, `isDecorated`, `findPlan`. Every returned coord needs a relight and remesh.
 - `WorldStorage::saveDecorationRecord / loadDecorationRecord(core::ChunkCoord)` with `worldgen::DecorationRecord` (`FeaturePlanCodec`).
 

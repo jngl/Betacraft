@@ -14,8 +14,8 @@
 
 namespace betacraft::worldgen::test {
 
-using world::BlockId;
-using world::Chunk;
+using voxel::BlockId;
+using voxel::Chunk;
 
 constexpr int32_t SEA = core::EngineConfig::SEA_LEVEL;
 
@@ -71,11 +71,11 @@ namespace betacraft::worldgen::test {
 // (Forest / Taiga / Desert), round lakes on a 40-block lattice (water up to sea level, a
 // sea-level sand / grass shore ring) so water-adjacent rules are exercised, and pass-1 caves
 // carved by CaveCarver underneath, as WorldGen's pass 1 will produce them.
-[[nodiscard]] inline world::BiomeId decorationBiome(int32_t wx, int32_t wz) noexcept {
+[[nodiscard]] inline voxel::BiomeId decorationBiome(int32_t wx, int32_t wz) noexcept {
     const int32_t patch = core::floorMod(core::floorDiv(wx, 40) + core::floorDiv(wz, 40), 3);
-    if (patch == 0) return world::BiomeId::Forest;
-    if (patch == 1) return world::BiomeId::Taiga;
-    return world::BiomeId::Desert;
+    if (patch == 0) return voxel::BiomeId::Forest;
+    if (patch == 1) return voxel::BiomeId::Taiga;
+    return voxel::BiomeId::Desert;
 }
 
 [[nodiscard]] inline int32_t decorationSurface(int32_t wx, int32_t wz) noexcept {
@@ -114,20 +114,20 @@ inline void buildDecorationTerrain(Chunk& chunk) noexcept {
         for (int32_t lx = 0; lx < Chunk::WIDTH; ++lx) {
             const int32_t wx = baseX + lx;
             const int32_t wz = baseZ + lz;
-            const world::BiomeId biome = decorationBiome(wx, wz);
+            const voxel::BiomeId biome = decorationBiome(wx, wz);
             chunk.setColumnBiome(lx, lz, biome, glm::vec3(0.5f), glm::vec3(0.5f));
             const DecorationColumn col = decorationColumn(wx, wz);
             const int32_t s = col.surface;
             const bool shore = !col.lake && s == SEA;
-            BlockId top = (biome == world::BiomeId::Desert) ? BlockId::Sand
-                        : (biome == world::BiomeId::Taiga) ? BlockId::SnowGrass : BlockId::Grass;
+            BlockId top = (biome == voxel::BiomeId::Desert) ? BlockId::Sand
+                        : (biome == voxel::BiomeId::Taiga) ? BlockId::SnowGrass : BlockId::Grass;
             if (col.lake) top = BlockId::Sand;
-            else if (shore && biome != world::BiomeId::Desert) top = BlockId::Grass;
+            else if (shore && biome != voxel::BiomeId::Desert) top = BlockId::Grass;
             for (int32_t y = 0; y <= s; ++y) {
                 BlockId b = BlockId::Stone;
                 if (y == 0) b = BlockId::Bedrock;
                 else if (y == s) b = top;
-                else if (y >= s - 3) b = (biome == world::BiomeId::Desert) ? BlockId::Sand : BlockId::Dirt;
+                else if (y >= s - 3) b = (biome == voxel::BiomeId::Desert) ? BlockId::Sand : BlockId::Dirt;
                 chunk.setBlock(lx, y, lz, b, false);
             }
             if (col.lake) {

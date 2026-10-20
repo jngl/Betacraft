@@ -35,7 +35,7 @@
 using namespace betacraft;
 using gameplay::MobCategory;
 using gameplay::MobKind;
-using world::BlockId;
+using voxel::BlockId;
 
 namespace {
 
@@ -65,7 +65,7 @@ constexpr float kNoon = 0.25f;
 class P2WeatherWorld : public ::testing::Test {
 protected:
     void SetUp() override {
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
         // Everything is loaded first: decorating a neighbour could put a tree into a chunk
         // already flattened.
@@ -73,10 +73,10 @@ protected:
             (void)m_world->ensureChunkLoaded(c);
         }
         for (const core::ChunkCoord c : test::p2worldgen::squareRegion({0, 0}, kRadius)) {
-            world::Chunk& chunk = m_world->ensureChunkLoaded(c);
-            for (int32_t z = 0; z < world::Chunk::DEPTH; ++z) {
-                for (int32_t x = 0; x < world::Chunk::WIDTH; ++x) {
-                    for (int32_t y = 0; y < world::Chunk::HEIGHT; ++y) {
+            voxel::Chunk& chunk = m_world->ensureChunkLoaded(c);
+            for (int32_t z = 0; z < voxel::Chunk::DEPTH; ++z) {
+                for (int32_t x = 0; x < voxel::Chunk::WIDTH; ++x) {
+                    for (int32_t y = 0; y < voxel::Chunk::HEIGHT; ++y) {
                         BlockId id = BlockId::Air;
                         if (y == 0) id = BlockId::Bedrock;
                         else if (y < kGroundY - 3) id = BlockId::Stone;
@@ -88,15 +88,15 @@ protected:
             }
             chunk.recalculateLighting();
         }
-        setBiome(world::BiomeId::Plains);
+        setBiome(voxel::BiomeId::Plains);
     }
 
     // Every loaded column gets `biome`.
-    void setBiome(world::BiomeId biome) {
+    void setBiome(voxel::BiomeId biome) {
         for (const core::ChunkCoord c : test::p2worldgen::squareRegion({0, 0}, kRadius)) {
-            world::Chunk& chunk = m_world->ensureChunkLoaded(c);
-            for (int32_t z = 0; z < world::Chunk::DEPTH; ++z) {
-                for (int32_t x = 0; x < world::Chunk::WIDTH; ++x) {
+            voxel::Chunk& chunk = m_world->ensureChunkLoaded(c);
+            for (int32_t z = 0; z < voxel::Chunk::DEPTH; ++z) {
+                for (int32_t x = 0; x < voxel::Chunk::WIDTH; ++x) {
                     chunk.setColumnBiome(x, z, biome, chunk.getGrassTint(x, z), chunk.getFoliageTint(x, z));
                 }
             }
@@ -204,7 +204,7 @@ TEST_F(P2WeatherSession, RainStopsZombieBurning) {
 
 TEST_F(P2WeatherSession, SnowDoesNotSaveZombiesFromTheSun) {
     // Beta isWet only counts rain: in a snowy Taiga the sun still sets zombies on fire.
-    setBiome(world::BiomeId::Taiga);
+    setBiome(voxel::BiomeId::Taiga);
     m_weather = fullRain();
     EXPECT_FALSE(world::isRainingAt(*m_world, m_weather, m_feet));
     const ecs::EntityId zombie = spawnZombie(m_feet + glm::vec3(10.0f, 0.0f, 0.0f));
@@ -256,13 +256,13 @@ TEST_F(P2WeatherWorld, PrecipitationColumnsFollowBiomeAndRoofs) {
     }
 
     // Snow in the Taiga, nothing in the desert.
-    setBiome(world::BiomeId::Taiga);
+    setBiome(voxel::BiomeId::Taiga);
     const std::vector<render::WeatherVertex> snow = build(1.0f);
     ASSERT_FALSE(snow.empty());
     for (const render::WeatherVertex& v : snow) {
         ASSERT_FLOAT_EQ(v.params.z, static_cast<float>(render::WeatherVertexKind::Snow));
     }
-    setBiome(world::BiomeId::Desert);
+    setBiome(voxel::BiomeId::Desert);
     EXPECT_TRUE(build(1.0f).empty());
 }
 
@@ -288,6 +288,6 @@ TEST_F(P2WeatherWorld, RainIsMuffledIndoors) {
     EXPECT_LT(hut.cutoffHz, open.cutoffHz * 0.5f);
 
     // No rain in the desert.
-    setBiome(world::BiomeId::Desert);
+    setBiome(voxel::BiomeId::Desert);
     EXPECT_FLOAT_EQ(game::measureRainAudibility(*m_world, eye).gain, 0.0f);
 }

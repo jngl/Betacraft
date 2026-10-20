@@ -31,8 +31,8 @@ ChunkGenPipeline::~ChunkGenPipeline() {
     m_workers.clear(); // Joins
 }
 
-std::unique_ptr<world::Chunk> ChunkGenPipeline::generate(const world::WorldGen& gen, core::ChunkCoord coord) {
-    auto chunk = std::make_unique<world::Chunk>(coord);
+std::unique_ptr<voxel::Chunk> ChunkGenPipeline::generate(const world::WorldGen& gen, core::ChunkCoord coord) {
+    auto chunk = std::make_unique<voxel::Chunk>(coord);
     gen.generateChunk(*chunk);
     chunk->recalculateLighting();
     return chunk;
@@ -129,7 +129,7 @@ ChunkGenPipeline::Job ChunkGenPipeline::popJobLocked() {
 }
 
 void ChunkGenPipeline::runJob(std::unique_lock<std::mutex>& lock, Job job) {
-    std::unique_ptr<world::Chunk> chunk;
+    std::unique_ptr<voxel::Chunk> chunk;
     if (!job.stop.stop_requested()) {
         lock.unlock();
         chunk = generate(*job.gen, job.coord);

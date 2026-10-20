@@ -13,7 +13,7 @@
 namespace betacraft::world {
 
 struct BiomeSample {
-    BiomeId biome{BiomeId::Plains};
+    voxel::BiomeId biome{voxel::BiomeId::Plains};
     float temperature{0.5f};
     float humidity{0.5f};
     glm::vec3 grassTint{0.54f, 0.78f, 0.34f};
@@ -28,12 +28,12 @@ public:
     [[nodiscard]] uint64_t getSeed() const noexcept { return m_seed; }
 
     [[nodiscard]] BiomeSample sampleBiome(int32_t worldX, int32_t worldZ) const noexcept;
-    void populateBiomeColumns(Chunk& chunk) const noexcept;
+    void populateBiomeColumns(voxel::Chunk& chunk) const noexcept;
 
     // P3.4 pass 1 only: biomes, terrain, surface, P3.3 caves, S6.9 ore veins and S6.10
     // dungeons, computed from this chunk alone. Decoration (pass 2) and lighting are World's job once the 3x3
     // neighbourhood is resident; the chunk is left unlit and unmodified.
-    void generateChunk(Chunk& chunk) const noexcept;
+    void generateChunk(voxel::Chunk& chunk) const noexcept;
 
     // Pass-1 facts of any world column (generated or not), as CaveCarver::scanColumn would
     // read them from the generated chunk. Feeds the carver's lateral guard across borders.
@@ -41,9 +41,9 @@ public:
     [[nodiscard]] const worldgen::CaveCarver& caveCarver() const noexcept { return m_caveCarver; }
 
 private:
-    using Column = std::array<BlockId, Chunk::HEIGHT>;
+    using Column = std::array<voxel::BlockId, voxel::Chunk::HEIGHT>;
     // Step 1 of pass 1 for one column: bedrock, 3D overhang density, sea fill.
-    void fillTerrainColumn(int32_t worldX, int32_t worldZ, BiomeId biome, Column& out) const noexcept;
+    void fillTerrainColumn(int32_t worldX, int32_t worldZ, voxel::BiomeId biome, Column& out) const noexcept;
 
     uint64_t m_seed{173173173ULL};
     math::PerlinNoise m_continentNoise;

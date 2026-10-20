@@ -19,7 +19,7 @@
 
 namespace betacraft::test::p2gameplay {
 
-using world::BlockId;
+using voxel::BlockId;
 
 // High above the generated terrain of the test seed, on a glass floor laid by the fixture.
 using glassfloor::kFloorY;
@@ -28,7 +28,7 @@ using glassfloor::kY;
 class GameplayWorld : public ::testing::Test {
 protected:
     void SetUp() override {
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         m_world = std::make_unique<world::World>(p2worldgen::kSeed, m_dir.path());
         glassfloor::layGlassFloor(*m_world);
         glassfloor::resetPlayer(m_player);

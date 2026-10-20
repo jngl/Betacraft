@@ -24,7 +24,7 @@ inline constexpr float kSwordDigSpeed = 1.5f;
 inline constexpr int32_t kBlockHitDelayTicks = 5;
 inline constexpr float kEnvironmentPenalty = 5.0f; // Under water / not on ground (harvestable only)
 
-// Mining-relevant properties of a world block. Hardness is read from world::BlockRegistry;
+// Mining-relevant properties of a world block. Hardness is read from voxel::BlockRegistry;
 // tool requirements are this module's own table because BlockDef has no such data.
 struct BlockHarvestInfo {
     float hardness{-1.0f};                  // < 0: unbreakable (bedrock, liquids, non-blocks)
@@ -51,7 +51,7 @@ struct DigResult {
     float seconds{0.0f};
 };
 
-[[nodiscard]] BlockHarvestInfo harvestInfo(world::BlockId block) noexcept;
+[[nodiscard]] BlockHarvestInfo harvestInfo(voxel::BlockId block) noexcept;
 
 // Beta EntityPlayer.canHarvestBlock: toolless blocks always drop; otherwise the held item
 // must be the required tool type with a sufficient harvest level.
@@ -62,7 +62,7 @@ struct DigResult {
 
 [[nodiscard]] DigResult computeDig(const BlockHarvestInfo& block, const ItemStack& held,
                                    DigConditions conditions = {}) noexcept;
-[[nodiscard]] DigResult computeDig(world::BlockId block, const ItemStack& held,
+[[nodiscard]] DigResult computeDig(voxel::BlockId block, const ItemStack& held,
                                    DigConditions conditions = {}) noexcept;
 
 struct BlockBreakOutcome {
@@ -87,7 +87,7 @@ struct BlockBreakOutcome {
 // S5.6-S5.8: tall grass gives seeds 1 time in 8, a door or bed half its item, crops (by
 // their stage `meta`) wheat when ripe as `drop` and 0..3 seeds as `bonusDrop`.
 // S6.6: gravel gives flint 1 time in kGravelFlintOneIn, gravel otherwise.
-BlockBreakOutcome breakBlockWith(world::BlockId block, ItemStack& held, uint64_t dropSeed = 0,
+BlockBreakOutcome breakBlockWith(voxel::BlockId block, ItemStack& held, uint64_t dropSeed = 0,
                                  uint8_t meta = 0) noexcept;
 
 // Beta 1.7.3 BlockGravel.idDropped: rand(10) == 0 gives flint.
@@ -97,7 +97,7 @@ inline constexpr int32_t kGravelFlintOneIn = 10;
 // Block.dropBlockAsItemWithChance): the same items as a harvest, without the tool check
 // (stone gives cobblestone, obsidian would give obsidian); nothing for air and liquids, even
 // for unbreakable blocks the caller let through.
-[[nodiscard]] BlockBreakOutcome explosionDrops(world::BlockId block, uint64_t dropSeed = 0, uint8_t meta = 0) noexcept;
+[[nodiscard]] BlockBreakOutcome explosionDrops(voxel::BlockId block, uint64_t dropSeed = 0, uint8_t meta = 0) noexcept;
 
 // Hold-to-mine accumulator (Beta PlayerControllerSP.curBlockDamage). Each held tick adds the
 // *current* DigResult::progressPerTick, so changing the held item, jumping or entering water

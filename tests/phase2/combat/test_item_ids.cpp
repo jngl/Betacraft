@@ -16,7 +16,7 @@
 #include <string_view>
 
 using namespace betacraft::gameplay;
-using betacraft::world::BlockId;
+using betacraft::voxel::BlockId;
 
 // Everything is constexpr so crafting recipes and static tables can use it.
 static_assert(toolItemId(ToolKind::Sword, ToolMaterial::Iron) == items::IronSword);
@@ -80,10 +80,10 @@ TEST(SharedItemIds, BucketsAndThrowablesFollowBetaStackLimits) {
 // --- S2.10: Beta item numbers are canonical; legacy ids 100..105 are only read on load ---
 
 // Nothing the game produces carries a legacy id: recipes, smelting, block drops, the
-// Creative kit and palette. world::BlockId gains no item past the six legacy ones.
+// Creative kit and palette. voxel::BlockId gains no item past the six legacy ones.
 TEST(SharedItemIds, NoNewLegacyIds) {
-    betacraft::world::BlockRegistry::initialize();
-    static_assert(static_cast<int>(BlockId::Count) == 106, "no new item in world::BlockId");
+    betacraft::voxel::BlockRegistry::initialize();
+    static_assert(static_cast<int>(BlockId::Count) == 106, "no new item in voxel::BlockId");
     for (int b = 100; b < static_cast<int>(BlockId::Count); ++b) {
         EXPECT_TRUE(isLegacyItemId(static_cast<ItemId>(b))) << b;
         EXPECT_FALSE(isLegacyItemId(canonicalize(static_cast<ItemId>(b)))) << b;
@@ -133,7 +133,7 @@ TEST(SharedItemIds, NoNewLegacyIds) {
 // A level.dat written before S2.10 (items_scheme 1, frozen below) loads its legacy ids as
 // Beta numbers; the next save writes items_scheme 2 ids only.
 TEST(SharedItemIds, LoadFoldsLegacyIds) {
-    betacraft::world::BlockRegistry::initialize();
+    betacraft::voxel::BlockRegistry::initialize();
     constexpr std::string_view kSchemeOneLevel =
         "BETACRAFT_LEVEL_V2\n"
         "items_scheme 1\n"

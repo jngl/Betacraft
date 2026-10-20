@@ -18,9 +18,9 @@ using betacraft::core::BlockPos;
 using betacraft::core::ChunkCoord;
 using betacraft::core::floorDiv;
 using betacraft::core::floorMod;
-using betacraft::world::BiomeId;
-using betacraft::world::BlockId;
-using betacraft::world::Chunk;
+using betacraft::voxel::BiomeId;
+using betacraft::voxel::BlockId;
+using betacraft::voxel::Chunk;
 
 namespace {
 

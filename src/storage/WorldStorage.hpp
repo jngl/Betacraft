@@ -161,7 +161,7 @@ public:
     // §1.5) so the regenerated chunk does not overwrite them. Nothing happens when read-only.
     void quarantineChunk(core::ChunkCoord coord) const;
     // The bundle's block entities; an unreadable record is quarantined like a .be was.
-    [[nodiscard]] std::vector<world::BlockEntityEntry> decodeBundleBlockEntities(core::ChunkCoord coord,
+    [[nodiscard]] std::vector<voxel::BlockEntityEntry> decodeBundleBlockEntities(core::ChunkCoord coord,
                                                                                  const ChunkBundle& bundle) const;
     // Makes every region write durable (data fsynced, then headers).
     bool flush() const;
@@ -172,10 +172,10 @@ public:
 
     // Pre-Sprint 7 entry points, kept as wrappers over the bundle of the chunk: each one
     // reads the current bundle, replaces its part and writes it back (durably).
-    [[nodiscard]] bool saveChunk(const world::Chunk& chunk) const;
+    [[nodiscard]] bool saveChunk(const voxel::Chunk& chunk) const;
     // False when there is no chunk. An unreadable one is quarantined with a warning
     // (.chk.corrupt for a legacy file) so the regenerated chunk does not silently overwrite it.
-    [[nodiscard]] bool loadChunk(world::Chunk& chunk) const;
+    [[nodiscard]] bool loadChunk(voxel::Chunk& chunk) const;
 
     // P3.4 decoration record kept with the chunk. Saves predating it have none.
     [[nodiscard]] bool saveDecorationRecord(core::ChunkCoord coord, const worldgen::DecorationRecord& record) const;
@@ -183,9 +183,9 @@ public:
 
     // S2.4 block entities (furnaces, chests) kept with the chunk; legacy files are written
     // atomically (.be.tmp renamed over .be). No entities: none stored. Saves predating it have none.
-    [[nodiscard]] bool saveBlockEntities(core::ChunkCoord coord, std::span<const world::BlockEntityEntry> entries) const;
+    [[nodiscard]] bool saveBlockEntities(core::ChunkCoord coord, std::span<const voxel::BlockEntityEntry> entries) const;
     // Empty when there are none; an unreadable record is ignored with a warning.
-    [[nodiscard]] std::vector<world::BlockEntityEntry> loadBlockEntities(core::ChunkCoord coord) const;
+    [[nodiscard]] std::vector<voxel::BlockEntityEntry> loadBlockEntities(core::ChunkCoord coord) const;
 
     [[nodiscard]] const std::filesystem::path& directory() const noexcept { return m_saveDir; }
 
@@ -195,7 +195,7 @@ private:
     template <typename Edit>
     [[nodiscard]] bool editBundle(core::ChunkCoord coord, Edit&& edit) const;
     // Pre-Sprint 7 writers (region storage disabled).
-    [[nodiscard]] bool saveLegacyChunk(const world::Chunk& chunk) const;
+    [[nodiscard]] bool saveLegacyChunk(const voxel::Chunk& chunk) const;
     [[nodiscard]] bool saveLegacyDecoration(core::ChunkCoord coord, const worldgen::DecorationRecord& record) const;
     [[nodiscard]] bool saveLegacyBlockEntities(core::ChunkCoord coord, std::span<const uint8_t> encoded) const;
 

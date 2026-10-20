@@ -16,9 +16,9 @@
 
 using namespace betacraft;
 using namespace betacraft::test::p2gameplay;
-using world::ChestData;
-using world::FurnaceData;
-using world::StoredStack;
+using voxel::ChestData;
+using voxel::FurnaceData;
+using voxel::StoredStack;
 
 namespace {
 
@@ -57,7 +57,7 @@ protected:
     }
 
     // S7.3: block entities are stored in chunk (0, 0)'s region bundle, not a .be file.
-    [[nodiscard]] std::vector<world::BlockEntityEntry> storedEntities() const {
+    [[nodiscard]] std::vector<voxel::BlockEntityEntry> storedEntities() const {
         return m_world->getStorage().loadBlockEntities({0, 0});
     }
 
@@ -109,7 +109,7 @@ TEST_F(S2BlockEntities, FurnaceProgressSurvivesUnloadReload) {
 
     (void)m_world->ensureChunkLoaded({0, 0});
     EXPECT_EQ(m_world->getBlock(kFurnacePos), BlockId::LitFurnace);
-    const world::BlockEntity* after = m_world->blockEntities().find(kFurnacePos);
+    const voxel::BlockEntity* after = m_world->blockEntities().find(kFurnacePos);
     ASSERT_NE(after, nullptr);
     EXPECT_EQ(std::get<FurnaceData>(*after), before);
 }
@@ -121,7 +121,7 @@ TEST_F(S2BlockEntities, ChestContentsSurviveSaveModifiedChunks) {
 
     auto w = reopen();
     EXPECT_EQ(w->getBlock(kChestPos), BlockId::Chest);
-    const world::BlockEntity* e = w->blockEntities().find(kChestPos);
+    const voxel::BlockEntity* e = w->blockEntities().find(kChestPos);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(std::get<ChestData>(*e), fullChest());
 }
@@ -151,7 +151,7 @@ TEST_F(S2BlockEntities, FurnaceLitSwapKeepsInventory) {
     (void)tickIdle();
     ASSERT_EQ(m_world->getBlock(kFurnacePos), BlockId::LitFurnace);
     EXPECT_EQ(m_world->getBlockLight(kFurnacePos.x - 1, kFurnacePos.y, kFurnacePos.z), 12);
-    const world::BlockEntity* e = m_world->blockEntities().find(kFurnacePos);
+    const voxel::BlockEntity* e = m_world->blockEntities().find(kFurnacePos);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(std::get<FurnaceData>(*e).input, stack(15, 8));
     EXPECT_TRUE(std::get<FurnaceData>(*e).fuel.empty()) << "the coal is burning";
@@ -202,8 +202,8 @@ TEST_F(S2BlockEntities, EntityWithoutMatchingBlockIsDiscarded) {
     ASSERT_TRUE(m_world->setBlock(kFurnacePos, BlockId::Stone));
     m_world->saveModifiedChunks(storage::WorldLevelData{});
     // Hand-written record: the real chest plus a furnace entity over a stone block.
-    const std::vector<world::BlockEntityEntry> entries{{kChestPos, fullChest()}, {kFurnacePos, kOresAndCoal}};
-    overwriteStoredBlockEntities(world::encodeBlockEntities(entries));
+    const std::vector<voxel::BlockEntityEntry> entries{{kChestPos, fullChest()}, {kFurnacePos, kOresAndCoal}};
+    overwriteStoredBlockEntities(voxel::encodeBlockEntities(entries));
     auto w = reopen();
     EXPECT_NE(w->blockEntities().find(kChestPos), nullptr);
     EXPECT_EQ(w->blockEntities().find(kFurnacePos), nullptr);
@@ -236,7 +236,7 @@ TEST_F(S2BlockEntities, LegacyItemIdsInBeFileFoldOnLoad) {
     m_world->saveModifiedChunks(storage::WorldLevelData{});
 
     auto w = reopen();
-    const world::BlockEntity* e = w->blockEntities().find(kChestPos);
+    const voxel::BlockEntity* e = w->blockEntities().find(kChestPos);
     ASSERT_NE(e, nullptr);
     const ChestData& loaded = std::get<ChestData>(*e);
     EXPECT_EQ(loaded.slots[0], stack(items::Stick, 16));

@@ -40,50 +40,50 @@ TEST(TextureAtlasTest, TileUVAndAtlasGeneration) {
 }
 
 TEST(ChunkMesherTest, FaceCullingAndTranslucency) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir tempDir;
     world::World world(173ULL, tempDir.path());
-    world::Chunk& chunk = world.ensureChunkLoaded({0, 0});
+    voxel::Chunk& chunk = world.ensureChunkLoaded({0, 0});
 
     // Clear all blocks in chunk to isolate meshing test
-    for (int y = 0; y < world::Chunk::HEIGHT; ++y) {
-        for (int z = 0; z < world::Chunk::DEPTH; ++z) {
-            for (int x = 0; x < world::Chunk::WIDTH; ++x) {
-                chunk.setBlock(x, y, z, world::BlockId::Air, false);
+    for (int y = 0; y < voxel::Chunk::HEIGHT; ++y) {
+        for (int z = 0; z < voxel::Chunk::DEPTH; ++z) {
+            for (int x = 0; x < voxel::Chunk::WIDTH; ++x) {
+                chunk.setBlock(x, y, z, voxel::BlockId::Air, false);
             }
         }
     }
 
     // 1. Single Stone block -> 6 faces * 4 vertices = 24 vertices (32 bytes/quad)
-    chunk.setBlock(5, 50, 5, world::BlockId::Stone);
+    chunk.setBlock(5, 50, 5, voxel::BlockId::Stone);
     auto mesh1 = ChunkMesher::buildMesh(world, chunk, false);
     EXPECT_EQ(mesh1.opaqueVertices.size(), 24U);
     EXPECT_TRUE(mesh1.translucentVertices.empty());
 
     // 2. Two adjacent Stone blocks -> internal shared face culled -> (6 + 6 - 2) * 4 = 40 vertices
-    chunk.setBlock(6, 50, 5, world::BlockId::Stone);
+    chunk.setBlock(6, 50, 5, voxel::BlockId::Stone);
     auto mesh2 = ChunkMesher::buildMesh(world, chunk, false);
     EXPECT_EQ(mesh2.opaqueVertices.size(), 40U);
 
     // 3. Water block -> produces translucent vertices
-    chunk.setBlock(10, 50, 10, world::BlockId::Water);
+    chunk.setBlock(10, 50, 10, voxel::BlockId::Water);
     auto mesh3 = ChunkMesher::buildMesh(world, chunk, false);
     EXPECT_FALSE(mesh3.translucentVertices.empty());
 
     // 4. Tall grass -> cross shape adds 16 vertices (4 quads * 4 vertices)
     const size_t prevOpaque = mesh2.opaqueVertices.size();
-    chunk.setBlock(2, 50, 2, world::BlockId::TallGrass);
+    chunk.setBlock(2, 50, 2, voxel::BlockId::TallGrass);
     auto mesh4 = ChunkMesher::buildMesh(world, chunk, false);
     EXPECT_EQ(mesh4.opaqueVertices.size(), prevOpaque + 16U);
 }
 
 TEST(ChunkMesherTest, CrossFloraMeshingAndUvOrientation) {
     world::World world(42, "test_flora_world");
-    world::Chunk chunk(0, 0);
+    voxel::Chunk chunk(0, 0);
 
     // Place a Rose (38) and a Dandelion (37)
-    chunk.setBlock(5, 60, 5, world::BlockId::Rose);
-    chunk.setBlock(8, 60, 8, world::BlockId::Dandelion);
+    chunk.setBlock(5, 60, 5, voxel::BlockId::Rose);
+    chunk.setBlock(8, 60, 8, voxel::BlockId::Dandelion);
 
     const auto mesh = ChunkMesher::buildMesh(world, chunk, false);
     // 2 flora blocks * 16 vertices each = 32 vertices
@@ -113,9 +113,9 @@ TEST(ChunkMesherTest, CrossFloraMeshingAndUvOrientation) {
 
 TEST(ChunkMesherTest, GrassBlockSideAndTopTiles) {
     world::World world(42, "test_grass_world");
-    world::Chunk chunk(0, 0);
+    voxel::Chunk chunk(0, 0);
 
-    chunk.setBlock(5, 60, 5, world::BlockId::Grass);
+    chunk.setBlock(5, 60, 5, voxel::BlockId::Grass);
     const auto mesh = ChunkMesher::buildMesh(world, chunk, false);
 
     // 6 faces * 4 vertices = 24 vertices
@@ -148,9 +148,9 @@ TEST(ChunkMesherTest, GrassBlockSideAndTopTiles) {
 
 TEST(ChunkMesherTest, LeavesBlockAllFacesFoliageTint) {
     world::World world(42, "test_leaves_world");
-    world::Chunk chunk(0, 0);
+    voxel::Chunk chunk(0, 0);
 
-    chunk.setBlock(5, 60, 5, world::BlockId::Leaves);
+    chunk.setBlock(5, 60, 5, voxel::BlockId::Leaves);
     const auto mesh = ChunkMesher::buildMesh(world, chunk, false);
 
     // 6 faces * 4 vertices = 24 vertices
@@ -183,14 +183,14 @@ TEST(SkyRendererTest, AtmosphereEvaluation) {
 }
 
 TEST(ParticleSystemTest, SpawningAndSimulation) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir tempDir;
     world::World world(173ULL, tempDir.path());
     world.ensureChunkLoaded({0, 0});
 
     ParticleSystem ps;
-    ps.spawnBlockBreakBurst(world, {5, 70, 5}, world::BlockId::Cobblestone, 16);
-    ps.spawnMiningHitParticles(world, {5, 70, 5}, core::FaceDir::PosY, world::BlockId::Cobblestone, 4);
+    ps.spawnBlockBreakBurst(world, {5, 70, 5}, voxel::BlockId::Cobblestone, 16);
+    ps.spawnMiningHitParticles(world, {5, 70, 5}, core::FaceDir::PosY, voxel::BlockId::Cobblestone, 4);
 
     std::vector<ChunkVertex> billboardVerts;
     ps.buildBillboardVertices({1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, billboardVerts);

@@ -14,8 +14,8 @@
 
 namespace betacraft::test::p2worldgen {
 
-using world::BlockId;
-using world::Chunk;
+using voxel::BlockId;
+using voxel::Chunk;
 
 // Seed whose spawn area mixes forest (border trees), plains, ocean and caves.
 constexpr uint64_t kSeed = 173173173ULL;

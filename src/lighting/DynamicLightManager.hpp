@@ -50,10 +50,10 @@ public:
     [[nodiscard]] static glm::vec3 heldLightPosition(const glm::vec3& eyePos, const glm::vec3& lookDir) noexcept;
 
     // Light from the item in the player's hand; false when the item does not glow.
-    bool submitHeldItem(const glm::vec3& eyePos, const glm::vec3& lookDir, world::BlockId heldItem);
+    bool submitHeldItem(const glm::vec3& eyePos, const glm::vec3& lookDir, voxel::BlockId heldItem);
 
     // Light from a glowing item entity lying in the world; false when it does not glow.
-    bool submitDroppedItem(const glm::vec3& position, world::BlockId item);
+    bool submitDroppedItem(const glm::vec3& position, voxel::BlockId item);
 
     [[nodiscard]] size_t size() const noexcept { return m_lights.size(); }
     [[nodiscard]] std::span<const DynamicLight> lights() const noexcept { return m_lights; }

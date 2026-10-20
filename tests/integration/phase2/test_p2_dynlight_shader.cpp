@@ -276,7 +276,7 @@ TEST(P2DynLightShader, HeldTorchBrightensAnUnlitWallAtNightOnTheGpu) {
     const auto dark = drawWith(none);
 
     lighting::DynamicLightManager torch;
-    ASSERT_TRUE(torch.submitHeldItem(eye, {0.0f, 0.0f, -1.0f}, world::BlockId::Torch));
+    ASSERT_TRUE(torch.submitHeldItem(eye, {0.0f, 0.0f, -1.0f}, voxel::BlockId::Torch));
     const auto lit = drawWith(torch);
 
     EXPECT_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));

@@ -34,7 +34,7 @@ struct ChunkGenConfig {
 // A pass-1 chunk ready for World integration (terrain, caves, ores, dungeons, own lighting).
 struct GeneratedChunk {
     core::ChunkCoord coord{};
-    std::unique_ptr<world::Chunk> chunk;
+    std::unique_ptr<voxel::Chunk> chunk;
 };
 
 struct ChunkGenStats {
@@ -59,7 +59,7 @@ public:
 
     // The job itself: a new Chunk, WorldGen::generateChunk (pass 1) then recalculateLighting.
     // Identical to what World::ensureChunkLoaded computes for a new chunk.
-    [[nodiscard]] static std::unique_ptr<world::Chunk> generate(const world::WorldGen& gen, core::ChunkCoord coord);
+    [[nodiscard]] static std::unique_ptr<voxel::Chunk> generate(const world::WorldGen& gen, core::ChunkCoord coord);
 
     // False when the chunk is already pending, running or ready.
     bool request(core::ChunkCoord coord);

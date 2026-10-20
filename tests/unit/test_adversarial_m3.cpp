@@ -300,7 +300,7 @@ TEST(AdversarialM3AudioEngine, ZeroAllocationsAndCommandDrain) {
 
     // Queue 512 sound commands
     for (int i = 0; i < 512; ++i) {
-        engine.playBlockStep(betacraft::world::SoundCategory::Grass);
+        engine.playBlockStep(betacraft::voxel::SoundCategory::Grass);
     }
 
     // Stop all
@@ -321,9 +321,9 @@ TEST(AdversarialM3AudioEngine, MultiThreadBurstContention8Threads) {
         threads.emplace_back([&engine, t]() {
             for (size_t i = 0; i < iterationsPerThread; ++i) {
                 switch ((t + i) % 6) {
-                    case 0: engine.playBlockStep(betacraft::world::SoundCategory::Dirt); break;
-                    case 1: engine.playBlockBreak(betacraft::world::SoundCategory::Wood); break;
-                    case 2: engine.playBlockPlace(betacraft::world::SoundCategory::Stone); break;
+                    case 0: engine.playBlockStep(betacraft::voxel::SoundCategory::Dirt); break;
+                    case 1: engine.playBlockBreak(betacraft::voxel::SoundCategory::Wood); break;
+                    case 2: engine.playBlockPlace(betacraft::voxel::SoundCategory::Stone); break;
                     case 3: engine.playWaterSplash(); break;
                     case 4: engine.playUiClick(); break;
                     case 5: engine.stopAll(); break;

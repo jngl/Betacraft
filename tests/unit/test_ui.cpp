@@ -43,7 +43,7 @@ TEST(BitmapFontTest, MeasurementAndGlyphVertices) {
 }
 
 TEST(CraftingSystemTest, RecipesAndPaletteCompleteness) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
 
     const auto recipes = CraftingSystem::getRecipes();
     EXPECT_GE(recipes.size(), 14U);
@@ -66,16 +66,16 @@ TEST(CraftingSystemTest, CraftingExecution) {
     EXPECT_FALSE(CraftingSystem::canCraft(planksRecipe, player));
     EXPECT_FALSE(CraftingSystem::craft(planksRecipe, player));
 
-    player.addItem(world::BlockId::OakLog, 2);
+    player.addItem(voxel::BlockId::OakLog, 2);
     EXPECT_TRUE(CraftingSystem::canCraft(planksRecipe, player));
     EXPECT_TRUE(CraftingSystem::craft(planksRecipe, player));
 
-    EXPECT_EQ(player.countItem(world::BlockId::OakLog), 1);
-    EXPECT_EQ(player.countItem(world::BlockId::OakPlanks), 4);
+    EXPECT_EQ(player.countItem(voxel::BlockId::OakLog), 1);
+    EXPECT_EQ(player.countItem(voxel::BlockId::OakPlanks), 4);
 }
 
 TEST(HudRendererTest, InventoryClickPaletteItemSelection) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     physics::Player player;
     HudRenderer hud;
 
@@ -94,7 +94,7 @@ TEST(HudRendererTest, InventoryClickPaletteItemSelection) {
 
     player.setSelectedSlot(0);
     EXPECT_TRUE(hud.handleInventoryClick(clickX, clickY, screenW, screenH, player));
-    EXPECT_EQ(player.getHeldItem().id, world::BlockId::Stone);
+    EXPECT_EQ(player.getHeldItem().id, voxel::BlockId::Stone);
     EXPECT_EQ(player.getHeldItem().count, 64);
 }
 

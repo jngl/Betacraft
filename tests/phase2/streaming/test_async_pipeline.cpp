@@ -32,8 +32,8 @@ using betacraft::streaming::test::FakeClock;
 using betacraft::streaming::test::kGenerousTimeout;
 using betacraft::streaming::VoxelSample;
 using betacraft::voxel::SectionCoord;
-using betacraft::world::BlockId;
-using betacraft::world::BlockStateId;
+using betacraft::voxel::BlockId;
+using betacraft::voxel::BlockStateId;
 using Snap = SectionNeighborhoodSnapshot18;
 using SnapPtr = std::shared_ptr<const Snap>;
 

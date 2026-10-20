@@ -17,7 +17,7 @@
 #include <utility>
 
 using namespace betacraft;
-using world::BlockId;
+using voxel::BlockId;
 
 namespace {
 

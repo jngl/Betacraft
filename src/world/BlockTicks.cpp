@@ -17,9 +17,9 @@ namespace {
 void tickGrass(World& world, const core::BlockPos& pos, uint8_t /*meta*/, gameplay::SplitMix64& rng) {
     const core::BlockPos above = pos.offset(0, 1, 0);
     const uint8_t light = world.getEffectiveLight(above);
-    if (light < 4 && BlockRegistry::get(world.getBlock(above)).lightOpacity > 2) {
+    if (light < 4 && voxel::BlockRegistry::get(world.getBlock(above)).lightOpacity > 2) {
         if (rng.nextInt(4) == 0) {
-            (void)world.setBlockWithMetadata(pos.x, pos.y, pos.z, BlockId::Dirt, 0);
+            (void)world.setBlockWithMetadata(pos.x, pos.y, pos.z, voxel::BlockId::Dirt, 0);
         }
         return;
     }
@@ -28,9 +28,9 @@ void tickGrass(World& world, const core::BlockPos& pos, uint8_t /*meta*/, gamepl
     }
     const core::BlockPos target = pos.offset(rng.nextInt(3) - 1, rng.nextInt(5) - 3, rng.nextInt(3) - 1);
     const core::BlockPos targetAbove = target.offset(0, 1, 0);
-    if (world.getBlock(target) == BlockId::Dirt && world.getEffectiveLight(targetAbove) >= 4 &&
-        BlockRegistry::get(world.getBlock(targetAbove)).lightOpacity <= 2) {
-        (void)world.setBlockWithMetadata(target.x, target.y, target.z, BlockId::Grass, 0);
+    if (world.getBlock(target) == voxel::BlockId::Dirt && world.getEffectiveLight(targetAbove) >= 4 &&
+        voxel::BlockRegistry::get(world.getBlock(targetAbove)).lightOpacity <= 2) {
+        (void)world.setBlockWithMetadata(target.x, target.y, target.z, voxel::BlockId::Grass, 0);
     }
 }
 
@@ -50,9 +50,9 @@ void tickSapling(World& world, const core::BlockPos& pos, uint8_t meta, gameplay
 // Beta BlockCactus / BlockReed.updateTick: with air above and a column shorter than 3, the
 // top block ages; at 15 a new block grows on it.
 void tickColumnPlant(World& world, const core::BlockPos& pos, uint8_t meta, gameplay::SplitMix64& /*rng*/) {
-    const BlockId self = world.getBlock(pos);
+    const voxel::BlockId self = world.getBlock(pos);
     const core::BlockPos above = pos.offset(0, 1, 0);
-    if (above.y >= Chunk::HEIGHT || world.getBlock(above) != BlockId::Air) {
+    if (above.y >= voxel::Chunk::HEIGHT || world.getBlock(above) != voxel::BlockId::Air) {
         return;
     }
     int32_t height = 1;
@@ -81,7 +81,7 @@ void tickLeaves(World& world, const core::BlockPos& pos, uint8_t meta, gameplay:
     constexpr int32_t kReach = kLeavesSupportRange + 1;
     for (const int32_t dz : {-kReach, kReach}) {
         for (const int32_t dx : {-kReach, kReach}) {
-            const core::ChunkCoord c{core::floorDiv(pos.x + dx, Chunk::WIDTH), core::floorDiv(pos.z + dz, Chunk::DEPTH)};
+            const core::ChunkCoord c{core::floorDiv(pos.x + dx, voxel::Chunk::WIDTH), core::floorDiv(pos.z + dz, voxel::Chunk::DEPTH)};
             if (world.getChunk(c) == nullptr) {
                 return;
             }
@@ -104,8 +104,8 @@ void tickFarmland(World& world, const core::BlockPos& pos, uint8_t meta, gamepla
         (void)world.setMetadata(pos.x, pos.y, pos.z, gameplay::kFarmlandWetMoisture);
     } else if (meta > 0) {
         (void)world.setMetadata(pos.x, pos.y, pos.z, static_cast<uint8_t>(meta - 1));
-    } else if (world.getBlock(pos.offset(0, 1, 0)) != BlockId::Crops) {
-        (void)world.setBlockWithMetadata(pos.x, pos.y, pos.z, BlockId::Dirt, 0);
+    } else if (world.getBlock(pos.offset(0, 1, 0)) != voxel::BlockId::Crops) {
+        (void)world.setBlockWithMetadata(pos.x, pos.y, pos.z, voxel::BlockId::Dirt, 0);
     }
 }
 
@@ -114,7 +114,7 @@ void tickFarmland(World& world, const core::BlockPos& pos, uint8_t meta, gamepla
 void tickCrops(World& world, const core::BlockPos& pos, uint8_t meta, gameplay::SplitMix64& rng) {
     const uint8_t sky = world.getSkyLight(pos.x, pos.y, pos.z);
     const uint8_t full = std::max(sky, world.getBlockLight(pos.x, pos.y, pos.z));
-    if (world.getBlock(pos.offset(0, -1, 0)) != BlockId::Farmland ||
+    if (world.getBlock(pos.offset(0, -1, 0)) != voxel::BlockId::Farmland ||
         (full < gameplay::kCropsMinStayLight && sky < 15)) {
         (void)world.breakBlockNaturally(pos);
         return;
@@ -129,19 +129,19 @@ void tickCrops(World& world, const core::BlockPos& pos, uint8_t meta, gameplay::
 
 [[nodiscard]] std::array<RandomTickFn, 256> buildRandomTickTable() noexcept {
     std::array<RandomTickFn, 256> table{};
-    table[static_cast<size_t>(BlockId::Grass)] = &tickGrass;
-    table[static_cast<size_t>(BlockId::Sapling)] = &tickSapling;
-    table[static_cast<size_t>(BlockId::Cactus)] = &tickColumnPlant;
-    table[static_cast<size_t>(BlockId::SugarCane)] = &tickColumnPlant;
-    table[static_cast<size_t>(BlockId::Leaves)] = &tickLeaves;
-    table[static_cast<size_t>(BlockId::Farmland)] = &tickFarmland;
-    table[static_cast<size_t>(BlockId::Crops)] = &tickCrops;
+    table[static_cast<size_t>(voxel::BlockId::Grass)] = &tickGrass;
+    table[static_cast<size_t>(voxel::BlockId::Sapling)] = &tickSapling;
+    table[static_cast<size_t>(voxel::BlockId::Cactus)] = &tickColumnPlant;
+    table[static_cast<size_t>(voxel::BlockId::SugarCane)] = &tickColumnPlant;
+    table[static_cast<size_t>(voxel::BlockId::Leaves)] = &tickLeaves;
+    table[static_cast<size_t>(voxel::BlockId::Farmland)] = &tickFarmland;
+    table[static_cast<size_t>(voxel::BlockId::Crops)] = &tickCrops;
     return table;
 }
 
 // Cells a growing tree may take: air, flora and leaves, never liquids or terrain.
-[[nodiscard]] bool treeCanReplace(BlockId id) noexcept {
-    return id == BlockId::Leaves || (BlockRegistry::get(id).replaceable && !BlockRegistry::isLiquid(id));
+[[nodiscard]] bool treeCanReplace(voxel::BlockId id) noexcept {
+    return id == voxel::BlockId::Leaves || (voxel::BlockRegistry::get(id).replaceable && !voxel::BlockRegistry::isLiquid(id));
 }
 
 } // namespace
@@ -153,7 +153,7 @@ bool farmlandHasWaterNearby(const World& world, const core::BlockPos& pos) {
     for (int32_t dy = 0; dy <= 1; ++dy) {
         for (int32_t dz = -r; dz <= r; ++dz) {
             for (int32_t dx = -r; dx <= r; ++dx) {
-                if (isWaterBlock(world.getBlock(pos.x + dx, pos.y + dy, pos.z + dz))) {
+                if (voxel::isWaterBlock(world.getBlock(pos.x + dx, pos.y + dy, pos.z + dz))) {
                     return true;
                 }
             }
@@ -183,11 +183,11 @@ bool growTreeFromSapling(World& world, const core::BlockPos& pos, gameplay::Spli
                                  .height = height,
                                  .variant = static_cast<uint32_t>(rng.next())};
     // Beta WorldGenTrees: room up to the crown inside the world, soil under the trunk.
-    if (pos.y < 1 || pos.y + height + 1 >= Chunk::HEIGHT) {
+    if (pos.y < 1 || pos.y + height + 1 >= voxel::Chunk::HEIGHT) {
         return false;
     }
-    const BlockId soil = world.getBlock(pos.offset(0, -1, 0));
-    if (soil != BlockId::Grass && soil != BlockId::Dirt) {
+    const voxel::BlockId soil = world.getBlock(pos.offset(0, -1, 0));
+    if (soil != voxel::BlockId::Grass && soil != voxel::BlockId::Dirt) {
         return false;
     }
     for (int32_t ty = 1; ty < height; ++ty) {
@@ -195,11 +195,11 @@ bool growTreeFromSapling(World& world, const core::BlockPos& pos, gameplay::Spli
             return false;
         }
     }
-    worldgen::forEachFeatureBlock(tree, [&](core::BlockPos p, BlockId proposed) {
-        const BlockId existing = world.getBlock(p);
-        if (proposed == BlockId::Dirt) {
-            if (existing == BlockId::Grass) {
-                (void)world.setBlockWithMetadata(p.x, p.y, p.z, BlockId::Dirt, 0);
+    worldgen::forEachFeatureBlock(tree, [&](core::BlockPos p, voxel::BlockId proposed) {
+        const voxel::BlockId existing = world.getBlock(p);
+        if (proposed == voxel::BlockId::Dirt) {
+            if (existing == voxel::BlockId::Grass) {
+                (void)world.setBlockWithMetadata(p.x, p.y, p.z, voxel::BlockId::Dirt, 0);
             }
             return;
         }
@@ -234,9 +234,9 @@ bool leavesHaveLogSupport(const World& world, const core::BlockPos& pos) {
                 const core::BlockPos p = from.offset(s.x, s.y, s.z);
                 if (visited[index(p)]) continue;
                 visited[index(p)] = true;
-                const BlockId id = world.getBlock(p);
+                const voxel::BlockId id = world.getBlock(p);
                 if (isLogBlock(id)) return true;
-                if (id == BlockId::Leaves && depth < kLeavesSupportRange) frontier[tail++] = p;
+                if (id == voxel::BlockId::Leaves && depth < kLeavesSupportRange) frontier[tail++] = p;
             }
         }
     }

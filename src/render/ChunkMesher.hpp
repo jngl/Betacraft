@@ -61,7 +61,7 @@ class ChunkMesher {
 public:
     [[nodiscard]] static ChunkMeshData buildMesh(
         const world::World& world,
-        const world::Chunk& chunk,
+        const voxel::Chunk& chunk,
         bool smoothLighting = true
     );
 };

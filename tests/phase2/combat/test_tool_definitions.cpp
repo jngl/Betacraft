@@ -155,7 +155,7 @@ TEST(ToolItems, NonToolsAreRejected) {
 }
 
 TEST(ToolItems, FromBlockIdBridgesLegacyInventory) {
-    using betacraft::world::BlockId;
+    using betacraft::voxel::BlockId;
     EXPECT_EQ(toItemId(BlockId::DiamondPickaxe), 105);
     EXPECT_TRUE(isTool(toItemId(BlockId::WoodPickaxe)));
     EXPECT_FALSE(isTool(toItemId(BlockId::Stick)));

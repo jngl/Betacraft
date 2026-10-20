@@ -17,7 +17,7 @@ namespace {
 class FoodTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         for (size_t i = 0; i < Player::TOTAL_INVENTORY_SIZE; ++i) m_player.setInventorySlot(i, {});
         m_player.setSelectedSlot(0);
     }
@@ -41,7 +41,7 @@ TEST(Food, BetaHealValues) {
         EXPECT_EQ(info->leftover, c.id == items::MushroomStew ? items::Bowl : gameplay::kNoItem) << c.id;
     }
     for (const gameplay::ItemId notFood : {gameplay::kNoItem, items::Bowl, items::Wheat, items::Stick,
-                                           gameplay::toItemId(world::BlockId::Dirt), items::Cake}) {
+                                           gameplay::toItemId(voxel::BlockId::Dirt), items::Cake}) {
         EXPECT_FALSE(foodInfo(notFood).has_value()) << notFood;
     }
 }
@@ -55,7 +55,7 @@ TEST_F(FoodTest, BetaHealValuesThroughUseHeldItem) {
     EXPECT_EQ(m_player.getHealth(), 14); // Playtest: 10 HP + an apple = 14 HP
     EXPECT_TRUE(m_player.getHeldItem().isEmpty());
 
-    m_player.setHeldItem({gameplay::toItemId(world::BlockId::Dirt), 5});
+    m_player.setHeldItem({gameplay::toItemId(voxel::BlockId::Dirt), 5});
     EXPECT_FALSE(m_session.useHeldItem(m_player).has_value());
     EXPECT_EQ(m_player.getHeldItem().count, 5);
 }
@@ -94,7 +94,7 @@ TEST_F(FoodTest, DeadCannotEat) {
 
 // S2.9: leaves roll an apple 1 time in 200 on top of (and independently of) the sapling.
 TEST(Food, LeavesDropAnAppleOneTimeIn200) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     int apples = 0;
     int saplings = 0;
     int both = 0;
@@ -102,7 +102,7 @@ TEST(Food, LeavesDropAnAppleOneTimeIn200) {
     for (int seed = 0; seed < kRolls; ++seed) {
         gameplay::ItemStack hand{};
         const gameplay::BlockBreakOutcome out =
-            gameplay::breakBlockWith(world::BlockId::Leaves, hand, static_cast<uint64_t>(seed) * 0x9E3779B97F4A7C15ULL);
+            gameplay::breakBlockWith(voxel::BlockId::Leaves, hand, static_cast<uint64_t>(seed) * 0x9E3779B97F4A7C15ULL);
         ASSERT_TRUE(out.broken);
         const bool apple = out.bonusDrop.has_value();
         if (apple) {
@@ -117,5 +117,5 @@ TEST(Food, LeavesDropAnAppleOneTimeIn200) {
     EXPECT_NEAR(saplings, kRolls / 20, kRolls / 20 / 4);
     EXPECT_LT(both, 30); // Independent rolls: ~10 expected
     gameplay::ItemStack hand{};
-    EXPECT_FALSE(gameplay::breakBlockWith(world::BlockId::Stone, hand, 1).bonusDrop.has_value());
+    EXPECT_FALSE(gameplay::breakBlockWith(voxel::BlockId::Stone, hand, 1).bonusDrop.has_value());
 }

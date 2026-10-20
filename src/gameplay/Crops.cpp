@@ -5,7 +5,7 @@
 namespace betacraft::gameplay {
 
 float cropGrowthRate(const CropNeighbourhood& cells) noexcept {
-    using world::BlockId;
+    using voxel::BlockId;
     const auto crop = [&](int dx, int dz) {
         return cells.level[static_cast<size_t>(dx + 1)][static_cast<size_t>(dz + 1)] == BlockId::Crops;
     };

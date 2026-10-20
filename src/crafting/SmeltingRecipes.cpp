@@ -4,7 +4,7 @@ namespace betacraft::crafting {
 
 namespace {
 
-using world::BlockId;
+using voxel::BlockId;
 
 [[nodiscard]] constexpr SlotStack one(ItemId id) noexcept {
     return SlotStack{id, 1, 0};

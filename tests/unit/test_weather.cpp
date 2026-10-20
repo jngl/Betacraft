@@ -133,13 +133,13 @@ TEST(WeatherTest, ThunderOnlyWhenRaining) {
 }
 
 TEST(WeatherTest, PrecipitationByBiome) {
-    EXPECT_EQ(world::precipitationAt(world::BiomeId::Taiga), Precipitation::Snow);
-    EXPECT_EQ(world::precipitationAt(world::BiomeId::Tundra), Precipitation::Snow);
-    EXPECT_EQ(world::precipitationAt(world::BiomeId::Desert), Precipitation::None);
-    for (const world::BiomeId biome :
-         {world::BiomeId::Rainforest, world::BiomeId::Swampland, world::BiomeId::SeasonalForest, world::BiomeId::Forest,
-          world::BiomeId::Savanna, world::BiomeId::Shrubland, world::BiomeId::Plains}) {
-        EXPECT_EQ(world::precipitationAt(biome), Precipitation::Rain) << world::biomeName(biome);
+    EXPECT_EQ(world::precipitationAt(voxel::BiomeId::Taiga), Precipitation::Snow);
+    EXPECT_EQ(world::precipitationAt(voxel::BiomeId::Tundra), Precipitation::Snow);
+    EXPECT_EQ(world::precipitationAt(voxel::BiomeId::Desert), Precipitation::None);
+    for (const voxel::BiomeId biome :
+         {voxel::BiomeId::Rainforest, voxel::BiomeId::Swampland, voxel::BiomeId::SeasonalForest, voxel::BiomeId::Forest,
+          voxel::BiomeId::Savanna, voxel::BiomeId::Shrubland, voxel::BiomeId::Plains}) {
+        EXPECT_EQ(world::precipitationAt(biome), Precipitation::Rain) << voxel::biomeName(biome);
     }
 }
 

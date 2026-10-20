@@ -43,7 +43,7 @@ enum class FluidEventKind : uint8_t {
 struct FluidEvent {
     FluidEventKind kind{FluidEventKind::Fizz};
     core::BlockPos pos{};
-    world::BlockId block{world::BlockId::Air};
+    voxel::BlockId block{voxel::BlockId::Air};
 
     bool operator==(const FluidEvent& other) const noexcept = default;
 };
@@ -138,9 +138,9 @@ private:
     void scheduleFluid(const core::BlockPos& pos);
     void wakeNeighbours(const core::BlockPos& pos, bool hardenLava);
     void writeFluid(const core::BlockPos& pos, FluidState state);
-    void writeBlock(const core::BlockPos& pos, world::BlockId id);
+    void writeBlock(const core::BlockPos& pos, voxel::BlockId id);
     bool tryHarden(const core::BlockPos& pos);
-    void emit(FluidEventKind kind, const core::BlockPos& pos, world::BlockId block);
+    void emit(FluidEventKind kind, const core::BlockPos& pos, voxel::BlockId block);
 
     void updateCell(const core::BlockPos& pos);
     void flowInto(const core::BlockPos& pos, FluidType type, int decay);

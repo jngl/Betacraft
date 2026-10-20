@@ -25,7 +25,7 @@ using betacraft::streaming::PipelineConfig;
 using betacraft::streaming::SubmitResult;
 using betacraft::streaming::test::kGenerousTimeout;
 using betacraft::voxel::SectionCoord;
-using betacraft::world::BlockId;
+using betacraft::voxel::BlockId;
 using betacraft::world::World;
 
 namespace {
@@ -47,7 +47,7 @@ bool sameWords(const std::vector<PackedChunkVertex>& a, const std::vector<Packed
 class PipelineWorldIntegration : public ::testing::Test {
 protected:
     void SetUp() override {
-        betacraft::world::BlockRegistry::initialize();
+        betacraft::voxel::BlockRegistry::initialize();
         m_world = std::make_unique<World>(424242ULL, m_dir.path());
         for (int cz = -1; cz <= 1; ++cz)
             for (int cx = -1; cx <= 1; ++cx)

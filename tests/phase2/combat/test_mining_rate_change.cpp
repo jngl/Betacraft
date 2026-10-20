@@ -14,8 +14,8 @@
 #include <vector>
 
 using namespace betacraft::gameplay;
-using betacraft::world::BlockId;
-using betacraft::world::BlockRegistry;
+using betacraft::voxel::BlockId;
+using betacraft::voxel::BlockRegistry;
 
 namespace {
 ItemStack tool(ToolType type, ToolMaterial mat) {

@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-using namespace betacraft::world;
+using namespace betacraft::voxel;
 using namespace testing;
 
 TEST(ChunkTest, InBoundsAndIndexing) {

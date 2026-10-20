@@ -33,39 +33,39 @@ uint8_t blockLightLevelOf(const DynamicLight& light, const glm::vec3& worldPos) 
     return linearBlockLevel(glm::length(worldPos - light.position), light.radius, light.radius * light.intensity);
 }
 
-uint8_t emissionOf(world::BlockId id) noexcept {
+uint8_t emissionOf(voxel::BlockId id) noexcept {
     switch (id) {
-        case world::BlockId::RedstoneOre:
+        case voxel::BlockId::RedstoneOre:
             // The registry gives id 73 a static-world glow of 4, but in Beta 1.7.3 only the
             // transient glowing ore block (id 74) emits; the ore as an item never does.
             return 0;
-        case world::BlockId::Lava:
-        case world::BlockId::StillLava:
+        case voxel::BlockId::Lava:
+        case voxel::BlockId::StillLava:
             // Placed lava emits 15, but Beta has no lava item (only the lava bucket, which
             // does not glow), so a held or dropped lava id never lights anything.
             return 0;
-        case world::BlockId::LitFurnace:
+        case voxel::BlockId::LitFurnace:
             // A burning furnace glows only while placed; it drops (and is held as) a furnace.
             return 0;
         default:
-            return world::BlockRegistry::get(id).lightEmission;
+            return voxel::BlockRegistry::get(id).lightEmission;
     }
 }
 
-glm::vec3 emitterColor(world::BlockId id) noexcept {
+glm::vec3 emitterColor(voxel::BlockId id) noexcept {
     switch (id) {
-        case world::BlockId::Torch:
+        case voxel::BlockId::Torch:
             // Same warm tint as the static torch light in PACKED_CHUNK_FS, so held and
             // placed torches look identical.
             return {1.0f, 0.94f, 0.82f};
-        case world::BlockId::Glowstone:
+        case voxel::BlockId::Glowstone:
             return {1.0f, 0.92f, 0.70f};
         default:
             return {1.0f, 1.0f, 1.0f};
     }
 }
 
-std::optional<DynamicLight> makeEmitterLight(world::BlockId id, const glm::vec3& position,
+std::optional<DynamicLight> makeEmitterLight(voxel::BlockId id, const glm::vec3& position,
                                              LightSource source) noexcept {
     const uint8_t emission = emissionOf(id);
     if (emission == 0) {

@@ -12,7 +12,7 @@ namespace betacraft::ai {
 // How a block reads for navigation: water is Liquid, lava and cactus are Hazards, a wooden
 // door (wooden or iron, S8.8) is open or closed by its metadata, fences are too high to step on, and anything else
 // is Solid when it has a collision box (BlockRegistry::isSolid), Passable otherwise.
-[[nodiscard]] NavCell classifyBlock(world::BlockId id, uint8_t meta) noexcept;
+[[nodiscard]] NavCell classifyBlock(voxel::BlockId id, uint8_t meta) noexcept;
 
 // INavVoxelQuery over the live World (main thread). A cell is loaded when it lies in
 // [0, Chunk::HEIGHT) and its chunk is resident.

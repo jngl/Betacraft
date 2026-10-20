@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 using namespace betacraft::gameplay;
-using betacraft::world::BlockId;
+using betacraft::voxel::BlockId;
 
 namespace {
 ItemStack tool(ToolType type, ToolMaterial mat) {
@@ -16,7 +16,7 @@ TEST(BlockBreak, HarvestedBlockYieldsRegistryDrop) {
     const BlockBreakOutcome r = breakBlockWith(BlockId::Stone, pick);
     EXPECT_TRUE(r.broken);
     ASSERT_TRUE(r.drop.has_value());
-    EXPECT_EQ(r.drop->id, toItemId(betacraft::world::BlockRegistry::get(BlockId::Stone).dropId));
+    EXPECT_EQ(r.drop->id, toItemId(betacraft::voxel::BlockRegistry::get(BlockId::Stone).dropId));
     EXPECT_EQ(r.drop->count, 1);
     EXPECT_EQ(r.toolWear, WearResult::Worn);
     EXPECT_EQ(pick.damage, 1);

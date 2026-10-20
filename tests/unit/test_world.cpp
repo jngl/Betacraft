@@ -7,6 +7,7 @@
 
 using namespace betacraft;
 using namespace betacraft::world;
+using namespace betacraft::voxel;
 using namespace testing;
 
 TEST(WorldTest, CrossChunkBoundaryBlocks) {

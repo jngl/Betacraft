@@ -10,7 +10,7 @@ namespace betacraft::redstone {
 
 namespace {
 
-using world::BlockId;
+using voxel::BlockId;
 
 constexpr std::array<glm::ivec3, 4> kHorizontal{{{1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}}};
 constexpr std::array<glm::ivec3, 6> kSides{{{1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}}};
@@ -52,7 +52,7 @@ constexpr uint64_t kBurnoutSweepTicks = 200;
 }
 
 [[nodiscard]] constexpr bool isConsumer(BlockId id) noexcept {
-    return isTorch(id) || world::isDoorBlock(id) || id == BlockId::Piston;
+    return isTorch(id) || voxel::isDoorBlock(id) || id == BlockId::Piston;
 }
 
 template <class Fn>
@@ -70,7 +70,7 @@ void forEachInDiamond(const core::BlockPos& c, int32_t radius, Fn&& fn) {
 
 } // namespace
 
-RedstoneEngine::RedstoneEngine(IRedstoneVoxelAccess& access, world::ScheduledTickQueue* sharedQueue,
+RedstoneEngine::RedstoneEngine(IRedstoneVoxelAccess& access, voxel::ScheduledTickQueue* sharedQueue,
                                uint32_t maxEvaluationsPerTick)
     : m_access(access),
       m_queue(sharedQueue != nullptr ? sharedQueue : &m_ownQueue),
@@ -108,9 +108,9 @@ void RedstoneEngine::onBlockLoaded(core::BlockPos pos) {
     const BlockId id = block(pos);
     if (isConsumer(id)) {
         enqueueCheck(pos);
-    } else if (id == BlockId::StoneButton && (meta(pos) & world::kButtonPressedBit) != 0) {
+    } else if (id == BlockId::StoneButton && (meta(pos) & voxel::kButtonPressedBit) != 0) {
         schedule(pos, kButtonTicks);
-    } else if (isPlate(id) && (meta(pos) & world::kPlatePressedBit) != 0) {
+    } else if (isPlate(id) && (meta(pos) & voxel::kPlatePressedBit) != 0) {
         schedule(pos, kPlateTicks);
     }
 }
@@ -219,12 +219,12 @@ uint8_t RedstoneEngine::weakPower(const core::BlockPos& src, const core::BlockPo
     const BlockId id = block(src);
     const uint8_t m = meta(src);
     switch (id) {
-        case BlockId::Lever: return (m & world::kLeverOnBit) != 0 ? kMaxPower : 0;
-        case BlockId::StoneButton: return (m & world::kButtonPressedBit) != 0 ? kMaxPower : 0;
+        case BlockId::Lever: return (m & voxel::kLeverOnBit) != 0 ? kMaxPower : 0;
+        case BlockId::StoneButton: return (m & voxel::kButtonPressedBit) != 0 ? kMaxPower : 0;
         case BlockId::StonePressurePlate:
-        case BlockId::WoodPressurePlate: return (m & world::kPlatePressedBit) != 0 ? kMaxPower : 0;
+        case BlockId::WoodPressurePlate: return (m & voxel::kPlatePressedBit) != 0 ? kMaxPower : 0;
         case BlockId::RedstoneTorchOn:
-            return add(src, world::attachmentOffset(m)) == target ? uint8_t{0} : kMaxPower;
+            return add(src, voxel::attachmentOffset(m)) == target ? uint8_t{0} : kMaxPower;
         case BlockId::RedstoneWire:
             return wires && wirePowersTowards(src, target) ? wirePower(src) : uint8_t{0};
         default: return 0;
@@ -238,11 +238,11 @@ uint8_t RedstoneEngine::strongPower(const core::BlockPos& src, const core::Block
         case BlockId::Lever:
         case BlockId::StoneButton:
             // The on bit and the pressed bit are the same 0x8.
-            return (m & world::kLeverOnBit) != 0 && add(src, world::attachmentOffset(m)) == target ? kMaxPower
+            return (m & voxel::kLeverOnBit) != 0 && add(src, voxel::attachmentOffset(m)) == target ? kMaxPower
                                                                                                     : uint8_t{0};
         case BlockId::StonePressurePlate:
         case BlockId::WoodPressurePlate:
-            return (m & world::kPlatePressedBit) != 0 && src.offset(0, -1, 0) == target ? kMaxPower : uint8_t{0};
+            return (m & voxel::kPlatePressedBit) != 0 && src.offset(0, -1, 0) == target ? kMaxPower : uint8_t{0};
         case BlockId::RedstoneTorchOn: return src.offset(0, 1, 0) == target ? kMaxPower : uint8_t{0};
         case BlockId::RedstoneWire: return weakPower(src, target, wires);
         default: return 0;
@@ -303,7 +303,7 @@ uint8_t RedstoneEngine::powerAt(core::BlockPos pos) const {
 
 bool RedstoneEngine::torchPowered(const core::BlockPos& torch) const {
     // Beta BlockRedstoneTorch.isIndirectlyPowered: the block it hangs on provides power to it.
-    const core::BlockPos support = add(torch, world::attachmentOffset(meta(torch)));
+    const core::BlockPos support = add(torch, voxel::attachmentOffset(meta(torch)));
     return normalCube(support) ? isStronglyPowered(support, true) : weakPower(support, torch, true) > 0;
 }
 
@@ -313,17 +313,17 @@ bool RedstoneEngine::toggleLever(core::BlockPos pos) {
     if (block(pos) != BlockId::Lever) {
         return false;
     }
-    writeMetadata(pos, static_cast<uint8_t>(meta(pos) ^ world::kLeverOnBit));
+    writeMetadata(pos, static_cast<uint8_t>(meta(pos) ^ voxel::kLeverOnBit));
     onBlockChanged(pos);
     m_events.push_back({pos, RedstoneEventKind::Click});
     return true;
 }
 
 bool RedstoneEngine::pressButton(core::BlockPos pos) {
-    if (block(pos) != BlockId::StoneButton || (meta(pos) & world::kButtonPressedBit) != 0) {
+    if (block(pos) != BlockId::StoneButton || (meta(pos) & voxel::kButtonPressedBit) != 0) {
         return false;
     }
-    writeMetadata(pos, static_cast<uint8_t>(meta(pos) | world::kButtonPressedBit));
+    writeMetadata(pos, static_cast<uint8_t>(meta(pos) | voxel::kButtonPressedBit));
     schedule(pos, kButtonTicks);
     onBlockChanged(pos);
     m_events.push_back({pos, RedstoneEventKind::Click});
@@ -335,10 +335,10 @@ bool RedstoneEngine::reportPlateContact(core::BlockPos pos) {
         return false;
     }
     m_plateContacts[pos] = m_now;
-    if ((meta(pos) & world::kPlatePressedBit) != 0) {
+    if ((meta(pos) & voxel::kPlatePressedBit) != 0) {
         return false;
     }
-    writeMetadata(pos, static_cast<uint8_t>(meta(pos) | world::kPlatePressedBit));
+    writeMetadata(pos, static_cast<uint8_t>(meta(pos) | voxel::kPlatePressedBit));
     schedule(pos, kPlateTicks);
     onBlockChanged(pos);
     m_events.push_back({pos, RedstoneEventKind::Click});
@@ -383,15 +383,15 @@ void RedstoneEngine::runScheduledTick(core::BlockPos pos) {
             }
             break;
         case BlockId::StoneButton:
-            if ((m & world::kButtonPressedBit) != 0) {
-                writeMetadata(pos, static_cast<uint8_t>(m & ~world::kButtonPressedBit));
+            if ((m & voxel::kButtonPressedBit) != 0) {
+                writeMetadata(pos, static_cast<uint8_t>(m & ~voxel::kButtonPressedBit));
                 onBlockChanged(pos);
                 m_events.push_back({pos, RedstoneEventKind::Click});
             }
             break;
         case BlockId::StonePressurePlate:
         case BlockId::WoodPressurePlate: {
-            if ((m & world::kPlatePressedBit) == 0) {
+            if ((m & voxel::kPlatePressedBit) == 0) {
                 break;
             }
             const auto it = m_plateContacts.find(pos);
@@ -402,7 +402,7 @@ void RedstoneEngine::runScheduledTick(core::BlockPos pos) {
             if (it != m_plateContacts.end()) {
                 m_plateContacts.erase(it);
             }
-            writeMetadata(pos, static_cast<uint8_t>(m & ~world::kPlatePressedBit));
+            writeMetadata(pos, static_cast<uint8_t>(m & ~voxel::kPlatePressedBit));
             onBlockChanged(pos);
             m_events.push_back({pos, RedstoneEventKind::Click});
             break;
@@ -517,7 +517,7 @@ void RedstoneEngine::evaluateConsumer(const core::BlockPos& p) {
     const BlockId id = block(p);
     if (isTorch(id)) {
         evaluateTorch(p);
-    } else if (world::isDoorBlock(id)) {
+    } else if (voxel::isDoorBlock(id)) {
         evaluateDoor(p);
     } else if (id == BlockId::Piston) {
         evaluatePiston(p);
@@ -533,14 +533,14 @@ void RedstoneEngine::evaluateTorch(const core::BlockPos& p) {
 
 void RedstoneEngine::evaluateDoor(const core::BlockPos& p) {
     const BlockId id = block(p);
-    const core::BlockPos lower = (meta(p) & world::kDoorUpperBit) != 0 ? p.offset(0, -1, 0) : p;
+    const core::BlockPos lower = (meta(p) & voxel::kDoorUpperBit) != 0 ? p.offset(0, -1, 0) : p;
     if (block(lower) != id) {
         return;
     }
     const core::BlockPos upper = lower.offset(0, 1, 0);
     const bool powered = isPowered(lower) || (block(upper) == id && isPowered(upper));
     const uint8_t m = meta(lower);
-    const bool open = (m & world::kDoorOpenBit) != 0;
+    const bool open = (m & voxel::kDoorOpenBit) != 0;
     bool wantOpen = open;
     if (powered && m_poweredDoors.insert(lower).second) {
         wantOpen = true;
@@ -550,10 +550,10 @@ void RedstoneEngine::evaluateDoor(const core::BlockPos& p) {
     if (wantOpen == open) {
         return;
     }
-    const auto lowerMeta = static_cast<uint8_t>((m ^ world::kDoorOpenBit) & ~world::kDoorUpperBit);
+    const auto lowerMeta = static_cast<uint8_t>((m ^ voxel::kDoorOpenBit) & ~voxel::kDoorUpperBit);
     writeMetadata(lower, lowerMeta);
     if (block(upper) == id) {
-        writeMetadata(upper, static_cast<uint8_t>(lowerMeta | world::kDoorUpperBit));
+        writeMetadata(upper, static_cast<uint8_t>(lowerMeta | voxel::kDoorUpperBit));
     }
     m_events.push_back({lower, wantOpen ? RedstoneEventKind::DoorOpen : RedstoneEventKind::DoorClose});
 }
@@ -561,12 +561,12 @@ void RedstoneEngine::evaluateDoor(const core::BlockPos& p) {
 void RedstoneEngine::evaluatePiston(const core::BlockPos& p) {
     const uint8_t m = meta(p);
     const bool powered = isPowered(p);
-    const bool wasPowered = (m & world::kPistonPoweredBit) != 0;
+    const bool wasPowered = (m & voxel::kPistonPoweredBit) != 0;
     if (powered == wasPowered) {
         return;
     }
-    writeMetadata(p, static_cast<uint8_t>(m ^ world::kPistonPoweredBit));
-    if (powered && m_access.pushPiston(p, world::pistonFacing(m))) {
+    writeMetadata(p, static_cast<uint8_t>(m ^ voxel::kPistonPoweredBit));
+    if (powered && m_access.pushPiston(p, voxel::pistonFacing(m))) {
         m_events.push_back({p, RedstoneEventKind::PistonPush});
     }
 }
@@ -578,7 +578,7 @@ RedstoneTickStats RedstoneEngine::tick(uint64_t worldTick) {
     if (!m_sharedQueue) {
         m_due.clear();
         (void)m_ownQueue.drainDue(m_now, m_due);
-        for (const world::ScheduledTickQueue::Entry& entry : m_due) {
+        for (const voxel::ScheduledTickQueue::Entry& entry : m_due) {
             if (block(entry.pos) == entry.block) {
                 runScheduledTick(entry.pos);
             }

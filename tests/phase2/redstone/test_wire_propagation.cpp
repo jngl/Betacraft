@@ -23,8 +23,8 @@ TEST(WirePropagation, Max15) {
     // above 15 nor wraps around.
     Bench b;
     b.put({5, kY, 4}, BlockId::Lever, floorLever(true));
-    b.put({5, kY, 6}, BlockId::RedstoneTorchOn, world::kAttachFloor);
-    b.put({4, kY, 5}, BlockId::StonePressurePlate, world::kPlatePressedBit);
+    b.put({5, kY, 6}, BlockId::RedstoneTorchOn, voxel::kAttachFloor);
+    b.put({4, kY, 5}, BlockId::StonePressurePlate, voxel::kPlatePressedBit);
     b.wirePath({{5, 5}, {10, 5}, {10, 10}, {5, 10}, {5, 7}});
     b.settle();
     EXPECT_EQ(b.power(5, 5), 15);

@@ -143,7 +143,7 @@ struct BurningComp {
 // S5.3 sand or gravel falling as an entity (Beta EntityFallingSand); EntitySimulation turns it
 // back into a block where it lands, or into an item.
 struct FallingBlockComp {
-    world::BlockId id{world::BlockId::Sand};
+    voxel::BlockId id{voxel::BlockId::Sand};
     int32_t ticks{0}; // Game ticks in flight
 };
 

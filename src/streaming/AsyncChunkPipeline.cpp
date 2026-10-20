@@ -28,7 +28,7 @@ AsyncChunkPipeline::AsyncChunkPipeline(PipelineConfig config)
       m_clock(config.clock ? std::move(config.clock) : MonotonicClock{&steadyClockNow}) {
     // BlockRegistry::get() lazily initialises a static table without synchronisation;
     // force it here, on the owning thread, before any worker can call it.
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
 
     if (config.workerCount == 0) {
         return; // inline mode

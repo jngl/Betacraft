@@ -16,15 +16,15 @@ bool GridFluidVoxelAccess::isLoaded(const core::BlockPos& pos) const noexcept {
            m_loaded[indexOf(pos)] != 0U;
 }
 
-world::BlockId GridFluidVoxelAccess::getBlock(const core::BlockPos& pos) const noexcept {
-    return isLoaded(pos) ? m_cells[indexOf(pos)].block : world::BlockId::Air;
+voxel::BlockId GridFluidVoxelAccess::getBlock(const core::BlockPos& pos) const noexcept {
+    return isLoaded(pos) ? m_cells[indexOf(pos)].block : voxel::BlockId::Air;
 }
 
 FluidState GridFluidVoxelAccess::getFluid(const core::BlockPos& pos) const noexcept {
     return isLoaded(pos) ? m_cells[indexOf(pos)].fluid : FluidState{};
 }
 
-void GridFluidVoxelAccess::setBlock(const core::BlockPos& pos, world::BlockId id) {
+void GridFluidVoxelAccess::setBlock(const core::BlockPos& pos, voxel::BlockId id) {
     if (!isLoaded(pos)) {
         return;
     }
@@ -36,7 +36,7 @@ void GridFluidVoxelAccess::setFluid(const core::BlockPos& pos, FluidState state)
     if (!isLoaded(pos)) {
         return;
     }
-    m_cells[indexOf(pos)] = Cell{world::BlockId::Air, state.isEmpty() ? FluidState{} : state};
+    m_cells[indexOf(pos)] = Cell{voxel::BlockId::Air, state.isEmpty() ? FluidState{} : state};
     ++m_writes;
 }
 
@@ -57,7 +57,7 @@ void GridFluidVoxelAccess::forEachInBox(const core::BlockPos& from, const core::
     }
 }
 
-void GridFluidVoxelAccess::fill(const core::BlockPos& from, const core::BlockPos& to, world::BlockId id) {
+void GridFluidVoxelAccess::fill(const core::BlockPos& from, const core::BlockPos& to, voxel::BlockId id) {
     forEachInBox(from, to, [&](const core::BlockPos& p) { setBlock(p, id); });
 }
 

@@ -16,7 +16,7 @@ using namespace betacraft;
 using gameplay::ToolKind;
 using gameplay::ToolMaterial;
 using render::TextureAtlas;
-using world::BlockId;
+using voxel::BlockId;
 namespace items = gameplay::items;
 
 namespace {
@@ -28,12 +28,12 @@ constexpr ToolMaterial kMaterials[] = {ToolMaterial::Wood, ToolMaterial::Stone, 
 } // namespace
 
 TEST(ItemAppearance, BlocksKeepTheirBlockDefLook) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     const render::ItemAppearance stone = render::itemAppearance(gameplay::toItemId(BlockId::Stone));
     EXPECT_EQ(stone.name, "Stone");
     EXPECT_FALSE(stone.flat);
     EXPECT_EQ(stone.block, BlockId::Stone);
-    EXPECT_EQ(stone.faceTiles, world::BlockRegistry::get(BlockId::Stone).faceTiles);
+    EXPECT_EQ(stone.faceTiles, voxel::BlockRegistry::get(BlockId::Stone).faceTiles);
     EXPECT_TRUE(render::itemAppearance(gameplay::toItemId(BlockId::Torch)).flat);
     const render::ItemAppearance pick = render::itemAppearance(items::DiamondPickaxe);
     EXPECT_EQ(pick.name, "Diamond Pickaxe");
@@ -42,7 +42,7 @@ TEST(ItemAppearance, BlocksKeepTheirBlockDefLook) {
 }
 
 TEST(ItemAppearance, EveryToolHasItsOwnNamedIcon) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     std::set<uint8_t> tiles;
     for (const ToolKind k : kKinds) {
         for (const ToolMaterial m : kMaterials) {

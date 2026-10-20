@@ -230,13 +230,13 @@ TEST_F(S5RandomTicks, GeneratedLeavesDoNotDecay) {
         ASSERT_TRUE(m_world->setBlockWithMetadata(x, kY + 2, 4, BlockId::Leaves, 0));
     }
     // And the real generated trees of the chunk keep every leaf.
-    const world::Chunk* chunk = m_world->getChunk({0, 0});
+    const voxel::Chunk* chunk = m_world->getChunk({0, 0});
     ASSERT_NE(chunk, nullptr);
     const auto generatedLeaves = [&] {
         int32_t n = 0;
         for (int32_t y = 0; y < kFloorY; ++y) {
-            for (int32_t z = 0; z < world::Chunk::DEPTH; ++z) {
-                for (int32_t x = 0; x < world::Chunk::WIDTH; ++x) n += chunk->getBlock(x, y, z) == BlockId::Leaves ? 1 : 0;
+            for (int32_t z = 0; z < voxel::Chunk::DEPTH; ++z) {
+                for (int32_t x = 0; x < voxel::Chunk::WIDTH; ++x) n += chunk->getBlock(x, y, z) == BlockId::Leaves ? 1 : 0;
             }
         }
         return n;

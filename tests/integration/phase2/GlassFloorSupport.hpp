@@ -23,7 +23,7 @@ inline void layGlassFloor(world::World& world) {
     p2worldgen::loadAll(world, p2worldgen::squareRegion({0, 0}, 1));
     for (int32_t z = -6; z <= 14; ++z) {
         for (int32_t x = -6; x <= 14; ++x) {
-            (void)world.setBlock(x, kFloorY, z, world::BlockId::Glass);
+            (void)world.setBlock(x, kFloorY, z, voxel::BlockId::Glass);
         }
     }
 }
@@ -47,7 +47,7 @@ inline void placePlayer(physics::Player& player, world::World& world, const glm:
 }
 
 // A hit on the -X face of `pos`, as the crosshair of a player west of it reports it.
-[[nodiscard]] inline physics::RaycastHit targetAt(const core::BlockPos& pos, world::BlockId id,
+[[nodiscard]] inline physics::RaycastHit targetAt(const core::BlockPos& pos, voxel::BlockId id,
                                                   float distance = 2.5f) {
     physics::RaycastHit hit{};
     hit.hit = true;

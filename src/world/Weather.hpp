@@ -42,7 +42,7 @@ void tickWeather(storage::WeatherState& state, gameplay::SplitMix64& rng);
 void cycleWeather(storage::WeatherState& state, gameplay::SplitMix64& rng);
 
 // Snow in Taiga and Tundra, nothing in the Desert, rain everywhere else.
-[[nodiscard]] Precipitation precipitationAt(BiomeId biome) noexcept;
+[[nodiscard]] Precipitation precipitationAt(voxel::BiomeId biome) noexcept;
 
 // Strengths interpolated between the last two ticks, for rendering.
 [[nodiscard]] float rainStrengthAt(const storage::WeatherState& state, float partialTick) noexcept;

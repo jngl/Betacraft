@@ -104,7 +104,7 @@ MigrationReport migrateLegacyChunks(const std::filesystem::path& saveDir, const 
     std::sort(coords.begin(), coords.end(), [](core::ChunkCoord a, core::ChunkCoord b) {
         return a.x != b.x ? a.x < b.x : a.z < b.z;
     });
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     {
         RegionChunkStore regions(saveDir / "region");
         for (size_t i = 0; i < coords.size(); ++i) {
@@ -115,7 +115,7 @@ MigrationReport migrateLegacyChunks(const std::filesystem::path& saveDir, const 
                 continue;
             }
             std::optional<ChunkBundle> bundle = legacy.readBundle(coord);
-            world::Chunk check(coord);
+            voxel::Chunk check(coord);
             if (!bundle || !check.deserializeRLE(bundle->blocks)) {
                 core::Logger::warn("SaveMigration", "Chunk ", coord.x, ",", coord.z, " is unreadable: not migrated");
                 ++report.corrupt;

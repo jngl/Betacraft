@@ -11,13 +11,13 @@
 namespace betacraft::ui {
 
 struct RecipeIngredient {
-    world::BlockId id{world::BlockId::Air};
+    voxel::BlockId id{voxel::BlockId::Air};
     int32_t count{1};
 };
 
 struct CraftingRecipe {
     std::string_view label;
-    world::BlockId resultId{world::BlockId::Air};
+    voxel::BlockId resultId{voxel::BlockId::Air};
     int32_t resultCount{1};
     std::vector<RecipeIngredient> ingredients;
 };
@@ -28,7 +28,7 @@ struct CraftingRecipe {
 class CraftingSystem {
 public:
     [[nodiscard]] static std::span<const CraftingRecipe> getRecipes() noexcept;
-    [[nodiscard]] static std::span<const world::BlockId> getCreativePalette() noexcept;
+    [[nodiscard]] static std::span<const voxel::BlockId> getCreativePalette() noexcept;
 
     [[nodiscard]] static bool canCraft(const CraftingRecipe& recipe, const physics::Player& player) noexcept;
     static bool craft(const CraftingRecipe& recipe, physics::Player& player) noexcept;

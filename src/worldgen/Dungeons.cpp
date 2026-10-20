@@ -9,13 +9,13 @@ namespace betacraft::worldgen {
 
 namespace {
 
-using world::BlockId;
-using world::Chunk;
+using voxel::BlockId;
+using voxel::Chunk;
 
 // Beta Material.isSolid: water, lava, air, plants and torches are not.
 [[nodiscard]] bool solidAt(const Chunk& chunk, int32_t x, int32_t y, int32_t z) noexcept {
     if (y < 0 || y >= Chunk::HEIGHT) return false;
-    return world::BlockRegistry::isSolid(chunk.getBlock(x, y, z));
+    return voxel::BlockRegistry::isSolid(chunk.getBlock(x, y, z));
 }
 
 [[nodiscard]] bool airAt(const Chunk& chunk, int32_t x, int32_t y, int32_t z) noexcept {
@@ -135,8 +135,8 @@ std::optional<LootStack> pickCheckLootItem(SeededRandom& rng) noexcept {
     }
 }
 
-std::array<world::StoredStack, world::kChestSlots> rollDungeonChestLoot(uint64_t worldSeed, core::BlockPos pos) noexcept {
-    std::array<world::StoredStack, world::kChestSlots> slots{};
+std::array<voxel::StoredStack, voxel::kChestSlots> rollDungeonChestLoot(uint64_t worldSeed, core::BlockPos pos) noexcept {
+    std::array<voxel::StoredStack, voxel::kChestSlots> slots{};
     const uint64_t ux = static_cast<uint32_t>(pos.x);
     const uint64_t uy = static_cast<uint32_t>(pos.y);
     const uint64_t uz = static_cast<uint32_t>(pos.z);
@@ -145,8 +145,8 @@ std::array<world::StoredStack, world::kChestSlots> rollDungeonChestLoot(uint64_t
                            (uz * 0xABC98388FB8FAC03ULL)));
     for (int32_t i = 0; i < kDungeonChestDraws; ++i) {
         if (const std::optional<LootStack> loot = pickCheckLootItem(rng)) {
-            const auto slot = static_cast<size_t>(rng.nextBounded(static_cast<uint32_t>(world::kChestSlots)));
-            slots[slot] = world::StoredStack{loot->id, static_cast<uint8_t>(std::clamp(loot->count, 1, 64)), 0};
+            const auto slot = static_cast<size_t>(rng.nextBounded(static_cast<uint32_t>(voxel::kChestSlots)));
+            slots[slot] = voxel::StoredStack{loot->id, static_cast<uint8_t>(std::clamp(loot->count, 1, 64)), 0};
         }
     }
     return slots;

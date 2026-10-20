@@ -44,9 +44,9 @@ TEST(AABBTest, IntersectionAndTransformation) {
 }
 
 TEST(AABBTest, FromBlockShapes) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
 
-    const auto cube = AABB::fromBlock(5, 10, 15, world::BlockId::Stone);
+    const auto cube = AABB::fromBlock(5, 10, 15, voxel::BlockId::Stone);
     EXPECT_FLOAT_EQ(cube.min.x, 5.0f);
     EXPECT_FLOAT_EQ(cube.min.y, 10.0f);
     EXPECT_FLOAT_EQ(cube.min.z, 15.0f);
@@ -54,14 +54,14 @@ TEST(AABBTest, FromBlockShapes) {
     EXPECT_FLOAT_EQ(cube.max.y, 11.0f);
     EXPECT_FLOAT_EQ(cube.max.z, 16.0f);
 
-    const auto slab = AABB::fromBlock(5, 10, 15, world::BlockId::CobbleSlab);
+    const auto slab = AABB::fromBlock(5, 10, 15, voxel::BlockId::CobbleSlab);
     EXPECT_FLOAT_EQ(slab.max.y, 10.5f);
 
-    const auto cactus = AABB::fromBlock(0, 0, 0, world::BlockId::Cactus);
+    const auto cactus = AABB::fromBlock(0, 0, 0, voxel::BlockId::Cactus);
     EXPECT_GT(cactus.min.x, 0.0f);
     EXPECT_LT(cactus.max.x, 1.0f);
 
-    const auto torch = AABB::fromBlock(0, 0, 0, world::BlockId::Torch);
+    const auto torch = AABB::fromBlock(0, 0, 0, voxel::BlockId::Torch);
     EXPECT_NEAR(torch.min.x, 0.375f, 1e-4f);
     EXPECT_NEAR(torch.max.x, 0.625f, 1e-4f);
 }
@@ -75,12 +75,12 @@ TEST(RaycasterTest, HitsAndMisses) {
     for (int z = 0; z < 16; ++z) {
         for (int x = 0; x < 16; ++x) {
             for (int y = 100; y <= 110; ++y) {
-                w.setBlock(x, y, z, world::BlockId::Air);
+                w.setBlock(x, y, z, voxel::BlockId::Air);
             }
         }
     }
 
-    w.setBlock(5, 105, 5, world::BlockId::Stone);
+    w.setBlock(5, 105, 5, voxel::BlockId::Stone);
 
     // Cast from (5.5, 105.5, 2.0) looking directly +Z toward (5, 105, 5)
     const auto hitZ = Raycaster::cast(w, {5.5f, 105.5f, 2.0f}, {0.0f, 0.0f, 1.0f}, 5.0f);
@@ -88,7 +88,7 @@ TEST(RaycasterTest, HitsAndMisses) {
     EXPECT_EQ(hitZ.blockPos, (core::BlockPos{5, 105, 5}));
     EXPECT_EQ(hitZ.adjacentPos, (core::BlockPos{5, 105, 4}));
     EXPECT_EQ(hitZ.face, core::FaceDir::NegZ);
-    EXPECT_EQ(hitZ.blockId, world::BlockId::Stone);
+    EXPECT_EQ(hitZ.blockId, voxel::BlockId::Stone);
     EXPECT_NEAR(hitZ.distance, 3.0f, 0.1f);
 
     // Cast in opposite direction (-Z) should miss
@@ -129,23 +129,23 @@ TEST(PlayerTest, InventoryOperations) {
     EXPECT_EQ(p.getSelectedSlot(), 0);
 
     // Custom inventory manipulation
-    p.setInventorySlot(30, {world::BlockId::GoldOre, 10});
-    EXPECT_EQ(p.getInventorySlot(30).id, world::BlockId::GoldOre);
+    p.setInventorySlot(30, {voxel::BlockId::GoldOre, 10});
+    EXPECT_EQ(p.getInventorySlot(30).id, voxel::BlockId::GoldOre);
     EXPECT_EQ(p.getInventorySlot(30).count, 10);
-    EXPECT_EQ(p.countItem(world::BlockId::GoldOre), 10);
+    EXPECT_EQ(p.countItem(voxel::BlockId::GoldOre), 10);
 
     // Consume item
-    EXPECT_TRUE(p.consumeItem(world::BlockId::GoldOre, 4));
-    EXPECT_EQ(p.countItem(world::BlockId::GoldOre), 6);
-    EXPECT_FALSE(p.consumeItem(world::BlockId::GoldOre, 20)); // Not enough
-    EXPECT_EQ(p.countItem(world::BlockId::GoldOre), 6);
+    EXPECT_TRUE(p.consumeItem(voxel::BlockId::GoldOre, 4));
+    EXPECT_EQ(p.countItem(voxel::BlockId::GoldOre), 6);
+    EXPECT_FALSE(p.consumeItem(voxel::BlockId::GoldOre, 20)); // Not enough
+    EXPECT_EQ(p.countItem(voxel::BlockId::GoldOre), 6);
 
     // Add item
-    EXPECT_TRUE(p.addItem(world::BlockId::GoldOre, 14));
-    EXPECT_EQ(p.countItem(world::BlockId::GoldOre), 20);
+    EXPECT_TRUE(p.addItem(voxel::BlockId::GoldOre, 14));
+    EXPECT_EQ(p.countItem(voxel::BlockId::GoldOre), 20);
 
     // Stack limit for tools is 1
-    EXPECT_TRUE(p.addItem(world::BlockId::DiamondPickaxe, 1));
+    EXPECT_TRUE(p.addItem(voxel::BlockId::DiamondPickaxe, 1));
 }
 
 TEST(PlayerTest, FlyingAndHealth) {
@@ -204,9 +204,9 @@ TEST(PlayerTest, LandingRecordsPendingFallWithoutDamage) {
     w.ensureChunkLoaded({0, 0});
     for (int32_t z = 0; z < 16; ++z) {
         for (int32_t x = 0; x < 16; ++x) {
-            w.setBlock(x, 100, z, world::BlockId::Stone);
+            w.setBlock(x, 100, z, voxel::BlockId::Stone);
             for (int32_t y = 101; y < 128; ++y) {
-                w.setBlock(x, y, z, world::BlockId::Air);
+                w.setBlock(x, y, z, voxel::BlockId::Air);
             }
         }
     }
@@ -224,10 +224,10 @@ TEST(PlayerTest, LandingRecordsPendingFallWithoutDamage) {
     EXPECT_FLOAT_EQ(p.takePendingFall(), 0.0f) << "read once, then cleared";
 
     // The selected-slot pick block of Survival only selects what the hotbar already holds.
-    p.setInventorySlot(4, {world::BlockId::Stone, 3});
-    EXPECT_FALSE(p.selectHotbarSlotHolding(gameplay::toItemId(world::BlockId::Dirt)));
+    p.setInventorySlot(4, {voxel::BlockId::Stone, 3});
+    EXPECT_FALSE(p.selectHotbarSlotHolding(gameplay::toItemId(voxel::BlockId::Dirt)));
     EXPECT_EQ(p.getSelectedSlot(), 0);
-    EXPECT_TRUE(p.selectHotbarSlotHolding(gameplay::toItemId(world::BlockId::Stone)));
+    EXPECT_TRUE(p.selectHotbarSlotHolding(gameplay::toItemId(voxel::BlockId::Stone)));
     EXPECT_EQ(p.getSelectedSlot(), 4);
     EXPECT_EQ(p.getHeldItem().count, 3);
 }
@@ -239,9 +239,9 @@ void flatStoneChunk(world::World& w) {
     w.ensureChunkLoaded({0, 0});
     for (int32_t z = 0; z < 16; ++z) {
         for (int32_t x = 0; x < 16; ++x) {
-            w.setBlock(x, 100, z, world::BlockId::Stone);
+            w.setBlock(x, 100, z, voxel::BlockId::Stone);
             for (int32_t y = 101; y < 128; ++y) {
-                w.setBlock(x, y, z, world::BlockId::Air);
+                w.setBlock(x, y, z, voxel::BlockId::Air);
             }
         }
     }
@@ -257,7 +257,7 @@ void settle(Player& p, const world::World& w, const PlayerInput& input = {}, int
 
 // S3.1: the cactus collision box is inset by 1/16, so walking into it overlaps its cell.
 TEST(PlayerTest, TouchingCactusFlag) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir tempDir;
     world::World w(173ULL, tempDir.path());
     flatStoneChunk(w);
@@ -267,8 +267,8 @@ TEST(PlayerTest, TouchingCactusFlag) {
     settle(p, w);
     EXPECT_FALSE(p.isTouchingCactus());
 
-    w.setBlock(8, 101, 8, world::BlockId::Cactus);
-    w.setBlock(8, 102, 8, world::BlockId::Cactus);
+    w.setBlock(8, 101, 8, voxel::BlockId::Cactus);
+    w.setBlock(8, 102, 8, voxel::BlockId::Cactus);
     settle(p, w, {}, 2);
     EXPECT_FALSE(p.isTouchingCactus()) << "two blocks away";
 
@@ -295,7 +295,7 @@ TEST(PlayerTest, TouchingCactusFlag) {
 }
 
 TEST(PlayerTest, InLavaFlag) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir tempDir;
     world::World w(173ULL, tempDir.path());
     flatStoneChunk(w);
@@ -305,13 +305,13 @@ TEST(PlayerTest, InLavaFlag) {
     settle(p, w, {}, 1);
     EXPECT_FALSE(p.isInLava());
 
-    w.setBlock(4, 101, 4, world::BlockId::Lava);
+    w.setBlock(4, 101, 4, voxel::BlockId::Lava);
     settle(p, w, {}, 1);
     EXPECT_TRUE(p.isInLava());
     EXPECT_TRUE(p.isInWater()) << "lava is swum through";
     EXPECT_FALSE(p.isInWaterMaterial()) << "but does not put fire out";
 
-    w.setBlock(4, 101, 4, world::BlockId::Water);
+    w.setBlock(4, 101, 4, voxel::BlockId::Water);
     settle(p, w, {}, 1);
     EXPECT_FALSE(p.isInLava());
     EXPECT_TRUE(p.isInWaterMaterial());

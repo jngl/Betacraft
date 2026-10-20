@@ -24,13 +24,13 @@ namespace {
     return a.id == b.id && a.damage == b.damage;
 }
 
-[[nodiscard]] physics::InventorySlot fromStored(const world::StoredStack& s) noexcept {
+[[nodiscard]] physics::InventorySlot fromStored(const voxel::StoredStack& s) noexcept {
     return s.empty() ? physics::InventorySlot{} : physics::InventorySlot{s.id, s.count, s.damage};
 }
 
-[[nodiscard]] world::StoredStack toStored(const physics::InventorySlot& s) noexcept {
+[[nodiscard]] voxel::StoredStack toStored(const physics::InventorySlot& s) noexcept {
     if (s.isEmpty()) return {};
-    return world::StoredStack{s.id, static_cast<uint8_t>(std::clamp(s.count, 0, 255)),
+    return voxel::StoredStack{s.id, static_cast<uint8_t>(std::clamp(s.count, 0, 255)),
                               static_cast<uint16_t>(std::clamp(s.damage, 0, 65535))};
 }
 
@@ -38,14 +38,14 @@ namespace {
 // when the entity is not that kind's payload or the index is out of range.
 template <class Entity>
 [[nodiscard]] auto* storedSlot(Entity& entity, ui::ScreenKind kind, size_t index) noexcept {
-    using Stack = std::conditional_t<std::is_const_v<Entity>, const world::StoredStack, world::StoredStack>;
+    using Stack = std::conditional_t<std::is_const_v<Entity>, const voxel::StoredStack, voxel::StoredStack>;
     Stack* out = nullptr;
     if (kind == ui::ScreenKind::Chest) {
-        if (auto* chest = std::get_if<world::ChestData>(&entity); chest != nullptr && index < chest->slots.size()) {
+        if (auto* chest = std::get_if<voxel::ChestData>(&entity); chest != nullptr && index < chest->slots.size()) {
             out = &chest->slots[index];
         }
     } else if (kind == ui::ScreenKind::Furnace) {
-        if (auto* furnace = std::get_if<world::FurnaceData>(&entity)) {
+        if (auto* furnace = std::get_if<voxel::FurnaceData>(&entity)) {
             switch (index) {
                 case ui::kFurnaceInputSlot: out = &furnace->input; break;
                 case ui::kFurnaceFuelSlot: out = &furnace->fuel; break;
@@ -86,7 +86,7 @@ template <class Entity>
 }
 
 // Merge-then-fill of `stack` into stored container slots. Returns what did not fit.
-[[nodiscard]] int32_t insertIntoStored(world::StoredStack* slots, size_t count, physics::InventorySlot stack) noexcept {
+[[nodiscard]] int32_t insertIntoStored(voxel::StoredStack* slots, size_t count, physics::InventorySlot stack) noexcept {
     const int32_t limit = stackLimit(stack.id);
     for (size_t pass = 0; pass < 2; ++pass) {
         for (size_t i = 0; i < count && stack.count > 0; ++i) {
@@ -148,16 +148,16 @@ size_t InventoryCrafting::containerSlotCount() const noexcept {
     if (!m_containerPos) return 0;
     switch (m_kind) {
         case ui::ScreenKind::Furnace: return ui::kFurnaceSlotCount;
-        case ui::ScreenKind::Chest: return world::kChestSlots;
+        case ui::ScreenKind::Chest: return voxel::kChestSlots;
         default: return 0;
     }
 }
 
 physics::InventorySlot InventoryCrafting::containerSlot(const world::World& world, size_t index) const noexcept {
     if (!m_containerPos) return {};
-    const world::BlockEntity* entity = world.blockEntities().find(*m_containerPos);
+    const voxel::BlockEntity* entity = world.blockEntities().find(*m_containerPos);
     if (entity == nullptr) return {};
-    const world::StoredStack* stored = storedSlot(*entity, m_kind, index);
+    const voxel::StoredStack* stored = storedSlot(*entity, m_kind, index);
     return stored != nullptr ? fromStored(*stored) : physics::InventorySlot{};
 }
 
@@ -210,12 +210,12 @@ bool InventoryCrafting::clickContainerSlot(world::World& world, size_t index, Sl
         return false;
     }
     const core::BlockPos pos = *m_containerPos;
-    world::BlockEntity* entity = world.blockEntities().find(pos);
-    if (entity == nullptr || !world::blockEntityMatches(world.getBlock(pos), *entity)) {
+    voxel::BlockEntity* entity = world.blockEntities().find(pos);
+    if (entity == nullptr || !voxel::blockEntityMatches(world.getBlock(pos), *entity)) {
         forgetContainer(); // Broken or unloaded under the open screen
         return false;
     }
-    world::StoredStack* stored = storedSlot(*entity, m_kind, index);
+    voxel::StoredStack* stored = storedSlot(*entity, m_kind, index);
     if (stored == nullptr) {
         forgetContainer();
         return false;
@@ -268,12 +268,12 @@ physics::InventorySlot InventoryCrafting::takeCarried(SlotButton button) {
     return taken;
 }
 
-world::BlockEntity* InventoryCrafting::liveContainer(world::World& world) noexcept {
+voxel::BlockEntity* InventoryCrafting::liveContainer(world::World& world) noexcept {
     if (!m_containerPos) {
         return nullptr;
     }
-    world::BlockEntity* entity = world.blockEntities().find(*m_containerPos);
-    if (entity == nullptr || !world::blockEntityMatches(world.getBlock(*m_containerPos), *entity)) {
+    voxel::BlockEntity* entity = world.blockEntities().find(*m_containerPos);
+    if (entity == nullptr || !voxel::blockEntityMatches(world.getBlock(*m_containerPos), *entity)) {
         forgetContainer(); // Broken or unloaded under the open screen
         return nullptr;
     }
@@ -346,8 +346,8 @@ bool InventoryCrafting::shiftClickInventorySlot(physics::Player& player, world::
         }
     }
     if (m_kind == ui::ScreenKind::Chest && m_containerPos && world != nullptr) {
-        world::BlockEntity* entity = liveContainer(*world);
-        auto* chest = entity != nullptr ? std::get_if<world::ChestData>(entity) : nullptr;
+        voxel::BlockEntity* entity = liveContainer(*world);
+        auto* chest = entity != nullptr ? std::get_if<voxel::ChestData>(entity) : nullptr;
         if (chest == nullptr) {
             return false;
         }
@@ -391,8 +391,8 @@ bool InventoryCrafting::shiftClickContainerSlot(physics::Player& player, world::
     if (!m_containerPos || index >= containerSlotCount()) {
         return false;
     }
-    world::BlockEntity* entity = liveContainer(world);
-    world::StoredStack* stored = entity != nullptr ? storedSlot(*entity, m_kind, index) : nullptr;
+    voxel::BlockEntity* entity = liveContainer(world);
+    voxel::StoredStack* stored = entity != nullptr ? storedSlot(*entity, m_kind, index) : nullptr;
     if (stored == nullptr) {
         forgetContainer();
         return false;

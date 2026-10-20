@@ -1,12 +1,12 @@
-// S2.3: Beta 1.7.3 TileEntityFurnace.updateEntity rules on world::FurnaceData.
+// S2.3: Beta 1.7.3 TileEntityFurnace.updateEntity rules on voxel::FurnaceData.
 #include "crafting/Furnace.hpp"
 
 #include <gtest/gtest.h>
 
 using namespace betacraft::crafting;
-using betacraft::world::BlockId;
-using betacraft::world::FurnaceData;
-using betacraft::world::StoredStack;
+using betacraft::voxel::BlockId;
+using betacraft::voxel::FurnaceData;
+using betacraft::voxel::StoredStack;
 
 namespace {
 

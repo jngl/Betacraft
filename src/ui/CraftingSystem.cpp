@@ -7,26 +7,26 @@ namespace betacraft::ui {
 
 std::span<const CraftingRecipe> CraftingSystem::getRecipes() noexcept {
     static const std::vector<CraftingRecipe> s_recipes = {
-        {"4 Planks (Oak Log)", world::BlockId::OakPlanks, 4, {{world::BlockId::OakLog, 1}}},
-        {"4 Planks (Birch)",   world::BlockId::OakPlanks, 4, {{world::BlockId::BirchLog, 1}}},
-        {"4 Planks (Pine)",    world::BlockId::OakPlanks, 4, {{world::BlockId::PineLog, 1}}},
-        {"4 Sticks",           world::BlockId::Stick, 4, {{world::BlockId::OakPlanks, 2}}},
-        {"Workbench",          world::BlockId::CraftingTable, 1, {{world::BlockId::OakPlanks, 4}}},
-        {"4 Torches",          world::BlockId::Torch, 4, {{world::BlockId::CoalItem, 1}, {world::BlockId::Stick, 1}}},
-        {"Furnace",            world::BlockId::Furnace, 1, {{world::BlockId::Cobblestone, 8}}},
-        {"6 Stone Slabs",      world::BlockId::CobbleSlab, 6, {{world::BlockId::Cobblestone, 3}}},
-        {"Sandstone",          world::BlockId::Sandstone, 1, {{world::BlockId::Sand, 4}}},
-        {"Bookshelf",          world::BlockId::Bookshelf, 1, {{world::BlockId::OakPlanks, 6}, {world::BlockId::SugarCane, 3}}},
-        {"Beta 1.7 Piston",    world::BlockId::Piston, 1, {{world::BlockId::OakPlanks, 3}, {world::BlockId::Cobblestone, 4}, {world::BlockId::IronOre, 1}, {world::BlockId::RedstoneOre, 1}}},
-        {"Wooden Pickaxe",     world::BlockId::WoodPickaxe, 1, {{world::BlockId::OakPlanks, 3}, {world::BlockId::Stick, 2}}},
-        {"Stone Pickaxe",      world::BlockId::StonePickaxe, 1, {{world::BlockId::Cobblestone, 3}, {world::BlockId::Stick, 2}}},
-        {"Iron Pickaxe",       world::BlockId::IronPickaxe, 1, {{world::BlockId::IronOre, 3}, {world::BlockId::Stick, 2}}},
-        {"Diamond Pickaxe",    world::BlockId::DiamondPickaxe, 1, {{world::BlockId::DiamondOre, 3}, {world::BlockId::Stick, 2}}}
+        {"4 Planks (Oak Log)", voxel::BlockId::OakPlanks, 4, {{voxel::BlockId::OakLog, 1}}},
+        {"4 Planks (Birch)",   voxel::BlockId::OakPlanks, 4, {{voxel::BlockId::BirchLog, 1}}},
+        {"4 Planks (Pine)",    voxel::BlockId::OakPlanks, 4, {{voxel::BlockId::PineLog, 1}}},
+        {"4 Sticks",           voxel::BlockId::Stick, 4, {{voxel::BlockId::OakPlanks, 2}}},
+        {"Workbench",          voxel::BlockId::CraftingTable, 1, {{voxel::BlockId::OakPlanks, 4}}},
+        {"4 Torches",          voxel::BlockId::Torch, 4, {{voxel::BlockId::CoalItem, 1}, {voxel::BlockId::Stick, 1}}},
+        {"Furnace",            voxel::BlockId::Furnace, 1, {{voxel::BlockId::Cobblestone, 8}}},
+        {"6 Stone Slabs",      voxel::BlockId::CobbleSlab, 6, {{voxel::BlockId::Cobblestone, 3}}},
+        {"Sandstone",          voxel::BlockId::Sandstone, 1, {{voxel::BlockId::Sand, 4}}},
+        {"Bookshelf",          voxel::BlockId::Bookshelf, 1, {{voxel::BlockId::OakPlanks, 6}, {voxel::BlockId::SugarCane, 3}}},
+        {"Beta 1.7 Piston",    voxel::BlockId::Piston, 1, {{voxel::BlockId::OakPlanks, 3}, {voxel::BlockId::Cobblestone, 4}, {voxel::BlockId::IronOre, 1}, {voxel::BlockId::RedstoneOre, 1}}},
+        {"Wooden Pickaxe",     voxel::BlockId::WoodPickaxe, 1, {{voxel::BlockId::OakPlanks, 3}, {voxel::BlockId::Stick, 2}}},
+        {"Stone Pickaxe",      voxel::BlockId::StonePickaxe, 1, {{voxel::BlockId::Cobblestone, 3}, {voxel::BlockId::Stick, 2}}},
+        {"Iron Pickaxe",       voxel::BlockId::IronPickaxe, 1, {{voxel::BlockId::IronOre, 3}, {voxel::BlockId::Stick, 2}}},
+        {"Diamond Pickaxe",    voxel::BlockId::DiamondPickaxe, 1, {{voxel::BlockId::DiamondOre, 3}, {voxel::BlockId::Stick, 2}}}
     };
     return s_recipes;
 }
 
-std::span<const world::BlockId> CraftingSystem::getCreativePalette() noexcept {
+std::span<const voxel::BlockId> CraftingSystem::getCreativePalette() noexcept {
     return creativePalette();
 }
 

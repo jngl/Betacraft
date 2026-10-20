@@ -13,17 +13,17 @@ struct FurnaceTickResult {
 
 // Whether the input has a known result that fits the output (Beta TileEntityFurnace.canSmelt):
 // the output is empty, or holds the same item with room for one more result.
-[[nodiscard]] bool canSmelt(const world::FurnaceData& furnace, const SmeltingBook& book) noexcept;
+[[nodiscard]] bool canSmelt(const voxel::FurnaceData& furnace, const SmeltingBook& book) noexcept;
 
 // One game tick of Beta 1.7.3 TileEntityFurnace.updateEntity:
 //  * a burning furnace burns one tick of its fuel;
 //  * at 0 it lights the next fuel item only if canSmelt holds;
 //  * while it burns and canSmelt holds, cookTicks grows and the item smelts at kSmeltTicks;
 //    otherwise cookTicks drops back to 0.
-FurnaceTickResult tickFurnace(world::FurnaceData& furnace, const SmeltingBook& book) noexcept;
+FurnaceTickResult tickFurnace(voxel::FurnaceData& furnace, const SmeltingBook& book) noexcept;
 
 // HUD arrow (cook) and flame (burn) fill, 0..1.
-[[nodiscard]] float cookProgress(const world::FurnaceData& furnace) noexcept;
-[[nodiscard]] float burnProgress(const world::FurnaceData& furnace) noexcept;
+[[nodiscard]] float cookProgress(const voxel::FurnaceData& furnace) noexcept;
+[[nodiscard]] float burnProgress(const voxel::FurnaceData& furnace) noexcept;
 
 } // namespace betacraft::crafting
