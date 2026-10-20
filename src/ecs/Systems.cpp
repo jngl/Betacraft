@@ -72,7 +72,7 @@ bool VoxelCollisionSystem::WorldBoxCollides::operator()(const math::AABB& box) c
             ? world->getMetadata(x, y, z)
             : uint8_t{0};
         return math::AABB::forEachBlockBox(x, y, z, id, meta,
-                                              [&](const math::AABB& b) { return box.intersects(b); });
+                                           [&](const math::AABB& b) { return box.intersects(b); });
     });
 }
 

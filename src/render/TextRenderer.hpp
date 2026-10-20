@@ -1,8 +1,8 @@
 #pragma once
 
 #include "render/BitmapFont.hpp"
-#include "render/GuiScale.hpp"
 #include "render/GLHeaders.hpp"
+#include "render/GuiScale.hpp"
 #include "render/Shader.hpp"
 
 #include <algorithm>

@@ -173,7 +173,7 @@ Phase 2 Data Flow:
 - `BlockHarvestInfo harvestInfo(world::BlockId);`, `bool canHarvest(const BlockHarvestInfo&, const ItemStack&);`, `DigResult computeDig(world::BlockId, const ItemStack& held, DigConditions);`.
 - `MiningProgress::click(target, dig)` / `advance(target, dig)` / `reset()` / `crackStage()` (-1 or 0..9).
 - `BlockBreakOutcome breakBlockWith(world::BlockId, ItemStack& held, uint64_t dropSeed = 0);`: drop, wear and `meltsIntoWater`. A tool breaks when `damage > maxDamage` (maxDamage + 1 uses, as in Beta).
-- `int32_t weaponDamage(const ItemStack&);`, `MeleeResult performMeleeAttack(const AttackerState&, ItemStack& weapon, TargetState&, ...);`, `std::optional<TargetHit> pickMeleeTarget(eye, look, std::span<const physics::AABB>, float maxDistance);`.
+- `int32_t weaponDamage(const ItemStack&);`, `MeleeResult performMeleeAttack(const AttackerState&, ItemStack& weapon, TargetState&, ...);`, `std::optional<TargetHit> pickMeleeTarget(eye, look, std::span<const math::AABB>, float maxDistance);`.
 - `gameplay::ItemId` (`uint16_t`): `toItemId(BlockId)`, `canonicalize`, `toVanillaId`, `toolItemId(kind, material)`, `toolInfo`, `maxStackSize`.
 
 ### Sprint 2.2 ↔ Crafting (`src/crafting/`)

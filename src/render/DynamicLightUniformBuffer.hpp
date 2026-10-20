@@ -20,7 +20,7 @@ public:
     DynamicLightUniformBuffer() noexcept = default;
     ~DynamicLightUniformBuffer() noexcept;
 
-    // Loads the UBO entry points (kept local to this module, GLHeaders is not extended) and
+    // Loads the UBO entry points (kept local to this class, GLHeaders is not extended) and
     // allocates the GPU buffer. Returns false if the driver lacks uniform buffer support.
     [[nodiscard]] bool initialize() noexcept;
 

@@ -64,8 +64,8 @@ set(BETACRAFT_CORE_SOURCES
     src/render/TextRenderer.cpp
     src/render/ItemAppearance.cpp
     src/render/DynamicLightUniformBuffer.cpp
-    src/audio/AudioEngine.cpp
     src/render/BitmapFont.cpp
+    src/audio/AudioEngine.cpp
     src/ui/CraftingSystem.cpp
     src/ui/HudRenderer.cpp
     src/ui/InputManager.cpp
