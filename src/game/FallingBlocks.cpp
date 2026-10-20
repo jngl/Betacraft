@@ -1,6 +1,6 @@
 #include "game/FallingBlocks.hpp"
 
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/World.hpp"
 
 #include <cmath>

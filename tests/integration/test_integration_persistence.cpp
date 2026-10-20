@@ -1,9 +1,9 @@
-#include "tests/test_helpers.hpp"
 #include "game/InventoryCrafting.hpp"
 #include "game/PlayerPersistence.hpp"
 #include "gameplay/Armor.hpp"
 #include "physics/Player.hpp"
-#include "world/Block.hpp"
+#include "tests/test_helpers.hpp"
+#include "voxel/Block.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>
@@ -26,7 +26,7 @@ TEST(PersistenceIntegrationTest, ModifySaveAndReloadWorld) {
         world1.setBlock(5, 76, 5, world::BlockId::Torch);
         world1.setBlock(-10, 68, 35, world::BlockId::DiamondOre);
 
-        const world::WorldLevelData saveLevel{
+        const storage::WorldLevelData saveLevel{
             .seed = 173173ULL,
             .playerPos = {5.5f, 77.0f, 5.5f},
             .playerYaw = 45.0f,
@@ -39,7 +39,7 @@ TEST(PersistenceIntegrationTest, ModifySaveAndReloadWorld) {
     // Phase 2: create completely fresh World instance pointing to same directory
     {
         world::World world2(0ULL, tempDir.path()); // start with dummy seed
-        world::WorldLevelData loadedLevel{};
+        storage::WorldLevelData loadedLevel{};
         ASSERT_TRUE(world2.loadLevelData(loadedLevel));
 
         EXPECT_EQ(loadedLevel.seed, 173173ULL);
@@ -75,7 +75,7 @@ TEST(PersistenceIntegrationTest, ShapedBlockMetadataSurvivesRestart) {
         ASSERT_TRUE(world1.setBlockWithMetadata(5, 100, 3, world::BlockId::Ladder, 4));
         ASSERT_TRUE(world1.setBlock(8, 100, 3, world::BlockId::Farmland));
         ASSERT_TRUE(world1.setBlockWithMetadata(8, 101, 3, world::BlockId::Crops, 5));
-        world1.saveModifiedChunks(world::WorldLevelData{.seed = 173173ULL});
+        world1.saveModifiedChunks(storage::WorldLevelData{.seed = 173173ULL});
     }
     {
         world::World world2(173173ULL, tempDir.path());
@@ -99,21 +99,21 @@ TEST(PersistenceIntegrationTest, BedSpawnSurvivesRestart) {
     {
         world::World world1(173173ULL, tempDir.path());
         world1.ensureChunkLoaded({0, 0});
-        world::WorldLevelData level{.seed = 173173ULL};
+        storage::WorldLevelData level{.seed = 173173ULL};
         level.spawnPos = glm::vec3{4.5f, 71.0f, 6.5f};
         level.bedPos = core::BlockPos{5, 71, 6};
         world1.saveModifiedChunks(level);
     }
     world::World world2(0ULL, tempDir.path());
-    world::WorldLevelData loaded{};
-    ASSERT_EQ(world2.loadLevelDataStatus(loaded), world::LevelLoadStatus::Ok);
+    storage::WorldLevelData loaded{};
+    ASSERT_EQ(world2.loadLevelDataStatus(loaded), storage::LevelLoadStatus::Ok);
     ASSERT_TRUE(loaded.bedPos.has_value());
     EXPECT_EQ(*loaded.bedPos, (core::BlockPos{5, 71, 6}));
     ASSERT_TRUE(loaded.spawnPos.has_value());
     EXPECT_FLOAT_EQ(loaded.spawnPos->x, 4.5f);
 
-    world::WorldLevelData noBed{};
-    ASSERT_EQ(world::decodeLevelData(world::encodeLevelData(world::WorldLevelData{}), noBed), world::LevelLoadStatus::Ok);
+    storage::WorldLevelData noBed{};
+    ASSERT_EQ(storage::decodeLevelData(storage::encodeLevelData(storage::WorldLevelData{}), noBed), storage::LevelLoadStatus::Ok);
     EXPECT_FALSE(noBed.bedPos.has_value());
 }
 
@@ -149,7 +149,7 @@ TEST(PersistenceIntegrationTest, PlayerInventoryHealthSpawnSurviveRestart) {
     {
         world::World world1(173173ULL, tempDir.path());
         world1.ensureChunkLoaded({0, 0});
-        world::WorldLevelData level{};
+        storage::WorldLevelData level{};
         level.seed = 173173ULL;
         level.playerPos = {5.5f, 77.0f, 5.5f};
         level.spawnPos = spawn;
@@ -158,8 +158,8 @@ TEST(PersistenceIntegrationTest, PlayerInventoryHealthSpawnSurviveRestart) {
     }
 
     world::World world2(0ULL, tempDir.path());
-    world::WorldLevelData loaded{};
-    ASSERT_EQ(world2.loadLevelDataStatus(loaded), world::LevelLoadStatus::Ok);
+    storage::WorldLevelData loaded{};
+    ASSERT_EQ(world2.loadLevelDataStatus(loaded), storage::LevelLoadStatus::Ok);
     ASSERT_TRUE(loaded.player.has_value());
     ASSERT_TRUE(loaded.spawnPos.has_value());
     EXPECT_FLOAT_EQ(loaded.spawnPos->x, spawn.x);
@@ -186,7 +186,7 @@ TEST(PersistenceIntegrationTest, PlayerInventoryHealthSpawnSurviveRestart) {
 // unknown ids empty their slot.
 TEST(PersistenceIntegrationTest, RestorePlayerClampsSavedValues) {
     world::BlockRegistry::initialize();
-    world::PlayerSaveData data{};
+    storage::PlayerSaveData data{};
     data.health = 99;
     data.air = -500;
     data.selectedSlot = 42;
@@ -225,10 +225,10 @@ TEST(PersistenceIntegrationTest, ArmorSurvivesRestart) {
     {
         world::World world1(173173ULL, tempDir.path());
         world1.ensureChunkLoaded({0, 0});
-        world::WorldLevelData level{};
+        storage::WorldLevelData level{};
         level.seed = 173173ULL;
         level.player = game::capturePlayer(before);
-        const std::string text = world::encodeLevelData(level);
+        const std::string text = storage::encodeLevelData(level);
         EXPECT_NE(text.find("BETACRAFT_LEVEL_V2"), std::string::npos) << "no version change";
         EXPECT_NE(text.find("armor 0 306 1 41"), std::string::npos) << text;
         EXPECT_NE(text.find("armor 3 313 1 0"), std::string::npos) << text;
@@ -237,8 +237,8 @@ TEST(PersistenceIntegrationTest, ArmorSurvivesRestart) {
     }
 
     world::World world2(0ULL, tempDir.path());
-    world::WorldLevelData loaded{};
-    ASSERT_EQ(world2.loadLevelDataStatus(loaded), world::LevelLoadStatus::Ok);
+    storage::WorldLevelData loaded{};
+    ASSERT_EQ(world2.loadLevelDataStatus(loaded), storage::LevelLoadStatus::Ok);
     ASSERT_TRUE(loaded.player.has_value());
     physics::Player after;
     after.setArmorSlot(1, {gameplay::armorItemId(gameplay::ArmorMaterial::Gold, gameplay::ArmorSlot::Chestplate), 1});
@@ -251,11 +251,11 @@ TEST(PersistenceIntegrationTest, ArmorSurvivesRestart) {
 }
 
 TEST(PersistenceIntegrationTest, LevelDatWithoutArmorKeysLoads) {
-    world::WorldLevelData data{};
-    ASSERT_EQ(world::decodeLevelData("BETACRAFT_LEVEL_V2\nitems_scheme 2\nseed 5\nplayer.health 12\ninv 0 1 3 0\n", data),
-              world::LevelLoadStatus::Ok);
+    storage::WorldLevelData data{};
+    ASSERT_EQ(storage::decodeLevelData("BETACRAFT_LEVEL_V2\nitems_scheme 2\nseed 5\nplayer.health 12\ninv 0 1 3 0\n", data),
+              storage::LevelLoadStatus::Ok);
     ASSERT_TRUE(data.player.has_value());
-    for (const world::SavedStack& s : data.player->armor) EXPECT_EQ(s, world::SavedStack{});
+    for (const storage::SavedStack& s : data.player->armor) EXPECT_EQ(s, storage::SavedStack{});
 
     physics::Player player;
     player.setArmorSlot(2, {gameplay::armorItemId(gameplay::ArmorMaterial::Leather, gameplay::ArmorSlot::Leggings), 1});
@@ -264,10 +264,10 @@ TEST(PersistenceIntegrationTest, LevelDatWithoutArmorKeysLoads) {
     EXPECT_EQ(player.getHealth(), 12);
 
     // Malformed or misplaced armor lines never put a wrong item in a slot.
-    ASSERT_EQ(world::decodeLevelData("BETACRAFT_LEVEL_V2\narmor 7 306 1 0\narmor 0 1 1 0\narmor 1 306 1 0\n"
-                                     "armor 2 312 1 9999\narmor x\n",
-                                     data),
-              world::LevelLoadStatus::Ok);
+    ASSERT_EQ(storage::decodeLevelData("BETACRAFT_LEVEL_V2\narmor 7 306 1 0\narmor 0 1 1 0\narmor 1 306 1 0\n"
+                                       "armor 2 312 1 9999\narmor x\n",
+                                       data),
+              storage::LevelLoadStatus::Ok);
     game::restorePlayer(player, *data.player);
     EXPECT_TRUE(player.getArmorSlot(0).isEmpty()) << "stone is no helmet";
     EXPECT_TRUE(player.getArmorSlot(1).isEmpty()) << "a helmet is no chestplate";

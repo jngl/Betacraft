@@ -22,8 +22,8 @@
 #include "gameplay/MobSpawnRules.hpp"
 #include "gameplay/SplitMix64.hpp"
 #include "physics/Player.hpp"
-#include "world/Block.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>

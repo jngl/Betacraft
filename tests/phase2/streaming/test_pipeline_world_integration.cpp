@@ -22,9 +22,9 @@ using betacraft::streaming::AsyncChunkPipeline;
 using betacraft::streaming::ChunkMeshResult;
 using betacraft::streaming::ChunkStage;
 using betacraft::streaming::PipelineConfig;
-using betacraft::streaming::SectionCoord;
 using betacraft::streaming::SubmitResult;
 using betacraft::streaming::test::kGenerousTimeout;
+using betacraft::voxel::SectionCoord;
 using betacraft::world::BlockId;
 using betacraft::world::World;
 

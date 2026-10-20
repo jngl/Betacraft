@@ -3,8 +3,8 @@
 // decoration plan left unchanged.
 #include "WorldgenTestSupport.hpp"
 
-#include "world/Block.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/Chunk.hpp"
 #include "worldgen/CaveCarver.hpp"
 #include "worldgen/DecorationFeatures.hpp"
 #include "worldgen/Dungeons.hpp"

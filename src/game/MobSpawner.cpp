@@ -3,8 +3,8 @@
 #include "ecs/Components.hpp"
 #include "ecs/Systems.hpp"
 #include "gameplay/MobSpawnRules.hpp"
-#include "world/Block.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/World.hpp"
 #include "worldgen/SeededRandom.hpp"
 
@@ -53,7 +53,7 @@ using gameplay::MobKind;
 
 void MobSpawner::tick(world::World& world, ecs::Registry& reg, ecs::CommandBuffer& commands,
                       const glm::vec3& playerFeet, float timeOfDay, core::GameMode mode,
-                      gameplay::SplitMix64& rng, const world::WeatherState& weather) {
+                      gameplay::SplitMix64& rng, const storage::WeatherState& weather) {
     // Spawning ignores the mode: in Creative hostiles still appear, they only ignore the
     // player (S4.5). Peaceful is out of scope.
     (void)mode;
@@ -181,7 +181,7 @@ gameplay::MobKind MobSpawner::spawnerKind(const core::BlockPos& pos) noexcept {
 
 void MobSpawner::tickSpawners(const world::World& world, ecs::Registry& reg, ecs::CommandBuffer& commands,
                               const glm::vec3& playerFeet, float timeOfDay, gameplay::SplitMix64& rng,
-                              const world::WeatherState& weather) {
+                              const storage::WeatherState& weather) {
     if (m_spawnerTicks++ % SPAWNER_SCAN_INTERVAL_TICKS == 0) {
         scanSpawners(world, playerFeet, rng);
     }

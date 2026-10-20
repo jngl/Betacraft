@@ -11,10 +11,10 @@
 #include <type_traits>
 #include <vector>
 
-using betacraft::streaming::SectionCoord;
+using betacraft::streaming::kMissingVoxel;
 using betacraft::streaming::SectionNeighborhoodSnapshot18;
 using betacraft::streaming::VoxelSample;
-using betacraft::streaming::kMissingVoxel;
+using betacraft::voxel::SectionCoord;
 using betacraft::world::BlockId;
 using betacraft::world::BlockStateId;
 using betacraft::world::World;

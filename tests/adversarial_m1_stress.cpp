@@ -6,11 +6,11 @@
 #include <memory>
 #include <chrono>
 
-#include "world/PalettedSection.hpp"
-#include "world/Chunk.hpp"
-#include "world/World.hpp"
-#include "physics/Player.hpp"
 #include "core/Config.hpp"
+#include "physics/Player.hpp"
+#include "voxel/Chunk.hpp"
+#include "voxel/PalettedSection.hpp"
+#include "world/World.hpp"
 
 using namespace betacraft;
 using namespace betacraft::world;

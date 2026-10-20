@@ -4,8 +4,8 @@
 
 #include "redstone/RedstoneEngine.hpp"
 #include "redstone/RedstoneVoxelAccess.hpp"
-#include "world/Block.hpp"
-#include "world/BlockShapes.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/BlockShapes.hpp"
 
 #include <gtest/gtest.h>
 

@@ -8,7 +8,7 @@
 #include <functional>
 #include <glm/glm.hpp>
 
-namespace betacraft::streaming {
+namespace betacraft::voxel {
 
 // Address of one 16x16x16 sub-chunk: x/z are chunk coordinates, y is the vertical
 // section index inside the 128-block column (0..7). This is the unit of meshing,
@@ -67,13 +67,13 @@ struct SectionBox {
              core::floorDiv(wz + 1, S)}};
 }
 
-} // namespace betacraft::streaming
+} // namespace betacraft::voxel
 
 namespace std {
 
 template <>
-struct hash<betacraft::streaming::SectionCoord> {
-    size_t operator()(const betacraft::streaming::SectionCoord& c) const noexcept {
+struct hash<betacraft::voxel::SectionCoord> {
+    size_t operator()(const betacraft::voxel::SectionCoord& c) const noexcept {
         // y fits in 3 bits for valid sections; mix it in with a large odd multiplier.
         const uint64_t ux = static_cast<uint32_t>(c.x);
         const uint64_t uz = static_cast<uint32_t>(c.z);

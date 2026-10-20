@@ -3,7 +3,7 @@
 #include "core/Types.hpp"
 #include "ecs/Components.hpp"
 #include "ecs/Registry.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <glm/glm.hpp>
 

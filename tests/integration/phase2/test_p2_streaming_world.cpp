@@ -24,26 +24,26 @@ using namespace std::chrono_literals;
 using streaming::ChunkMeshResult;
 using streaming::ChunkStage;
 using streaming::RawMeshBuffer;
-using streaming::SectionCoord;
+using voxel::SectionCoord;
 using streaming::WorldMeshStreamer;
 using streaming::WorldMeshStreamerConfig;
 using world::BlockId;
 
 namespace {
 
-constexpr int32_t kSections = SectionCoord::SECTIONS_PER_COLUMN;
+constexpr int32_t kSections = voxel::SectionCoord::SECTIONS_PER_COLUMN;
 constexpr auto kTimeout = std::chrono::seconds(20);
 
 struct SectionLess {
-    bool operator()(const SectionCoord& a, const SectionCoord& b) const noexcept {
+    bool operator()(const voxel::SectionCoord& a, const voxel::SectionCoord& b) const noexcept {
         if (a.x != b.x) return a.x < b.x;
         if (a.z != b.z) return a.z < b.z;
         return a.y < b.y;
     }
 };
-using SectionSet = std::set<SectionCoord, SectionLess>;
+using SectionSet = std::set<voxel::SectionCoord, SectionLess>;
 template <typename V>
-using SectionMap = std::map<SectionCoord, V, SectionLess>;
+using SectionMap = std::map<voxel::SectionCoord, V, SectionLess>;
 
 bool sameVertices(const std::vector<render::PackedChunkVertex>& a, const std::vector<render::PackedChunkVertex>& b) {
     if (a.size() != b.size()) return false;
@@ -91,17 +91,17 @@ struct FakeGpu {
 };
 
 [[nodiscard]] std::shared_ptr<const streaming::SectionNeighborhoodSnapshot18> snapshotOf(const world::World& w,
-                                                                                    SectionCoord c) {
+                                                                                    voxel::SectionCoord c) {
     return streaming::SectionNeighborhoodSnapshot18::capture(w, c);
 }
 
-[[nodiscard]] RawMeshBuffer freshMesh(const world::World& w, SectionCoord c, bool smooth = true) {
+[[nodiscard]] RawMeshBuffer freshMesh(const world::World& w, voxel::SectionCoord c, bool smooth = true) {
     streaming::MeshOptions opts;
     opts.smoothLighting = smooth;
     return streaming::SnapshotMesher::build(*snapshotOf(w, c), c.y, opts).value();
 }
 
-[[nodiscard]] bool isNonEmpty(const world::World& w, SectionCoord c) {
+[[nodiscard]] bool isNonEmpty(const world::World& w, voxel::SectionCoord c) {
     return !snapshotOf(w, c)->isInteriorEmpty();
 }
 
@@ -147,7 +147,7 @@ protected:
         size_t expectedLive = 0;
         for (const auto& [coord, chunk] : m_world->getChunks()) {
             for (int32_t sy = 0; sy < kSections; ++sy) {
-                const SectionCoord sc{coord.x, sy, coord.z};
+                const voxel::SectionCoord sc{coord.x, sy, coord.z};
                 const auto it = gpu.live.find(sc);
                 if (!m_world->isChunkDecorated(coord) || !isNonEmpty(*m_world, sc)) {
                     EXPECT_TRUE(it == gpu.live.end()) << "unexpected mesh " << sc.x << "," << sc.y << "," << sc.z;
@@ -163,9 +163,9 @@ protected:
         EXPECT_GT(expectedLive, 0u);
     }
 
-    [[nodiscard]] SectionSet nonEmptyAmong(const std::vector<SectionCoord>& cs) const {
+    [[nodiscard]] SectionSet nonEmptyAmong(const std::vector<voxel::SectionCoord>& cs) const {
         SectionSet out;
-        for (const SectionCoord c : cs) {
+        for (const voxel::SectionCoord c : cs) {
             if (isNonEmpty(*m_world, c)) out.insert(c);
         }
         return out;
@@ -212,7 +212,7 @@ TEST_F(P2StreamingWorld, OpaqueSwapAtAChunkCornerRemeshesExactlyTheSectionsThatS
     ASSERT_TRUE(m_world->setBlock(15, 31, 15, BlockId::Cobblestone));
     converge(s, gpu);
 
-    std::vector<SectionCoord> seeing;
+    std::vector<voxel::SectionCoord> seeing;
     for (const int32_t cx : {0, 1})
         for (const int32_t cz : {0, 1})
             for (const int32_t sy : {1, 2}) seeing.push_back({cx, sy, cz});
@@ -235,11 +235,11 @@ TEST_F(P2StreamingWorld, BlockEditRemeshesNeighbourSectionsAndConvergesToTheNewW
     converge(s, gpu);
 
     const SectionSet uploaded = gpu.uploadedSet();
-    for (const SectionCoord c : nonEmptyAmong({{0, 2, 0}, {0, 3, 0}, {1, 2, 0}, {1, 3, 0},
-                                               {0, 2, 1}, {0, 3, 1}, {1, 2, 1}, {1, 3, 1}})) {
+    for (const voxel::SectionCoord c : nonEmptyAmong({{0, 2, 0}, {0, 3, 0}, {1, 2, 0}, {1, 3, 0},
+                                                      {0, 2, 1}, {0, 3, 1}, {1, 2, 1}, {1, 3, 1}})) {
         EXPECT_TRUE(uploaded.contains(c)) << "not re-meshed: " << c.x << "," << c.y << "," << c.z;
     }
-    EXPECT_FALSE(uploaded.contains(SectionCoord{-2, 7, -2})) << "far section re-meshed";
+    EXPECT_FALSE(uploaded.contains(voxel::SectionCoord{-2, 7, -2})) << "far section re-meshed";
     expectGpuMatchesWorld(gpu);
 }
 
@@ -247,7 +247,7 @@ TEST_F(P2StreamingWorld, SectionThatEmptiesOutHasItsMeshDeleted) {
     WorldMeshStreamer s(threaded());
     FakeGpu gpu;
     converge(s, gpu);
-    const SectionCoord sky{0, 7, 0};
+    const voxel::SectionCoord sky{0, 7, 0};
     ASSERT_FALSE(isNonEmpty(*m_world, sky));
     ASSERT_FALSE(gpu.live.contains(sky));
 
@@ -295,7 +295,7 @@ TEST_F(P2StreamingWorld, UnloadCancelsQueuedWorkAndDeletesTheColumnsMeshes) {
 
     (void)s.drainUploads(1s, std::ref(gpu));
     EXPECT_TRUE(gpu.uploads.empty()) << "a cancelled job reached the GPU";
-    for (const SectionCoord sc : goneMeshes) {
+    for (const voxel::SectionCoord sc : goneMeshes) {
         EXPECT_EQ(gpu.removals[sc], 1) << sc.x << "," << sc.y << "," << sc.z;
     }
     EXPECT_TRUE(gpu.live.empty());
@@ -372,7 +372,7 @@ TEST_F(P2StreamingWorld, FrontierChunkIsMeshedOnceItsNeighbourhoodLoadsAndDecora
     const core::ChunkCoord edge{2, 0};
     ASSERT_FALSE(m_world->isChunkDecorated(edge));
     for (int32_t sy = 0; sy < kSections; ++sy) {
-        EXPECT_FALSE(gpu.live.contains(SectionCoord{edge.x, sy, edge.z}));
+        EXPECT_FALSE(gpu.live.contains(voxel::SectionCoord{edge.x, sy, edge.z}));
     }
 
     test::p2worldgen::loadAll(*m_world, {{3, -1}, {3, 0}, {3, 1}});

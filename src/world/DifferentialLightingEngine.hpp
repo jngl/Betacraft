@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/Types.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <cstdint>
 #include <cstddef>

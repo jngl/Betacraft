@@ -1,13 +1,13 @@
 #pragma once
 
 #include "math/PerlinNoise.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
 #include "worldgen/CaveCarver.hpp"
 
 #include <array>
 #include <cstdint>
 
-// Concurrency (S7.7): pass 1 runs on the generation workers (streaming::ChunkGenPipeline),
+// Concurrency (S7.7): pass 1 runs on the generation workers (world::ChunkGenPipeline),
 // several threads sharing one const WorldGen. Nothing here or in worldgen/ may hold `mutable`
 // members or non-const `static` state, and generation never reads World.
 namespace betacraft::world {

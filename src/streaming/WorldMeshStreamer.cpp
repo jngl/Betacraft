@@ -1,6 +1,6 @@
 #include "streaming/WorldMeshStreamer.hpp"
 
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/World.hpp"
 
 #include <algorithm>
@@ -83,14 +83,14 @@ void WorldMeshStreamer::update(world::World& world, const glm::vec3& viewerPos, 
         m_remeshAll = false;
     }
     // Their queued job was dropped for a nearer one; nothing else would refresh them.
-    for (const SectionCoord sc : m_pipeline->takeEvictedSections()) {
+    for (const voxel::SectionCoord sc : m_pipeline->takeEvictedSections()) {
         if (world::Chunk* chunk = world.getChunkMutable(sc.chunk())) {
             chunk->markSectionDirty(static_cast<size_t>(sc.y));
         }
     }
 
     struct Candidate {
-        SectionCoord coord;
+        voxel::SectionCoord coord;
         float distanceSq;
     };
     std::vector<Candidate> dirty;
@@ -100,7 +100,7 @@ void WorldMeshStreamer::update(world::World& world, const glm::vec3& viewerPos, 
         if (chunk == nullptr || chunk->dirtySectionMask() == 0) continue;
         for (size_t s = 0; s < world::Chunk::SECTIONS_PER_CHUNK; ++s) {
             if (chunk->isSectionDirty(s)) {
-                const SectionCoord sc{coord.x, static_cast<int32_t>(s), coord.z};
+                const voxel::SectionCoord sc{coord.x, static_cast<int32_t>(s), coord.z};
                 dirty.push_back({sc, sc.distanceSqTo(viewerPos)});
             }
         }
@@ -140,8 +140,8 @@ void WorldMeshStreamer::update(world::World& world, const glm::vec3& viewerPos, 
 void WorldMeshStreamer::forgetChunk(core::ChunkCoord coord) {
     // Stops running jobs of the column and moves it back to Unloaded.
     m_pipeline->cancelChunk(coord);
-    for (int32_t y = 0; y < SectionCoord::SECTIONS_PER_COLUMN; ++y) {
-        const SectionCoord sc{coord.x, y, coord.z};
+    for (int32_t y = 0; y < voxel::SectionCoord::SECTIONS_PER_COLUMN; ++y) {
+        const voxel::SectionCoord sc{coord.x, y, coord.z};
         m_versions.erase(sc);
         if (m_meshed.erase(sc) != 0) {
             m_pendingRemovals.push_back(sc);
@@ -149,7 +149,7 @@ void WorldMeshStreamer::forgetChunk(core::ChunkCoord coord) {
     }
 }
 
-void WorldMeshStreamer::dropSection(SectionCoord coord) {
+void WorldMeshStreamer::dropSection(voxel::SectionCoord coord) {
     if (m_meshed.erase(coord) == 0) {
         return;
     }
@@ -161,9 +161,9 @@ void WorldMeshStreamer::dropSection(SectionCoord coord) {
 DrainStats WorldMeshStreamer::drainUploads(std::chrono::nanoseconds budget, const MeshUploader& uploader) {
     // Deletions first: a mesh staged after them belongs to a later submission (the section
     // refilled or the chunk came back), so it must win.
-    std::vector<SectionCoord> removals;
+    std::vector<voxel::SectionCoord> removals;
     removals.swap(m_pendingRemovals);
-    for (const SectionCoord coord : removals) {
+    for (const voxel::SectionCoord coord : removals) {
         ChunkMeshResult empty{coord, 0, {}};
         uploader(empty);
     }

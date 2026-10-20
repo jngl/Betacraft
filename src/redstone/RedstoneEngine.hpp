@@ -3,8 +3,8 @@
 #include "core/Types.hpp"
 #include "redstone/RedstoneVoxelAccess.hpp"
 #include "redstone/TorchBurnoutTracker.hpp"
-#include "world/Block.hpp"
-#include "world/ScheduledTicks.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/ScheduledTicks.hpp"
 
 #include <array>
 #include <cstddef>

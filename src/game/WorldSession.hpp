@@ -2,15 +2,15 @@
 
 #include "core/Config.hpp"
 #include "core/Types.hpp"
+#include "fluids/FluidSimulator.hpp"
 #include "game/EntitySimulation.hpp"
 #include "game/InventoryCrafting.hpp"
 #include "gameplay/SplitMix64.hpp"
-#include "fluids/FluidSimulator.hpp"
 #include "physics/Player.hpp"
 #include "redstone/RedstoneEngine.hpp"
+#include "storage/WorldStorage.hpp"
 #include "world/Weather.hpp"
 #include "world/World.hpp"
-#include "world/WorldStorage.hpp"
 
 #include <glm/glm.hpp>
 
@@ -103,7 +103,7 @@ public:
     // (WorldRenderer::releaseWorld).
     ~WorldSession() noexcept;
 
-    [[nodiscard]] world::LevelLoadStatus levelStatus() const noexcept { return m_levelStatus; }
+    [[nodiscard]] storage::LevelLoadStatus levelStatus() const noexcept { return m_levelStatus; }
     // A new world opened without a mode: nothing is written until startNewWorld.
     [[nodiscard]] bool awaitingGameMode() const noexcept { return m_awaitingGameMode; }
     // Applies `mode` and its starter kit, then writes the first level.dat. No-op unless
@@ -166,9 +166,9 @@ public:
     void skipTimeIfCreative() noexcept;
 
     // S8.9 weather, advanced by tick() (clear and frozen with --no-weather).
-    [[nodiscard]] const world::WeatherState& weather() const noexcept { return m_weather; }
+    [[nodiscard]] const storage::WeatherState& weather() const noexcept { return m_weather; }
     // Replaces the weather (tests); ignored with --no-weather, which keeps it clear.
-    void setWeather(const world::WeatherState& weather) noexcept {
+    void setWeather(const storage::WeatherState& weather) noexcept {
         if (m_features.weather) {
             m_weather = weather;
         }
@@ -209,7 +209,7 @@ public:
 
 private:
     explicit WorldSession(const OpenOptions& options);
-    [[nodiscard]] world::WorldLevelData makeLevelData(std::vector<physics::InventorySlot>* overflow = nullptr) const;
+    [[nodiscard]] storage::WorldLevelData makeLevelData(std::vector<physics::InventorySlot>* overflow = nullptr) const;
     void migrateLegacyStorage(const OpenOptions& options, uint32_t storageFormat);
     // Beta wakeUpPlayer: a hit, death or the bed going away ends the sleep early; a full
     // night's sleep reports wokeInBed and applies the morning.
@@ -231,7 +231,7 @@ private:
     EntitySimulation m_simulation;
     InventoryCrafting m_crafting;
 
-    world::LevelLoadStatus m_levelStatus{world::LevelLoadStatus::Missing};
+    storage::LevelLoadStatus m_levelStatus{storage::LevelLoadStatus::Missing};
     bool m_awaitingGameMode{false};
     std::optional<bool> m_closed; // close()'s result once it ran
 
@@ -242,7 +242,7 @@ private:
     float m_prevTimeOfDay{0.22f}; // Before the last tick, for timeOfDay(alpha)
     uint32_t m_gameTicks{0};
     // S8.9 weather, saved in level.dat (weather.*); always clear with --no-weather.
-    world::WeatherState m_weather{};
+    storage::WeatherState m_weather{};
     gameplay::SplitMix64 m_weatherRng{0x5EA7E5ULL};    // Seeded from the world seed
     gameplay::SplitMix64 m_randomTickRng{0};           // S5.1, seeded from the world seed
     gameplay::SplitMix64 m_trampleRng{0x7EA3B1EULL};   // S5.7 farmland trampling rolls

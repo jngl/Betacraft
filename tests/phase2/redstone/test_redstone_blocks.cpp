@@ -4,8 +4,8 @@
 #include "gameplay/ItemIds.hpp"
 #include "math/AABB.hpp"
 #include "render/BlockShapeMesher.hpp"
-#include "world/Block.hpp"
-#include "world/BlockShapes.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/BlockShapes.hpp"
 
 #include <gtest/gtest.h>
 

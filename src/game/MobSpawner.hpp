@@ -57,7 +57,7 @@ public:
     // (gameplay::hostileSkylightSubtracted), so they also appear in daylight.
     void tick(world::World& world, ecs::Registry& reg, ecs::CommandBuffer& commands, const glm::vec3& playerFeet,
               float timeOfDay, core::GameMode mode, gameplay::SplitMix64& rng,
-              const world::WeatherState& weather = world::WeatherState{});
+              const storage::WeatherState& weather = storage::WeatherState{});
 
     [[nodiscard]] const MobSpawnerStats& stats() const noexcept { return m_stats; }
 
@@ -85,7 +85,7 @@ public:
 
     void tickSpawners(const world::World& world, ecs::Registry& reg, ecs::CommandBuffer& commands,
                       const glm::vec3& playerFeet, float timeOfDay, gameplay::SplitMix64& rng,
-                      const world::WeatherState& weather = world::WeatherState{});
+                      const storage::WeatherState& weather = storage::WeatherState{});
     // Remaining delay of every known spawner, by block position.
     [[nodiscard]] const std::unordered_map<core::BlockPos, int32_t>& spawnerDelays() const noexcept {
         return m_spawnerDelays;

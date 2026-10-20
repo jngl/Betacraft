@@ -6,7 +6,7 @@
 #include "game/DynamicLightCollector.hpp"
 #include "lighting/DynamicLightManager.hpp"
 #include "physics/Player.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <gtest/gtest.h>
 

@@ -1,4 +1,4 @@
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
 
 #include <algorithm>
 #include <queue>

@@ -1,6 +1,6 @@
 #include "worldgen/CaveCarver.hpp"
+#include "voxel/Chunk.hpp"
 #include "worldgen/SeededRandom.hpp"
-#include "world/Chunk.hpp"
 
 #include <array>
 

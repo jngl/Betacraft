@@ -4,7 +4,7 @@
 #include "tests/test_helpers.hpp"
 
 #include "P2WorldgenSupport.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>

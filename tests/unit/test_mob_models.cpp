@@ -4,7 +4,7 @@
 #include "render/MobModels.hpp"
 #include "render/TextureAtlas.hpp"
 #include "tests/test_helpers.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>

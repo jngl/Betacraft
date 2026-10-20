@@ -1,7 +1,7 @@
 // S6.5: the pure Beta 1.7.3 explosion (gameplay::explosionBlocks, exposure, explosionDamage)
 // over a small voxel lambda, without any World.
 #include "gameplay/Explosion.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <gtest/gtest.h>
 

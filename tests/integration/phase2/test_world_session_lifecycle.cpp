@@ -35,7 +35,7 @@ protected:
 TEST_F(WorldSessionLifecycle, NewCreativeWorldGetsTheCreativeKit) {
     std::unique_ptr<WorldSession> session = open();
     ASSERT_NE(session, nullptr);
-    EXPECT_EQ(session->levelStatus(), world::LevelLoadStatus::Missing);
+    EXPECT_EQ(session->levelStatus(), storage::LevelLoadStatus::Missing);
     EXPECT_TRUE(session->awaitingGameMode());
     EXPECT_FALSE(levelDatExists()) << "nothing written before the mode is chosen";
 
@@ -69,7 +69,7 @@ TEST_F(WorldSessionLifecycle, SurvivalWorldSavesInventoryOnShutdown) {
     }
 
     std::unique_ptr<WorldSession> session = open();
-    EXPECT_EQ(session->levelStatus(), world::LevelLoadStatus::Ok);
+    EXPECT_EQ(session->levelStatus(), storage::LevelLoadStatus::Ok);
     EXPECT_FALSE(session->awaitingGameMode());
     const physics::Player& player = session->player();
     EXPECT_FALSE(player.isCreative());
@@ -93,7 +93,7 @@ TEST_F(WorldSessionLifecycle, NewWorldQuitAtTitleKeepsTheModeChoice) {
     EXPECT_FALSE(levelDatExists());
 
     std::unique_ptr<WorldSession> session = open();
-    EXPECT_EQ(session->levelStatus(), world::LevelLoadStatus::Missing);
+    EXPECT_EQ(session->levelStatus(), storage::LevelLoadStatus::Missing);
     ASSERT_TRUE(session->awaitingGameMode()) << "still a new world: the choice applies";
     session->startNewWorld(core::GameMode::Creative);
     EXPECT_TRUE(session->player().isCreative());
@@ -112,7 +112,7 @@ TEST_F(WorldSessionLifecycle, TooNewLevelDatIsNeverOverwritten) {
     options.defaultGameMode = core::GameMode::Creative;
     std::unique_ptr<WorldSession> session = WorldSession::open(options);
     ASSERT_NE(session, nullptr) << "a too new save is still playable";
-    EXPECT_EQ(session->levelStatus(), world::LevelLoadStatus::TooNew);
+    EXPECT_EQ(session->levelStatus(), storage::LevelLoadStatus::TooNew);
     EXPECT_TRUE(session->isSaveDisabled());
     EXPECT_TRUE(session->world().isSaveDisabled()) << "the World holds the flag";
     EXPECT_FALSE(session->awaitingGameMode());

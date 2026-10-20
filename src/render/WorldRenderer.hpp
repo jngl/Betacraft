@@ -15,8 +15,8 @@
 #include "render/SkyRenderer.hpp"
 #include "render/TextureAtlas.hpp"
 #include "render/WeatherRenderer.hpp"
-#include "streaming/SectionCoord.hpp"
 #include "streaming/WorldMeshStreamer.hpp"
+#include "voxel/SectionCoord.hpp"
 #include "world/World.hpp"
 
 #include <cstdint>
@@ -150,9 +150,9 @@ private:
     DynamicLightUniformBuffer m_dynamicLightUbo;
     lighting::DynamicLightFrame m_dynamicLightFrame;
 
-    std::unordered_map<streaming::SectionCoord, ChunkMeshGL> m_sectionMeshes;
+    std::unordered_map<voxel::SectionCoord, ChunkMeshGL> m_sectionMeshes;
     // Per-frame culling results, kept to reuse their storage.
-    std::vector<std::pair<streaming::SectionCoord, const ChunkMeshGL*>> m_visibleMeshes;
+    std::vector<std::pair<voxel::SectionCoord, const ChunkMeshGL*>> m_visibleMeshes;
     std::vector<core::ChunkCoord> m_visibleColumns;
 
     GLuint m_dynamicVao{0};

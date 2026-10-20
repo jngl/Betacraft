@@ -4,7 +4,7 @@
 #include "game/ItemBridge.hpp"
 #include "gameplay/Armor.hpp"
 #include "gameplay/ItemIds.hpp"
-#include "world/BlockEntityStore.hpp"
+#include "voxel/BlockEntityStore.hpp"
 #include "world/World.hpp"
 
 #include <algorithm>

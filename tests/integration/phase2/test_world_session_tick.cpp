@@ -8,7 +8,7 @@
 #include "crafting/CraftingGrid.hpp"
 #include "gameplay/ItemIds.hpp"
 #include "gameplay/MobDefs.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 #include "world/Weather.hpp"
 
 #include <gtest/gtest.h>
@@ -98,14 +98,14 @@ TEST_F(WorldSessionTick, TheTickThePlayerDiesScattersTheGridTheCursorAndTheInven
 // S8.10 the lightning roll is part of the tick: in a lasting thunderstorm a strike comes back
 // in the events, within 64 blocks of the player, on top of a rainy column.
 TEST_F(WorldSessionTick, AThunderstormReturnsLightningStrikes) {
-    m_session->setWeather(world::WeatherState{.raining = true,
-                                              .thundering = true,
-                                              .rainTime = 100000,
-                                              .thunderTime = 100000,
-                                              .rainStrength = 1.0f,
-                                              .prevRainStrength = 1.0f,
-                                              .thunderStrength = 1.0f,
-                                              .prevThunderStrength = 1.0f});
+    m_session->setWeather(storage::WeatherState{.raining = true,
+                                                .thundering = true,
+                                                .rainTime = 100000,
+                                                .thunderTime = 100000,
+                                                .rainStrength = 1.0f,
+                                                .prevRainStrength = 1.0f,
+                                                .thunderStrength = 1.0f,
+                                                .prevThunderStrength = 1.0f});
     std::optional<glm::vec3> strike;
     for (int32_t t = 0; t < 4000 && !strike; ++t) {
         strike = tickIdle().lightningStrike;
@@ -126,7 +126,7 @@ TEST_F(WorldSessionTick, AThunderstormReturnsLightningStrikes) {
 // noon a clear sky keeps hostiles off the sunlit surface; a thunderstorm lets them spawn there
 // (Beta reads their light with skylightSubtracted 10). Hostiles in caves do not count.
 TEST_F(WorldSessionTick, ThunderLetsHostilesSpawnOnTheSunlitSurfaceAtNoon) {
-    const auto sunlitHostilesWithin = [&](const world::WeatherState& weather, int32_t ticks) {
+    const auto sunlitHostilesWithin = [&](const storage::WeatherState& weather, int32_t ticks) {
         ecs::Registry& entities = m_session->simulation().entities();
         std::vector<ecs::EntityId> mobs;
         entities.view<ecs::MobKindComp>().each([&](ecs::EntityId e, const ecs::MobKindComp&) {
@@ -158,22 +158,22 @@ TEST_F(WorldSessionTick, ThunderLetsHostilesSpawnOnTheSunlitSurfaceAtNoon) {
     };
 
     // Long timers: neither weather changes during the run.
-    EXPECT_EQ(sunlitHostilesWithin(world::WeatherState{.rainTime = 100000, .thunderTime = 100000}, 1500), 0);
-    EXPECT_GT(sunlitHostilesWithin(world::WeatherState{.raining = true,
-                                                       .thundering = true,
-                                                       .rainTime = 100000,
-                                                       .thunderTime = 100000,
-                                                       .rainStrength = 1.0f,
-                                                       .prevRainStrength = 1.0f,
-                                                       .thunderStrength = 1.0f,
-                                                       .prevThunderStrength = 1.0f},
+    EXPECT_EQ(sunlitHostilesWithin(storage::WeatherState{.rainTime = 100000, .thunderTime = 100000}, 1500), 0);
+    EXPECT_GT(sunlitHostilesWithin(storage::WeatherState{.raining = true,
+                                                         .thundering = true,
+                                                         .rainTime = 100000,
+                                                         .thunderTime = 100000,
+                                                         .rainStrength = 1.0f,
+                                                         .prevRainStrength = 1.0f,
+                                                         .thunderStrength = 1.0f,
+                                                         .prevThunderStrength = 1.0f},
                                    1500),
               0);
 }
 
 // Clear weather never strikes, and the weather advances once per tick.
 TEST_F(WorldSessionTick, ClearWeatherNeverStrikesAndTheWeatherAdvancesEachTick) {
-    m_session->setWeather(world::WeatherState{.rainTime = 1000});
+    m_session->setWeather(storage::WeatherState{.rainTime = 1000});
     for (int32_t t = 0; t < 500; ++t) {
         ASSERT_FALSE(tickIdle().lightningStrike.has_value()) << t;
     }

@@ -2,8 +2,8 @@
 
 #include "core/Config.hpp"
 #include "core/Types.hpp"
-#include "world/Block.hpp"
-#include "world/PalettedSection.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/PalettedSection.hpp"
 
 #include <array>
 #include <cstdint>

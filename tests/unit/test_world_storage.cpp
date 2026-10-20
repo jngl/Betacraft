@@ -1,7 +1,7 @@
+#include "storage/WorldStorage.hpp"
 #include "tests/test_helpers.hpp"
-#include "world/Block.hpp"
-#include "world/Chunk.hpp"
-#include "world/WorldStorage.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/Chunk.hpp"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -12,6 +12,7 @@
 #include <string>
 #include <string_view>
 
+using namespace betacraft::storage;
 using namespace betacraft::world;
 using namespace testing;
 

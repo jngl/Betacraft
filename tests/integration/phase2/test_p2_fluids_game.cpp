@@ -7,7 +7,7 @@
 #include "game/FluidEffects.hpp"
 #include "game/StarterKit.hpp"
 #include "physics/Player.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <gtest/gtest.h>
 

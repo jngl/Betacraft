@@ -1,6 +1,6 @@
 #include "redstone/RedstoneEngine.hpp"
 
-#include "world/BlockShapes.hpp"
+#include "voxel/BlockShapes.hpp"
 
 #include <algorithm>
 #include <array>

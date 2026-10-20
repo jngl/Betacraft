@@ -1,8 +1,8 @@
 #pragma once
 
-#include "streaming/SectionCoord.hpp"
-#include "world/Block.hpp"
-#include "world/PalettedSection.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/PalettedSection.hpp"
+#include "voxel/SectionCoord.hpp"
 
 #include <array>
 #include <concepts>
@@ -109,7 +109,7 @@ public:
     // getBlockLight semantics exactly (unloaded chunk -> air + sky 15, y >= 128 -> sky 15,
     // y < 0 -> sky 0) but resolves the 3x3 chunk column once instead of per voxel.
     [[nodiscard]] static std::shared_ptr<const SectionNeighborhoodSnapshot18> capture(
-        const world::World& world, SectionCoord coord);
+        const world::World& world, voxel::SectionCoord coord);
 
 private:
     [[nodiscard]] static constexpr bool isInterior(int32_t lx, int32_t ly, int32_t lz) noexcept {

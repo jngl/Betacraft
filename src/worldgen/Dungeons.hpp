@@ -2,7 +2,7 @@
 
 #include "core/Types.hpp"
 #include "gameplay/ItemIds.hpp"
-#include "world/BlockEntity.hpp"
+#include "voxel/BlockEntity.hpp"
 #include "worldgen/CaveCarver.hpp"
 #include "worldgen/SeededRandom.hpp"
 

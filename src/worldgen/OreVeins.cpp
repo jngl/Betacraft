@@ -1,6 +1,6 @@
 #include "worldgen/OreVeins.hpp"
 
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
 
 namespace betacraft::worldgen {
 

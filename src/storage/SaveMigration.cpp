@@ -3,9 +3,9 @@
 #include "core/Logger.hpp"
 #include "storage/LegacyChunkStore.hpp"
 #include "storage/RegionChunkStore.hpp"
-#include "world/Block.hpp"
-#include "world/Chunk.hpp"
-#include "world/WorldStorage.hpp"
+#include "storage/WorldStorage.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/Chunk.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -48,7 +48,7 @@ namespace {
         out += line;
         out += '\n';
     }
-    out += "storage_format " + std::to_string(world::kRegionStorageFormat) + "\n";
+    out += "storage_format " + std::to_string(kRegionStorageFormat) + "\n";
 
     const auto tmpPath = saveDir / "level.dat.tmp";
     {
@@ -85,10 +85,10 @@ MigrationReport migrateLegacyChunks(const std::filesystem::path& saveDir, const 
         if (progress) progress(v);
     };
 
-    world::WorldLevelData level;
-    const world::WorldStorage levelStorage(saveDir);
-    const world::LevelLoadStatus status = levelStorage.loadLevelDataStatus(level);
-    if (status == world::LevelLoadStatus::TooNew || status == world::LevelLoadStatus::Corrupt) {
+    WorldLevelData level;
+    const WorldStorage levelStorage(saveDir);
+    const LevelLoadStatus status = levelStorage.loadLevelDataStatus(level);
+    if (status == LevelLoadStatus::TooNew || status == LevelLoadStatus::Corrupt) {
         core::Logger::warn("SaveMigration", "level.dat of ", saveDir.string(), " is not readable: migration refused");
         return report;
     }
@@ -143,7 +143,7 @@ MigrationReport migrateLegacyChunks(const std::filesystem::path& saveDir, const 
     report.completed = true;
     report01(1.0f);
 
-    if (status == world::LevelLoadStatus::Ok && !writeStorageFormat(saveDir)) {
+    if (status == LevelLoadStatus::Ok && !writeStorageFormat(saveDir)) {
         core::Logger::warn("SaveMigration", "Could not record storage_format 2 in level.dat (written at next save)");
     }
     core::Logger::info("SaveMigration", "Migrated ", report.migrated, " chunks (", report.skipped, " already done, ",

@@ -1,6 +1,6 @@
 #include "world/DifferentialLightingEngine.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/World.hpp"
-#include "world/Chunk.hpp"
 
 #include <algorithm>
 #include <array>

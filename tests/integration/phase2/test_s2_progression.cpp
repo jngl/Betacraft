@@ -7,7 +7,7 @@
 
 #include "crafting/ItemIds.hpp"
 #include "crafting/SmeltingRecipes.hpp"
-#include "world/BlockEntityStore.hpp"
+#include "voxel/BlockEntityStore.hpp"
 
 #include <variant>
 

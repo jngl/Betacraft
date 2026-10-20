@@ -1,6 +1,6 @@
 #include "worldgen/DecorationPipeline.hpp"
 
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
 
 #include <algorithm>
 #include <array>

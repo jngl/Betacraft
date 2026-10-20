@@ -8,7 +8,7 @@
 #include "render/ChunkMesher.hpp"
 #include "streaming/SectionNeighborhoodSnapshot18.hpp"
 #include "streaming/SnapshotMesher.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 #include "world/World.hpp"
 #include "worldgen/CaveCarver.hpp"
 
@@ -182,8 +182,8 @@ TEST_F(P2FoundationsBlocks, SnapshotMesherMatchesLegacyMesherAroundFluids) {
 
     std::vector<render::PackedChunkVertex> opaque;
     std::vector<render::PackedChunkVertex> translucent;
-    for (int32_t sy = 0; sy < streaming::SectionCoord::SECTIONS_PER_COLUMN; ++sy) {
-        const auto snap = streaming::SectionNeighborhoodSnapshot18::capture(w, streaming::SectionCoord{0, sy, 0});
+    for (int32_t sy = 0; sy < voxel::SectionCoord::SECTIONS_PER_COLUMN; ++sy) {
+        const auto snap = streaming::SectionNeighborhoodSnapshot18::capture(w, voxel::SectionCoord{0, sy, 0});
         const auto m = streaming::SnapshotMesher::build(*snap, sy, streaming::MeshOptions{.smoothLighting = true});
         ASSERT_TRUE(m.has_value());
         opaque.insert(opaque.end(), m->opaqueVertices.begin(), m->opaqueVertices.end());

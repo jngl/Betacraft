@@ -11,7 +11,7 @@
 #include "game/MobBehaviour.hpp"
 #include "gameplay/MobDefs.hpp"
 #include "physics/Player.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>

@@ -2,8 +2,8 @@
 // decoration record ('D') and the S2.4 block entities ('E'); unknown tags are skipped.
 #include "storage/ChunkBundleCodec.hpp"
 #include "tests/test_helpers.hpp"
-#include "world/BlockEntityStore.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/BlockEntityStore.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>
@@ -106,7 +106,7 @@ TEST(ChunkBundleCodec, MissingDecorationTagMeansLegacyDecorated) {
         for (int32_t x = 0; x < world::Chunk::WIDTH; ++x)
             for (int32_t y = 0; y < 66; ++y) flat.setBlock(x, y, z, y == 65 ? BlockId::Grass : BlockId::Stone);
     {
-        world::WorldStorage storage(dir.path());
+        storage::WorldStorage storage(dir.path());
         ASSERT_TRUE(storage.saveChunkBundle({0, 0}, ChunkBundle{flat.serializeRLE(), std::nullopt, {}}));
         ASSERT_TRUE(storage.flush());
     }

@@ -7,7 +7,7 @@
 #include "gameplay/MobDefs.hpp"
 #include "math/AABB.hpp"
 #include "physics/Player.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <array>
 #include <cstddef>

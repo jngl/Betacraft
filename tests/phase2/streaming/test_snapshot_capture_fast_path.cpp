@@ -5,7 +5,7 @@
 #include "streaming/SectionNeighborhoodSnapshot18.hpp"
 
 #include "StreamingTestHelpers.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
 
 #include <gtest/gtest.h>
 
@@ -13,8 +13,8 @@
 #include <iostream>
 #include <memory>
 
-using betacraft::streaming::SectionCoord;
 using betacraft::streaming::SectionNeighborhoodSnapshot18;
+using betacraft::voxel::SectionCoord;
 using betacraft::world::BlockId;
 using betacraft::world::BlockStateId;
 using betacraft::world::Chunk;

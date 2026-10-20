@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/Types.hpp"
-#include "world/Block.hpp"
-#include "world/BlockShapes.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/BlockShapes.hpp"
 
 #include <cstddef>
 #include <cstdint>

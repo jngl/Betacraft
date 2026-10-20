@@ -6,7 +6,7 @@
 #include "render/TextureAtlas.hpp"
 
 #include "gameplay/ItemIds.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <gtest/gtest.h>
 

@@ -50,25 +50,25 @@ std::vector<WorldSummary> listWorlds(const std::filesystem::path& savesRoot) {
         WorldSummary summary;
         summary.path = dir;
         summary.name = folder;
-        world::WorldLevelData level{};
+        storage::WorldLevelData level{};
         if (hasLevel) {
             std::ifstream in(levelPath, std::ios::binary);
             std::ostringstream text;
             text << in.rdbuf();
-            summary.status = in.is_open() ? world::decodeLevelData(text.str(), level) : world::LevelLoadStatus::Corrupt;
+            summary.status = in.is_open() ? storage::decodeLevelData(text.str(), level) : storage::LevelLoadStatus::Corrupt;
         }
         const bool readable =
-            summary.status == world::LevelLoadStatus::Ok || summary.status == world::LevelLoadStatus::LegacyV1;
+            summary.status == storage::LevelLoadStatus::Ok || summary.status == storage::LevelLoadStatus::LegacyV1;
         if (readable) {
             summary.seed = level.seed;
             if (!level.name.empty()) summary.name = level.name;
             // A V1 level.dat predates game modes: those worlds load as Creative.
-            summary.mode = summary.status == world::LevelLoadStatus::LegacyV1 ? core::GameMode::Creative
+            summary.mode = summary.status == storage::LevelLoadStatus::LegacyV1 ? core::GameMode::Creative
                            : level.player                                     ? level.player->mode
                                                                               : core::GameMode::Survival;
         }
-        summary.needsMigration = (readable || summary.status == world::LevelLoadStatus::Missing) && hasChunks &&
-                                 level.storageFormat < world::kRegionStorageFormat;
+        summary.needsMigration = (readable || summary.status == storage::LevelLoadStatus::Missing) && hasChunks &&
+                                 level.storageFormat < storage::kRegionStorageFormat;
         const auto written = std::filesystem::last_write_time(hasLevel ? levelPath : dir, entryEc);
         if (!entryEc) summary.lastPlayed = unixSeconds(written);
         worlds.push_back(std::move(summary));
@@ -176,12 +176,12 @@ void WorldSelectScreen::render(int windowWidth, int windowHeight, std::vector<re
                                          glm::vec4(0.63f, 0.63f, 0.63f, 1.0f), true);
         std::string info;
         glm::vec4 infoColour{0.63f, 0.63f, 0.63f, 1.0f};
-        if (world.status == world::LevelLoadStatus::TooNew || world.status == world::LevelLoadStatus::Corrupt) {
-            info = world.status == world::LevelLoadStatus::TooNew ? "Newer version: read only" : "Unreadable: read only";
+        if (world.status == storage::LevelLoadStatus::TooNew || world.status == storage::LevelLoadStatus::Corrupt) {
+            info = world.status == storage::LevelLoadStatus::TooNew ? "Newer version: read only" : "Unreadable: read only";
             infoColour = glm::vec4(1.0f, 0.35f, 0.35f, 1.0f);
         } else {
             info = std::string(world.mode == core::GameMode::Creative ? "Creative Mode" : "Survival Mode");
-            if (world.status != world::LevelLoadStatus::Missing) info += ", seed " + std::to_string(world.seed);
+            if (world.status != storage::LevelLoadStatus::Missing) info += ", seed " + std::to_string(world.seed);
             if (world.needsMigration) {
                 info += " - Must be converted!";
                 infoColour = glm::vec4(1.0f, 0.75f, 0.3f, 1.0f);

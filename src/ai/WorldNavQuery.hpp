@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ai/NavVoxelQuery.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <cstdint>
 

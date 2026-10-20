@@ -8,8 +8,8 @@
 #include "game/PlayerPersistence.hpp"
 #include "game/StarterKit.hpp"
 #include "gameplay/Harvesting.hpp"
+#include "storage/WorldStorage.hpp"
 #include "ui/CreativePalette.hpp"
-#include "world/WorldStorage.hpp"
 
 #include <gtest/gtest.h>
 
@@ -148,9 +148,9 @@ TEST(SharedItemIds, LoadFoldsLegacyIds) {
         "inv 5 105 1 0\n"    // diamond pickaxe
         "inv 9 17 32 0\n"    // oak logs (a block: unchanged)
         "inv 10 268 1 40\n"; // wooden sword (already Beta)
-    betacraft::world::WorldLevelData level{};
-    ASSERT_EQ(betacraft::world::decodeLevelData(kSchemeOneLevel, level), betacraft::world::LevelLoadStatus::Ok);
-    EXPECT_EQ(level.itemsScheme, betacraft::world::kLegacyItemsScheme);
+    betacraft::storage::WorldLevelData level{};
+    ASSERT_EQ(betacraft::storage::decodeLevelData(kSchemeOneLevel, level), betacraft::storage::LevelLoadStatus::Ok);
+    EXPECT_EQ(level.itemsScheme, betacraft::storage::kLegacyItemsScheme);
     ASSERT_TRUE(level.player.has_value());
 
     betacraft::physics::Player player;
@@ -166,13 +166,13 @@ TEST(SharedItemIds, LoadFoldsLegacyIds) {
     EXPECT_EQ(player.getInventorySlot(10), (Slot{items::WoodSword, 1, 40}));
 
     // Saved again: Beta numbers only, under items_scheme 2.
-    betacraft::world::WorldLevelData resaved{};
-    resaved.itemsScheme = betacraft::world::kCurrentItemsScheme;
+    betacraft::storage::WorldLevelData resaved{};
+    resaved.itemsScheme = betacraft::storage::kCurrentItemsScheme;
     resaved.player = betacraft::game::capturePlayer(player);
-    for (const betacraft::world::SavedStack& s : resaved.player->inventory) {
+    for (const betacraft::storage::SavedStack& s : resaved.player->inventory) {
         EXPECT_FALSE(isLegacyItemId(s.id)) << s.id;
     }
-    const std::string text = betacraft::world::encodeLevelData(resaved);
+    const std::string text = betacraft::storage::encodeLevelData(resaved);
     EXPECT_NE(text.find("items_scheme 2\n"), std::string::npos);
     EXPECT_NE(text.find("inv 1 280 32 0\n"), std::string::npos);
 }

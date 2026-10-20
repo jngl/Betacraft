@@ -3,7 +3,7 @@
 #include "core/Types.hpp"
 #include "render/GLHeaders.hpp"
 #include "render/PackedChunkVertex.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/World.hpp"
 
 #include <cstdint>

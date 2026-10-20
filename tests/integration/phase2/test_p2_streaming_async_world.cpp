@@ -63,7 +63,7 @@ TEST(P2StreamingAsyncWorld, AsyncAndSyncWorldsConverge) {
             (void)seedWorld.ensureChunkLoaded({core::floorDiv(m.x, 16), core::floorDiv(m.z, 16)});
             ASSERT_TRUE(seedWorld.setBlock(m, BlockId::Glowstone));
         }
-        seedWorld.saveModifiedChunks(world::WorldLevelData{});
+        seedWorld.saveModifiedChunks(storage::WorldLevelData{});
     }
     std::filesystem::copy(dir.path() / "base", dir.path() / "sync", std::filesystem::copy_options::recursive);
     std::filesystem::copy(dir.path() / "base", dir.path() / "async", std::filesystem::copy_options::recursive);

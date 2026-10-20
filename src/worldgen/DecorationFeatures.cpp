@@ -2,7 +2,7 @@
 #include "worldgen/SeededRandom.hpp"
 
 #include "core/Config.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
 
 #include <algorithm>
 

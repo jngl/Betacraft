@@ -1,7 +1,7 @@
 #include "audio/AudioEngine.hpp"
 #include "physics/Player.hpp"
 #include "ui/CraftingSystem.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>

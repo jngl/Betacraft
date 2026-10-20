@@ -1,6 +1,6 @@
 #include "physics/Player.hpp"
 #include "tests/test_helpers.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>

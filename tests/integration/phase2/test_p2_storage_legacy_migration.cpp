@@ -6,7 +6,7 @@
 
 #include "P2WorldgenSupport.hpp"
 #include "storage/SaveMigration.hpp"
-#include "world/BlockEntityStore.hpp"
+#include "voxel/BlockEntityStore.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>
@@ -78,12 +78,12 @@ TEST(P2StorageLegacyMigration, MigratedSaveLoadsIdenticalToLegacy) {
     EXPECT_EQ(std::get<world::ChestData>(*migrated.blockEntities().find({4, 121, 4})).slots[5],
               (world::StoredStack{265, 12, 0}));
 
-    world::WorldLevelData before;
-    world::WorldLevelData after;
-    ASSERT_EQ(legacy.loadLevelDataStatus(before), world::LevelLoadStatus::Ok);
-    ASSERT_EQ(migrated.loadLevelDataStatus(after), world::LevelLoadStatus::Ok);
-    EXPECT_EQ(after.storageFormat, world::kRegionStorageFormat);
-    EXPECT_EQ(before.storageFormat, world::kLegacyStorageFormat);
+    storage::WorldLevelData before;
+    storage::WorldLevelData after;
+    ASSERT_EQ(legacy.loadLevelDataStatus(before), storage::LevelLoadStatus::Ok);
+    ASSERT_EQ(migrated.loadLevelDataStatus(after), storage::LevelLoadStatus::Ok);
+    EXPECT_EQ(after.storageFormat, storage::kRegionStorageFormat);
+    EXPECT_EQ(before.storageFormat, storage::kLegacyStorageFormat);
     ASSERT_TRUE(before.player.has_value());
     ASSERT_TRUE(after.player.has_value());
     EXPECT_EQ(after.player->inventory, before.player->inventory);
@@ -103,9 +103,9 @@ TEST(P2StorageLegacyMigration, UnmigratedSaveReadsThroughFacade) {
         EXPECT_EQ(w.getBlock(8, 120, 8), world::BlockId::Glass);
         EXPECT_EQ(w.blockEntities().size(), 2U);
         ASSERT_TRUE(w.setBlock(8, 121, 8, world::BlockId::Obsidian));
-        w.saveModifiedChunks(world::WorldLevelData{});
-        EXPECT_EQ(w.storageFormat(), world::kLegacyStorageFormat) << "chunks/ still to migrate";
-        EXPECT_TRUE(w.needsStorageMigration(world::kLegacyStorageFormat));
+        w.saveModifiedChunks(storage::WorldLevelData{});
+        EXPECT_EQ(w.storageFormat(), storage::kLegacyStorageFormat) << "chunks/ still to migrate";
+        EXPECT_TRUE(w.needsStorageMigration(storage::kLegacyStorageFormat));
     }
     EXPECT_TRUE(std::filesystem::exists(save / "region" / "r.0.0.bcr"));
     const storage::MigrationReport r = storage::migrateLegacyChunks(save, {});

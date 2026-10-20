@@ -1,7 +1,6 @@
-#include "world/BlockEntityStore.hpp"
+#include "voxel/BlockEntityStore.hpp"
 
-#include "world/Chunk.hpp"
-#include "world/WorldStorage.hpp"
+#include "voxel/Chunk.hpp"
 
 #include <algorithm>
 #include <array>

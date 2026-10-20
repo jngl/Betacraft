@@ -1,7 +1,7 @@
 #pragma once
 
 #include "physics/Player.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <cstdint>
 #include <span>

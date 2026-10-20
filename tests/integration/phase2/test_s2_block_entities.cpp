@@ -6,7 +6,7 @@
 #include "P2GameplaySupport.hpp"
 
 #include "crafting/ItemIds.hpp"
-#include "world/BlockEntityStore.hpp"
+#include "voxel/BlockEntityStore.hpp"
 
 #include <filesystem>
 #include <map>
@@ -65,7 +65,7 @@ protected:
     // corrupt), as a .be file could be edited before.
     void overwriteStoredBlockEntities(std::span<const uint8_t> bytes) {
         ASSERT_TRUE(m_world->getStorage().closeRegions()); // No stale header left open
-        world::WorldStorage storage(m_dir.path());
+        storage::WorldStorage storage(m_dir.path());
         std::optional<storage::ChunkBundle> bundle = storage.loadChunkBundle({0, 0});
         ASSERT_TRUE(bundle.has_value());
         bundle->blockEntities.assign(bytes.begin(), bytes.end());
@@ -116,7 +116,7 @@ TEST_F(S2BlockEntities, FurnaceProgressSurvivesUnloadReload) {
 
 TEST_F(S2BlockEntities, ChestContentsSurviveSaveModifiedChunks) {
     placeChest(fullChest());
-    m_world->saveModifiedChunks(world::WorldLevelData{});
+    m_world->saveModifiedChunks(storage::WorldLevelData{});
     ASSERT_EQ(storedEntities().size(), 1U);
 
     auto w = reopen();
@@ -139,7 +139,7 @@ TEST_F(S2BlockEntities, BreakingAChestDropsAllStacks) {
     EXPECT_TRUE(m_world->takeRemovedBlockEntities().empty()) << "the tick consumed them";
 
     // The chunk's stored entities lose the chest too.
-    m_world->saveModifiedChunks(world::WorldLevelData{});
+    m_world->saveModifiedChunks(storage::WorldLevelData{});
     EXPECT_TRUE(storedEntities().empty());
     const auto bundle = m_world->getStorage().loadChunkBundle({0, 0});
     ASSERT_TRUE(bundle.has_value());
@@ -187,7 +187,7 @@ TEST_F(S2BlockEntities, PistonRefusesToPushAChest) {
 
 TEST_F(S2BlockEntities, CorruptBeFileStillLoadsTheChunk) {
     placeChest(fullChest());
-    m_world->saveModifiedChunks(world::WorldLevelData{});
+    m_world->saveModifiedChunks(storage::WorldLevelData{});
     const std::string garbage = "BCBE\x01garbage";
     overwriteStoredBlockEntities(std::span(reinterpret_cast<const uint8_t*>(garbage.data()), garbage.size()));
     auto w = reopen();
@@ -200,7 +200,7 @@ TEST_F(S2BlockEntities, CorruptBeFileStillLoadsTheChunk) {
 TEST_F(S2BlockEntities, EntityWithoutMatchingBlockIsDiscarded) {
     placeChest(fullChest());
     ASSERT_TRUE(m_world->setBlock(kFurnacePos, BlockId::Stone));
-    m_world->saveModifiedChunks(world::WorldLevelData{});
+    m_world->saveModifiedChunks(storage::WorldLevelData{});
     // Hand-written record: the real chest plus a furnace entity over a stone block.
     const std::vector<world::BlockEntityEntry> entries{{kChestPos, fullChest()}, {kFurnacePos, kOresAndCoal}};
     overwriteStoredBlockEntities(world::encodeBlockEntities(entries));
@@ -213,7 +213,7 @@ TEST_F(S2BlockEntities, EntityWithoutMatchingBlockIsDiscarded) {
 TEST_F(S2BlockEntities, NoBeFileForOldSaves) {
     // A save with plain blocks only writes no block entity record, and loads without one.
     ASSERT_TRUE(m_world->setBlock(kFurnacePos, BlockId::Stone));
-    m_world->saveModifiedChunks(world::WorldLevelData{});
+    m_world->saveModifiedChunks(storage::WorldLevelData{});
     const auto bundle = m_world->getStorage().loadChunkBundle({0, 0});
     ASSERT_TRUE(bundle.has_value());
     EXPECT_FALSE(bundle->blocks.empty());
@@ -233,7 +233,7 @@ TEST_F(S2BlockEntities, LegacyItemIdsInBeFileFoldOnLoad) {
     legacy.slots[2] = StoredStack{items::legacy::StonePickaxe, 1, 17};
     legacy.slots[3] = stack(gameplay::toItemId(BlockId::Cobblestone), 64);
     placeChest(legacy);
-    m_world->saveModifiedChunks(world::WorldLevelData{});
+    m_world->saveModifiedChunks(storage::WorldLevelData{});
 
     auto w = reopen();
     const world::BlockEntity* e = w->blockEntities().find(kChestPos);

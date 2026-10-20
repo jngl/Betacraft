@@ -8,7 +8,7 @@
 #include "gameplay/SplitMix64.hpp"
 #include "physics/Player.hpp"
 #include "tests/test_helpers.hpp"
-#include "world/BlockEntityStore.hpp"
+#include "voxel/BlockEntityStore.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>

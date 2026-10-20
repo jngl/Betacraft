@@ -8,9 +8,9 @@
 #include "gameplay/SplitMix64.hpp"
 #include "render/SkyRenderer.hpp"
 #include "render/WeatherRenderer.hpp"
+#include "storage/WorldStorage.hpp"
 #include "ui/InputManager.hpp"
 #include "world/Weather.hpp"
-#include "world/WorldStorage.hpp"
 
 #include <gtest/gtest.h>
 
@@ -21,13 +21,13 @@
 
 using namespace betacraft;
 using world::Precipitation;
-using world::WeatherState;
+using storage::WeatherState;
 
 namespace {
 
 // Ticks until `flag` flips, at most `limit`; -1 when it never did.
 template <typename Flag>
-int32_t ticksUntilFlip(WeatherState& state, gameplay::SplitMix64& rng, Flag&& flag, int32_t limit) {
+int32_t ticksUntilFlip(storage::WeatherState& state, gameplay::SplitMix64& rng, Flag&& flag, int32_t limit) {
     const bool start = flag(state);
     for (int32_t t = 1; t <= limit; ++t) {
         world::tickWeather(state, rng);
@@ -52,7 +52,7 @@ TEST(WeatherTest, WeatherDurationsInBetaRanges) {
     for (uint64_t seed = 1; seed <= 200; ++seed) {
         gameplay::SplitMix64 rng(seed);
         // A fresh (clear) state draws its clear spells on the first tick.
-        WeatherState state{};
+        storage::WeatherState state{};
         world::tickWeather(state, rng);
         EXPECT_FALSE(state.raining);
         EXPECT_GE(state.rainTime, 12000);
@@ -61,7 +61,7 @@ TEST(WeatherTest, WeatherDurationsInBetaRanges) {
         EXPECT_LT(state.thunderTime, 180000);
 
         // Rain lasts 12000..24000 ticks, thunder 3600..15600.
-        WeatherState wet{.raining = true, .thundering = true};
+        storage::WeatherState wet{.raining = true, .thundering = true};
         world::tickWeather(wet, rng);
         EXPECT_GE(wet.rainTime, 12000);
         EXPECT_LT(wet.rainTime, 24000);
@@ -71,18 +71,18 @@ TEST(WeatherTest, WeatherDurationsInBetaRanges) {
 
     // The timer counts down and flips the flag when it runs out: a rain spell of rainTime.
     gameplay::SplitMix64 rng(7);
-    WeatherState state{.raining = false, .rainTime = 5, .thunderTime = 1000000};
-    EXPECT_EQ(ticksUntilFlip(state, rng, [](const WeatherState& s) { return s.raining; }, 10), 5);
+    storage::WeatherState state{.raining = false, .rainTime = 5, .thunderTime = 1000000};
+    EXPECT_EQ(ticksUntilFlip(state, rng, [](const storage::WeatherState& s) { return s.raining; }, 10), 5);
     ASSERT_TRUE(state.raining);
     world::tickWeather(state, rng); // draws the rain's duration
     const int32_t rainSpell = state.rainTime;
-    EXPECT_EQ(ticksUntilFlip(state, rng, [](const WeatherState& s) { return s.raining; }, 30000), rainSpell);
+    EXPECT_EQ(ticksUntilFlip(state, rng, [](const storage::WeatherState& s) { return s.raining; }, 30000), rainSpell);
     EXPECT_FALSE(state.raining);
 }
 
 TEST(WeatherTest, RainStrengthRampsOver400Ticks) {
     gameplay::SplitMix64 rng(3);
-    WeatherState state{.raining = true, .rainTime = 100000, .thunderTime = 100000};
+    storage::WeatherState state{.raining = true, .rainTime = 100000, .thunderTime = 100000};
     for (int32_t t = 1; t <= 399; ++t) {
         world::tickWeather(state, rng);
         ASSERT_LT(state.rainStrength, 1.0f) << t;
@@ -112,7 +112,7 @@ TEST(WeatherTest, RainStrengthRampsOver400Ticks) {
 
 TEST(WeatherTest, ThunderOnlyWhenRaining) {
     gameplay::SplitMix64 rng(11);
-    WeatherState state{.raining = false, .thundering = true, .rainTime = 100000, .thunderTime = 100000};
+    storage::WeatherState state{.raining = false, .thundering = true, .rainTime = 100000, .thunderTime = 100000};
     for (int32_t t = 0; t < 1000; ++t) world::tickWeather(state, rng);
     EXPECT_FLOAT_EQ(state.thunderStrength, 0.0f);
     EXPECT_FALSE(world::isThundering(state));
@@ -144,23 +144,23 @@ TEST(WeatherTest, PrecipitationByBiome) {
 }
 
 TEST(WeatherTest, LevelDataRoundtripWeather) {
-    world::WorldLevelData data{};
+    storage::WorldLevelData data{};
     data.seed = 42ULL;
-    data.weather = WeatherState{.raining = true,
-                                .thundering = true,
-                                .rainTime = 12345,
-                                .thunderTime = 678,
-                                .rainStrength = 0.4375f,
-                                .prevRainStrength = 0.435f,
-                                .thunderStrength = 0.1f,
-                                .prevThunderStrength = 0.0975f};
-    const std::string text = world::encodeLevelData(data);
+    data.weather = storage::WeatherState{.raining = true,
+                                         .thundering = true,
+                                         .rainTime = 12345,
+                                         .thunderTime = 678,
+                                         .rainStrength = 0.4375f,
+                                         .prevRainStrength = 0.435f,
+                                         .thunderStrength = 0.1f,
+                                         .prevThunderStrength = 0.0975f};
+    const std::string text = storage::encodeLevelData(data);
     EXPECT_EQ(text.rfind("BETACRAFT_LEVEL_V2\n", 0), 0U) << "new keys, no version change";
     EXPECT_NE(text.find("weather.raining 1\n"), std::string::npos) << text;
     EXPECT_NE(text.find("weather.rainTime 12345\n"), std::string::npos) << text;
 
-    world::WorldLevelData read{};
-    ASSERT_EQ(world::decodeLevelData(text, read), world::LevelLoadStatus::Ok);
+    storage::WorldLevelData read{};
+    ASSERT_EQ(storage::decodeLevelData(text, read), storage::LevelLoadStatus::Ok);
     EXPECT_TRUE(read.weather.raining);
     EXPECT_TRUE(read.weather.thundering);
     EXPECT_EQ(read.weather.rainTime, 12345);
@@ -172,23 +172,23 @@ TEST(WeatherTest, LevelDataRoundtripWeather) {
 
     // Through the file, too.
     test::TempDir dir;
-    world::WorldStorage storage(dir.path());
+    storage::WorldStorage storage(dir.path());
     ASSERT_TRUE(storage.saveLevelData(data));
-    world::WorldLevelData loaded{};
-    ASSERT_EQ(storage.loadLevelDataStatus(loaded), world::LevelLoadStatus::Ok);
+    storage::WorldLevelData loaded{};
+    ASSERT_EQ(storage.loadLevelDataStatus(loaded), storage::LevelLoadStatus::Ok);
     EXPECT_TRUE(loaded.weather.raining);
     EXPECT_EQ(loaded.weather.rainTime, 12345);
 
     // Out-of-range values are clamped.
-    world::WorldLevelData clamped{};
-    ASSERT_EQ(world::decodeLevelData("BETACRAFT_LEVEL_V2\nweather.rainStrength 7\nweather.rainTime -5\n", clamped),
-              world::LevelLoadStatus::Ok);
+    storage::WorldLevelData clamped{};
+    ASSERT_EQ(storage::decodeLevelData("BETACRAFT_LEVEL_V2\nweather.rainStrength 7\nweather.rainTime -5\n", clamped),
+              storage::LevelLoadStatus::Ok);
     EXPECT_FLOAT_EQ(clamped.weather.rainStrength, 1.0f);
     EXPECT_EQ(clamped.weather.rainTime, 0);
 }
 
 TEST(WeatherTest, LegacyLevelDataDefaultsClear) {
-    const auto expectClear = [](const WeatherState& w) {
+    const auto expectClear = [](const storage::WeatherState& w) {
         EXPECT_FALSE(w.raining);
         EXPECT_FALSE(w.thundering);
         EXPECT_EQ(w.rainTime, 0);
@@ -196,20 +196,20 @@ TEST(WeatherTest, LegacyLevelDataDefaultsClear) {
         EXPECT_FLOAT_EQ(w.rainStrength, 0.0f);
         EXPECT_FLOAT_EQ(w.thunderStrength, 0.0f);
     };
-    world::WorldLevelData v2{};
+    storage::WorldLevelData v2{};
     v2.weather.raining = true; // overwritten by the decode
-    ASSERT_EQ(world::decodeLevelData("BETACRAFT_LEVEL_V2\nseed 5\ntime 0.5\n", v2), world::LevelLoadStatus::Ok);
+    ASSERT_EQ(storage::decodeLevelData("BETACRAFT_LEVEL_V2\nseed 5\ntime 0.5\n", v2), storage::LevelLoadStatus::Ok);
     expectClear(v2.weather);
 
-    world::WorldLevelData v1{};
-    ASSERT_EQ(world::decodeLevelData("BETACRAFT_LEVEL_V1\n173173\n5.5 77 8.5\n0 0\n0.25\n", v1),
-              world::LevelLoadStatus::LegacyV1);
+    storage::WorldLevelData v1{};
+    ASSERT_EQ(storage::decodeLevelData("BETACRAFT_LEVEL_V1\n173173\n5.5 77 8.5\n0 0\n0.25\n", v1),
+              storage::LevelLoadStatus::LegacyV1);
     expectClear(v1.weather);
 }
 
 TEST(WeatherTest, CycleWeatherGoesClearRainThunderClear) {
     gameplay::SplitMix64 rng(5);
-    WeatherState state{};
+    storage::WeatherState state{};
     world::cycleWeather(state, rng);
     EXPECT_TRUE(state.raining);
     EXPECT_FALSE(state.thundering);
@@ -271,9 +271,9 @@ TEST(WeatherTest, RainAndThunderDarkenTheSky) {
 }
 
 TEST(WeatherTest, LightningOddsAndThunderDelay) {
-    WeatherState storm{.raining = true, .thundering = true, .rainTime = 100000, .thunderTime = 100000,
-                       .rainStrength = 1.0f, .prevRainStrength = 1.0f, .thunderStrength = 1.0f,
-                       .prevThunderStrength = 1.0f};
+    storage::WeatherState storm{.raining = true, .thundering = true, .rainTime = 100000, .thunderTime = 100000,
+                                .rainStrength = 1.0f, .prevRainStrength = 1.0f, .thunderStrength = 1.0f,
+                                .prevThunderStrength = 1.0f};
     gameplay::SplitMix64 rng(99);
     int32_t strikes = 0;
     constexpr int32_t kTicks = 200000;
@@ -283,7 +283,7 @@ TEST(WeatherTest, LightningOddsAndThunderDelay) {
     // 400 in 100000 per tick: ~800 strikes, about one every 250 ticks.
     EXPECT_GT(strikes, 650);
     EXPECT_LT(strikes, 950);
-    WeatherState clear{};
+    storage::WeatherState clear{};
     EXPECT_FALSE(world::rollLightning(clear, 100000, rng));
 
     EXPECT_EQ(world::thunderDelayTicks(0.0f), 0);

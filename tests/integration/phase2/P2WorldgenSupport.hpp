@@ -4,8 +4,8 @@
 
 #include "core/Config.hpp"
 #include "core/Types.hpp"
-#include "world/Block.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/World.hpp"
 #include "worldgen/DecorationFeatures.hpp"
 

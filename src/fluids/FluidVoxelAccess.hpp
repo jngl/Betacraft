@@ -2,7 +2,7 @@
 
 #include "core/Types.hpp"
 #include "fluids/FluidState.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 namespace betacraft::fluids {
 

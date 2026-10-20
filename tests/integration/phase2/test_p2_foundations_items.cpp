@@ -8,7 +8,7 @@
 #include "gameplay/ItemIds.hpp"
 #include "gameplay/ItemStack.hpp"
 #include "gameplay/ToolDefinitions.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <gtest/gtest.h>
 

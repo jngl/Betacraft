@@ -1,4 +1,4 @@
-#include "world/PalettedSection.hpp"
+#include "voxel/PalettedSection.hpp"
 
 namespace betacraft::world {
 

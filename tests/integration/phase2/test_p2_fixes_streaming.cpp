@@ -6,7 +6,7 @@
 #include "P2WorldgenSupport.hpp"
 #include "render/WorldRenderer.hpp"
 #include "streaming/WorldMeshStreamer.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>
@@ -19,7 +19,7 @@
 using namespace betacraft;
 using namespace std::chrono_literals;
 using streaming::ChunkMeshResult;
-using streaming::SectionCoord;
+using voxel::SectionCoord;
 using streaming::WorldMeshStreamer;
 using streaming::WorldMeshStreamerConfig;
 using world::BlockId;
@@ -27,7 +27,7 @@ using world::BlockId;
 namespace {
 
 struct SectionLess {
-    bool operator()(const SectionCoord& a, const SectionCoord& b) const noexcept {
+    bool operator()(const voxel::SectionCoord& a, const voxel::SectionCoord& b) const noexcept {
         if (a.x != b.x) return a.x < b.x;
         if (a.z != b.z) return a.z < b.z;
         return a.y < b.y;
@@ -36,9 +36,9 @@ struct SectionLess {
 
 // One live mesh per section, deleted on an empty result (WorldRenderer's uploader minus GL).
 struct FakeGpu {
-    std::map<SectionCoord, int, SectionLess> live;
-    std::map<SectionCoord, int, SectionLess> uploads;
-    std::map<SectionCoord, int, SectionLess> removals;
+    std::map<voxel::SectionCoord, int, SectionLess> live;
+    std::map<voxel::SectionCoord, int, SectionLess> uploads;
+    std::map<voxel::SectionCoord, int, SectionLess> removals;
 
     void operator()(ChunkMeshResult& r) {
         if (r.buffers.empty()) {

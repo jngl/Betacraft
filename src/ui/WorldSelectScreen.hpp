@@ -3,8 +3,8 @@
 #include "audio/AudioEngine.hpp"
 #include "core/Config.hpp"
 #include "render/BitmapFont.hpp"
+#include "storage/WorldStorage.hpp"
 #include "ui/TitleScreen.hpp"
-#include "world/WorldStorage.hpp"
 
 #include <SDL2/SDL.h>
 #include <cstddef>
@@ -27,7 +27,7 @@ struct WorldSummary {
     // world converts it (S7.4).
     bool needsMigration{false};
     // Missing for a world never entered; TooNew / Corrupt open read-only (conventions §1.2).
-    world::LevelLoadStatus status{world::LevelLoadStatus::Missing};
+    storage::LevelLoadStatus status{storage::LevelLoadStatus::Missing};
 };
 
 // Every world under `savesRoot`: the subdirectories holding a level.dat, a region/ or a

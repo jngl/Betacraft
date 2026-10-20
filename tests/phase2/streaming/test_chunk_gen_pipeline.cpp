@@ -1,7 +1,7 @@
 // S7.7 ChunkGenPipeline: pass 1 (terrain + own lighting) on worker threads from a shared
 // const WorldGen, nearest jobs first, cancellable, reset by a seed change.
-#include "streaming/ChunkGenPipeline.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
+#include "world/ChunkGenPipeline.hpp"
 
 #include <gtest/gtest.h>
 
@@ -9,8 +9,8 @@
 #include <vector>
 
 using namespace betacraft;
-using streaming::ChunkGenConfig;
-using streaming::ChunkGenPipeline;
+using world::ChunkGenConfig;
+using world::ChunkGenPipeline;
 using world::Chunk;
 
 namespace {
@@ -36,7 +36,7 @@ namespace {
     return ::testing::AssertionSuccess();
 }
 
-[[nodiscard]] std::vector<core::ChunkCoord> coordsOf(std::vector<streaming::GeneratedChunk>& ready) {
+[[nodiscard]] std::vector<core::ChunkCoord> coordsOf(std::vector<world::GeneratedChunk>& ready) {
     std::vector<core::ChunkCoord> out;
     for (const auto& r : ready) out.push_back(r.coord);
     return out;
@@ -51,7 +51,7 @@ protected:
 
 TEST_F(ChunkGenPipelineTest, GeneratedChunkIdenticalToSyncGeneration) {
     for (const uint64_t seed : {173173173ULL, 42ULL, 0xDEADBEEFCAFEULL}) {
-        ChunkGenPipeline pipeline(std::make_shared<const world::WorldGen>(seed), ChunkGenConfig{.workerCount = 3});
+        world::ChunkGenPipeline pipeline(std::make_shared<const world::WorldGen>(seed), world::ChunkGenConfig{.workerCount = 3});
         std::vector<core::ChunkCoord> coords;
         for (int32_t z = -2; z <= 2; ++z)
             for (int32_t x = -2; x <= 2; ++x) {
@@ -59,9 +59,9 @@ TEST_F(ChunkGenPipelineTest, GeneratedChunkIdenticalToSyncGeneration) {
                 ASSERT_TRUE(pipeline.request(coords.back()));
             }
         ASSERT_TRUE(pipeline.waitIdle());
-        std::vector<streaming::GeneratedChunk> ready = pipeline.takeReady();
+        std::vector<world::GeneratedChunk> ready = pipeline.takeReady();
         ASSERT_EQ(ready.size(), 25U);
-        for (const streaming::GeneratedChunk& r : ready) {
+        for (const world::GeneratedChunk& r : ready) {
             ASSERT_NE(r.chunk, nullptr);
             EXPECT_EQ(r.chunk->getCoord(), r.coord);
             const std::unique_ptr<Chunk> expected = syncGenerate(seed, r.coord);
@@ -72,7 +72,7 @@ TEST_F(ChunkGenPipelineTest, GeneratedChunkIdenticalToSyncGeneration) {
 }
 
 TEST_F(ChunkGenPipelineTest, CancelledCoordNeverIntegrated) {
-    ChunkGenPipeline pipeline(std::make_shared<const world::WorldGen>(1ULL), ChunkGenConfig{.workerCount = 0});
+    world::ChunkGenPipeline pipeline(std::make_shared<const world::WorldGen>(1ULL), world::ChunkGenConfig{.workerCount = 0});
     ASSERT_TRUE(pipeline.request({0, 0}));
     ASSERT_TRUE(pipeline.request({1, 0}));
     ASSERT_TRUE(pipeline.request({2, 0}));
@@ -81,14 +81,14 @@ TEST_F(ChunkGenPipelineTest, CancelledCoordNeverIntegrated) {
     EXPECT_FALSE(pipeline.isScheduled({1, 0}));
     EXPECT_EQ(pipeline.runPendingInline(10), 2U);
     EXPECT_TRUE(pipeline.cancel({2, 0})); // Ready, not taken yet
-    std::vector<streaming::GeneratedChunk> ready = pipeline.takeReady();
+    std::vector<world::GeneratedChunk> ready = pipeline.takeReady();
     ASSERT_EQ(ready.size(), 1U);
     EXPECT_EQ(ready[0].coord, (core::ChunkCoord{0, 0}));
     EXPECT_FALSE(pipeline.cancel({7, 7}));
 
     // Threaded: whether the job was pending or already running when cancelled, it never
     // comes out, and the chunk can be requested again.
-    ChunkGenPipeline threaded(std::make_shared<const world::WorldGen>(1ULL), ChunkGenConfig{.workerCount = 2});
+    world::ChunkGenPipeline threaded(std::make_shared<const world::WorldGen>(1ULL), world::ChunkGenConfig{.workerCount = 2});
     for (int32_t i = 0; i < 16; ++i) ASSERT_TRUE(threaded.request({i, 3}));
     for (int32_t i = 0; i < 16; i += 2) EXPECT_TRUE(threaded.cancel({i, 3}));
     ASSERT_TRUE(threaded.waitIdle());
@@ -103,14 +103,14 @@ TEST_F(ChunkGenPipelineTest, CancelledCoordNeverIntegrated) {
 }
 
 TEST_F(ChunkGenPipelineTest, PriorityByDistance) {
-    ChunkGenPipeline pipeline(std::make_shared<const world::WorldGen>(5ULL), ChunkGenConfig{.workerCount = 0});
+    world::ChunkGenPipeline pipeline(std::make_shared<const world::WorldGen>(5ULL), world::ChunkGenConfig{.workerCount = 0});
     pipeline.setCenter({0, 0});
     for (const core::ChunkCoord c : {core::ChunkCoord{5, 5}, core::ChunkCoord{1, 0}, core::ChunkCoord{-3, 0},
                                      core::ChunkCoord{0, 0}, core::ChunkCoord{0, 2}}) {
         ASSERT_TRUE(pipeline.request(c));
     }
     EXPECT_EQ(pipeline.runPendingInline(10), 5U);
-    std::vector<streaming::GeneratedChunk> ready = pipeline.takeReady();
+    std::vector<world::GeneratedChunk> ready = pipeline.takeReady();
     const std::vector<core::ChunkCoord> expected{{0, 0}, {1, 0}, {0, 2}, {-3, 0}, {5, 5}};
     EXPECT_EQ(coordsOf(ready), expected);
 
@@ -133,13 +133,13 @@ TEST_F(ChunkGenPipelineTest, ReadyOrderIndependentOfWorkerTiming) {
     for (int32_t z = -3; z <= 3; ++z)
         for (int32_t x = -3; x <= 3; ++x) coords.push_back({x, z});
     const auto run = [&coords](size_t workers) {
-        ChunkGenPipeline pipeline(std::make_shared<const world::WorldGen>(9ULL), ChunkGenConfig{.workerCount = workers});
+        world::ChunkGenPipeline pipeline(std::make_shared<const world::WorldGen>(9ULL), world::ChunkGenConfig{.workerCount = workers});
         pipeline.setCenter({1, -1});
         for (const core::ChunkCoord c : coords) {
             EXPECT_TRUE(pipeline.request(c));
         }
         EXPECT_TRUE(pipeline.waitIdle());
-        std::vector<streaming::GeneratedChunk> ready = pipeline.takeReady();
+        std::vector<world::GeneratedChunk> ready = pipeline.takeReady();
         return coordsOf(ready);
     };
     const std::vector<core::ChunkCoord> inlineOrder = run(0);
@@ -150,7 +150,7 @@ TEST_F(ChunkGenPipelineTest, ReadyOrderIndependentOfWorkerTiming) {
 }
 
 TEST_F(ChunkGenPipelineTest, SeedChangeDiscardsInFlight) {
-    ChunkGenPipeline pipeline(std::make_shared<const world::WorldGen>(11ULL), ChunkGenConfig{.workerCount = 0});
+    world::ChunkGenPipeline pipeline(std::make_shared<const world::WorldGen>(11ULL), world::ChunkGenConfig{.workerCount = 0});
     ASSERT_TRUE(pipeline.request({0, 0}));
     ASSERT_TRUE(pipeline.request({1, 1}));
     EXPECT_EQ(pipeline.runPendingInline(1), 1U); // (0, 0) ready, (1, 1) pending
@@ -160,13 +160,13 @@ TEST_F(ChunkGenPipelineTest, SeedChangeDiscardsInFlight) {
     EXPECT_EQ(pipeline.runPendingInline(10), 0U);
     ASSERT_TRUE(pipeline.request({0, 0}));
     EXPECT_EQ(pipeline.runPendingInline(10), 1U);
-    std::vector<streaming::GeneratedChunk> ready = pipeline.takeReady();
+    std::vector<world::GeneratedChunk> ready = pipeline.takeReady();
     ASSERT_EQ(ready.size(), 1U);
     EXPECT_TRUE(sameChunk(*ready[0].chunk, *syncGenerate(22ULL, {0, 0}))) << "built from the new seed";
 
     // Threaded: jobs running when the seed changes are thrown away; only chunks requested
     // after it come out, all from the new seed.
-    ChunkGenPipeline threaded(std::make_shared<const world::WorldGen>(11ULL), ChunkGenConfig{.workerCount = 2});
+    world::ChunkGenPipeline threaded(std::make_shared<const world::WorldGen>(11ULL), world::ChunkGenConfig{.workerCount = 2});
     for (int32_t i = 0; i < 12; ++i) ASSERT_TRUE(threaded.request({i, 0}));
     threaded.setWorldGen(std::make_shared<const world::WorldGen>(33ULL));
     ASSERT_TRUE(threaded.request({100, 0}));

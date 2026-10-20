@@ -1,10 +1,10 @@
-#include "streaming/SectionCoord.hpp"
+#include "voxel/SectionCoord.hpp"
 
 #include <gtest/gtest.h>
 
 #include <unordered_set>
 
-using betacraft::streaming::SectionCoord;
+using betacraft::voxel::SectionCoord;
 
 TEST(SectionCoord, WorldOriginIsSixteenTimesCoord) {
     const SectionCoord c{2, 3, -4};
@@ -60,30 +60,30 @@ TEST(SectionCoord, CentreIsTheMiddleOfTheSectionIncludingNegativeCoords) {
 // A voxel is read by its own section's mesh and, through the 1-voxel guard of the 18^3
 // snapshot, by the meshes of the sections across every seam it touches.
 TEST(SectionCoord, InteriorVoxelIsSeenOnlyByItsOwnSection) {
-    const auto box = betacraft::streaming::sectionsSeeingVoxel(5, 40, 9);
+    const auto box = betacraft::voxel::sectionsSeeingVoxel(5, 40, 9);
     EXPECT_EQ(box.min, (SectionCoord{0, 2, 0}));
     EXPECT_EQ(box.max, (SectionCoord{0, 2, 0}));
 }
 
 TEST(SectionCoord, SeamVoxelIsSeenAcrossEverySeamItTouches) {
-    const auto corner = betacraft::streaming::sectionsSeeingVoxel(15, 31, 16);
+    const auto corner = betacraft::voxel::sectionsSeeingVoxel(15, 31, 16);
     EXPECT_EQ(corner.min, (SectionCoord{0, 1, 0}));
     EXPECT_EQ(corner.max, (SectionCoord{1, 2, 1}));
 
-    const auto negative = betacraft::streaming::sectionsSeeingVoxel(-16, 48, -1);
+    const auto negative = betacraft::voxel::sectionsSeeingVoxel(-16, 48, -1);
     EXPECT_EQ(negative.min, (SectionCoord{-2, 2, -1}));
     EXPECT_EQ(negative.max, (SectionCoord{-1, 3, 0}));
 }
 
 TEST(SectionCoord, SeenSectionsAreClippedToTheColumn) {
-    const auto bottom = betacraft::streaming::sectionsSeeingVoxel(3, 0, 3);
+    const auto bottom = betacraft::voxel::sectionsSeeingVoxel(3, 0, 3);
     EXPECT_EQ(bottom.min.y, 0);
     EXPECT_EQ(bottom.max.y, 0);
-    const auto top = betacraft::streaming::sectionsSeeingVoxel(3, 127, 3);
+    const auto top = betacraft::voxel::sectionsSeeingVoxel(3, 127, 3);
     EXPECT_EQ(top.min.y, 7);
     EXPECT_EQ(top.max.y, 7);
     // Above the column a voxel still borders the top section (World reads it as sky).
-    const auto above = betacraft::streaming::sectionsSeeingVoxel(3, 128, 3);
+    const auto above = betacraft::voxel::sectionsSeeingVoxel(3, 128, 3);
     EXPECT_EQ(above.min.y, 7);
     EXPECT_EQ(above.max.y, 7);
 }

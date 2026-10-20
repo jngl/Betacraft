@@ -1,13 +1,13 @@
 #include "game/Application.hpp"
-#include "game/FluidEffects.hpp"
 #include "core/Logger.hpp"
 #include "crafting/Furnace.hpp"
 #include "crafting/ItemIds.hpp"
 #include "ecs/Components.hpp"
+#include "game/FluidEffects.hpp"
 #include "game/ItemBridge.hpp"
 #include "game/ItemUse.hpp"
 #include "storage/SaveMigration.hpp"
-#include "world/BlockShapes.hpp"
+#include "voxel/BlockShapes.hpp"
 #include "world/Weather.hpp"
 
 #include <algorithm>
