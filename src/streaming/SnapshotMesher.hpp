@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render/PackedChunkVertex.hpp"
+#include "streaming/PackedChunkVertex.hpp"
 #include "streaming/SectionNeighborhoodSnapshot18.hpp"
 
 #include <cstdint>
@@ -13,8 +13,8 @@ namespace betacraft::streaming {
 
 // Raw CPU-side geometry for one section, ready for a direct glBufferData upload.
 struct RawMeshBuffer {
-    std::vector<render::PackedChunkVertex> opaqueVertices;
-    std::vector<render::PackedChunkVertex> translucentVertices;
+    std::vector<PackedChunkVertex> opaqueVertices;
+    std::vector<PackedChunkVertex> translucentVertices;
     uint32_t opaqueQuadCount{0};
     uint32_t translucentQuadCount{0};
 

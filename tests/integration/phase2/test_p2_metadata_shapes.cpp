@@ -9,8 +9,8 @@
 
 #include "math/AABB.hpp"
 #include "physics/Raycaster.hpp"
-#include "render/BlockShapeMesher.hpp"
 #include "render/ChunkMesher.hpp"
+#include "streaming/BlockShapeMesher.hpp"
 #include "streaming/SectionNeighborhoodSnapshot18.hpp"
 #include "streaming/SnapshotMesher.hpp"
 #include "voxel/BlockShapes.hpp"
@@ -44,7 +44,7 @@ std::vector<AABB> collisionBoxes(BlockId id, uint8_t meta) {
     return out;
 }
 
-bool sameWords(const std::vector<render::PackedChunkVertex>& a, const std::vector<render::PackedChunkVertex>& b) {
+bool sameWords(const std::vector<streaming::PackedChunkVertex>& a, const std::vector<streaming::PackedChunkVertex>& b) {
     if (a.size() != b.size()) return false;
     for (size_t i = 0; i < a.size(); ++i) {
         if (a[i].word0 != b[i].word0 || a[i].word1 != b[i].word1) return false;
@@ -323,7 +323,7 @@ TEST(S5ShapeMesher, ClosedDoorVerticesStayInsideItsSlab) {
     const auto mesh = streaming::SnapshotMesher::build(*snap, 0, {});
     ASSERT_TRUE(mesh.has_value());
     ASSERT_EQ(mesh->opaqueVertices.size(), 6U * 4U) << "one box, six faces";
-    for (const render::PackedChunkVertex& v : mesh->opaqueVertices) {
+    for (const streaming::PackedChunkVertex& v : mesh->opaqueVertices) {
         const glm::vec3 p = v.getLocalPosition();
         EXPECT_GE(p.x, 5.0f - 1e-5f);
         EXPECT_LE(p.x, 5.0f + 3.0f / 16.0f + 1e-5f) << "closed orientation 0: x in [0, 3/16]";
@@ -386,8 +386,8 @@ TEST_F(S5MetadataShapes, BothMeshersProduceTheSameShapeGeometry) {
 
     const voxel::Chunk& chunk = *m_world->getChunk({0, 0});
     const render::ChunkMeshData legacy = render::ChunkMesher::buildMesh(*m_world, chunk, true);
-    std::vector<render::PackedChunkVertex> opaque;
-    std::vector<render::PackedChunkVertex> translucent;
+    std::vector<streaming::PackedChunkVertex> opaque;
+    std::vector<streaming::PackedChunkVertex> translucent;
     for (int32_t sy = 0; sy < voxel::Chunk::HEIGHT / 16; ++sy) {
         const auto snap = streaming::SectionNeighborhoodSnapshot18::capture(*m_world, {0, sy, 0});
         const auto mesh = streaming::SnapshotMesher::build(*snap, sy, {.smoothLighting = true});
@@ -400,7 +400,7 @@ TEST_F(S5MetadataShapes, BothMeshersProduceTheSameShapeGeometry) {
 
     // The shapes really produced sub-block vertices.
     size_t fine = 0;
-    for (const render::PackedChunkVertex& v : opaque) {
+    for (const streaming::PackedChunkVertex& v : opaque) {
         fine += v.getFineOffset() != glm::uvec3(0) ? 1U : 0U;
     }
     EXPECT_GT(fine, 100U);

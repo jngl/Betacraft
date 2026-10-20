@@ -7,7 +7,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-namespace betacraft::render {
+namespace betacraft::streaming {
 
 /**
  * @brief Packed 64-bit (8-byte) chunk vertex format for high performance voxel rendering.
@@ -191,4 +191,4 @@ static_assert(std::is_trivially_copyable_v<PackedChunkVertex>, "PackedChunkVerte
     return true;
 }
 
-} // namespace betacraft::render
+} // namespace betacraft::streaming

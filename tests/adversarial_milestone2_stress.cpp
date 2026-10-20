@@ -6,7 +6,7 @@
 #include <cmath>
 
 #include "render/ChunkMesher.hpp"
-#include "render/PackedChunkVertex.hpp"
+#include "streaming/PackedChunkVertex.hpp"
 #include "tests/test_helpers.hpp"
 #include "voxel/Block.hpp"
 #include "world/DifferentialLightingEngine.hpp"
@@ -14,6 +14,7 @@
 
 using namespace betacraft;
 using namespace betacraft::render;
+using namespace betacraft::streaming;
 using namespace betacraft::world;
 using namespace betacraft::voxel;
 

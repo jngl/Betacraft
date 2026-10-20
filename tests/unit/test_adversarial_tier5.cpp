@@ -1,5 +1,5 @@
 #include "physics/Player.hpp"
-#include "render/PackedChunkVertex.hpp"
+#include "streaming/PackedChunkVertex.hpp"
 #include "tests/test_helpers.hpp"
 #include "voxel/Block.hpp"
 #include "voxel/Chunk.hpp"
@@ -19,6 +19,7 @@ using namespace betacraft::physics;
 using namespace betacraft::world;
 using namespace betacraft::voxel;
 using namespace betacraft::render;
+using namespace betacraft::streaming;
 
 // ============================================================================
 // SUITE 1: Complex Multi-Chunk Border Light Propagation & Analytical Bounds

@@ -54,7 +54,6 @@ set(BETACRAFT_CORE_SOURCES
     src/render/GLHeaders.cpp
     src/render/Shader.cpp
     src/render/TextureAtlas.cpp
-    src/render/PackedChunkVertex.cpp
     src/render/ChunkMesher.cpp
     src/render/SkyRenderer.cpp
     src/render/WeatherRenderer.cpp

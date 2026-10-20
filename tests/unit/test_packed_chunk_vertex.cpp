@@ -1,9 +1,9 @@
-#include "render/PackedChunkVertex.hpp"
+#include "streaming/PackedChunkVertex.hpp"
 #include <gtest/gtest.h>
 #include <type_traits>
 #include <vector>
 
-using namespace betacraft::render;
+using namespace betacraft::streaming;
 
 TEST(PackedChunkVertexTest, SizeAndAlignmentContract) {
     EXPECT_EQ(sizeof(PackedChunkVertex), 8u);

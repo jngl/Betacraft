@@ -39,8 +39,8 @@
 #define BETACRAFT_HAS_PROD_PALETTED_SECTION 0
 #endif
 
-#if __has_include("render/PackedChunkVertex.hpp")
-#include "render/PackedChunkVertex.hpp"
+#if __has_include("streaming/PackedChunkVertex.hpp")
+#include "streaming/PackedChunkVertex.hpp"
 #define BETACRAFT_HAS_PROD_PACKED_CHUNK_VERTEX 1
 #else
 #define BETACRAFT_HAS_PROD_PACKED_CHUNK_VERTEX 0

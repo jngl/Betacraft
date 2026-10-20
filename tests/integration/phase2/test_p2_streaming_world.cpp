@@ -45,7 +45,7 @@ using SectionSet = std::set<voxel::SectionCoord, SectionLess>;
 template <typename V>
 using SectionMap = std::map<voxel::SectionCoord, V, SectionLess>;
 
-bool sameVertices(const std::vector<render::PackedChunkVertex>& a, const std::vector<render::PackedChunkVertex>& b) {
+bool sameVertices(const std::vector<streaming::PackedChunkVertex>& a, const std::vector<streaming::PackedChunkVertex>& b) {
     if (a.size() != b.size()) return false;
     for (size_t i = 0; i < a.size(); ++i) {
         if (a[i].word0 != b[i].word0 || a[i].word1 != b[i].word1) return false;

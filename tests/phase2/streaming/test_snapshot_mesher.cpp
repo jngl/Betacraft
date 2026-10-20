@@ -11,7 +11,7 @@
 #include <stop_token>
 #include <vector>
 
-using betacraft::render::PackedChunkVertex;
+using betacraft::streaming::PackedChunkVertex;
 using betacraft::streaming::MeshOptions;
 using betacraft::streaming::RawMeshBuffer;
 using betacraft::streaming::SectionNeighborhoodSnapshot18;

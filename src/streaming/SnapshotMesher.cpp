@@ -1,6 +1,6 @@
 #include "streaming/SnapshotMesher.hpp"
 
-#include "render/BlockShapeMesher.hpp"
+#include "streaming/BlockShapeMesher.hpp"
 
 #include <algorithm>
 #include <array>
@@ -16,7 +16,6 @@ namespace betacraft::streaming {
 
 namespace {
 
-using render::PackedChunkVertex;
 using Snap = SectionNeighborhoodSnapshot18;
 
 constexpr uint32_t faceDirToNormalIdx(core::FaceDir dir) noexcept {
@@ -245,12 +244,12 @@ std::optional<RawMeshBuffer> SnapshotMesher::build(const SectionNeighborhoodSnap
 
                 if (voxel::isDetailedShape(def.shape)) {
                     const auto sample = [&](int32_t dx, int32_t dy, int32_t dz) {
-                        return render::ShapeVoxel{snapshot.getBlock(lx + dx, ly + dy, lz + dz),
-                                                  snapshot.getMetadata(lx + dx, ly + dy, lz + dz),
-                                                  snapshot.getSkyLight(lx + dx, ly + dy, lz + dz),
-                                                  snapshot.getBlockLight(lx + dx, ly + dy, lz + dz)};
+                        return ShapeVoxel{snapshot.getBlock(lx + dx, ly + dy, lz + dz),
+                                          snapshot.getMetadata(lx + dx, ly + dy, lz + dz),
+                                          snapshot.getSkyLight(lx + dx, ly + dy, lz + dz),
+                                          snapshot.getBlockLight(lx + dx, ly + dy, lz + dz)};
                     };
-                    render::emitDetailedShape(target, def, snapshot.getMetadata(lx, ly, lz), ux, uy, uz, secY, sample);
+                    emitDetailedShape(target, def, snapshot.getMetadata(lx, ly, lz), ux, uy, uz, secY, sample);
                     continue;
                 }
 

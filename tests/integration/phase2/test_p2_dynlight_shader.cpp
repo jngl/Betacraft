@@ -9,9 +9,9 @@
 #include "lighting/DynamicLightsGlsl.hpp"
 #include "render/ChunkMesher.hpp"
 #include "render/DynamicLightUniformBuffer.hpp"
-#include "render/PackedChunkVertex.hpp"
 #include "render/Shader.hpp"
 #include "render/WorldRenderer.hpp"
+#include "streaming/PackedChunkVertex.hpp"
 
 #include <gtest/gtest.h>
 
@@ -233,11 +233,11 @@ TEST(P2DynLightShader, HeldTorchBrightensAnUnlitWallAtNightOnTheGpu) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, texel.data());
 
     // One +Z face (x, y in 0..2 at z = 1) with no sky or block light and no biome tint.
-    std::vector<render::PackedChunkVertex> quad;
+    std::vector<streaming::PackedChunkVertex> quad;
     const std::array<glm::uvec2, 4> corners{{{0, 0}, {2, 0}, {2, 2}, {0, 2}}};
     for (uint32_t c = 0; c < 4; ++c) {
-        quad.push_back({render::PackedChunkVertex::packWord0(corners[c].x, corners[c].y, 1, 2, 3, c, 0),
-                        render::PackedChunkVertex::packWord1(0, 0, 255, 0, false, false)});
+        quad.push_back({streaming::PackedChunkVertex::packWord0(corners[c].x, corners[c].y, 1, 2, 3, c, 0),
+                        streaming::PackedChunkVertex::packWord1(0, 0, 255, 0, false, false)});
     }
     render::ChunkMeshGL::initSharedEBO(); // default size: the EBO is process-wide
     render::ChunkMeshGL mesh;
