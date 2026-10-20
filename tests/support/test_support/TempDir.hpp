@@ -9,7 +9,7 @@
 
 namespace betacraft::test {
 
-/// Temporary directory RAII helper for storage / world tests
+/// Temporary directory RAII helper for tests that write saves or region files
 class TempDir {
 public:
     TempDir(std::string_view prefix = "betacraft_test_") {

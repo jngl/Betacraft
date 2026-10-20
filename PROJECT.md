@@ -279,4 +279,4 @@ Earlier module notes listed these items as open. They are now done in the code:
 - The player inventory uses 16-bit `gameplay::ItemId` (`physics::InventorySlot`), and `render::ItemAppearance` defines names and icons for items at 256 and above.
 - `BlockWashedAway` events spawn item drops (`EntitySimulation::spawnFluidDrops`), and the fizz sound uses the acoustics path.
 - `Application` reaches the `ecs::Registry` through `WorldSession::simulation()`, so dropped items emit dynamic light (`collectDynamicLights(..., &sim().entities(), ...)`).
-- The stale "Default palette has no lava block yet" comment is no longer in `tests/phase2/worldgen/test_cave_chunk_carving.cpp`.
+- The stale "Default palette has no lava block yet" comment is no longer in `modules/worldgen/test/test_cave_chunk_carving.cpp`.
