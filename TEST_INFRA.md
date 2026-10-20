@@ -58,18 +58,20 @@
 - Beta 1.7.3 parity is pinned by explicit value tests: tool durability, weapon damage, fluid tick rates and decay, recipe shapes, and cave spec constants.
 - Integration tests in `tests/integration/phase2/` drive the real `World`, `WorldSession`, `EntitySimulation`, `WorldMeshStreamer`, `AudioEngine` and renderer-side helpers headlessly.
 
-## Phase 2 Module Suites (`tests/phase2/<key>/`)
-`CMakeLists.txt` (`BETACRAFT_PHASE2_MODULES`) globs `tests/phase2/<key>/*.cpp` into `betacraft_p2_<key>_tests`, which links `betacraft_p2_<key>`, an INTERFACE target over `betacraft_core`. It registers the executable in CTest as `Phase2_<key>`.
+## Phase 2 Module Suites (`tests/phase2/<key>/`, `modules/<m>/test/`)
+For a module still in `src/`, `CMakeLists.txt` (`BETACRAFT_PHASE2_MODULES`) globs `tests/phase2/<key>/*.cpp` into `betacraft_p2_<key>_tests`, which links `betacraft_p2_<key>`, an INTERFACE target over `betacraft_core`. It registers the executable in CTest as `Phase2_<key>`. An extracted module (`modules/<m>`, ADR 0001) builds `modules/<m>/test/*.cpp` into `betacraft_<m>_tests`, linked against that module only, and keeps its `Phase2_<key>` CTest name (`TEST_NAME` in `modules/<m>/CMakeLists.txt`). Its tests that need other modules (`game`, `render`, `world`...) are in `tests/integration/phase2/test_p2_<key>_*.cpp`.
 
-| CTest name | Executable | Module (`src/`) | Roadmap | Sprint | Test files | Test cases |
+| CTest name | Executable | Module | Roadmap | Sprint | Test files | Test cases |
 |------------|------------|-----------------|---------|--------|:----------:|:----------:|
 | `Phase2_streaming` | `betacraft_p2_streaming_tests` | `streaming` | P1.1 AsyncChunkPipeline | 2.1 | 15 | 176 |
 | `Phase2_ecs` | `betacraft_p2_ecs_tests` | `ecs` | P2.1 Sparse-set ECS | 2.2 | 20 | 224 |
-| `Phase2_combat` | `betacraft_p2_combat_tests` | `gameplay` | P2.5 Tools, durability, melee | 2.2 | 15 | 217 |
+| `Phase2_combat` | `betacraft_gameplay_tests` | `modules/gameplay` | P2.5 Tools, durability, melee | 2.2 | 15 | 230 |
 | `Phase2_crafting` | `betacraft_p2_crafting_tests` | `crafting` | P2.6 2x2 / 3x3 crafting | 2.2 | 9 | 141 |
-| `Phase2_fluids` | `betacraft_p2_fluids_tests` | `fluids` | P2.3 Cellular fluids | 2.3 | 13 | 131 |
-| `Phase2_worldgen` | `betacraft_p2_worldgen_tests` | `worldgen` | P3.3 caves + P3.4 decoration | 2.3 | 17 | 162 |
-| `Phase2_dynlight` | `betacraft_p2_dynlight_tests` | `lighting` | P4.6 Dynamic light UBO | 2.4 | 10 | 158 |
+| `Phase2_fluids` | `betacraft_fluids_tests` | `modules/fluids` | P2.3 Cellular fluids | 2.3 | 13 | 131 |
+| `Phase2_worldgen` | `betacraft_worldgen_tests` | `modules/worldgen` | P3.3 caves + P3.4 decoration | 2.3 | 18 | 174 |
+| `Phase2_dynlight` | `betacraft_lighting_tests` | `modules/lighting` | P4.6 Dynamic light UBO | 2.4 | 10 | 158 |
+| `Phase2_storage` | `betacraft_storage_tests` | `modules/storage` | S7.1-S7.6 Region files, migration | S7 | 6 | 37 |
+| `Phase2_redstone` | `betacraft_redstone_tests` | `modules/redstone` | S8.5-S8.8 Redstone | S8 | 4 | 13 |
 | `Phase2_acoustics` | `betacraft_p2_acoustics_tests` | `acoustics` | P4.2 DDA occlusion + reverb bus | 2.4 | 14 | 265 |
 
 Test-case counts are `TEST`/`TEST_F`/`TEST_P` macros per directory. A parameterised case can expand to more test instances at run time.
@@ -77,7 +79,7 @@ Test-case counts are `TEST`/`TEST_F`/`TEST_P` macros per directory. A parameteri
 Coverage highlights per suite:
 - **streaming**: section coords, 18³ snapshot capture and fast paths, `SnapshotMesher` parity with `ChunkMesher`, ping-pong staging, upload budget, chunk lifecycle, cancellation, eviction, supersession and staleness, view-cone priority, robustness and shutdown, and `World` integration.
 - **ecs**: sparse set, component pool, registry and slot recycling, views, owning groups, command buffer, iteration and exception safety, systems, collision hardening, mob AI and knockback, entity budget, Beta parity, spec-name aliases.
-- **combat**: item ids and stacks, tool definitions, harvesting and dig rates, block break and drops, weapon damage, melee, knockback, health, survival, death drops, item appearance, item bridge.
+- **combat**: item stacks, tool definitions, harvesting and dig rates, block break and drops, weapon damage, melee, knockback, health, survival, crops, explosions, mob definitions, death drops. Armor, food, item ids, item appearance, item bridge and spawn rules need `game` or `render` and run in `IntegrationTests` (`test_p2_combat_*.cpp`).
 - **crafting**: ingredients, item ids, grid, shaped and shapeless recipes, registry, Beta recipe book (legacy and vanilla), inventory crafting screen, HUD inventory layout.
 - **fluids**: `FluidState` encoding, active queue, spread, falling, infinite sources, retraction, settled detection, flow-cost pathfinding, interactions (hardening, fizz, wash-away), tick rates, budgets, determinism, grid adapter.
 - **worldgen**: Simplex noise, seeded random, column sampling and context, cave envelope, carver, chunk carving and sampler, aquifers, fill palette, spec pinning, cave properties, decoration features, pipeline, hooks and shores, feature-plan codec.
@@ -101,7 +103,7 @@ Coverage highlights per suite:
 - Build: `cmake --build build --parallel`
 - All CTest entries (Phase 1 and Phase 2): `ctest --test-dir build --output-on-failure`
 - Phase 2 module suites only: `ctest --test-dir build -R '^Phase2_' --output-on-failure`
-- One module: `ctest --test-dir build -R '^Phase2_fluids$' --output-on-failure`, or run `build/betacraft_p2_fluids_tests --gtest_filter='FluidSpread*'` directly.
+- One module: `ctest --test-dir build -R '^Phase2_fluids$' --output-on-failure`, or run `build/betacraft_fluids_tests --gtest_filter='FluidSpread*'` directly.
 - Phase 2 integration tests only: `build/betacraft_integration_tests --gtest_filter='P2*'`
 - Pass/fail semantics are the same as Phase 1: 100% CTest pass, zero failed assertions, exit code 0.
 

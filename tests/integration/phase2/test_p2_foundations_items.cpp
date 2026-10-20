@@ -1,5 +1,5 @@
 // Phase 2 integration, data foundations: ONE item id scheme shared by the tools/combat
-// module (src/gameplay) and the crafting module (src/crafting).
+// module (modules/gameplay) and the crafting module (src/crafting).
 #include "crafting/BetaRecipes.hpp"
 #include "crafting/CraftingGrid.hpp"
 #include "crafting/ItemIds.hpp"
