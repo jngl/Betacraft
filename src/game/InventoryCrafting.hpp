@@ -110,7 +110,7 @@ private:
     bool clickStack(physics::InventorySlot& slot, SlotButton button, bool takeOnly = false);
     void forgetContainer() noexcept;
     // The open container's entity, or null (and the screen forgets it) when it is gone.
-    [[nodiscard]] world::BlockEntity* liveContainer(world::World& world) noexcept;
+    [[nodiscard]] voxel::BlockEntity* liveContainer(world::World& world) noexcept;
     [[nodiscard]] std::vector<physics::InventorySlot> returnContents(physics::Player& player);
 
     crafting::RecipeRegistry m_book;

@@ -22,7 +22,7 @@ using streaming::ChunkMeshResult;
 using voxel::SectionCoord;
 using streaming::WorldMeshStreamer;
 using streaming::WorldMeshStreamerConfig;
-using world::BlockId;
+using voxel::BlockId;
 
 namespace {
 
@@ -54,7 +54,7 @@ struct FakeGpu {
 class P2FixesStreaming : public ::testing::Test {
 protected:
     void SetUp() override {
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
         test::p2worldgen::loadAll(*m_world, test::p2worldgen::squareRegion({0, 0}, 2));
     }
@@ -134,8 +134,8 @@ TEST_F(P2FixesStreaming, FluidLevelChangesDoNotQueueRemeshes) {
 }
 
 TEST(P2FixesStreamingChunk, MetadataWriteMarksTheChunkModifiedButNotDirty) {
-    world::BlockRegistry::initialize();
-    world::Chunk c({0, 0});
+    voxel::BlockRegistry::initialize();
+    voxel::Chunk c({0, 0});
     c.setBlock(3, 70, 3, BlockId::Water, false);
     c.setMeshDirty(false);
     c.setModified(false);

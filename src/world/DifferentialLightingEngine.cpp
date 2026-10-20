@@ -28,8 +28,8 @@ constexpr std::array<glm::ivec3, 4> HORIZONTAL_NEIGHBORS = {{
 
 inline bool isVoxelInLoadedChunk(const World& world, int32_t x, int32_t z) noexcept {
     const core::ChunkCoord coord{
-        core::floorDiv(x, Chunk::WIDTH),
-        core::floorDiv(z, Chunk::DEPTH)
+        core::floorDiv(x, voxel::Chunk::WIDTH),
+        core::floorDiv(z, voxel::Chunk::DEPTH)
     };
     return world.getChunk(coord) != nullptr;
 }
@@ -72,8 +72,8 @@ size_t DifferentialLightingEngine::computeDiscreteManhattanVolumeBFS(int maxRadi
     return visitedDist.size();
 }
 
-void DifferentialLightingEngine::onBlockPlaced(const glm::ivec3& pos, BlockId newState) noexcept {
-    const BlockDef& def = BlockRegistry::get(newState);
+void DifferentialLightingEngine::onBlockPlaced(const glm::ivec3& pos, voxel::BlockId newState) noexcept {
+    const voxel::BlockDef& def = voxel::BlockRegistry::get(newState);
 
     // 1. If placed block emits light (e.g. Torch)
     if (def.lightEmission > 0) {
@@ -106,8 +106,8 @@ void DifferentialLightingEngine::onBlockPlaced(const glm::ivec3& pos, BlockId ne
     }
 }
 
-void DifferentialLightingEngine::onBlockDestroyed(const glm::ivec3& pos, BlockId oldState) noexcept {
-    const BlockDef& oldDef = BlockRegistry::get(oldState);
+void DifferentialLightingEngine::onBlockDestroyed(const glm::ivec3& pos, voxel::BlockId oldState) noexcept {
+    const voxel::BlockDef& oldDef = voxel::BlockRegistry::get(oldState);
 
     // 1. If destroyed block was emitting light (e.g. Torch broken)
     if (oldDef.lightEmission > 0) {
@@ -121,7 +121,7 @@ void DifferentialLightingEngine::onBlockDestroyed(const glm::ivec3& pos, BlockId
         glm::ivec3 bestBlockNb = pos;
         for (const auto& off : NEIGHBORS) {
             const glm::ivec3 nb = pos + off;
-            if (nb.y < 0 || nb.y >= Chunk::HEIGHT) continue;
+            if (nb.y < 0 || nb.y >= voxel::Chunk::HEIGHT) continue;
             if (!isVoxelInLoadedChunk(m_world, nb.x, nb.z)) continue;
             const uint8_t l = m_world.getBlockLight(nb.x, nb.y, nb.z);
             if (l > maxNbBlock) {
@@ -136,8 +136,8 @@ void DifferentialLightingEngine::onBlockDestroyed(const glm::ivec3& pos, BlockId
 
         // Sky light check: check if directly open to sky
         bool openToSky = true;
-        for (int32_t y = pos.y + 1; y < Chunk::HEIGHT; ++y) {
-            if (BlockRegistry::isOpaque(m_world.getBlock(pos.x, y, pos.z))) {
+        for (int32_t y = pos.y + 1; y < voxel::Chunk::HEIGHT; ++y) {
+            if (voxel::BlockRegistry::isOpaque(m_world.getBlock(pos.x, y, pos.z))) {
                 openToSky = false;
                 break;
             }
@@ -146,7 +146,7 @@ void DifferentialLightingEngine::onBlockDestroyed(const glm::ivec3& pos, BlockId
         if (openToSky) {
             // Restore vertical sky light column downward
             for (int32_t y = pos.y; y >= 0; --y) {
-                if (BlockRegistry::isOpaque(m_world.getBlock(pos.x, y, pos.z))) {
+                if (voxel::BlockRegistry::isOpaque(m_world.getBlock(pos.x, y, pos.z))) {
                     break;
                 }
                 m_world.setSkyLight(pos.x, y, pos.z, 15);
@@ -159,7 +159,7 @@ void DifferentialLightingEngine::onBlockDestroyed(const glm::ivec3& pos, BlockId
             glm::ivec3 bestSkyNb = pos;
             for (const auto& off : NEIGHBORS) {
                 const glm::ivec3 nb = pos + off;
-                if (nb.y < 0 || nb.y >= Chunk::HEIGHT) continue;
+                if (nb.y < 0 || nb.y >= voxel::Chunk::HEIGHT) continue;
                 if (!isVoxelInLoadedChunk(m_world, nb.x, nb.z)) continue;
                 const uint8_t l = m_world.getSkyLight(nb.x, nb.y, nb.z);
                 if (l > maxNbSky) {
@@ -181,8 +181,8 @@ void DifferentialLightingEngine::onSkylightColumnObstructed(int32_t wx, int32_t 
 
     // Pass 1: 1D vertical raycast direct extinction O(Delta H) < 0.5 microseconds
     for (int32_t y = yHigh; y >= yLow; --y) {
-        const BlockId block = m_world.getBlock(wx, y, wz);
-        if (BlockRegistry::isOpaque(block)) {
+        const voxel::BlockId block = m_world.getBlock(wx, y, wz);
+        if (voxel::BlockRegistry::isOpaque(block)) {
             break; // Hit opaque surface
         }
         const uint8_t oldSky = m_world.getSkyLight(wx, y, wz);
@@ -221,11 +221,11 @@ void DifferentialLightingEngine::updateLightSource(int32_t wx, int32_t wy, int32
 }
 
 void DifferentialLightingEngine::setBlockAndUpdateLighting(
-    int32_t wx, int32_t wy, int32_t wz, BlockId newBlock, BlockId oldBlock
+    int32_t wx, int32_t wy, int32_t wz, voxel::BlockId newBlock, voxel::BlockId oldBlock
 ) noexcept {
     if (newBlock == oldBlock) return;
 
-    if (newBlock == BlockId::Air) {
+    if (newBlock == voxel::BlockId::Air) {
         onBlockDestroyed({wx, wy, wz}, oldBlock);
     } else {
         onBlockPlaced({wx, wy, wz}, newBlock);
@@ -233,9 +233,9 @@ void DifferentialLightingEngine::setBlockAndUpdateLighting(
 }
 
 void DifferentialLightingEngine::setBlockAndUpdateLighting(
-    World& world, int32_t wx, int32_t wy, int32_t wz, BlockId newBlock
+    World& world, int32_t wx, int32_t wy, int32_t wz, voxel::BlockId newBlock
 ) noexcept {
-    const BlockId old = world.getBlock(wx, wy, wz);
+    const voxel::BlockId old = world.getBlock(wx, wy, wz);
     world.setBlock(wx, wy, wz, newBlock);
     DifferentialLightingEngine engine(world);
     engine.setBlockAndUpdateLighting(wx, wy, wz, newBlock, old);
@@ -256,7 +256,7 @@ void DifferentialLightingEngine::executeRemovalBFS() noexcept {
 
         for (const auto& off : NEIGHBORS) {
             const glm::ivec3 nb = curr.worldPos + off;
-            if (nb.y < 0 || nb.y >= Chunk::HEIGHT) continue;
+            if (nb.y < 0 || nb.y >= voxel::Chunk::HEIGHT) continue;
             if (!isVoxelInLoadedChunk(m_world, nb.x, nb.z)) continue;
 
             const uint8_t nbLight = m_world.getBlockLight(nb.x, nb.y, nb.z);
@@ -285,11 +285,11 @@ void DifferentialLightingEngine::executeAdditionBFS() noexcept {
 
         for (const auto& off : NEIGHBORS) {
             const glm::ivec3 nb = curr.worldPos + off;
-            if (nb.y < 0 || nb.y >= Chunk::HEIGHT) continue;
+            if (nb.y < 0 || nb.y >= voxel::Chunk::HEIGHT) continue;
             if (!isVoxelInLoadedChunk(m_world, nb.x, nb.z)) continue;
 
-            const BlockId nbBlock = m_world.getBlock(nb.x, nb.y, nb.z);
-            const BlockDef& nbDef = BlockRegistry::get(nbBlock);
+            const voxel::BlockId nbBlock = m_world.getBlock(nb.x, nb.y, nb.z);
+            const voxel::BlockDef& nbDef = voxel::BlockRegistry::get(nbBlock);
             if (nbDef.lightOpacity >= 15) continue;
 
             const int cost = std::max<int>(1, nbDef.lightOpacity);
@@ -314,7 +314,7 @@ void DifferentialLightingEngine::executeSkyRemovalBFS() noexcept {
 
         for (const auto& off : NEIGHBORS) {
             const glm::ivec3 nb = curr.worldPos + off;
-            if (nb.y < 0 || nb.y >= Chunk::HEIGHT) continue;
+            if (nb.y < 0 || nb.y >= voxel::Chunk::HEIGHT) continue;
             if (!isVoxelInLoadedChunk(m_world, nb.x, nb.z)) continue;
 
             const uint8_t nbSky = m_world.getSkyLight(nb.x, nb.y, nb.z);
@@ -340,11 +340,11 @@ void DifferentialLightingEngine::executeSkyAdditionBFS() noexcept {
 
         for (const auto& off : NEIGHBORS) {
             const glm::ivec3 nb = curr.worldPos + off;
-            if (nb.y < 0 || nb.y >= Chunk::HEIGHT) continue;
+            if (nb.y < 0 || nb.y >= voxel::Chunk::HEIGHT) continue;
             if (!isVoxelInLoadedChunk(m_world, nb.x, nb.z)) continue;
 
-            const BlockId nbBlock = m_world.getBlock(nb.x, nb.y, nb.z);
-            const BlockDef& nbDef = BlockRegistry::get(nbBlock);
+            const voxel::BlockId nbBlock = m_world.getBlock(nb.x, nb.y, nb.z);
+            const voxel::BlockDef& nbDef = voxel::BlockRegistry::get(nbBlock);
             if (nbDef.lightOpacity >= 15) continue;
 
             const int cost = std::max<int>(1, nbDef.lightOpacity);

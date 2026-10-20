@@ -245,7 +245,7 @@ TEST(EcsCollisionSystem, ThousandItemDropsSettleOnFloor) {
         const float x = static_cast<float>(i % 40) + 0.5f;
         const float z = static_cast<float>(i / 40) + 0.5f;
         (void)EntityFactory::spawnItemDrop(reg, {x, 2.0f + static_cast<float>(i % 5), z},
-                                           world::BlockId::Dirt, 1);
+                                           voxel::BlockId::Dirt, 1);
     }
     for (int s = 0; s < 80; ++s) {
         tick(reg, floorBelowZero);
@@ -266,7 +266,7 @@ TEST(EcsCollisionSystem, WorldOverloadCollidesWithPlacedBlocks) {
     // Build a stone platform high above any generated terrain.
     for (int32_t x = 0; x < 4; ++x) {
         for (int32_t z = 0; z < 4; ++z) {
-            ASSERT_TRUE(world.setBlock(x, 110, z, world::BlockId::Stone));
+            ASSERT_TRUE(world.setBlock(x, 110, z, voxel::BlockId::Stone));
         }
     }
     Registry reg;
@@ -369,7 +369,7 @@ TEST(EcsHealthSystem, HealClampsToMaxAndNeverRevives) {
 
 TEST(EcsItemDropSystem, AgesItemsAndCountsDownPickupDelay) {
     Registry reg;
-    const EntityId e = EntityFactory::spawnItemDrop(reg, {}, world::BlockId::Cobblestone, 3);
+    const EntityId e = EntityFactory::spawnItemDrop(reg, {}, voxel::BlockId::Cobblestone, 3);
     EXPECT_FALSE(ItemDropSystem::canPickUp(reg.get<ItemDropComp>(e)));
     EXPECT_EQ(ItemDropSystem::update(reg, 0.25f), 0U);
     EXPECT_FLOAT_EQ(reg.get<ItemDropComp>(e).ageSeconds, 0.25f);
@@ -380,9 +380,9 @@ TEST(EcsItemDropSystem, AgesItemsAndCountsDownPickupDelay) {
 
 TEST(EcsItemDropSystem, DespawnsAfterFiveMinutes) {
     Registry reg;
-    const EntityId old = EntityFactory::spawnItemDrop(reg, {}, world::BlockId::Dirt, 1);
+    const EntityId old = EntityFactory::spawnItemDrop(reg, {}, voxel::BlockId::Dirt, 1);
     reg.get<ItemDropComp>(old).ageSeconds = ItemDropSystem::DESPAWN_SECONDS - 0.1f;
-    const EntityId young = EntityFactory::spawnItemDrop(reg, {}, world::BlockId::Dirt, 1);
+    const EntityId young = EntityFactory::spawnItemDrop(reg, {}, voxel::BlockId::Dirt, 1);
     EXPECT_FLOAT_EQ(ItemDropSystem::DESPAWN_SECONDS, 300.0f);
     EXPECT_EQ(ItemDropSystem::update(reg, 0.1f), 1U); // exactly reaching the limit despawns
     EXPECT_FALSE(reg.valid(old));
@@ -393,7 +393,7 @@ TEST(EcsItemDropSystem, DespawnsAfterFiveMinutes) {
 TEST(EcsItemDropSystem, MassDespawnKeepsGroupConsistent) {
     Registry reg;
     for (int i = 0; i < 500; ++i) {
-        const EntityId e = EntityFactory::spawnItemDrop(reg, {}, world::BlockId::Sand, 1);
+        const EntityId e = EntityFactory::spawnItemDrop(reg, {}, voxel::BlockId::Sand, 1);
         if (i % 2 == 0) {
             reg.get<ItemDropComp>(e).ageSeconds = 1000.0f;
         }
@@ -528,9 +528,9 @@ TEST(EcsEntityFactory, PlayerHasStandardComponents) {
 
 TEST(EcsEntityFactory, ItemDropHasSmallColliderAndLighterGravity) {
     Registry reg;
-    const EntityId e = EntityFactory::spawnItemDrop(reg, {0.0f, 70.0f, 0.0f}, world::BlockId::Sand, 5,
+    const EntityId e = EntityFactory::spawnItemDrop(reg, {0.0f, 70.0f, 0.0f}, voxel::BlockId::Sand, 5,
                                                     {1.0f, 2.0f, 0.0f});
-    EXPECT_EQ(reg.get<ItemDropComp>(e).id, world::BlockId::Sand);
+    EXPECT_EQ(reg.get<ItemDropComp>(e).id, voxel::BlockId::Sand);
     EXPECT_EQ(reg.get<ItemDropComp>(e).count, 5);
     EXPECT_EQ(reg.get<VelocityComp>(e).linear, glm::vec3(1.0f, 2.0f, 0.0f));
     EXPECT_LT(reg.get<VelocityComp>(e).gravityScale, 1.0f);
@@ -550,7 +550,7 @@ TEST(EcsEntityFactory, MobHasAiHealthAndCollider) {
 TEST(EcsEntityFactory, SpawnFailsGracefullyWhenRegistryFull) {
     Registry reg(1);
     EXPECT_NE(EntityFactory::spawnPlayer(reg, {}), NULL_ENTITY);
-    EXPECT_EQ(EntityFactory::spawnItemDrop(reg, {}, world::BlockId::Dirt, 1), NULL_ENTITY);
+    EXPECT_EQ(EntityFactory::spawnItemDrop(reg, {}, voxel::BlockId::Dirt, 1), NULL_ENTITY);
     EXPECT_EQ(EntityFactory::spawnMob(reg, {}, 10, 0.6f, 1.8f), NULL_ENTITY);
     EXPECT_EQ(reg.alive(), 1U);
 }

@@ -158,8 +158,8 @@ TEST_F(WorldSessionBetaOrder, EntitiesRunBeforeBlockEntities) {
     const core::BlockPos furnace{12, kY, 10};
     const core::BlockPos tnt{11, kY, 10};
     ASSERT_TRUE(world().setBlock(furnace, BlockId::LitFurnace));
-    std::get<world::FurnaceData>(world().blockEntities().getOrCreate(furnace, BlockId::LitFurnace)) =
-        world::FurnaceData{.input = {gameplay::toItemId(BlockId::IronOre), 2, 0},
+    std::get<voxel::FurnaceData>(world().blockEntities().getOrCreate(furnace, BlockId::LitFurnace)) =
+        voxel::FurnaceData{.input = {gameplay::toItemId(BlockId::IronOre), 2, 0},
                            .burnTicks = 100,
                            .burnTicksTotal = 1600,
                            .cookTicks = static_cast<int16_t>(crafting::kSmeltTicks - 1)};

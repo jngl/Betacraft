@@ -22,7 +22,7 @@ inline constexpr float kFallingBlockDrag = 0.40405414f; // -20 ln 0.98: 0.98 per
 inline constexpr int32_t kFallingBlockMaxTicks = 600;
 
 // The entity for a block that just left `cell`, feet on the cell floor, centred on it.
-ecs::EntityId spawnFallingBlock(ecs::Registry& reg, const core::BlockPos& cell, world::BlockId id);
+ecs::EntityId spawnFallingBlock(ecs::Registry& reg, const core::BlockPos& cell, voxel::BlockId id);
 
 // Cell a falling block occupies: the one holding its centre (Beta floor(posY) with the
 // entity's half-height yOffset).

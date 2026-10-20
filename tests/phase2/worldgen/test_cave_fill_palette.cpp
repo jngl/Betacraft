@@ -10,8 +10,8 @@
 
 using namespace betacraft::worldgen;
 using betacraft::core::ChunkCoord;
-using betacraft::world::BlockId;
-using betacraft::world::Chunk;
+using betacraft::voxel::BlockId;
+using betacraft::voxel::Chunk;
 
 namespace {
 

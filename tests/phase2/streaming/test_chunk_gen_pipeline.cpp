@@ -11,7 +11,7 @@
 using namespace betacraft;
 using world::ChunkGenConfig;
 using world::ChunkGenPipeline;
-using world::Chunk;
+using voxel::Chunk;
 
 namespace {
 
@@ -44,7 +44,7 @@ namespace {
 
 class ChunkGenPipelineTest : public ::testing::Test {
 protected:
-    void SetUp() override { world::BlockRegistry::initialize(); }
+    void SetUp() override { voxel::BlockRegistry::initialize(); }
 };
 
 } // namespace

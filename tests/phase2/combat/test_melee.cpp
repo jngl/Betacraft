@@ -9,7 +9,7 @@
 
 using namespace betacraft::gameplay;
 using betacraft::math::AABB;
-using betacraft::world::BlockId;
+using betacraft::voxel::BlockId;
 
 namespace {
 ItemStack tool(ToolType type, ToolMaterial mat) {

@@ -1,4 +1,4 @@
-// Drop decisions of breakBlockWith where Beta 1.7.3 differs from world::BlockDef::dropId
+// Drop decisions of breakBlockWith where Beta 1.7.3 differs from voxel::BlockDef::dropId
 // (BlockIce / BlockGlass / BlockGlowStone / BlockLeaves / BlockBookshelf quantityDropped,
 // BlockOre / BlockRedstoneOre / BlockSnowBlock idDropped).
 #include "gameplay/Harvesting.hpp"
@@ -10,8 +10,8 @@
 #include <set>
 
 using namespace betacraft::gameplay;
-using betacraft::world::BlockId;
-using betacraft::world::BlockRegistry;
+using betacraft::voxel::BlockId;
+using betacraft::voxel::BlockRegistry;
 
 namespace {
 ItemStack tool(ToolType type, ToolMaterial mat) {

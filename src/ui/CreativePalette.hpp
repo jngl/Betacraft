@@ -12,19 +12,19 @@ namespace betacraft::ui {
 // The 36 blocks the inventory screen offers for free (click to equip in the selected slot).
 // The two pickaxes are listed by their legacy BlockId for ui::CraftingSystem, which is not
 // migrated; the game hands out paletteItem(), in the Beta item numbering (S2.10).
-inline constexpr std::array<world::BlockId, 36> kCreativePalette{{
-    world::BlockId::Stone, world::BlockId::Grass, world::BlockId::Dirt, world::BlockId::Cobblestone,
-    world::BlockId::OakPlanks, world::BlockId::OakLog, world::BlockId::BirchLog, world::BlockId::PineLog,
-    world::BlockId::Leaves, world::BlockId::Glass, world::BlockId::Sand, world::BlockId::Sandstone,
-    world::BlockId::Gravel, world::BlockId::Bricks, world::BlockId::CobbleSlab, world::BlockId::MossyCobble,
-    world::BlockId::Obsidian, world::BlockId::Bookshelf, world::BlockId::CraftingTable, world::BlockId::Furnace,
-    world::BlockId::Piston, world::BlockId::TNT, world::BlockId::Torch, world::BlockId::Glowstone,
-    world::BlockId::Wool, world::BlockId::SnowBlock, world::BlockId::Ice, world::BlockId::Clay,
-    world::BlockId::Cactus, world::BlockId::Dandelion, world::BlockId::Rose, world::BlockId::TallGrass,
-    world::BlockId::Sapling, world::BlockId::SugarCane, world::BlockId::StonePickaxe, world::BlockId::DiamondPickaxe
+inline constexpr std::array<voxel::BlockId, 36> kCreativePalette{{
+    voxel::BlockId::Stone, voxel::BlockId::Grass, voxel::BlockId::Dirt, voxel::BlockId::Cobblestone,
+    voxel::BlockId::OakPlanks, voxel::BlockId::OakLog, voxel::BlockId::BirchLog, voxel::BlockId::PineLog,
+    voxel::BlockId::Leaves, voxel::BlockId::Glass, voxel::BlockId::Sand, voxel::BlockId::Sandstone,
+    voxel::BlockId::Gravel, voxel::BlockId::Bricks, voxel::BlockId::CobbleSlab, voxel::BlockId::MossyCobble,
+    voxel::BlockId::Obsidian, voxel::BlockId::Bookshelf, voxel::BlockId::CraftingTable, voxel::BlockId::Furnace,
+    voxel::BlockId::Piston, voxel::BlockId::TNT, voxel::BlockId::Torch, voxel::BlockId::Glowstone,
+    voxel::BlockId::Wool, voxel::BlockId::SnowBlock, voxel::BlockId::Ice, voxel::BlockId::Clay,
+    voxel::BlockId::Cactus, voxel::BlockId::Dandelion, voxel::BlockId::Rose, voxel::BlockId::TallGrass,
+    voxel::BlockId::Sapling, voxel::BlockId::SugarCane, voxel::BlockId::StonePickaxe, voxel::BlockId::DiamondPickaxe
 }};
 
-[[nodiscard]] inline std::span<const world::BlockId> creativePalette() noexcept {
+[[nodiscard]] inline std::span<const voxel::BlockId> creativePalette() noexcept {
     return kCreativePalette;
 }
 

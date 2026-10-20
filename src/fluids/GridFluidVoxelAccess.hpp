@@ -20,13 +20,13 @@ public:
     [[nodiscard]] int32_t sizeZ() const noexcept { return m_sz; }
 
     [[nodiscard]] bool isLoaded(const core::BlockPos& pos) const noexcept override;
-    [[nodiscard]] world::BlockId getBlock(const core::BlockPos& pos) const noexcept override;
+    [[nodiscard]] voxel::BlockId getBlock(const core::BlockPos& pos) const noexcept override;
     [[nodiscard]] FluidState getFluid(const core::BlockPos& pos) const noexcept override;
-    void setBlock(const core::BlockPos& pos, world::BlockId id) override;
+    void setBlock(const core::BlockPos& pos, voxel::BlockId id) override;
     void setFluid(const core::BlockPos& pos, FluidState state) override;
 
     // Inclusive box fill with a regular block (clears fluid). Out-of-range parts are clipped.
-    void fill(const core::BlockPos& from, const core::BlockPos& to, world::BlockId id);
+    void fill(const core::BlockPos& from, const core::BlockPos& to, voxel::BlockId id);
 
     // Marks an inclusive box (clipped) as unloaded or loaded again, like a chunk being
     // saved and reloaded: unloaded cells read as Air/dry, ignore writes and keep their
@@ -47,7 +47,7 @@ public:
 
 private:
     struct Cell {
-        world::BlockId block{world::BlockId::Air};
+        voxel::BlockId block{voxel::BlockId::Air};
         FluidState fluid{};
 
         bool operator==(const Cell& other) const noexcept = default;

@@ -9,7 +9,7 @@ using betacraft::fluids::FluidState;
 using betacraft::fluids::FluidType;
 using betacraft::fluids::GridFluidVoxelAccess;
 using betacraft::fluids::IFluidVoxelAccess;
-using betacraft::world::BlockId;
+using betacraft::voxel::BlockId;
 
 TEST(DefaultBlocksFlow, AirAndPlantsAreWashedAwaySolidsBlock) {
     EXPECT_FALSE(defaultBlocksFlow(BlockId::Air));

@@ -64,11 +64,11 @@ bool VoxelCollisionSystem::WorldBoxCollides::operator()(const math::AABB& box) c
     // above its own. Each solid cell then contributes its collision boxes (two for stairs).
     const math::AABB scan{box.min - glm::vec3(0.0f, 1.0f, 0.0f), box.max};
     return gridCollides(scan, [&](int32_t x, int32_t y, int32_t z) {
-        const world::BlockId id = world->getBlock(x, y, z);
-        if (!world::BlockRegistry::isSolid(id)) {
+        const voxel::BlockId id = world->getBlock(x, y, z);
+        if (!voxel::BlockRegistry::isSolid(id)) {
             return false;
         }
-        const uint8_t meta = world::shapeDependsOnMetadata(world::BlockRegistry::get(id).shape)
+        const uint8_t meta = voxel::shapeDependsOnMetadata(voxel::BlockRegistry::get(id).shape)
             ? world->getMetadata(x, y, z)
             : uint8_t{0};
         return math::AABB::forEachBlockBox(x, y, z, id, meta,

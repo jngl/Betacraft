@@ -9,7 +9,7 @@
 #include <random>
 
 using namespace betacraft::lighting;
-using betacraft::world::BlockId;
+using betacraft::voxel::BlockId;
 
 namespace {
 DynamicLight makeLight(glm::vec3 p, float r, glm::vec3 c = glm::vec3(1.0f), float i = 1.0f) {

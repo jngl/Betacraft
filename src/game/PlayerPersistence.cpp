@@ -14,8 +14,8 @@ namespace {
 [[nodiscard]] bool isKnownItemId(gameplay::ItemId id) noexcept {
     if (id == gameplay::kNoItem || gameplay::isLegacyItemId(id)) return false;
     if (id < 256) {
-        const auto block = static_cast<world::BlockId>(id);
-        return world::BlockRegistry::get(block).id == block;
+        const auto block = static_cast<voxel::BlockId>(id);
+        return voxel::BlockRegistry::get(block).id == block;
     }
     return id <= 359 || id == 2256 || id == 2257;
 }

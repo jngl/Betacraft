@@ -15,10 +15,10 @@
 
 using betacraft::streaming::SectionNeighborhoodSnapshot18;
 using betacraft::voxel::SectionCoord;
-using betacraft::world::BlockId;
-using betacraft::world::BlockStateId;
-using betacraft::world::Chunk;
-using betacraft::world::PalettedSection;
+using betacraft::voxel::BlockId;
+using betacraft::voxel::BlockStateId;
+using betacraft::voxel::Chunk;
+using betacraft::voxel::PalettedSection;
 using betacraft::world::World;
 using Snap = SectionNeighborhoodSnapshot18;
 
@@ -27,7 +27,7 @@ namespace {
 class SnapshotCaptureFastPath : public ::testing::Test {
 protected:
     void SetUp() override {
-        betacraft::world::BlockRegistry::initialize();
+        betacraft::voxel::BlockRegistry::initialize();
         m_world = std::make_unique<World>(987654ULL, m_dir.path());
     }
 

@@ -9,7 +9,7 @@
 #include <vector>
 
 using namespace betacraft::worldgen;
-using betacraft::world::BlockId;
+using betacraft::voxel::BlockId;
 
 namespace {
 

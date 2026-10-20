@@ -17,7 +17,7 @@ namespace betacraft::storage {
 // len bytes}:
 //   'B' Chunk::serializeRLE()                 (absent: no chunk stored)
 //   'D' worldgen::encodeDecorationRecord      (absent: saved before P3.4, treated as decorated)
-//   'E' world::encodeBlockEntities (S2.4)     (absent: no block entity)
+//   'E' voxel::encodeBlockEntities (S2.4)     (absent: no block entity)
 // Unknown tags are skipped, so later additions stay readable by this version.
 inline constexpr uint8_t BUNDLE_V1 = 1;
 inline constexpr uint8_t kBundleTagBlocks = 'B';

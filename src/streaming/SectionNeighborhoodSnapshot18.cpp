@@ -10,7 +10,7 @@ namespace betacraft::streaming {
 
 namespace {
 
-constexpr world::BlockStateId kAirState = static_cast<world::BlockStateId>(world::BlockId::Air);
+constexpr voxel::BlockStateId kAirState = static_cast<voxel::BlockStateId>(voxel::BlockId::Air);
 
 // A default-constructed snapshot is already filled with kMissingVoxel, which is exactly
 // World's value for unloaded chunks and for y >= 128: capture() skips those voxels.
@@ -26,7 +26,7 @@ std::shared_ptr<const SectionNeighborhoodSnapshot18> SectionNeighborhoodSnapshot
     const world::World& world, voxel::SectionCoord coord) {
     // Resolve the 3x3 neighbourhood of chunk columns once: per-voxel hash-map lookups
     // through World::getBlock would dominate the capture cost on the tick thread.
-    std::array<const world::Chunk*, 9> columns{};
+    std::array<const voxel::Chunk*, 9> columns{};
     for (int32_t dz = -1; dz <= 1; ++dz) {
         for (int32_t dx = -1; dx <= 1; ++dx) {
             columns[static_cast<size_t>((dz + 1) * 3 + (dx + 1))] = world.getChunk({coord.x + dx, coord.z + dz});
@@ -50,7 +50,7 @@ std::shared_ptr<const SectionNeighborhoodSnapshot18> SectionNeighborhoodSnapshot
     const int32_t baseY = coord.y * SIZE;
     for (int32_t ly = MIN_LOCAL; ly <= MAX_LOCAL; ++ly) {
         const int32_t wy = baseY + ly;
-        if (wy >= world::Chunk::HEIGHT) {
+        if (wy >= voxel::Chunk::HEIGHT) {
             continue; // above the column: open sky (already the default fill)
         }
         if (wy < 0) {
@@ -72,14 +72,14 @@ std::shared_ptr<const SectionNeighborhoodSnapshot18> SectionNeighborhoodSnapshot
             const bool interiorRow = interiorLayer && czi == 1u;
 
             for (const Run& run : kRuns) {
-                const world::Chunk* chunk = columns[czi * 3u + run.column];
+                const voxel::Chunk* chunk = columns[czi * 3u + run.column];
                 if (chunk == nullptr) {
                     continue; // unloaded: Air, sky 15, block 0 (default fill)
                 }
-                const world::PalettedSection& section = chunk->getSection(sectionIndex);
+                const voxel::PalettedSection& section = chunk->getSection(sectionIndex);
                 const int32_t x0 = core::floorMod(run.first, SIZE);
                 const size_t dst = voxelIndex(run.first, ly, lz);
-                world::BlockStateId* states = snap->m_blockStates.data() + dst;
+                voxel::BlockStateId* states = snap->m_blockStates.data() + dst;
                 uint8_t* light = snap->m_lightData.data() + dst;
 
                 if (section.getBitsPerVoxel() == 0) {
@@ -104,7 +104,7 @@ std::shared_ptr<const SectionNeighborhoodSnapshot18> SectionNeighborhoodSnapshot
                 }
                 if (interiorEmpty && interiorRow && run.column == 1u &&
                     std::any_of(states, states + run.length,
-                                [](world::BlockStateId s) { return (s & kStateMask) != kAirState; })) {
+                                [](voxel::BlockStateId s) { return (s & kStateMask) != kAirState; })) {
                     interiorEmpty = false;
                 }
             }

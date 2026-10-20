@@ -13,8 +13,8 @@
 #include <string>
 
 using betacraft::core::ChunkCoord;
-using betacraft::world::BlockRegistry;
-using betacraft::world::Chunk;
+using betacraft::voxel::BlockRegistry;
+using betacraft::voxel::Chunk;
 using betacraft::world::WorldGen;
 using betacraft::worldgen::CaveCarver;
 using betacraft::worldgen::ColumnContext;

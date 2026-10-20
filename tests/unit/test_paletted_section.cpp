@@ -2,7 +2,7 @@
 #include "voxel/Chunk.hpp"
 #include "voxel/PalettedSection.hpp"
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 
 TEST(PalettedSectionTest, SizeAndAlignmentInvariants) {
     EXPECT_LE(sizeof(PalettedSection), 64U);
@@ -200,4 +200,4 @@ TEST(PalettedSectionTest, ChunkSubChunkIntegration) {
     EXPECT_FALSE(chunk.getSection(2).hasLightData());
 }
 
-} // namespace betacraft::world
+} // namespace betacraft::voxel

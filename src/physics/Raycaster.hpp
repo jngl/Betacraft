@@ -13,7 +13,7 @@ struct RaycastHit {
     core::BlockPos blockPos{};
     core::BlockPos adjacentPos{};
     core::FaceDir face{core::FaceDir::PosY};
-    world::BlockId blockId{world::BlockId::Air};
+    voxel::BlockId blockId{voxel::BlockId::Air};
     float distance{0.0f};
     uint8_t blockMeta{0}; // Metadata of the hit block (S5.4 shapes: outline box)
 };

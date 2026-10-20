@@ -10,14 +10,14 @@
 #include <gtest/gtest.h>
 
 using namespace betacraft;
-using world::BlockId;
-using world::Chunk;
+using voxel::BlockId;
+using voxel::Chunk;
 using storage::WorldStorage;
 
 namespace {
 
 [[nodiscard]] Chunk sampleChunk(core::ChunkCoord c) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     Chunk chunk(c);
     chunk.setBlock(2, 40, 3, BlockId::Obsidian);
     return chunk;
@@ -37,9 +37,9 @@ void breakRegionEntry(const std::filesystem::path& save, core::ChunkCoord c) {
 TEST(WorldStorageFacade, WrappersShareOneBundle) {
     test::TempDir dir("betacraft_facade_");
     const core::ChunkCoord c{-33, 70}; // Region (-2, 2)
-    world::ChestData chest{};
+    voxel::ChestData chest{};
     chest.slots[1] = {265, 5, 0};
-    const std::vector<world::BlockEntityEntry> entities{{core::BlockPos{-33 * 16 + 1, 50, 70 * 16 + 1}, chest}};
+    const std::vector<voxel::BlockEntityEntry> entities{{core::BlockPos{-33 * 16 + 1, 50, 70 * 16 + 1}, chest}};
     {
         const storage::WorldStorage storage(dir.path());
         ASSERT_TRUE(storage.saveChunk(sampleChunk(c)));
@@ -62,7 +62,7 @@ TEST(WorldStorageFacade, WrappersShareOneBundle) {
     EXPECT_FALSE(bundle->decoration->decorated);
     const auto loadedEntities = storage.loadBlockEntities(c);
     ASSERT_EQ(loadedEntities.size(), 1U);
-    EXPECT_EQ(std::get<world::ChestData>(loadedEntities.front().second), chest);
+    EXPECT_EQ(std::get<voxel::ChestData>(loadedEntities.front().second), chest);
 
     // Saving the blocks again keeps the other two parts.
     ASSERT_TRUE(storage.saveChunk(sampleChunk(c)));

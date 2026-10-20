@@ -37,7 +37,7 @@ protected:
 
     void ironDoor(const core::BlockPos& lower) {
         put(lower, BlockId::IronDoor, 0);
-        put(lower.offset(0, 1, 0), BlockId::IronDoor, world::kDoorUpperBit);
+        put(lower.offset(0, 1, 0), BlockId::IronDoor, voxel::kDoorUpperBit);
     }
 
     void worldTicks(int32_t n) {
@@ -45,8 +45,8 @@ protected:
     }
 
     [[nodiscard]] bool doorOpen(const core::BlockPos& lower) const {
-        return (m_world->getMetadata(lower) & world::kDoorOpenBit) != 0 &&
-               (m_world->getMetadata(lower.offset(0, 1, 0)) & world::kDoorOpenBit) != 0;
+        return (m_world->getMetadata(lower) & voxel::kDoorOpenBit) != 0 &&
+               (m_world->getMetadata(lower.offset(0, 1, 0)) & voxel::kDoorOpenBit) != 0;
     }
 };
 
@@ -56,7 +56,7 @@ const core::BlockPos kDoor{11, kY, 0};
 } // namespace
 
 TEST_F(P2RedstoneWorld, LeverOpensDoorThroughWire) {
-    put(kLever, BlockId::Lever, world::kAttachFloor);
+    put(kLever, BlockId::Lever, voxel::kAttachFloor);
     wireLine(1, 10, 0); // 10 wires, the last one points into the door
     ironDoor(kDoor);
     worldTicks(5);
@@ -112,10 +112,10 @@ TEST_F(P2RedstoneWorld, PlateTriggersPiston) {
         (void)tickIdle();
         (void)m_world->tick();
     }
-    EXPECT_NE(m_world->getMetadata(plate) & world::kPlatePressedBit, 0) << "the player stands on it";
+    EXPECT_NE(m_world->getMetadata(plate) & voxel::kPlatePressedBit, 0) << "the player stands on it";
     EXPECT_EQ(m_world->getBlock(6, kY, 2), BlockId::Air);
     EXPECT_EQ(m_world->getBlock(7, kY, 2), BlockId::Cobblestone) << "pushed on the rising edge";
-    EXPECT_NE(m_world->getMetadata(piston) & world::kPistonPoweredBit, 0);
+    EXPECT_NE(m_world->getMetadata(piston) & voxel::kPistonPoweredBit, 0);
     // Staying on the plate does not push again.
     put({6, kY, 2}, BlockId::Cobblestone);
     for (int32_t i = 0; i < 30; ++i) {
@@ -131,8 +131,8 @@ TEST_F(P2RedstoneWorld, PlateTriggersPiston) {
         (void)tickIdle();
         (void)m_world->tick();
     }
-    EXPECT_EQ(m_world->getMetadata(plate) & world::kPlatePressedBit, 0);
-    EXPECT_EQ(m_world->getMetadata(piston) & world::kPistonPoweredBit, 0);
+    EXPECT_EQ(m_world->getMetadata(plate) & voxel::kPlatePressedBit, 0);
+    EXPECT_EQ(m_world->getMetadata(piston) & voxel::kPistonPoweredBit, 0);
 
     // An item lying on a stone plate does nothing; on a wooden one it presses it.
     const core::BlockPos woodPlate{1, kY, 5};
@@ -143,12 +143,12 @@ TEST_F(P2RedstoneWorld, PlateTriggersPiston) {
         (void)tickIdle();
         (void)m_world->tick();
     }
-    EXPECT_EQ(m_world->getMetadata(plate) & world::kPlatePressedBit, 0);
-    EXPECT_NE(m_world->getMetadata(woodPlate) & world::kPlatePressedBit, 0);
+    EXPECT_EQ(m_world->getMetadata(plate) & voxel::kPlatePressedBit, 0);
+    EXPECT_NE(m_world->getMetadata(woodPlate) & voxel::kPlatePressedBit, 0);
 }
 
 TEST_F(P2RedstoneWorld, StatePersistsAcrossSaveReload) {
-    put(kLever, BlockId::Lever, world::kAttachFloor);
+    put(kLever, BlockId::Lever, voxel::kAttachFloor);
     wireLine(1, 10, 0);
     ironDoor(kDoor);
     ASSERT_TRUE(m_world->toggleLever(kLever));
@@ -160,7 +160,7 @@ TEST_F(P2RedstoneWorld, StatePersistsAcrossSaveReload) {
     m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
     test::p2worldgen::loadAll(*m_world, test::p2worldgen::squareRegion({0, 0}, 1));
     EXPECT_EQ(m_world->getBlock(kLever), BlockId::Lever);
-    EXPECT_EQ(m_world->getMetadata(kLever), world::kAttachFloor | world::kLeverOnBit);
+    EXPECT_EQ(m_world->getMetadata(kLever), voxel::kAttachFloor | voxel::kLeverOnBit);
     for (int32_t x = 1; x <= 10; ++x) {
         EXPECT_EQ(m_world->getMetadata({x, kY, 0}), 16 - x) << "wire " << x;
     }
@@ -182,10 +182,10 @@ TEST_F(P2RedstoneWorld, ChunkReloadReschedulesTorches) {
     const core::BlockPos buttonBlock{6, kY, 6};
     const core::BlockPos button{5, kY, 6};
     put(a, BlockId::Stone);
-    put(torch, BlockId::RedstoneTorchOn, world::kAttachFloor);
-    put(lever, BlockId::Lever, world::kAttachWallPosX);
+    put(torch, BlockId::RedstoneTorchOn, voxel::kAttachFloor);
+    put(lever, BlockId::Lever, voxel::kAttachWallPosX);
     put(buttonBlock, BlockId::Stone);
-    put(button, BlockId::StoneButton, world::kAttachWallPosX);
+    put(button, BlockId::StoneButton, voxel::kAttachWallPosX);
     ASSERT_TRUE(m_world->toggleLever(lever));
     worldTicks(5);
     ASSERT_EQ(m_world->getBlock(torch), BlockId::RedstoneTorchOff);
@@ -200,11 +200,11 @@ TEST_F(P2RedstoneWorld, ChunkReloadReschedulesTorches) {
     m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
     test::p2worldgen::loadAll(*m_world, test::p2worldgen::squareRegion({0, 0}, 1));
     ASSERT_EQ(m_world->getBlock(torch), BlockId::RedstoneTorchOff) << "saved unlit";
-    ASSERT_NE(m_world->getMetadata(button) & world::kButtonPressedBit, 0) << "saved pressed";
+    ASSERT_NE(m_world->getMetadata(button) & voxel::kButtonPressedBit, 0) << "saved pressed";
     worldTicks(4);
     EXPECT_EQ(m_world->getBlock(torch), BlockId::RedstoneTorchOn) << "the reload checked the torch again";
     worldTicks(redstone::RedstoneEngine::kButtonTicks);
-    EXPECT_EQ(m_world->getMetadata(button) & world::kButtonPressedBit, 0) << "the button came back up";
+    EXPECT_EQ(m_world->getMetadata(button) & voxel::kButtonPressedBit, 0) << "the button came back up";
 }
 
 TEST_F(P2RedstoneWorld, RightClickPartsAndPlacement) {
@@ -219,7 +219,7 @@ TEST_F(P2RedstoneWorld, RightClickPartsAndPlacement) {
     hold({gameplay::toItemId(BlockId::StoneButton), 4});
     ASSERT_TRUE(game::placeHeldBlock(*m_world, m_player, side).has_value());
     EXPECT_EQ(m_world->getBlock(7, kY, 4), BlockId::StoneButton);
-    EXPECT_EQ(m_world->getMetadata(7, kY, 4), world::kAttachWallPosX);
+    EXPECT_EQ(m_world->getMetadata(7, kY, 4), voxel::kAttachWallPosX);
 
     physics::RaycastHit top{};
     top.hit = true;
@@ -230,7 +230,7 @@ TEST_F(P2RedstoneWorld, RightClickPartsAndPlacement) {
     EXPECT_FALSE(game::placeHeldBlock(*m_world, m_player, top).has_value()) << "no button on a floor";
     hold({gameplay::toItemId(BlockId::Lever), 1});
     ASSERT_TRUE(game::placeHeldBlock(*m_world, m_player, top).has_value());
-    EXPECT_EQ(m_world->getMetadata(8, kY, 8), world::kAttachFloor);
+    EXPECT_EQ(m_world->getMetadata(8, kY, 8), voxel::kAttachFloor);
 
     hold({gameplay::items::Redstone, 3});
     top.blockPos = {9, kFloorY, 8};
@@ -267,7 +267,7 @@ TEST_F(P2RedstoneWorld, RightClickPartsAndPlacement) {
 
 TEST_F(P2RedstoneWorld, FifteenWiresButtonTorchAndClockOnTheWorld) {
     // DoD: a lever opens a door through 15 wires (the last one carries power 1).
-    put({-4, kY, 2}, BlockId::Lever, world::kAttachFloor);
+    put({-4, kY, 2}, BlockId::Lever, voxel::kAttachFloor);
     wireLine(-3, 11, 2);
     const core::BlockPos farDoor{12, kY, 2};
     ironDoor(farDoor);
@@ -282,7 +282,7 @@ TEST_F(P2RedstoneWorld, FifteenWiresButtonTorchAndClockOnTheWorld) {
     const core::BlockPos buttonDoor{2, kY, 8};
     ironDoor(buttonDoor);
     put({0, kY, 8}, BlockId::Stone);
-    put({1, kY, 8}, BlockId::StoneButton, world::kAttachWallNegX);
+    put({1, kY, 8}, BlockId::StoneButton, voxel::kAttachWallNegX);
     worldTicks(3);
     ASSERT_FALSE(doorOpen(buttonDoor));
     ASSERT_TRUE(m_world->pressButton({1, kY, 8}));
@@ -294,8 +294,8 @@ TEST_F(P2RedstoneWorld, FifteenWiresButtonTorchAndClockOnTheWorld) {
     // A torch inverts the signal: lever off -> torch lit -> door open; lever on -> closed.
     const core::BlockPos block{6, kY, 10};
     put(block, BlockId::Stone);
-    put({5, kY, 10}, BlockId::Lever, world::kAttachWallPosX);
-    put({7, kY, 10}, BlockId::RedstoneTorchOn, world::kAttachWallNegX);
+    put({5, kY, 10}, BlockId::Lever, voxel::kAttachWallPosX);
+    put({7, kY, 10}, BlockId::RedstoneTorchOn, voxel::kAttachWallNegX);
     const core::BlockPos torchDoor{8, kY, 10};
     ironDoor(torchDoor);
     worldTicks(6);
@@ -307,7 +307,7 @@ TEST_F(P2RedstoneWorld, FifteenWiresButtonTorchAndClockOnTheWorld) {
 
     // A torch clock burns out instead of switching forever.
     put({1, kY, -3}, BlockId::Stone);
-    put({2, kY, -3}, BlockId::RedstoneTorchOn, world::kAttachWallNegX);
+    put({2, kY, -3}, BlockId::RedstoneTorchOn, voxel::kAttachWallNegX);
     for (const core::BlockPos& w : {core::BlockPos{3, kY, -3}, core::BlockPos{3, kY, -2}, core::BlockPos{3, kY, -1},
                                     core::BlockPos{2, kY, -1}, core::BlockPos{1, kY, -1}, core::BlockPos{1, kY, -2}}) {
         put(w, BlockId::RedstoneWire);

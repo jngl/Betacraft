@@ -4,8 +4,8 @@
 
 namespace betacraft::acoustics {
 
-bool blocksSound(world::BlockId id) noexcept {
-    return world::BlockRegistry::isSolid(id) && !world::BlockRegistry::isLiquid(id);
+bool blocksSound(voxel::BlockId id) noexcept {
+    return voxel::BlockRegistry::isSolid(id) && !voxel::BlockRegistry::isLiquid(id);
 }
 
 float computeVoxelOcclusion(const world::World& world, const glm::vec3& listener, const glm::vec3& soundPos) noexcept {

@@ -23,7 +23,7 @@ namespace {
 
 class P2WorldgenDecoration : public ::testing::Test {
 protected:
-    void SetUp() override { world::BlockRegistry::initialize(); }
+    void SetUp() override { voxel::BlockRegistry::initialize(); }
 };
 
 // A trunk rooted in the outer 2 columns of its chunk: its radius-2 crown crosses the border.

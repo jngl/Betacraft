@@ -31,18 +31,18 @@ constexpr uint32_t faceDirToNormalIdx(core::FaceDir dir) noexcept {
     return 0;
 }
 
-bool shouldRenderBlockFace(world::BlockId selfId, const world::BlockDef& selfDef, world::BlockId neighborId,
-                           const world::BlockDef& neighborDef) noexcept {
-    if (neighborId == world::BlockId::Air) {
+bool shouldRenderBlockFace(voxel::BlockId selfId, const voxel::BlockDef& selfDef, voxel::BlockId neighborId,
+                           const voxel::BlockDef& neighborDef) noexcept {
+    if (neighborId == voxel::BlockId::Air) {
         return true;
     }
-    if (world::BlockRegistry::isLiquid(selfId)) {
-        return !world::isSameLiquid(selfId, neighborId);
+    if (voxel::BlockRegistry::isLiquid(selfId)) {
+        return !voxel::isSameLiquid(selfId, neighborId);
     }
-    if (selfDef.layer == world::RenderLayer::Translucent && neighborId == selfId) {
+    if (selfDef.layer == voxel::RenderLayer::Translucent && neighborId == selfId) {
         return false;
     }
-    if (neighborDef.opaque && neighborDef.shape == world::RenderShape::Cube) {
+    if (neighborDef.opaque && neighborDef.shape == voxel::RenderShape::Cube) {
         return false;
     }
     return true;
@@ -69,9 +69,9 @@ VertexLightSample sampleVertexAOAndLight(const Snap& snap, const glm::ivec3& bas
     const glm::ivec3 s2Pos = baseNeighbor + tangent2;
     const glm::ivec3 cornerPos = baseNeighbor + tangent1 + tangent2;
 
-    const bool s1Opaque = world::BlockRegistry::isOpaque(snap.getBlock(s1Pos.x, s1Pos.y, s1Pos.z));
-    const bool s2Opaque = world::BlockRegistry::isOpaque(snap.getBlock(s2Pos.x, s2Pos.y, s2Pos.z));
-    const bool cOpaque = world::BlockRegistry::isOpaque(snap.getBlock(cornerPos.x, cornerPos.y, cornerPos.z));
+    const bool s1Opaque = voxel::BlockRegistry::isOpaque(snap.getBlock(s1Pos.x, s1Pos.y, s1Pos.z));
+    const bool s2Opaque = voxel::BlockRegistry::isOpaque(snap.getBlock(s2Pos.x, s2Pos.y, s2Pos.z));
+    const bool cOpaque = voxel::BlockRegistry::isOpaque(snap.getBlock(cornerPos.x, cornerPos.y, cornerPos.z));
 
     int occluded = 0;
     if (s1Opaque && s2Opaque) {
@@ -153,7 +153,7 @@ constexpr FaceGeometry faceGeometry(core::FaceDir dir) noexcept {
     return {};
 }
 
-void emitCross(std::vector<PackedChunkVertex>& out, const world::BlockDef& def, uint32_t lx, uint32_t ly, uint32_t lz,
+void emitCross(std::vector<PackedChunkVertex>& out, const voxel::BlockDef& def, uint32_t lx, uint32_t ly, uint32_t lz,
                uint32_t skyLight, uint32_t blkLight, uint32_t biomeTint, uint32_t secY) {
     const uint32_t matTile = def.tileForFace(core::FaceDir::PosZ);
     constexpr uint32_t normalIdx = 6; // cross-billboard flora (explicit UV mapping)
@@ -177,7 +177,7 @@ void emitCross(std::vector<PackedChunkVertex>& out, const world::BlockDef& def, 
     addDoubleSidedQuad(lx, ly, lz + 1, lx + 1, ly, lz);
 }
 
-void emitTorch(std::vector<PackedChunkVertex>& out, const world::BlockDef& def, uint32_t lx, uint32_t ly, uint32_t lz,
+void emitTorch(std::vector<PackedChunkVertex>& out, const voxel::BlockDef& def, uint32_t lx, uint32_t ly, uint32_t lz,
                uint32_t skyLight, uint32_t blkLight, uint32_t secY) {
     const uint32_t tile = def.tileForFace(core::FaceDir::PosZ);
     const uint32_t w1 = PackedChunkVertex::packWord1(skyLight, blkLight, 255, 0, false, false, secY);
@@ -218,13 +218,13 @@ std::optional<RawMeshBuffer> SnapshotMesher::build(const SectionNeighborhoodSnap
         }
         for (int32_t lz = 0; lz < Snap::SIZE; ++lz) {
             for (int32_t lx = 0; lx < Snap::SIZE; ++lx) {
-                const world::BlockId id = snapshot.getBlock(lx, ly, lz);
-                if (id == world::BlockId::Air) {
+                const voxel::BlockId id = snapshot.getBlock(lx, ly, lz);
+                if (id == voxel::BlockId::Air) {
                     continue;
                 }
-                const world::BlockDef& def = world::BlockRegistry::get(id);
+                const voxel::BlockDef& def = voxel::BlockRegistry::get(id);
                 std::vector<PackedChunkVertex>& target =
-                    (def.layer == world::RenderLayer::Translucent) ? mesh.translucentVertices : mesh.opaqueVertices;
+                    (def.layer == voxel::RenderLayer::Translucent) ? mesh.translucentVertices : mesh.opaqueVertices;
 
                 const uint32_t ux = static_cast<uint32_t>(lx);
                 const uint32_t uy = static_cast<uint32_t>(ly);
@@ -234,16 +234,16 @@ std::optional<RawMeshBuffer> SnapshotMesher::build(const SectionNeighborhoodSnap
                     (def.lightEmission > 0) ? def.lightEmission : snapshot.getBlockLight(lx, ly, lz);
                 const uint32_t biomeTint = def.tintGrassTop ? 128u : (def.tintFoliage ? 160u : 255u);
 
-                if (def.shape == world::RenderShape::Cross) {
+                if (def.shape == voxel::RenderShape::Cross) {
                     emitCross(target, def, ux, uy, uz, skyLight, blkLight, biomeTint, secY);
                     continue;
                 }
-                if (def.shape == world::RenderShape::Torch) {
+                if (def.shape == voxel::RenderShape::Torch) {
                     emitTorch(target, def, ux, uy, uz, skyLight, blkLight, secY);
                     continue;
                 }
 
-                if (world::isDetailedShape(def.shape)) {
+                if (voxel::isDetailedShape(def.shape)) {
                     const auto sample = [&](int32_t dx, int32_t dy, int32_t dz) {
                         return render::ShapeVoxel{snapshot.getBlock(lx + dx, ly + dy, lz + dz),
                                                   snapshot.getMetadata(lx + dx, ly + dy, lz + dz),
@@ -254,17 +254,17 @@ std::optional<RawMeshBuffer> SnapshotMesher::build(const SectionNeighborhoodSnap
                     continue;
                 }
 
-                const bool isSlab = (def.shape == world::RenderShape::Slab);
-                const bool isTranslucent = (def.layer == world::RenderLayer::Translucent);
+                const bool isSlab = (def.shape == voxel::RenderShape::Slab);
+                const bool isTranslucent = (def.layer == voxel::RenderLayer::Translucent);
 
                 for (int faceIdx = 0; faceIdx < 6; ++faceIdx) {
                     const auto dir = static_cast<core::FaceDir>(faceIdx);
                     const glm::ivec3 n = core::faceNormal(dir);
                     const glm::ivec3 nbPos(lx + n.x, ly + n.y, lz + n.z);
-                    const world::BlockId nbId = snapshot.getBlock(nbPos.x, nbPos.y, nbPos.z);
-                    const world::BlockDef& nbDef = world::BlockRegistry::get(nbId);
+                    const voxel::BlockId nbId = snapshot.getBlock(nbPos.x, nbPos.y, nbPos.z);
+                    const voxel::BlockDef& nbDef = voxel::BlockRegistry::get(nbId);
 
-                    if (def.shape != world::RenderShape::Cactus && !(isSlab && dir == core::FaceDir::PosY) &&
+                    if (def.shape != voxel::RenderShape::Cactus && !(isSlab && dir == core::FaceDir::PosY) &&
                         !shouldRenderBlockFace(id, def, nbId, nbDef)) {
                         continue;
                     }

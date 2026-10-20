@@ -49,13 +49,13 @@ TEST_F(WorldSessionTick, WaterPlacedNextToAFlowerFlowsOverItAndDropsIt) {
     const size_t before = itemEntityCount();
 
     bool washedAway = false;
-    for (int32_t t = 0; t < 600 && !world::isWaterBlock(world().getBlock(flower)); ++t) {
+    for (int32_t t = 0; t < 600 && !voxel::isWaterBlock(world().getBlock(flower)); ++t) {
         for (const fluids::FluidEvent& ev : tickIdle().fluids) {
             washedAway = washedAway || (ev.kind == fluids::FluidEventKind::BlockWashedAway && ev.pos == flower);
         }
     }
 
-    EXPECT_TRUE(world::isWaterBlock(world().getBlock(flower)));
+    EXPECT_TRUE(voxel::isWaterBlock(world().getBlock(flower)));
     EXPECT_TRUE(washedAway);
     EXPECT_EQ(itemEntityCount(), before + 1);
 }

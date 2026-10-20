@@ -20,7 +20,7 @@ namespace betacraft::adversarial {
 // =========================================================================
 
 TEST(AdversarialChunkSubChunk, BoundaryBlockAccessY0_15_16_31_32_127) {
-    world::Chunk chunk(core::ChunkCoord{0, 0});
+    voxel::Chunk chunk(core::ChunkCoord{0, 0});
 
     // Sub-chunk boundaries:
     // Sec 0: Y = 0 .. 15
@@ -33,15 +33,15 @@ TEST(AdversarialChunkSubChunk, BoundaryBlockAccessY0_15_16_31_32_127) {
     // Sec 7: Y = 112 .. 127
 
     const int32_t boundaryYs[] = {0, 15, 16, 31, 32, 47, 48, 63, 64, 79, 80, 95, 96, 111, 112, 127};
-    const world::BlockId testBlocks[] = {
-        world::BlockId::Bedrock, world::BlockId::Stone,      // Sec 0: 0, 15
-        world::BlockId::Dirt, world::BlockId::Grass,        // Sec 1: 16, 31
-        world::BlockId::Cobblestone, world::BlockId::OakPlanks, // Sec 2: 32, 47
-        world::BlockId::Sand, world::BlockId::Gravel,       // Sec 3: 48, 63
-        world::BlockId::GoldOre, world::BlockId::IronOre,   // Sec 4: 64, 79
-        world::BlockId::CoalOre, world::BlockId::OakLog,    // Sec 5: 80, 95
-        world::BlockId::Leaves, world::BlockId::Glass,      // Sec 6: 96, 111
-        world::BlockId::LapisOre, world::BlockId::DiamondOre // Sec 7: 112, 127
+    const voxel::BlockId testBlocks[] = {
+        voxel::BlockId::Bedrock, voxel::BlockId::Stone,      // Sec 0: 0, 15
+        voxel::BlockId::Dirt, voxel::BlockId::Grass,        // Sec 1: 16, 31
+        voxel::BlockId::Cobblestone, voxel::BlockId::OakPlanks, // Sec 2: 32, 47
+        voxel::BlockId::Sand, voxel::BlockId::Gravel,       // Sec 3: 48, 63
+        voxel::BlockId::GoldOre, voxel::BlockId::IronOre,   // Sec 4: 64, 79
+        voxel::BlockId::CoalOre, voxel::BlockId::OakLog,    // Sec 5: 80, 95
+        voxel::BlockId::Leaves, voxel::BlockId::Glass,      // Sec 6: 96, 111
+        voxel::BlockId::LapisOre, voxel::BlockId::DiamondOre // Sec 7: 112, 127
     };
 
     // Set boundary blocks
@@ -64,43 +64,43 @@ TEST(AdversarialChunkSubChunk, BoundaryBlockAccessY0_15_16_31_32_127) {
     }
 
     // Verify adjacent non-boundary voxels remain Air
-    EXPECT_EQ(chunk.getBlock(7, 1, 7), world::BlockId::Air);
-    EXPECT_EQ(chunk.getBlock(7, 14, 7), world::BlockId::Air);
-    EXPECT_EQ(chunk.getBlock(7, 17, 7), world::BlockId::Air);
-    EXPECT_EQ(chunk.getBlock(7, 30, 7), world::BlockId::Air);
-    EXPECT_EQ(chunk.getBlock(7, 126, 7), world::BlockId::Air);
+    EXPECT_EQ(chunk.getBlock(7, 1, 7), voxel::BlockId::Air);
+    EXPECT_EQ(chunk.getBlock(7, 14, 7), voxel::BlockId::Air);
+    EXPECT_EQ(chunk.getBlock(7, 17, 7), voxel::BlockId::Air);
+    EXPECT_EQ(chunk.getBlock(7, 30, 7), voxel::BlockId::Air);
+    EXPECT_EQ(chunk.getBlock(7, 126, 7), voxel::BlockId::Air);
 
     // Verify Out of Bounds access
-    EXPECT_EQ(chunk.getBlock(7, -1, 7), world::BlockId::Air);
-    EXPECT_EQ(chunk.getBlock(7, 128, 7), world::BlockId::Air);
-    EXPECT_EQ(chunk.getBlock(7, 255, 7), world::BlockId::Air);
-    EXPECT_EQ(chunk.getBlock(-1, 0, 7), world::BlockId::Air);
-    EXPECT_EQ(chunk.getBlock(16, 0, 7), world::BlockId::Air);
-    EXPECT_EQ(chunk.getBlock(7, 0, -1), world::BlockId::Air);
-    EXPECT_EQ(chunk.getBlock(7, 0, 16), world::BlockId::Air);
+    EXPECT_EQ(chunk.getBlock(7, -1, 7), voxel::BlockId::Air);
+    EXPECT_EQ(chunk.getBlock(7, 128, 7), voxel::BlockId::Air);
+    EXPECT_EQ(chunk.getBlock(7, 255, 7), voxel::BlockId::Air);
+    EXPECT_EQ(chunk.getBlock(-1, 0, 7), voxel::BlockId::Air);
+    EXPECT_EQ(chunk.getBlock(16, 0, 7), voxel::BlockId::Air);
+    EXPECT_EQ(chunk.getBlock(7, 0, -1), voxel::BlockId::Air);
+    EXPECT_EQ(chunk.getBlock(7, 0, 16), voxel::BlockId::Air);
 }
 
 TEST(AdversarialChunkSubChunk, CrossSectionColumnAccessAndIsolation) {
-    world::Chunk chunk(core::ChunkCoord{0, 0});
+    voxel::Chunk chunk(core::ChunkCoord{0, 0});
 
     // Fill an entire vertical column (x=4, z=9) with distinctive blocks for all 128 heights
     for (int32_t y = 0; y < 128; ++y) {
-        const world::BlockId id = static_cast<world::BlockId>(1 + (y % 15)); // rotating solid block types
+        const voxel::BlockId id = static_cast<voxel::BlockId>(1 + (y % 15)); // rotating solid block types
         chunk.setBlock(4, y, 9, id);
     }
 
     // Verify all 128 blocks are exactly as written
     for (int32_t y = 0; y < 128; ++y) {
-        const world::BlockId expected = static_cast<world::BlockId>(1 + (y % 15));
+        const voxel::BlockId expected = static_cast<voxel::BlockId>(1 + (y % 15));
         EXPECT_EQ(chunk.getBlock(4, y, 9), expected) << "Mismatch at Y=" << y;
     }
 
     // Neighboring columns in all 8 sections must remain completely pure Air
     for (int32_t y = 0; y < 128; ++y) {
-        EXPECT_EQ(chunk.getBlock(3, y, 9), world::BlockId::Air);
-        EXPECT_EQ(chunk.getBlock(5, y, 9), world::BlockId::Air);
-        EXPECT_EQ(chunk.getBlock(4, y, 8), world::BlockId::Air);
-        EXPECT_EQ(chunk.getBlock(4, y, 10), world::BlockId::Air);
+        EXPECT_EQ(chunk.getBlock(3, y, 9), voxel::BlockId::Air);
+        EXPECT_EQ(chunk.getBlock(5, y, 9), voxel::BlockId::Air);
+        EXPECT_EQ(chunk.getBlock(4, y, 8), voxel::BlockId::Air);
+        EXPECT_EQ(chunk.getBlock(4, y, 10), voxel::BlockId::Air);
     }
 
     // Check that sections have bitsPerVoxel == 4 (since multiple unique blocks were placed per section)
@@ -111,27 +111,27 @@ TEST(AdversarialChunkSubChunk, CrossSectionColumnAccessAndIsolation) {
 }
 
 TEST(AdversarialChunkSubChunk, RLERoundtripCrossSectionLongRuns) {
-    world::Chunk original(core::ChunkCoord{1, 2});
+    voxel::Chunk original(core::ChunkCoord{1, 2});
 
     // Construct challenging patterns:
     // 1. Column (0, 0): Run of 128 Stone blocks traversing all 8 sub-chunks
     for (int32_t y = 0; y < 128; ++y) {
-        original.setBlock(0, y, 0, world::BlockId::Stone);
+        original.setBlock(0, y, 0, voxel::BlockId::Stone);
     }
 
     // 2. Boundary straddler: 10 Sand blocks from Y=12 to Y=21 (straddles Sec 0 and Sec 1)
     for (int32_t y = 12; y <= 21; ++y) {
-        original.setBlock(1, y, 0, world::BlockId::Sand);
+        original.setBlock(1, y, 0, voxel::BlockId::Sand);
     }
 
     // 3. High boundary straddler: 10 Dirt blocks from Y=120 to Y=127 (top of Sec 7)
     for (int32_t y = 120; y <= 127; ++y) {
-        original.setBlock(2, y, 0, world::BlockId::Dirt);
+        original.setBlock(2, y, 0, voxel::BlockId::Dirt);
     }
 
     // 4. Multi-section checkerboard in Column (5, 5)
     for (int32_t y = 0; y < 128; ++y) {
-        original.setBlock(5, y, 5, (y % 2 == 0) ? world::BlockId::Glass : world::BlockId::Obsidian);
+        original.setBlock(5, y, 5, (y % 2 == 0) ? voxel::BlockId::Glass : voxel::BlockId::Obsidian);
     }
 
     // Explicitly recalculate lighting on original chunk so its heightmap matches its contents
@@ -147,7 +147,7 @@ TEST(AdversarialChunkSubChunk, RLERoundtripCrossSectionLongRuns) {
     EXPECT_EQ(rle[4], 1);
 
     // Deserialize into fresh chunk
-    world::Chunk restored(core::ChunkCoord{1, 2});
+    voxel::Chunk restored(core::ChunkCoord{1, 2});
     const bool success = restored.deserializeRLE(rle);
     EXPECT_TRUE(success);
 
@@ -171,7 +171,7 @@ TEST(AdversarialChunkSubChunk, RLERoundtripCrossSectionLongRuns) {
 }
 
 TEST(AdversarialChunkSubChunk, RLEMalformedBufferAdversarialInputs) {
-    world::Chunk chunk(core::ChunkCoord{0, 0});
+    voxel::Chunk chunk(core::ChunkCoord{0, 0});
 
     // 1. Empty buffer
     EXPECT_FALSE(chunk.deserializeRLE(std::span<const uint8_t>()));
@@ -206,11 +206,11 @@ TEST(AdversarialChunkSubChunk, RLEMalformedBufferAdversarialInputs) {
 // =========================================================================
 
 TEST(AdversarialPalettedSection, HighBlockIdPreservedIn4BitAnd8Bit) {
-    world::PalettedSection sec;
+    voxel::PalettedSection sec;
 
     // Use high block IDs that would be corrupted if truncated to 4 or 8 bits
-    constexpr world::BlockStateId HIGH_ID_1 = 0xABCD; // 43,981
-    constexpr world::BlockStateId HIGH_ID_2 = 0x1234; // 4,660
+    constexpr voxel::BlockStateId HIGH_ID_1 = 0xABCD; // 43,981
+    constexpr voxel::BlockStateId HIGH_ID_2 = 0x1234; // 4,660
 
     sec.setBlock(0, 0, 0, HIGH_ID_1);
     EXPECT_EQ(sec.getBitsPerVoxel(), 4);
@@ -224,22 +224,22 @@ TEST(AdversarialPalettedSection, HighBlockIdPreservedIn4BitAnd8Bit) {
 }
 
 TEST(AdversarialPalettedSection, DenseLightReclaimMemoryOnReset) {
-    world::PalettedSection sec(world::BlockId::Air, 15, 0);
+    voxel::PalettedSection sec(voxel::BlockId::Air, 15, 0);
     EXPECT_FALSE(sec.hasLightData());
-    EXPECT_EQ(sec.getMemoryFootprintBytes(), sizeof(world::PalettedSection));
+    EXPECT_EQ(sec.getMemoryFootprintBytes(), sizeof(voxel::PalettedSection));
 
     // Non-uniform modification causes allocation
     sec.setSkyLight(5, 5, 5, 8);
     EXPECT_TRUE(sec.hasLightData());
     EXPECT_EQ(sec.getSkyLight(5, 5, 5), 8);
     EXPECT_EQ(sec.getSkyLight(5, 5, 6), 15);
-    EXPECT_GT(sec.getMemoryFootprintBytes(), sizeof(world::PalettedSection));
+    EXPECT_GT(sec.getMemoryFootprintBytes(), sizeof(voxel::PalettedSection));
 
     // Resetting uniform lighting frees the heap allocation
     sec.setUniformLighting(15, 0);
     EXPECT_FALSE(sec.hasLightData());
     EXPECT_EQ(sec.getSkyLight(5, 5, 5), 15);
-    EXPECT_EQ(sec.getMemoryFootprintBytes(), sizeof(world::PalettedSection));
+    EXPECT_EQ(sec.getMemoryFootprintBytes(), sizeof(voxel::PalettedSection));
 }
 
 // =========================================================================
@@ -247,12 +247,12 @@ TEST(AdversarialPalettedSection, DenseLightReclaimMemoryOnReset) {
 // =========================================================================
 
 TEST(AdversarialLighting, SunlightPenetrationThroughSubChunks) {
-    world::Chunk chunk(core::ChunkCoord{0, 0});
+    voxel::Chunk chunk(core::ChunkCoord{0, 0});
 
     // Place an opaque roof in Section 4 (Y = 64) covering entire (X, Z) plane
     for (int32_t z = 0; z < 16; ++z) {
         for (int32_t x = 0; x < 16; ++x) {
-            chunk.setBlock(x, 64, z, world::BlockId::Stone);
+            chunk.setBlock(x, 64, z, voxel::BlockId::Stone);
         }
     }
 
@@ -270,7 +270,7 @@ TEST(AdversarialLighting, SunlightPenetrationThroughSubChunks) {
 }
 
 TEST(AdversarialLighting, BlockLightCrossesSectionBoundaryY15ToY16) {
-    world::Chunk chunk(core::ChunkCoord{0, 0});
+    voxel::Chunk chunk(core::ChunkCoord{0, 0});
 
     // Clear all lighting to 0
     for (size_t sec = 0; sec < 8; ++sec) {
@@ -278,7 +278,7 @@ TEST(AdversarialLighting, BlockLightCrossesSectionBoundaryY15ToY16) {
     }
 
     // Place torch at Y = 15 (top-most layer of Section 0)
-    chunk.setBlock(8, 15, 8, world::BlockId::Torch);
+    chunk.setBlock(8, 15, 8, voxel::BlockId::Torch);
     chunk.spreadBlockLight(8, 15, 8, 14);
 
     EXPECT_EQ(chunk.getBlockLight(8, 15, 8), 14);
@@ -302,7 +302,7 @@ TEST(AdversarialPhysics, AlphaInterpolationMonotonicityAndBounds) {
     // Platform at Y = 100
     for (int x = 0; x < 16; ++x) {
         for (int z = 0; z < 16; ++z) {
-            world.setBlock(x, 100, z, world::BlockId::Stone);
+            world.setBlock(x, 100, z, voxel::BlockId::Stone);
         }
     }
 
@@ -344,7 +344,7 @@ TEST(AdversarialPhysics, LandingFlushOnBlockBoundary) {
     // Create solid stone floor high at Y = 100 to avoid procedural terrain
     for (int32_t x = 0; x < 16; ++x) {
         for (int32_t z = 0; z < 16; ++z) {
-            world.setBlock(x, 100, z, world::BlockId::Stone);
+            world.setBlock(x, 100, z, voxel::BlockId::Stone);
         }
     }
 
@@ -375,14 +375,14 @@ TEST(AdversarialPhysics, HorizontalWallCollisionPreventsPenetration) {
     // Stone floor at Y = 100
     for (int32_t x = 0; x < 16; ++x) {
         for (int32_t z = 0; z < 16; ++z) {
-            world.setBlock(x, 100, z, world::BlockId::Stone);
+            world.setBlock(x, 100, z, voxel::BlockId::Stone);
         }
     }
 
     // Solid wall at X = 10 from Y = 101 to Y = 103
     for (int32_t z = 0; z < 16; ++z) {
         for (int32_t y = 101; y <= 103; ++y) {
-            world.setBlock(10, y, z, world::BlockId::Stone);
+            world.setBlock(10, y, z, voxel::BlockId::Stone);
         }
     }
 
@@ -412,7 +412,7 @@ TEST(AdversarialPhysics, ChaoticFramerateJitterDeterminism) {
     world.ensureChunkLoaded({1, 0});
     for (int32_t x = 0; x < 32; ++x) {
         for (int32_t z = 0; z < 32; ++z) {
-            world.setBlock(x, 100, z, world::BlockId::Stone);
+            world.setBlock(x, 100, z, voxel::BlockId::Stone);
         }
     }
 
@@ -468,15 +468,15 @@ TEST(AdversarialPhysics, ChaoticFramerateJitterDeterminism) {
 }
 
 TEST(AdversarialChunkSubChunk, RealisticHeterogeneousSubchunkRLEIntegrity) {
-    world::Chunk chunk(core::ChunkCoord{-5, 7});
+    voxel::Chunk chunk(core::ChunkCoord{-5, 7});
 
     // Section 0 (Y=0..15): Bedrock floor, Obsidian, Stone
     for (int z = 0; z < 16; ++z) {
         for (int x = 0; x < 16; ++x) {
-            chunk.setBlock(x, 0, z, world::BlockId::Bedrock);
-            chunk.setBlock(x, 1, z, world::BlockId::Obsidian);
+            chunk.setBlock(x, 0, z, voxel::BlockId::Bedrock);
+            chunk.setBlock(x, 1, z, voxel::BlockId::Obsidian);
             for (int y = 2; y <= 15; ++y) {
-                chunk.setBlock(x, y, z, world::BlockId::Stone);
+                chunk.setBlock(x, y, z, voxel::BlockId::Stone);
             }
         }
     }
@@ -485,10 +485,10 @@ TEST(AdversarialChunkSubChunk, RealisticHeterogeneousSubchunkRLEIntegrity) {
     for (int z = 0; z < 16; ++z) {
         for (int x = 0; x < 16; ++x) {
             for (int y = 16; y <= 31; ++y) {
-                world::BlockId b = world::BlockId::Stone;
-                if ((x + y + z) % 7 == 0) b = world::BlockId::CoalOre;
-                if ((x * 3 + y + z) % 11 == 0) b = world::BlockId::IronOre;
-                if ((x + y * 2 + z) % 19 == 0) b = world::BlockId::GoldOre;
+                voxel::BlockId b = voxel::BlockId::Stone;
+                if ((x + y + z) % 7 == 0) b = voxel::BlockId::CoalOre;
+                if ((x * 3 + y + z) % 11 == 0) b = voxel::BlockId::IronOre;
+                if ((x + y * 2 + z) % 19 == 0) b = voxel::BlockId::GoldOre;
                 chunk.setBlock(x, y, z, b);
             }
         }
@@ -499,9 +499,9 @@ TEST(AdversarialChunkSubChunk, RealisticHeterogeneousSubchunkRLEIntegrity) {
         for (int x = 0; x < 16; ++x) {
             for (int y = 32; y <= 47; ++y) {
                 if (x >= 4 && x <= 12 && z >= 4 && z <= 12) {
-                    chunk.setBlock(x, y, z, (y == 32) ? world::BlockId::Water : world::BlockId::Air);
+                    chunk.setBlock(x, y, z, (y == 32) ? voxel::BlockId::Water : voxel::BlockId::Air);
                 } else {
-                    chunk.setBlock(x, y, z, world::BlockId::Stone);
+                    chunk.setBlock(x, y, z, voxel::BlockId::Stone);
                 }
             }
         }
@@ -511,22 +511,22 @@ TEST(AdversarialChunkSubChunk, RealisticHeterogeneousSubchunkRLEIntegrity) {
     for (int z = 0; z < 16; ++z) {
         for (int x = 0; x < 16; ++x) {
             for (int y = 48; y < 63; ++y) {
-                chunk.setBlock(x, y, z, world::BlockId::Dirt);
+                chunk.setBlock(x, y, z, voxel::BlockId::Dirt);
             }
-            chunk.setBlock(x, 63, z, world::BlockId::Grass);
+            chunk.setBlock(x, 63, z, voxel::BlockId::Grass);
         }
     }
 
     // Section 4 (Y=64..79): Surface with trees (OakLog trunk, Leaves canopy)
     // Tree at (8, 64..70, 8)
     for (int y = 64; y <= 68; ++y) {
-        chunk.setBlock(8, y, 8, world::BlockId::OakLog);
+        chunk.setBlock(8, y, 8, voxel::BlockId::OakLog);
     }
     for (int lx = 6; lx <= 10; ++lx) {
         for (int lz = 6; lz <= 10; ++lz) {
             for (int ly = 67; ly <= 70; ++ly) {
-                if (chunk.getBlock(lx, ly, lz) == world::BlockId::Air) {
-                    chunk.setBlock(lx, ly, lz, world::BlockId::Leaves);
+                if (chunk.getBlock(lx, ly, lz) == voxel::BlockId::Air) {
+                    chunk.setBlock(lx, ly, lz, voxel::BlockId::Leaves);
                 }
             }
         }
@@ -541,7 +541,7 @@ TEST(AdversarialChunkSubChunk, RealisticHeterogeneousSubchunkRLEIntegrity) {
     // Section 7 (Y=112..127): Glass ceiling at Y=127
     for (int z = 0; z < 16; ++z) {
         for (int x = 0; x < 16; ++x) {
-            chunk.setBlock(x, 127, z, world::BlockId::Glass);
+            chunk.setBlock(x, 127, z, voxel::BlockId::Glass);
         }
     }
 
@@ -555,7 +555,7 @@ TEST(AdversarialChunkSubChunk, RealisticHeterogeneousSubchunkRLEIntegrity) {
     const std::vector<uint8_t> rle = chunk.serializeRLE();
     EXPECT_GE(rle.size(), 8U);
 
-    world::Chunk loaded(core::ChunkCoord{-5, 7});
+    voxel::Chunk loaded(core::ChunkCoord{-5, 7});
     ASSERT_TRUE(loaded.deserializeRLE(rle));
 
     // Full 3D verification
@@ -571,8 +571,8 @@ TEST(AdversarialChunkSubChunk, RealisticHeterogeneousSubchunkRLEIntegrity) {
     // Verify sections 5 and 6 in loaded chunk remain pure air voxels (0 bits per voxel)
     EXPECT_EQ(loaded.getSection(5).getBitsPerVoxel(), 0);
     EXPECT_EQ(loaded.getSection(6).getBitsPerVoxel(), 0);
-    EXPECT_EQ(loaded.getSection(5).getBlock(8, 8, 8), world::BlockId::Air);
-    EXPECT_EQ(loaded.getSection(6).getBlock(8, 8, 8), world::BlockId::Air);
+    EXPECT_EQ(loaded.getSection(5).getBlock(8, 8, 8), voxel::BlockId::Air);
+    EXPECT_EQ(loaded.getSection(6).getBlock(8, 8, 8), voxel::BlockId::Air);
 }
 
 TEST(AdversarialPhysics, SneakLedgeProtectionDeterminism) {
@@ -583,7 +583,7 @@ TEST(AdversarialPhysics, SneakLedgeProtectionDeterminism) {
     // Top surface of platform is at Y = 101.0f, platform edge is at X = 9.0f
     for (int32_t z = 0; z < 16; ++z) {
         for (int32_t x = 0; x <= 8; ++x) {
-            world.setBlock(x, 100, z, world::BlockId::Cobblestone);
+            world.setBlock(x, 100, z, voxel::BlockId::Cobblestone);
         }
     }
 
@@ -621,17 +621,17 @@ TEST(AdversarialPhysics, InnerCornerCollisionResolution) {
     // Floor at Y = 100
     for (int32_t z = 0; z < 16; ++z) {
         for (int32_t x = 0; x < 16; ++x) {
-            world.setBlock(x, 100, z, world::BlockId::Stone);
+            world.setBlock(x, 100, z, voxel::BlockId::Stone);
         }
     }
 
     // Wall 1 at X = 10, Wall 2 at Z = 10 (forming an inside corner)
     for (int32_t y = 101; y <= 103; ++y) {
         for (int32_t z = 0; z < 16; ++z) {
-            world.setBlock(10, y, z, world::BlockId::Stone);
+            world.setBlock(10, y, z, voxel::BlockId::Stone);
         }
         for (int32_t x = 0; x < 16; ++x) {
-            world.setBlock(x, y, 10, world::BlockId::Stone);
+            world.setBlock(x, y, 10, voxel::BlockId::Stone);
         }
     }
 
@@ -657,7 +657,7 @@ TEST(AdversarialPhysics, InnerCornerCollisionResolution) {
 }
 
 TEST(AdversarialPalettedSection, Full4096VoxelsRandomLightingArray) {
-    world::PalettedSection sec;
+    voxel::PalettedSection sec;
     EXPECT_FALSE(sec.hasLightData());
 
     std::mt19937 rng(1337);

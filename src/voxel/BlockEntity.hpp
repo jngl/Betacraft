@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <variant>
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 
 // Block entity payloads (Beta TileEntity): plain data, independent of the crafting rules
 // that operate on them (crafting/Furnace.hpp) so the world and the save code stay below
@@ -41,4 +41,4 @@ struct ChestData {
 
 using BlockEntity = std::variant<FurnaceData, ChestData>;
 
-} // namespace betacraft::world
+} // namespace betacraft::voxel

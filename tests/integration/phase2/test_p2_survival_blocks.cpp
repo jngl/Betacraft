@@ -200,7 +200,7 @@ TEST_F(S5Door, PlacedAsTwoHalvesFacingTheLook) {
     EXPECT_EQ(m_world->getBlock(kX, kY, kZ), BlockId::WoodDoor);
     EXPECT_EQ(m_world->getBlock(kX, kY + 1, kZ), BlockId::WoodDoor);
     EXPECT_EQ(m_world->getMetadata(kX, kY, kZ), 0) << "looking +X: Beta orientation 0";
-    EXPECT_EQ(m_world->getMetadata(kX, kY + 1, kZ), world::kDoorUpperBit);
+    EXPECT_EQ(m_world->getMetadata(kX, kY + 1, kZ), voxel::kDoorUpperBit);
     EXPECT_TRUE(m_player.getHeldItem().isEmpty()) << "the door item is used up";
 
     EXPECT_EQ(game::doorFacingForLook(0.0f, 1.0f), 1);
@@ -214,9 +214,9 @@ TEST_F(S5Door, HingeMovesToTheWallSide) {
     ASSERT_TRUE(m_world->setBlock(kX, kY, kZ + 1, BlockId::Stone));
     ASSERT_TRUE(m_world->setBlock(kX, kY + 1, kZ + 1, BlockId::Stone));
     ASSERT_TRUE(placeDoor().has_value());
-    EXPECT_EQ(m_world->getMetadata(kX, kY, kZ), 3 | world::kDoorOpenBit);
-    EXPECT_EQ(m_world->getMetadata(kX, kY + 1, kZ), 3 | world::kDoorOpenBit | world::kDoorUpperBit);
-    EXPECT_EQ(world::doorState(m_world->getMetadata(kX, kY, kZ)), world::doorState(0)) << "same closed box";
+    EXPECT_EQ(m_world->getMetadata(kX, kY, kZ), 3 | voxel::kDoorOpenBit);
+    EXPECT_EQ(m_world->getMetadata(kX, kY + 1, kZ), 3 | voxel::kDoorOpenBit | voxel::kDoorUpperBit);
+    EXPECT_EQ(voxel::doorState(m_world->getMetadata(kX, kY, kZ)), voxel::doorState(0)) << "same closed box";
 }
 
 TEST_F(S5Door, NeedsTwoFreeCellsOverANormalCube) {
@@ -237,11 +237,11 @@ TEST_F(S5Door, NeedsTwoFreeCellsOverANormalCube) {
 TEST_F(S5Door, ClickFlipsBothHalves) {
     ASSERT_TRUE(placeDoor().has_value());
     EXPECT_EQ(game::toggleDoor(*m_world, {kX, kY + 1, kZ}), std::optional<bool>{true}) << "clicked on the upper half";
-    EXPECT_EQ(m_world->getMetadata(kX, kY, kZ), world::kDoorOpenBit);
-    EXPECT_EQ(m_world->getMetadata(kX, kY + 1, kZ), world::kDoorOpenBit | world::kDoorUpperBit);
+    EXPECT_EQ(m_world->getMetadata(kX, kY, kZ), voxel::kDoorOpenBit);
+    EXPECT_EQ(m_world->getMetadata(kX, kY + 1, kZ), voxel::kDoorOpenBit | voxel::kDoorUpperBit);
     EXPECT_EQ(game::toggleDoor(*m_world, {kX, kY, kZ}), std::optional<bool>{false});
     EXPECT_EQ(m_world->getMetadata(kX, kY, kZ), 0);
-    EXPECT_EQ(m_world->getMetadata(kX, kY + 1, kZ), world::kDoorUpperBit);
+    EXPECT_EQ(m_world->getMetadata(kX, kY + 1, kZ), voxel::kDoorUpperBit);
     EXPECT_FALSE(game::toggleDoor(*m_world, {kX, kFloorY, kZ}).has_value()) << "not a door";
 }
 
@@ -523,7 +523,7 @@ TEST_F(S5Bed, PlacedAlongTheLook) {
     EXPECT_EQ(m_world->getBlock(m_foot), BlockId::Bed);
     EXPECT_EQ(m_world->getBlock(m_head), BlockId::Bed);
     EXPECT_EQ(m_world->getMetadata(m_foot), 3) << "Beta orientation 3: the head towards +X";
-    EXPECT_EQ(m_world->getMetadata(m_head), 3 | world::kBedHeadBit);
+    EXPECT_EQ(m_world->getMetadata(m_head), 3 | voxel::kBedHeadBit);
     EXPECT_TRUE(m_player.getHeldItem().isEmpty());
     EXPECT_EQ(game::bedHeadAt(*m_world, m_foot), std::optional<core::BlockPos>{m_head});
     EXPECT_EQ(game::bedHeadAt(*m_world, m_head), std::optional<core::BlockPos>{m_head});

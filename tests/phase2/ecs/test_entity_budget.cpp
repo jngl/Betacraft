@@ -36,7 +36,7 @@ TEST(EcsEntityBudget, TwoThousandFiveHundredEntitiesStayWithinThePerTickWorkBudg
     }
     for (int i = 0; i < ITEMS; ++i) {
         const glm::vec3 at(static_cast<float>(i % 40) * 2.0f + 0.5f, 1.0f, -static_cast<float>(i / 40) * 2.0f);
-        (void)EntityFactory::spawnItemDrop(reg, at, world::BlockId::Dirt, 1, {1.0f, 2.0f, 0.0f});
+        (void)EntityFactory::spawnItemDrop(reg, at, voxel::BlockId::Dirt, 1, {1.0f, 2.0f, 0.0f});
     }
     const size_t bodies = reg.count<AABBColliderComp>();
     ASSERT_EQ(bodies, static_cast<size_t>(MOBS + ITEMS + 1));

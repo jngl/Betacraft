@@ -12,7 +12,7 @@
 // meshers can emit them exactly (PackedChunkVertex fine offsets) and math::AABB can turn
 // them into boxes. One table feeds collision, selection and both meshers.
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 
 // Box inside a cell, in 1/16 block units. y1 may exceed 16 (the fence's 1.5-block collision).
 struct ShapeBox {
@@ -279,4 +279,4 @@ inline constexpr uint8_t kPistonPoweredBit = 0x8; // Set while powered (the push
     return def.solid && def.opaque && def.shape == RenderShape::Cube;
 }
 
-} // namespace betacraft::world
+} // namespace betacraft::voxel

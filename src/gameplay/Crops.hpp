@@ -30,8 +30,8 @@ inline constexpr uint8_t kCropsMinGrowLight = 9;
 // The 3x3 cells around a crop, indexed [dx + 1][dz + 1]: the blocks on the crop's level and
 // the blocks (with metadata) below them.
 struct CropNeighbourhood {
-    std::array<std::array<world::BlockId, 3>, 3> level{};
-    std::array<std::array<world::BlockId, 3>, 3> below{};
+    std::array<std::array<voxel::BlockId, 3>, 3> level{};
+    std::array<std::array<voxel::BlockId, 3>, 3> below{};
     std::array<std::array<uint8_t, 3>, 3> belowMeta{};
 };
 

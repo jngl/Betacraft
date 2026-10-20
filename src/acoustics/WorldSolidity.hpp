@@ -16,7 +16,7 @@ namespace betacraft::acoustics {
 // Acoustic solidity of a block: anything the registry marks solid, except liquids (water transmits
 // sound well; muffling under water is a separate effect). Thin decorations (torches, flowers, tall
 // grass) are non-solid in the registry and therefore transparent. Requires BlockRegistry::initialize().
-[[nodiscard]] bool blocksSound(world::BlockId id) noexcept;
+[[nodiscard]] bool blocksSound(voxel::BlockId id) noexcept;
 
 // THREADING: world::World keeps its chunks in an unsynchronised unordered_map that the game thread
 // mutates while streaming (inserts may rehash). Every World-backed query below is therefore GAME-THREAD
@@ -51,7 +51,7 @@ using WorldSolidityQuery = BlockSoliditySource<world::World>;
 // `BlockId getBlock(int32_t lx, int32_t y, int32_t lz) const` (bounds-checked, Air outside).
 // The cached pointer is only valid while no chunk is loaded or unloaded: construct one per scheduler
 // update on the game thread (it is a few bytes) or call invalidate() after the World changed.
-template <typename ChunkSource, int32_t ChunkWidth = world::Chunk::WIDTH, int32_t ChunkDepth = world::Chunk::DEPTH>
+template <typename ChunkSource, int32_t ChunkWidth = voxel::Chunk::WIDTH, int32_t ChunkDepth = voxel::Chunk::DEPTH>
 class ChunkCachedSolidity final : public VoxelSolidityQuery {
 public:
     explicit ChunkCachedSolidity(const ChunkSource& source) noexcept : m_source(&source) {}

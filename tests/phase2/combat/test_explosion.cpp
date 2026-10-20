@@ -11,8 +11,8 @@
 
 using namespace betacraft;
 using gameplay::ExplosionInput;
-using world::BlockId;
-using world::BlockRegistry;
+using voxel::BlockId;
+using voxel::BlockRegistry;
 
 namespace {
 

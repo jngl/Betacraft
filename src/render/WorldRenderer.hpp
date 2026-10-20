@@ -54,7 +54,7 @@ struct ItemEntityInstance {
 // S5.3 falling sand or gravel to draw this frame: a full-size block cube.
 struct FallingBlockInstance {
     glm::vec3 position{0.0f}; // Render-interpolated feet position of the entity
-    world::BlockId id{world::BlockId::Sand};
+    voxel::BlockId id{voxel::BlockId::Sand};
     float flash{0.0f}; // S6.6 primed TNT: 0..1 white flash of the last fuse ticks
 };
 

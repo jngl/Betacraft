@@ -13,8 +13,8 @@
 
 using namespace betacraft;
 using namespace betacraft::test::p2worldgen;
-using world::BlockId;
-using world::Chunk;
+using voxel::BlockId;
+using voxel::Chunk;
 
 namespace {
 
@@ -52,7 +52,7 @@ void streamUntilSettled(world::World& w, const glm::vec3& centre, int32_t radius
 } // namespace
 
 TEST(P2StreamingAsyncWorld, AsyncAndSyncWorldsConverge) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s7_async_");
     // A save holding player edits in a few chunks, so both paths read some chunks from disk
     // (one of them through the I/O worker) and generate the rest.
@@ -90,7 +90,7 @@ TEST(P2StreamingAsyncWorld, AsyncAndSyncWorldsConverge) {
 }
 
 TEST(P2StreamingAsyncWorld, IntegrationRespectsBudget) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s7_budget_");
     world::World w(kSeed, dir.path());
     const glm::vec3 centre(0.0f, 70.0f, 0.0f);
@@ -127,7 +127,7 @@ TEST(P2StreamingAsyncWorld, IntegrationRespectsBudget) {
 }
 
 TEST(P2StreamingAsyncWorld, UnloadedEditReloadsFromSaveQueue) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s7_requeue_");
     world::World w(kSeed, dir.path());
     const core::BlockPos mark{5, 115, 5};
@@ -151,7 +151,7 @@ TEST(P2StreamingAsyncWorld, UnloadedEditReloadsFromSaveQueue) {
 // the chunk was edited, unloaded and requested again in between, and the late answer holds
 // the older contents.
 TEST(P2StreamingAsyncWorld, LateAnswerToACancelledLoadIsDiscarded) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s8_stale_load_");
     world::World w(kSeed, dir.path());
     w.setGenerationWorkers(0);

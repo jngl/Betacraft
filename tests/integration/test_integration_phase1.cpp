@@ -173,8 +173,8 @@ TEST(PalettedSectionIntegration, SizeAndAlignmentContract) {
     EXPECT_LE(sizeof(ContractPalettedSection), 64u);
     EXPECT_EQ(alignof(ContractPalettedSection), 64u);
 #if BETACRAFT_HAS_PROD_PALETTED_SECTION
-    EXPECT_LE(sizeof(world::PalettedSection), 64u);
-    EXPECT_EQ(alignof(world::PalettedSection), 64u);
+    EXPECT_LE(sizeof(voxel::PalettedSection), 64u);
+    EXPECT_EQ(alignof(voxel::PalettedSection), 64u);
 #endif
 }
 
@@ -421,9 +421,9 @@ TEST(LazyLightIntegration, ZeroMemoryFootprintWhenUniform) {
 }
 
 TEST(LazyLightIntegration, ChunkPublicInterfaceCompatibility) {
-    world::Chunk chunk(0, 0);
-    chunk.setBlock(2, 65, 2, world::BlockId::Stone);
-    EXPECT_EQ(chunk.getBlock(2, 65, 2), world::BlockId::Stone);
+    voxel::Chunk chunk(0, 0);
+    chunk.setBlock(2, 65, 2, voxel::BlockId::Stone);
+    EXPECT_EQ(chunk.getBlock(2, 65, 2), voxel::BlockId::Stone);
 
     chunk.setBlockLight(2, 65, 2, 12);
     EXPECT_EQ(chunk.getBlockLight(2, 65, 2), 12u);

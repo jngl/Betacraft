@@ -29,8 +29,8 @@ bool hostileLightOk(uint8_t sky, uint8_t effective, SplitMix64& rng) noexcept {
     return static_cast<int32_t>(effective) <= rng.nextInt(8);
 }
 
-bool passiveSpawnOk(world::BlockId below, uint8_t effective) noexcept {
-    return below == world::BlockId::Grass && effective > 8;
+bool passiveSpawnOk(voxel::BlockId below, uint8_t effective) noexcept {
+    return below == voxel::BlockId::Grass && effective > 8;
 }
 
 int32_t mobCap(MobCategory category, size_t eligibleChunks) noexcept {

@@ -26,7 +26,7 @@ struct Clock {
 
     explicit Clock(Bench& b) {
         b.put(kBlock, BlockId::Stone);
-        b.put(kTorch, BlockId::RedstoneTorchOn, world::kAttachWallNegX);
+        b.put(kTorch, BlockId::RedstoneTorchOn, voxel::kAttachWallNegX);
         b.wirePath({{3, 1}, {3, 3}, {1, 3}, {1, 2}});
     }
 };
@@ -43,10 +43,10 @@ TEST(TorchInverter, TwoTickDelay) {
     const core::BlockPos blockB{4, kY + 2, 4};
     const core::BlockPos t2{4, kY + 3, 4};
     b.put(a, BlockId::Stone);
-    b.put(lever, BlockId::Lever, world::kAttachWallPosX);
-    b.put(t1, BlockId::RedstoneTorchOn, world::kAttachFloor);
+    b.put(lever, BlockId::Lever, voxel::kAttachWallPosX);
+    b.put(t1, BlockId::RedstoneTorchOn, voxel::kAttachFloor);
     b.put(blockB, BlockId::Stone);
-    b.put(t2, BlockId::RedstoneTorchOn, world::kAttachFloor);
+    b.put(t2, BlockId::RedstoneTorchOn, voxel::kAttachFloor);
     b.settle();
     ASSERT_EQ(b.at(t1), BlockId::RedstoneTorchOn);
     ASSERT_EQ(b.at(t2), BlockId::RedstoneTorchOff) << "B is powered by T1";
@@ -119,10 +119,10 @@ TEST(TorchInverter, RsNorLatchStable) {
     const core::BlockPos leverB{7, kY, 0};
     b.put(a, BlockId::Stone);
     b.put(blockB, BlockId::Stone);
-    b.put(ta, BlockId::RedstoneTorchOn, world::kAttachWallNegZ);
-    b.put(tb, BlockId::RedstoneTorchOff, world::kAttachWallNegZ);
-    b.put(leverA, BlockId::Lever, world::kAttachWallPosZ);
-    b.put(leverB, BlockId::Lever, world::kAttachWallPosZ);
+    b.put(ta, BlockId::RedstoneTorchOn, voxel::kAttachWallNegZ);
+    b.put(tb, BlockId::RedstoneTorchOff, voxel::kAttachWallNegZ);
+    b.put(leverA, BlockId::Lever, voxel::kAttachWallPosZ);
+    b.put(leverB, BlockId::Lever, voxel::kAttachWallPosZ);
     b.wirePath({{3, 3}, {5, 3}, {5, 1}, {6, 1}});         // TA -> into B (6 wires)
     b.wirePath({{7, 3}, {7, 5}, {1, 5}, {1, 1}, {2, 1}}); // TB -> into A (14 wires)
     b.settle();

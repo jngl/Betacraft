@@ -11,7 +11,7 @@
 #include <string_view>
 #include <vector>
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 
 enum class BiomeId : uint8_t {
     Rainforest = 0,
@@ -153,4 +153,4 @@ private:
     bool m_playerTouched{false};
 };
 
-} // namespace betacraft::world
+} // namespace betacraft::voxel

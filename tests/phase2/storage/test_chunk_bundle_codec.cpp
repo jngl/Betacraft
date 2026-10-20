@@ -10,7 +10,7 @@
 
 using namespace betacraft;
 using storage::ChunkBundle;
-using world::BlockId;
+using voxel::BlockId;
 
 namespace {
 
@@ -24,14 +24,14 @@ namespace {
 }
 
 [[nodiscard]] ChunkBundle sampleBundle() {
-    world::BlockRegistry::initialize();
-    world::Chunk chunk({2, -3});
+    voxel::BlockRegistry::initialize();
+    voxel::Chunk chunk({2, -3});
     chunk.setBlock(1, 10, 1, BlockId::Obsidian);
     chunk.setBlock(4, 70, 4, BlockId::Chest);
-    world::ChestData chest{};
+    voxel::ChestData chest{};
     chest.slots[3] = {265, 9, 0};
-    const std::vector<world::BlockEntityEntry> entities{{core::BlockPos{2 * 16 + 4, 70, -3 * 16 + 4}, chest}};
-    return ChunkBundle{chunk.serializeRLE(), sampleRecord(false), world::encodeBlockEntities(entities)};
+    const std::vector<voxel::BlockEntityEntry> entities{{core::BlockPos{2 * 16 + 4, 70, -3 * 16 + 4}, chest}};
+    return ChunkBundle{chunk.serializeRLE(), sampleRecord(false), voxel::encodeBlockEntities(entities)};
 }
 
 void appendRecord(std::vector<uint8_t>& out, uint8_t tag, const std::vector<uint8_t>& body) {
@@ -58,13 +58,13 @@ TEST(ChunkBundleCodec, RoundtripAllTags) {
     EXPECT_EQ(out->blockEntities, in.blockEntities);
 
     // The parts are the very bytes their own codecs read.
-    world::Chunk chunk({2, -3});
+    voxel::Chunk chunk({2, -3});
     ASSERT_TRUE(chunk.deserializeRLE(out->blocks));
     EXPECT_EQ(chunk.getBlock(1, 10, 1), BlockId::Obsidian);
-    const auto entities = world::decodeBlockEntities({2, -3}, out->blockEntities);
+    const auto entities = voxel::decodeBlockEntities({2, -3}, out->blockEntities);
     ASSERT_TRUE(entities.has_value());
     ASSERT_EQ(entities->size(), 1U);
-    EXPECT_EQ(std::get<world::ChestData>(entities->front().second).slots[3], (world::StoredStack{265, 9, 0}));
+    EXPECT_EQ(std::get<voxel::ChestData>(entities->front().second).slots[3], (voxel::StoredStack{265, 9, 0}));
 
     // Empty parts are simply left out.
     const auto empty = storage::decodeBundle(storage::encodeBundle(ChunkBundle{}));
@@ -100,10 +100,10 @@ TEST(ChunkBundleCodec, MissingDecorationTagMeansLegacyDecorated) {
     // World reads such a chunk as a save predating two-pass decoration: already decorated,
     // its blocks untouched by neighbouring trees.
     test::TempDir dir("betacraft_bundle_");
-    world::BlockRegistry::initialize();
-    world::Chunk flat({0, 0});
-    for (int32_t z = 0; z < world::Chunk::DEPTH; ++z)
-        for (int32_t x = 0; x < world::Chunk::WIDTH; ++x)
+    voxel::BlockRegistry::initialize();
+    voxel::Chunk flat({0, 0});
+    for (int32_t z = 0; z < voxel::Chunk::DEPTH; ++z)
+        for (int32_t x = 0; x < voxel::Chunk::WIDTH; ++x)
             for (int32_t y = 0; y < 66; ++y) flat.setBlock(x, y, z, y == 65 ? BlockId::Grass : BlockId::Stone);
     {
         storage::WorldStorage storage(dir.path());
@@ -114,9 +114,9 @@ TEST(ChunkBundleCodec, MissingDecorationTagMeansLegacyDecorated) {
     for (int32_t z = -1; z <= 1; ++z)
         for (int32_t x = -1; x <= 1; ++x) (void)w.ensureChunkLoaded({x, z});
     EXPECT_TRUE(w.isChunkDecorated({0, 0}));
-    for (int32_t z = 0; z < world::Chunk::DEPTH; ++z)
-        for (int32_t x = 0; x < world::Chunk::WIDTH; ++x)
-            for (int32_t y = 66; y < world::Chunk::HEIGHT; ++y)
+    for (int32_t z = 0; z < voxel::Chunk::DEPTH; ++z)
+        for (int32_t x = 0; x < voxel::Chunk::WIDTH; ++x)
+            for (int32_t y = 66; y < voxel::Chunk::HEIGHT; ++y)
                 ASSERT_EQ(w.getChunk({0, 0})->getBlock(x, y, z), BlockId::Air) << x << " " << y << " " << z;
 }
 

@@ -18,7 +18,7 @@
 #include <vector>
 
 using namespace betacraft;
-using world::BlockId;
+using voxel::BlockId;
 
 namespace {
 
@@ -60,7 +60,7 @@ void fillBox(world::World& w, core::BlockPos lo, core::BlockPos hi, BlockId id, 
 class P2AcousticsMixing : public ::testing::Test {
 protected:
     void SetUp() override {
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
         test::p2worldgen::loadAll(*m_world, test::p2worldgen::squareRegion({0, 0}, 3));
     }

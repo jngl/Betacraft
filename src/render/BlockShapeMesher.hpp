@@ -11,7 +11,7 @@
 #include <type_traits>
 #include <vector>
 
-// S5.4 geometry of the detailed shapes (world::isDetailedShape): ladders, doors, beds, fences,
+// S5.4 geometry of the detailed shapes (voxel::isDetailedShape): ladders, doors, beds, fences,
 // crops, farmland and stairs, built from 1/16-block boxes and planes. Shared by
 // render::ChunkMesher (live World reads) and streaming::SnapshotMesher (18^3 snapshot reads)
 // so the two meshes stay identical by construction: each passes a sampler returning the
@@ -26,7 +26,7 @@
 namespace betacraft::render {
 
 struct ShapeVoxel {
-    world::BlockId id{world::BlockId::Air};
+    voxel::BlockId id{voxel::BlockId::Air};
     uint8_t meta{0};
     uint8_t skyLight{15};
     uint8_t blockLight{0};
@@ -69,13 +69,13 @@ inline constexpr uint32_t kAllFaces = 0x3Fu;
 template <class Sample>
 class ShapeEmitter {
 public:
-    ShapeEmitter(std::vector<PackedChunkVertex>& out, const world::BlockDef& def, uint32_t ux, uint32_t uy, uint32_t uz,
+    ShapeEmitter(std::vector<PackedChunkVertex>& out, const voxel::BlockDef& def, uint32_t ux, uint32_t uy, uint32_t uz,
                  uint32_t secY, Sample& sample) noexcept
         : m_out(out), m_def(def), m_ux(ux), m_uy(uy), m_uz(uz), m_secY(secY), m_sample(sample) {}
 
     // The six faces of `box` named by `faces`, tile per face from tileFor(FaceDir).
     template <class TileFor>
-    void box(const world::ShapeBox& b, uint32_t faces, TileFor&& tileFor) {
+    void box(const voxel::ShapeBox& b, uint32_t faces, TileFor&& tileFor) {
         for (int f = 0; f < 6; ++f) {
             const auto dir = static_cast<core::FaceDir>(f);
             if ((faces & faceBit(dir)) == 0) {
@@ -87,11 +87,11 @@ public:
                                     (n.z > 0 && b.z1 == 16) || (n.z < 0 && b.z0 == 0);
             if (onBoundary) {
                 const ShapeVoxel nb = m_sample(n.x, n.y, n.z);
-                const world::BlockDef& nbDef = world::BlockRegistry::get(nb.id);
-                if (nbDef.opaque && nbDef.shape == world::RenderShape::Cube) {
+                const voxel::BlockDef& nbDef = voxel::BlockRegistry::get(nb.id);
+                if (nbDef.opaque && nbDef.shape == voxel::RenderShape::Cube) {
                     continue;
                 }
-                if (nb.id == m_def.id && m_def.shape == world::RenderShape::Fence) {
+                if (nb.id == m_def.id && m_def.shape == voxel::RenderShape::Fence) {
                     continue; // Stacked posts and joined bars hide each other
                 }
             }
@@ -100,7 +100,7 @@ public:
     }
 
     // A double-sided plane `b` (one axis has zero thickness), lit by the cell itself.
-    void plane(const world::ShapeBox& b, core::FaceDir front, uint32_t tile) {
+    void plane(const voxel::ShapeBox& b, core::FaceDir front, uint32_t tile) {
         const ShapeVoxel self = m_sample(0, 0, 0);
         const glm::ivec3 n = core::faceNormal(front);
         const core::FaceDir back = n.x != 0 ? (n.x > 0 ? core::FaceDir::NegX : core::FaceDir::PosX)
@@ -114,7 +114,7 @@ private:
     [[nodiscard]] ShapeVoxel faceLight(const glm::ivec3& n, bool onBoundary) {
         const bool facedCell = onBoundary || m_def.lightOpacity >= 15;
         ShapeVoxel light = facedCell ? m_sample(n.x, n.y, n.z) : m_sample(0, 0, 0);
-        if (world::BlockRegistry::get(light.id).lightOpacity >= 15) {
+        if (voxel::BlockRegistry::get(light.id).lightOpacity >= 15) {
             // A light-stopping cell (the next stair block) is dark inside: take the sky over
             // this block when brighter.
             const ShapeVoxel above = m_sample(0, 1, 0);
@@ -124,7 +124,7 @@ private:
         return light;
     }
 
-    void quad(const world::ShapeBox& b, core::FaceDir dir, uint32_t tile, const ShapeVoxel& light) {
+    void quad(const voxel::ShapeBox& b, core::FaceDir dir, uint32_t tile, const ShapeVoxel& light) {
         const std::array<glm::uvec3, 4> corners = faceCorners(dir);
         const uint32_t normIdx = normalIndex(dir);
         const uint32_t sky = light.skyLight;
@@ -154,7 +154,7 @@ private:
     }
 
     std::vector<PackedChunkVertex>& m_out;
-    const world::BlockDef& m_def;
+    const voxel::BlockDef& m_def;
     uint32_t m_ux;
     uint32_t m_uy;
     uint32_t m_uz;
@@ -168,18 +168,18 @@ private:
 // at packed local position (ux, uy, uz) of section `secY`. sample(dx, dy, dz) -> ShapeVoxel
 // reads the voxel at that offset from the cell (|d| <= 1).
 template <class Sample>
-void emitDetailedShape(std::vector<PackedChunkVertex>& out, const world::BlockDef& def, uint8_t meta, uint32_t ux,
+void emitDetailedShape(std::vector<PackedChunkVertex>& out, const voxel::BlockDef& def, uint8_t meta, uint32_t ux,
                        uint32_t uy, uint32_t uz, uint32_t secY, Sample&& sample) {
     using namespace shape_mesher_detail;
-    using world::RenderShape;
-    using world::ShapeBox;
+    using voxel::RenderShape;
+    using voxel::ShapeBox;
     ShapeEmitter<std::remove_reference_t<Sample>> e(out, def, ux, uy, uz, secY, sample);
     const auto defTiles = [&def](core::FaceDir dir) -> uint32_t { return def.tileForFace(dir); };
 
     switch (def.shape) {
         case RenderShape::Ladder: {
             // A plate one sixteenth off the wall, as Beta draws it.
-            const glm::ivec3 wall = world::ladderSupportOffset(meta);
+            const glm::ivec3 wall = voxel::ladderSupportOffset(meta);
             ShapeBox p{0, 0, 0, 16, 16, 16};
             core::FaceDir front = core::FaceDir::NegZ;
             if (wall.z > 0) { p.z0 = p.z1 = 15; front = core::FaceDir::NegZ; }
@@ -191,7 +191,7 @@ void emitDetailedShape(std::vector<PackedChunkVertex>& out, const world::BlockDe
         }
         case RenderShape::Crops: {
             // Beta renderBlockCrops: four planes at 1/4 and 3/4 of the cell.
-            const uint32_t tile = world::kCropsFirstTile + std::min<uint32_t>(meta, world::kCropsMaxStage);
+            const uint32_t tile = voxel::kCropsFirstTile + std::min<uint32_t>(meta, voxel::kCropsMaxStage);
             e.plane({4, 0, 0, 4, 16, 16}, core::FaceDir::PosX, tile);
             e.plane({12, 0, 0, 12, 16, 16}, core::FaceDir::NegX, tile);
             e.plane({0, 0, 4, 16, 16, 4}, core::FaceDir::PosZ, tile);
@@ -199,26 +199,26 @@ void emitDetailedShape(std::vector<PackedChunkVertex>& out, const world::BlockDe
             break;
         }
         case RenderShape::Door: {
-            const bool upper = (meta & world::kDoorUpperBit) != 0;
-            const bool iron = def.id == world::BlockId::IronDoor;
-            const uint32_t tile = iron ? (upper ? world::kIronDoorUpperTile : world::kIronDoorLowerTile)
-                                       : (upper ? world::kDoorUpperTile : world::kDoorLowerTile);
-            e.box(world::doorBox(meta), kAllFaces, [tile](core::FaceDir) { return tile; });
+            const bool upper = (meta & voxel::kDoorUpperBit) != 0;
+            const bool iron = def.id == voxel::BlockId::IronDoor;
+            const uint32_t tile = iron ? (upper ? voxel::kIronDoorUpperTile : voxel::kIronDoorLowerTile)
+                                       : (upper ? voxel::kDoorUpperTile : voxel::kDoorLowerTile);
+            e.box(voxel::doorBox(meta), kAllFaces, [tile](core::FaceDir) { return tile; });
             break;
         }
         case RenderShape::Bed: {
-            const bool head = (meta & world::kBedHeadBit) != 0;
-            const uint32_t top = head ? world::kBedHeadTopTile : world::kBedFootTopTile;
-            const uint32_t side = head ? world::kBedHeadSideTile : world::kBedFootSideTile;
+            const bool head = (meta & voxel::kBedHeadBit) != 0;
+            const uint32_t top = head ? voxel::kBedHeadTopTile : voxel::kBedFootTopTile;
+            const uint32_t side = head ? voxel::kBedHeadSideTile : voxel::kBedFootSideTile;
             const uint32_t bottom = def.tileForFace(core::FaceDir::NegY);
-            e.box({0, 0, 0, 16, world::kBedHeight, 16}, kAllFaces, [&](core::FaceDir dir) {
+            e.box({0, 0, 0, 16, voxel::kBedHeight, 16}, kAllFaces, [&](core::FaceDir dir) {
                 return dir == core::FaceDir::PosY ? top : (dir == core::FaceDir::NegY ? bottom : side);
             });
             break;
         }
         case RenderShape::Farmland: {
-            const uint32_t top = meta > 0 ? world::kFarmlandWetTile : world::kFarmlandDryTile;
-            e.box({0, 0, 0, 16, world::kFarmlandHeight, 16}, kAllFaces, [&](core::FaceDir dir) {
+            const uint32_t top = meta > 0 ? voxel::kFarmlandWetTile : voxel::kFarmlandDryTile;
+            e.box({0, 0, 0, 16, voxel::kFarmlandHeight, 16}, kAllFaces, [&](core::FaceDir dir) {
                 return dir == core::FaceDir::PosY ? top : def.tileForFace(dir);
             });
             break;
@@ -255,22 +255,22 @@ void emitDetailedShape(std::vector<PackedChunkVertex>& out, const world::BlockDe
             // S8.5 wire (bright tile when powered) and pressure plates: a 1/16 slab whose
             // underside lies on the block below.
             uint32_t tile = def.tileForFace(core::FaceDir::PosY);
-            if (def.id == world::BlockId::RedstoneWire) {
-                tile = meta > 0 ? world::kRedstoneWireOnTile : world::kRedstoneWireOffTile;
+            if (def.id == voxel::BlockId::RedstoneWire) {
+                tile = meta > 0 ? voxel::kRedstoneWireOnTile : voxel::kRedstoneWireOffTile;
             }
-            e.box(world::flatBox(def.id), kAllFaces, [tile](core::FaceDir) { return tile; });
+            e.box(voxel::flatBox(def.id), kAllFaces, [tile](core::FaceDir) { return tile; });
             break;
         }
         case RenderShape::Lever: {
             // S8.5 lever (cobblestone base and a stick that leans the other way when on) and
             // button, turned onto the wall or floor they hang on.
-            if (def.id == world::BlockId::Lever) {
-                e.box(world::orientAttachedBox(world::leverBaseBox(), meta), kAllFaces,
+            if (def.id == voxel::BlockId::Lever) {
+                e.box(voxel::orientAttachedBox(voxel::leverBaseBox(), meta), kAllFaces,
                       [](core::FaceDir) { return 16u; });
-                e.box(world::orientAttachedBox(world::leverHandleBox(meta), meta), kAllFaces,
+                e.box(voxel::orientAttachedBox(voxel::leverHandleBox(meta), meta), kAllFaces,
                       [&def](core::FaceDir) { return static_cast<uint32_t>(def.tileForFace(core::FaceDir::PosZ)); });
             } else {
-                e.box(world::orientAttachedBox(world::buttonBox(meta), meta), kAllFaces, defTiles);
+                e.box(voxel::orientAttachedBox(voxel::buttonBox(meta), meta), kAllFaces, defTiles);
             }
             break;
         }

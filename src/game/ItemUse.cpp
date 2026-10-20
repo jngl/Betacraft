@@ -13,18 +13,18 @@ namespace betacraft::game {
 
 namespace {
 
-using world::BlockId;
+using voxel::BlockId;
 
 [[nodiscard]] bool isAir(const world::World& world, const core::BlockPos& p) {
     return world.getBlock(p) == BlockId::Air;
 }
 
 [[nodiscard]] bool isReplaceable(const world::World& world, const core::BlockPos& p) {
-    return world::BlockRegistry::get(world.getBlock(p)).replaceable;
+    return voxel::BlockRegistry::get(world.getBlock(p)).replaceable;
 }
 
 [[nodiscard]] bool isNormalCubeAt(const world::World& world, int32_t x, int32_t y, int32_t z) {
-    return world::isNormalCube(world.getBlock(x, y, z));
+    return voxel::isNormalCube(world.getBlock(x, y, z));
 }
 
 // The player must not end up inside the new block (Beta only checks this for ItemBlock; kept
@@ -41,7 +41,7 @@ std::optional<ItemUseResult> placeDoor(world::World& world, physics::Player& pla
     }
     const core::BlockPos lower = target.adjacentPos;
     const core::BlockPos upper = lower.offset(0, 1, 0);
-    if (lower.y < 1 || upper.y >= world::Chunk::HEIGHT || !isNormalCubeAt(world, lower.x, lower.y - 1, lower.z) ||
+    if (lower.y < 1 || upper.y >= voxel::Chunk::HEIGHT || !isNormalCubeAt(world, lower.x, lower.y - 1, lower.z) ||
         !isReplaceable(world, lower) || !isReplaceable(world, upper)) {
         return std::nullopt;
     }
@@ -61,8 +61,8 @@ std::optional<ItemUseResult> placeDoor(world::World& world, physics::Player& pla
                (isNormalCubeAt(world, lower.x + dx, lower.y + 1, lower.z + dz) ? 1 : 0);
     };
     const auto doorAt = [&](int32_t dx, int32_t dz) {
-        return world::isDoorBlock(world.getBlock(lower.x + dx, lower.y, lower.z + dz)) ||
-               world::isDoorBlock(world.getBlock(lower.x + dx, lower.y + 1, lower.z + dz));
+        return voxel::isDoorBlock(world.getBlock(lower.x + dx, lower.y, lower.z + dz)) ||
+               voxel::isDoorBlock(world.getBlock(lower.x + dx, lower.y + 1, lower.z + dz));
     };
     const int32_t leftSolid = solidCount(-sx, -sz);
     const int32_t rightSolid = solidCount(sx, sz);
@@ -71,16 +71,16 @@ std::optional<ItemUseResult> placeDoor(world::World& world, physics::Player& pla
     // Beta: the hinge goes to the other side next to a door (double doors) or when the
     // right side has more wall; it is stored as the turned orientation plus the open bit.
     if ((leftDoor && !rightDoor) || rightSolid > leftSolid) {
-        facing = static_cast<uint8_t>(((facing + 3) & world::kDoorOrientationMask) | world::kDoorOpenBit);
+        facing = static_cast<uint8_t>(((facing + 3) & voxel::kDoorOrientationMask) | voxel::kDoorOpenBit);
     }
     if (overlapsPlayer(player, lower, door, facing) ||
-        overlapsPlayer(player, upper, door, static_cast<uint8_t>(facing | world::kDoorUpperBit))) {
+        overlapsPlayer(player, upper, door, static_cast<uint8_t>(facing | voxel::kDoorUpperBit))) {
         return std::nullopt;
     }
     if (!world.setBlockWithMetadata(lower.x, lower.y, lower.z, door, facing)) {
         return std::nullopt;
     }
-    (void)world.setBlockWithMetadata(upper.x, upper.y, upper.z, door, static_cast<uint8_t>(facing | world::kDoorUpperBit));
+    (void)world.setBlockWithMetadata(upper.x, upper.y, upper.z, door, static_cast<uint8_t>(facing | voxel::kDoorUpperBit));
     (void)player.consumeHeldItem(1);
     return ItemUseResult{ItemUseKind::DoorPlaced, lower, door};
 }
@@ -88,8 +88,8 @@ std::optional<ItemUseResult> placeDoor(world::World& world, physics::Player& pla
 // Beta ItemRedstone.onItemUse.
 std::optional<ItemUseResult> placeWire(world::World& world, physics::Player& player, const physics::RaycastHit& target) {
     const core::BlockPos cell = target.adjacentPos;
-    if (cell.y < 1 || cell.y >= world::Chunk::HEIGHT || !isReplaceable(world, cell) ||
-        world::BlockRegistry::isLiquid(world.getBlock(cell)) || !isNormalCubeAt(world, cell.x, cell.y - 1, cell.z)) {
+    if (cell.y < 1 || cell.y >= voxel::Chunk::HEIGHT || !isReplaceable(world, cell) ||
+        voxel::BlockRegistry::isLiquid(world.getBlock(cell)) || !isNormalCubeAt(world, cell.x, cell.y - 1, cell.z)) {
         return std::nullopt;
     }
     if (!world.setBlockWithMetadata(cell.x, cell.y, cell.z, BlockId::RedstoneWire, 0)) {
@@ -106,14 +106,14 @@ std::optional<ItemUseResult> placeBed(world::World& world, physics::Player& play
     }
     const glm::vec3 look = player.getLookDirection();
     const uint8_t facing = bedFacingForLook(look.x, look.z);
-    const glm::ivec3 d = world::bedHeadDirection(facing);
+    const glm::ivec3 d = voxel::bedHeadDirection(facing);
     const core::BlockPos foot = target.adjacentPos;
     const core::BlockPos head = foot.offset(d.x, d.y, d.z);
-    if (foot.y < 1 || foot.y >= world::Chunk::HEIGHT || !isAir(world, foot) || !isAir(world, head) ||
+    if (foot.y < 1 || foot.y >= voxel::Chunk::HEIGHT || !isAir(world, foot) || !isAir(world, head) ||
         !isNormalCubeAt(world, foot.x, foot.y - 1, foot.z) || !isNormalCubeAt(world, head.x, head.y - 1, head.z)) {
         return std::nullopt;
     }
-    const auto headMeta = static_cast<uint8_t>(facing | world::kBedHeadBit);
+    const auto headMeta = static_cast<uint8_t>(facing | voxel::kBedHeadBit);
     if (overlapsPlayer(player, foot, BlockId::Bed, facing) || overlapsPlayer(player, head, BlockId::Bed, headMeta)) {
         return std::nullopt;
     }
@@ -187,18 +187,18 @@ std::optional<ItemUseResult> useHeldBucket(world::World& world, physics::Player&
     }
     if (empty) {
         const BlockId liquid = world.getBlock(hit.blockPos);
-        if (!world::BlockRegistry::isLiquid(liquid) || world.getMetadata(hit.blockPos) != 0) {
+        if (!voxel::BlockRegistry::isLiquid(liquid) || world.getMetadata(hit.blockPos) != 0) {
             return std::nullopt;
         }
         if (!world.setBlockWithMetadata(hit.blockPos.x, hit.blockPos.y, hit.blockPos.z, BlockId::Air, 0)) {
             return std::nullopt;
         }
-        const bool water = world::isWaterBlock(liquid);
+        const bool water = voxel::isWaterBlock(liquid);
         swapHeldBucket(player, water ? gameplay::items::WaterBucket : gameplay::items::LavaBucket);
         return ItemUseResult{ItemUseKind::BucketFilled, hit.blockPos, water ? BlockId::Water : BlockId::Lava};
     }
     const core::BlockPos cell = hit.adjacentPos;
-    if (cell.y < 0 || cell.y >= world::Chunk::HEIGHT || !isReplaceable(world, cell)) {
+    if (cell.y < 0 || cell.y >= voxel::Chunk::HEIGHT || !isReplaceable(world, cell)) {
         return std::nullopt;
     }
     const BlockId liquid = id == gameplay::items::WaterBucket ? BlockId::Water : BlockId::Lava;
@@ -248,19 +248,19 @@ std::optional<bool> toggleDoor(world::World& world, const core::BlockPos& pos) {
     }
     // Beta: the upper half forwards the click to the lower one, which holds the state.
     core::BlockPos lower = pos;
-    if ((world.getMetadata(pos) & world::kDoorUpperBit) != 0) {
+    if ((world.getMetadata(pos) & voxel::kDoorUpperBit) != 0) {
         lower = pos.offset(0, -1, 0);
         if (world.getBlock(lower) != BlockId::WoodDoor) {
             return std::nullopt;
         }
     }
-    const auto meta = static_cast<uint8_t>((world.getMetadata(lower) ^ world::kDoorOpenBit) & ~world::kDoorUpperBit);
+    const auto meta = static_cast<uint8_t>((world.getMetadata(lower) ^ voxel::kDoorOpenBit) & ~voxel::kDoorUpperBit);
     (void)world.setMetadata(lower.x, lower.y, lower.z, meta);
     const core::BlockPos upper = lower.offset(0, 1, 0);
     if (world.getBlock(upper) == BlockId::WoodDoor) {
-        (void)world.setMetadata(upper.x, upper.y, upper.z, static_cast<uint8_t>(meta | world::kDoorUpperBit));
+        (void)world.setMetadata(upper.x, upper.y, upper.z, static_cast<uint8_t>(meta | voxel::kDoorUpperBit));
     }
-    return (meta & world::kDoorOpenBit) != 0;
+    return (meta & voxel::kDoorOpenBit) != 0;
 }
 
 uint8_t doorFacingForLook(float lookX, float lookZ) noexcept {

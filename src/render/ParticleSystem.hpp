@@ -26,8 +26,8 @@ class ParticleSystem {
 public:
     ParticleSystem() noexcept;
 
-    void spawnBlockBreakBurst(const world::World& world, core::BlockPos pos, world::BlockId blockId, int count = 24);
-    void spawnMiningHitParticles(const world::World& world, core::BlockPos pos, core::FaceDir face, world::BlockId blockId, int count = 3);
+    void spawnBlockBreakBurst(const world::World& world, core::BlockPos pos, voxel::BlockId blockId, int count = 24);
+    void spawnMiningHitParticles(const world::World& world, core::BlockPos pos, core::FaceDir face, voxel::BlockId blockId, int count = 3);
 
     // S6.6 explosion: a puff of grey smoke particles thrown out of `centre`, wider for a larger
     // `power`.

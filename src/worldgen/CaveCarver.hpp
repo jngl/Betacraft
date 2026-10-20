@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <span>
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 class Chunk;
 }
 
@@ -33,7 +33,7 @@ public:
 enum class CaveKind : uint8_t { None = 0, Spaghetti, Cheese };
 
 // What an excavated voxel becomes. Kept abstract so a palette (CaveFillPalette) maps it to
-// concrete blocks; the default one uses Air / Water / Lava from world::BlockId.
+// concrete blocks; the default one uses Air / Water / Lava from voxel::BlockId.
 enum class CaveFill : uint8_t { Air = 0, Water, Lava };
 
 namespace detail {
@@ -54,17 +54,17 @@ template <typename E>
 } // namespace detail
 
 struct CaveFillPalette {
-    world::BlockId air{world::BlockId::Air};
-    world::BlockId water{world::BlockId::Water};
+    voxel::BlockId air{voxel::BlockId::Air};
+    voxel::BlockId water{voxel::BlockId::Water};
     // BlockId::Lava when the registry has it; otherwise == air, i.e. "no lava available".
-    world::BlockId lava{detail::lavaBlockOr(world::BlockId::Air)};
+    voxel::BlockId lava{detail::lavaBlockOr(voxel::BlockId::Air)};
 
     // False when lava would degrade to air. carveChunk then leaves the magma band (Y <= 10)
     // as rock: an empty void there would drain the aquifers right above it (Y >= 11) and is
     // further from the spec's lava sheets than solid ground.
     [[nodiscard]] constexpr bool providesLava() const noexcept { return lava != air; }
 
-    [[nodiscard]] constexpr world::BlockId blockFor(CaveFill fill) const noexcept {
+    [[nodiscard]] constexpr voxel::BlockId blockFor(CaveFill fill) const noexcept {
         switch (fill) {
             case CaveFill::Water: return water;
             case CaveFill::Lava:  return lava;
@@ -181,8 +181,8 @@ public:
 
     // Natural stone / soil only. Bedrock, fluids, sand (would float) and anything placed
     // by players or decoration are never excavated.
-    [[nodiscard]] static constexpr bool isCarvable(world::BlockId id) noexcept {
-        using world::BlockId;
+    [[nodiscard]] static constexpr bool isCarvable(voxel::BlockId id) noexcept {
+        using voxel::BlockId;
         switch (id) {
             case BlockId::Stone: case BlockId::Dirt: case BlockId::Grass: case BlockId::SnowGrass:
             case BlockId::Gravel: case BlockId::Sandstone: case BlockId::Clay:
@@ -195,8 +195,8 @@ public:
     }
 
     // Blocks a default-palette excavation can leave behind (air, aquifer water, magma-band lava).
-    [[nodiscard]] static constexpr bool isFillBlock(world::BlockId id) noexcept {
-        return id == world::BlockId::Air || id == world::BlockId::Water || world::isLavaBlock(id);
+    [[nodiscard]] static constexpr bool isFillBlock(voxel::BlockId id) noexcept {
+        return id == voxel::BlockId::Air || id == voxel::BlockId::Water || voxel::isLavaBlock(id);
     }
 
     // Derives a ColumnContext from a chunk column: surface = topmost solid block; fluid above
@@ -204,14 +204,14 @@ public:
     // solid block beneath the topmost such fluid. Invariant under carveChunk (aquifer water
     // lives at Y <= AQUIFER_MAX_Y and caves stay below the aquitard), so a sampler built on
     // resident chunks gives the same answer before and after a neighbour is carved.
-    [[nodiscard]] static ColumnContext scanColumn(const world::Chunk& chunk, int32_t lx, int32_t lz) noexcept;
+    [[nodiscard]] static ColumnContext scanColumn(const voxel::Chunk& chunk, int32_t lx, int32_t lz) noexcept;
 
     // scanColumn over any column source, `blockAt(y)` for y in [0, height). Lets WorldGen
     // derive the context of a column it has not generated from the same pass-1 blocks, with
     // exactly the rules scanColumn applies to a resident chunk.
     template <typename BlockAt>
     [[nodiscard]] static constexpr ColumnContext scanColumnBlocks(BlockAt&& blockAt, int32_t height) noexcept {
-        using world::BlockId;
+        using voxel::BlockId;
         auto isFluid = [](BlockId b) noexcept { return b == BlockId::Water || b == BlockId::Ice; };
 
         int32_t y = height - 1;
@@ -250,7 +250,7 @@ public:
     // Chunk-local carving: writes only into `chunk`, reads only `chunk` + sampler, so chunks
     // can be carved in any order (or in parallel) with identical results. Writes are not
     // flagged as player modifications.
-    CarveStats carveChunk(world::Chunk& chunk, const ColumnSampler& sampler,
+    CarveStats carveChunk(voxel::Chunk& chunk, const ColumnSampler& sampler,
                           const CaveFillPalette& palette = {}) const noexcept;
 
 private:

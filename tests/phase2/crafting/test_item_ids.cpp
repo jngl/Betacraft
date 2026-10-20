@@ -7,7 +7,7 @@
 #include <set>
 
 using namespace betacraft::crafting;
-using betacraft::world::BlockId;
+using betacraft::voxel::BlockId;
 
 namespace {
 constexpr std::array<ToolKind, 5> kKinds{ToolKind::Pickaxe, ToolKind::Axe, ToolKind::Shovel,
@@ -163,9 +163,9 @@ TEST(ItemIds, ToBlockIdRejectsUndefinedNumbersBelow256) {
 }
 
 TEST(ItemIds, ToBlockIdAgreesWithBlockRegistry) {
-    betacraft::world::BlockRegistry::initialize();
+    betacraft::voxel::BlockRegistry::initialize();
     for (ItemId id = 1; id < 256; ++id) {
-        const auto& def = betacraft::world::BlockRegistry::get(static_cast<BlockId>(id));
+        const auto& def = betacraft::voxel::BlockRegistry::get(static_cast<BlockId>(id));
         const bool defined = def.name != "Air";
         EXPECT_EQ(toBlockId(id).has_value(), defined) << id << " " << def.name;
         EXPECT_EQ(isPlaceableBlock(id), defined && !def.isItemOnly) << id << " " << def.name;
@@ -196,10 +196,10 @@ TEST(ItemIds, ChestAndLitFurnaceArePlaceable) {
 }
 
 TEST(ItemIds, LitFurnaceDropsFurnace) {
-    betacraft::world::BlockRegistry::initialize();
-    const auto& lit = betacraft::world::BlockRegistry::get(BlockId::LitFurnace);
+    betacraft::voxel::BlockRegistry::initialize();
+    const auto& lit = betacraft::voxel::BlockRegistry::get(BlockId::LitFurnace);
     EXPECT_EQ(lit.dropId, BlockId::Furnace);
     EXPECT_EQ(lit.lightEmission, 13);
-    EXPECT_EQ(betacraft::world::BlockRegistry::get(BlockId::Furnace).lightEmission, 0);
-    EXPECT_EQ(betacraft::world::BlockRegistry::get(BlockId::Chest).dropId, BlockId::Chest);
+    EXPECT_EQ(betacraft::voxel::BlockRegistry::get(BlockId::Furnace).lightEmission, 0);
+    EXPECT_EQ(betacraft::voxel::BlockRegistry::get(BlockId::Chest).dropId, BlockId::Chest);
 }

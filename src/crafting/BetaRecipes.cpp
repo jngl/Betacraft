@@ -13,7 +13,7 @@ namespace betacraft::crafting {
 
 namespace {
 
-using world::BlockId;
+using voxel::BlockId;
 
 constexpr ItemId kPlanks = toItemId(BlockId::OakPlanks);
 constexpr ItemId kCobble = toItemId(BlockId::Cobblestone);

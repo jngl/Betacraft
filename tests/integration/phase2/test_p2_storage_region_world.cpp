@@ -14,8 +14,8 @@
 
 using namespace betacraft;
 using namespace betacraft::test::p2worldgen;
-using world::BlockId;
-using world::Chunk;
+using voxel::BlockId;
+using voxel::Chunk;
 
 namespace {
 
@@ -33,19 +33,19 @@ namespace {
     for (int32_t y = minY; y < Chunk::HEIGHT; ++y)
         for (int32_t z = 0; z < Chunk::DEPTH; ++z)
             for (int32_t x = 0; x < Chunk::WIDTH; ++x)
-                if (world::isWaterBlock(c.getBlock(x, y, z))) ++n;
+                if (voxel::isWaterBlock(c.getBlock(x, y, z))) ++n;
     return n;
 }
 
 } // namespace
 
 TEST(P2StorageRegionWorld, EditSaveReloadThroughRegions) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s7_region_");
     const core::BlockPos glass{-3, 120, 5};     // Chunk (-1, 0), region (-1, 0)
     const core::BlockPos far{40 * 16 + 2, 121, 3}; // Chunk (40, 0), region (1, 0)
     const core::BlockPos chestPos{6, 121, 6};
-    world::ChestData chest{};
+    voxel::ChestData chest{};
     chest.slots[0] = {265, 33, 0};
     chest.slots[26] = {4, 64, 0};
     std::vector<std::unique_ptr<Chunk>> expected;
@@ -54,7 +54,7 @@ TEST(P2StorageRegionWorld, EditSaveReloadThroughRegions) {
         loadAll(w, squareRegion({0, 0}, 1));
         ASSERT_TRUE(w.setBlock(glass, BlockId::Glass));
         ASSERT_TRUE(w.setBlock(chestPos, BlockId::Chest));
-        std::get<world::ChestData>(w.blockEntities().getOrCreate(chestPos, BlockId::Chest)) = chest;
+        std::get<voxel::ChestData>(w.blockEntities().getOrCreate(chestPos, BlockId::Chest)) = chest;
         w.markBlockEntityChanged(chestPos);
         (void)w.ensureChunkLoaded({40, 0});
         ASSERT_TRUE(w.setBlock(far, BlockId::Obsidian));
@@ -89,16 +89,16 @@ TEST(P2StorageRegionWorld, EditSaveReloadThroughRegions) {
         EXPECT_EQ(firstBlockDifference(*again.getChunk(c->getCoord()), *c), -1) << c->getCoord().x;
         EXPECT_TRUE(again.getChunk(c->getCoord())->isPlayerTouched());
     }
-    const world::BlockEntity* e = again.blockEntities().find(chestPos);
+    const voxel::BlockEntity* e = again.blockEntities().find(chestPos);
     ASSERT_NE(e, nullptr);
-    EXPECT_EQ(std::get<world::ChestData>(*e), chest);
+    EXPECT_EQ(std::get<voxel::ChestData>(*e), chest);
     EXPECT_TRUE(again.isChunkDecorated({0, 0}));
     (void)again.ensureChunkLoaded({40, 0});
     EXPECT_EQ(again.getBlock(far), BlockId::Obsidian);
 }
 
 TEST(P2StorageRegionWorld, UntouchedFluidChunksNotWritten) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s7_region_");
     world::World w(kSeed, dir.path());
     loadAll(w, squareRegion({0, 0}, 2));

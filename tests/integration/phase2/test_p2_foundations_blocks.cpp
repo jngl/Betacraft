@@ -18,8 +18,8 @@
 #include <vector>
 
 using namespace betacraft;
-using world::BlockId;
-using world::BlockRegistry;
+using voxel::BlockId;
+using voxel::BlockRegistry;
 
 namespace {
 
@@ -34,7 +34,7 @@ protected:
 // Air pocket high above the generated terrain of chunk (0,0), so nothing else meshes there.
 constexpr int32_t kPocketY = 120;
 
-size_t opaqueCount(const world::World& w, const world::Chunk& c) {
+size_t opaqueCount(const world::World& w, const voxel::Chunk& c) {
     return render::ChunkMesher::buildMesh(w, c, false).opaqueVertices.size();
 }
 
@@ -49,44 +49,44 @@ TEST_F(P2FoundationsBlocks, FluidBlocksUseBetaIds) {
 
 TEST_F(P2FoundationsBlocks, EveryFluidBlockIsARegisteredLiquid) {
     for (const BlockId id : kFluidBlocks) {
-        const world::BlockDef& def = BlockRegistry::get(id);
+        const voxel::BlockDef& def = BlockRegistry::get(id);
         EXPECT_EQ(def.id, id);
-        EXPECT_NE(def.name, world::BlockDef{}.name) << static_cast<int>(id);
+        EXPECT_NE(def.name, voxel::BlockDef{}.name) << static_cast<int>(id);
         EXPECT_TRUE(BlockRegistry::isLiquid(id)) << def.name;
         EXPECT_FALSE(def.solid) << def.name;
         EXPECT_FALSE(def.selectable) << def.name;
         EXPECT_TRUE(def.replaceable) << def.name;
         EXPECT_FALSE(def.isItemOnly) << def.name;
         EXPECT_LT(def.hardness, 0.0f) << def.name;
-        EXPECT_EQ(def.shape, world::RenderShape::Liquid) << def.name;
+        EXPECT_EQ(def.shape, voxel::RenderShape::Liquid) << def.name;
     }
     EXPECT_FALSE(BlockRegistry::isLiquid(BlockId::Air));
     EXPECT_FALSE(BlockRegistry::isLiquid(BlockId::Obsidian));
 }
 
 TEST_F(P2FoundationsBlocks, WaterAndLavaPredicatesSplitTheFluidIds) {
-    EXPECT_TRUE(world::isWaterBlock(BlockId::Water));
-    EXPECT_TRUE(world::isWaterBlock(BlockId::StillWater));
-    EXPECT_FALSE(world::isWaterBlock(BlockId::Lava));
-    EXPECT_TRUE(world::isLavaBlock(BlockId::Lava));
-    EXPECT_TRUE(world::isLavaBlock(BlockId::StillLava));
-    EXPECT_FALSE(world::isLavaBlock(BlockId::StillWater));
-    EXPECT_TRUE(world::isSameLiquid(BlockId::Water, BlockId::StillWater));
-    EXPECT_TRUE(world::isSameLiquid(BlockId::StillLava, BlockId::Lava));
-    EXPECT_FALSE(world::isSameLiquid(BlockId::Water, BlockId::Lava));
-    EXPECT_FALSE(world::isSameLiquid(BlockId::Stone, BlockId::Stone));
+    EXPECT_TRUE(voxel::isWaterBlock(BlockId::Water));
+    EXPECT_TRUE(voxel::isWaterBlock(BlockId::StillWater));
+    EXPECT_FALSE(voxel::isWaterBlock(BlockId::Lava));
+    EXPECT_TRUE(voxel::isLavaBlock(BlockId::Lava));
+    EXPECT_TRUE(voxel::isLavaBlock(BlockId::StillLava));
+    EXPECT_FALSE(voxel::isLavaBlock(BlockId::StillWater));
+    EXPECT_TRUE(voxel::isSameLiquid(BlockId::Water, BlockId::StillWater));
+    EXPECT_TRUE(voxel::isSameLiquid(BlockId::StillLava, BlockId::Lava));
+    EXPECT_FALSE(voxel::isSameLiquid(BlockId::Water, BlockId::Lava));
+    EXPECT_FALSE(voxel::isSameLiquid(BlockId::Stone, BlockId::Stone));
 }
 
 TEST_F(P2FoundationsBlocks, LavaGlowsAtFullBrightnessAndBlocksSkyLight) {
     for (const BlockId id : {BlockId::Lava, BlockId::StillLava}) {
-        const world::BlockDef& def = BlockRegistry::get(id);
+        const voxel::BlockDef& def = BlockRegistry::get(id);
         EXPECT_EQ(def.lightEmission, 15) << def.name;   // Beta setLightValue(1.0F)
         EXPECT_EQ(def.lightOpacity, 15) << def.name;    // Beta setLightOpacity(255)
-        EXPECT_EQ(def.layer, world::RenderLayer::Opaque) << def.name; // Beta render pass 0
+        EXPECT_EQ(def.layer, voxel::RenderLayer::Opaque) << def.name; // Beta render pass 0
     }
     // Stationary water has exactly the properties of the canonical water block.
-    const world::BlockDef& w = BlockRegistry::get(BlockId::Water);
-    const world::BlockDef& sw = BlockRegistry::get(BlockId::StillWater);
+    const voxel::BlockDef& w = BlockRegistry::get(BlockId::Water);
+    const voxel::BlockDef& sw = BlockRegistry::get(BlockId::StillWater);
     EXPECT_EQ(sw.lightOpacity, w.lightOpacity);
     EXPECT_EQ(sw.layer, w.layer);
     EXPECT_EQ(sw.faceTiles, w.faceTiles);
@@ -120,7 +120,7 @@ TEST_F(P2FoundationsBlocks, SafeSpawnNeverStandsInLava) {
 TEST_F(P2FoundationsBlocks, CaveCarverPaletteNowProvidesLava) {
     constexpr worldgen::CaveFillPalette palette{};
     EXPECT_TRUE(palette.providesLava());
-    EXPECT_TRUE(world::isLavaBlock(palette.lava));
+    EXPECT_TRUE(voxel::isLavaBlock(palette.lava));
 }
 
 TEST_F(P2FoundationsBlocks, CraftingAndCombatAgreeOnFluidBlocks) {
@@ -142,7 +142,7 @@ TEST_F(P2FoundationsBlocks, LavaIsNotADynamicLightItem) {
 TEST_F(P2FoundationsBlocks, MesherCullsFacesBetweenCellsOfTheSameLiquid) {
     test::TempDir dir;
     world::World w(173173ULL, dir.path());
-    const world::Chunk& chunk = w.ensureChunkLoaded({0, 0});
+    const voxel::Chunk& chunk = w.ensureChunkLoaded({0, 0});
     const size_t base = opaqueCount(w, chunk);
 
     ASSERT_TRUE(w.setBlock(4, kPocketY, 4, BlockId::Lava));
@@ -176,7 +176,7 @@ TEST_F(P2FoundationsBlocks, SnapshotMesherMatchesLegacyMesherAroundFluids) {
         ASSERT_TRUE(w.setBlock(10 + i, kPocketY, 7, pattern[static_cast<size_t>(i)]));
         ASSERT_TRUE(w.setBlock(10 + i, kPocketY + 1, 7, pattern[static_cast<size_t>(5 - i)]));
     }
-    const world::Chunk* chunk = w.getChunk({0, 0});
+    const voxel::Chunk* chunk = w.getChunk({0, 0});
     ASSERT_NE(chunk, nullptr);
     const auto legacy = render::ChunkMesher::buildMesh(w, *chunk, true);
 

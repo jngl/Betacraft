@@ -26,19 +26,19 @@ using gameplay::MobKind;
 }
 
 // A cell a mob can stand in: neither solid nor liquid.
-[[nodiscard]] bool isFree(world::BlockId id) noexcept {
-    return !world::BlockRegistry::isSolid(id) && !world::BlockRegistry::isLiquid(id);
+[[nodiscard]] bool isFree(voxel::BlockId id) noexcept {
+    return !voxel::BlockRegistry::isSolid(id) && !voxel::BlockRegistry::isLiquid(id);
 }
 
 // Beta isBlockNormalCube: a full opaque block to stand on (no leaves, glass or slabs).
-[[nodiscard]] bool isFloor(world::BlockId id) noexcept {
-    return world::BlockRegistry::isSolid(id) && world::BlockRegistry::isOpaque(id);
+[[nodiscard]] bool isFloor(voxel::BlockId id) noexcept {
+    return voxel::BlockRegistry::isSolid(id) && voxel::BlockRegistry::isOpaque(id);
 }
 
 // First free cell above the highest solid block of the column, or -1 for an empty column.
 [[nodiscard]] int32_t surfaceY(const world::World& world, int32_t x, int32_t z) noexcept {
     for (int32_t y = EngineConfig::CHUNK_HEIGHT - 1; y >= 0; --y) {
-        if (world::BlockRegistry::isSolid(world.getBlock(x, y, z))) {
+        if (voxel::BlockRegistry::isSolid(world.getBlock(x, y, z))) {
             return y + 1;
         }
     }
@@ -130,7 +130,7 @@ int32_t MobSpawner::trySpawnPack(const world::World& world, ecs::CommandBuffer& 
             !isFree(world.getBlock(x, y + 1, z))) {
             return false;
         }
-        const world::BlockId below = world.getBlock(x, y - 1, z);
+        const voxel::BlockId below = world.getBlock(x, y - 1, z);
         if (!isFloor(below)) {
             return false;
         }
@@ -192,7 +192,7 @@ void MobSpawner::tickSpawners(const world::World& world, ecs::Registry& reg, ecs
         const core::BlockPos pos = it->first;
         const glm::vec3 centre(static_cast<float>(pos.x) + 0.5f, static_cast<float>(pos.y) + 0.5f,
                                static_cast<float>(pos.z) + 0.5f);
-        if (world.getChunk(chunkOf(centre)) == nullptr || world.getBlock(pos) != world::BlockId::MobSpawner) {
+        if (world.getChunk(chunkOf(centre)) == nullptr || world.getBlock(pos) != voxel::BlockId::MobSpawner) {
             it = m_spawnerDelays.erase(it); // Unloaded (a reload draws a new delay) or broken
             continue;
         }
@@ -214,12 +214,12 @@ void MobSpawner::scanSpawners(const world::World& world, const glm::vec3& player
     const auto fz = static_cast<int32_t>(std::floor(playerFeet.z));
     const int32_t yLo = std::max(0, fy - reach);
     const int32_t yHi = std::min(EngineConfig::CHUNK_HEIGHT - 1, fy + reach);
-    const auto isSpawner = [](world::BlockId id) { return id == world::BlockId::MobSpawner; };
+    const auto isSpawner = [](voxel::BlockId id) { return id == voxel::BlockId::MobSpawner; };
     for (int32_t cz = core::floorDiv(fz - reach, EngineConfig::CHUNK_DEPTH);
          cz <= core::floorDiv(fz + reach, EngineConfig::CHUNK_DEPTH); ++cz) {
         for (int32_t cx = core::floorDiv(fx - reach, EngineConfig::CHUNK_WIDTH);
              cx <= core::floorDiv(fx + reach, EngineConfig::CHUNK_WIDTH); ++cx) {
-            const world::Chunk* chunk = world.getChunk({cx, cz});
+            const voxel::Chunk* chunk = world.getChunk({cx, cz});
             if (chunk == nullptr) {
                 continue;
             }
@@ -231,7 +231,7 @@ void MobSpawner::scanSpawners(const world::World& world, const glm::vec3& player
                 for (int32_t y = std::max(yLo, s * 16); y <= std::min(yHi, s * 16 + 15); ++y) {
                     for (int32_t lz = 0; lz < EngineConfig::CHUNK_DEPTH; ++lz) {
                         for (int32_t lx = 0; lx < EngineConfig::CHUNK_WIDTH; ++lx) {
-                            if (chunk->getBlock(lx, y, lz) != world::BlockId::MobSpawner) {
+                            if (chunk->getBlock(lx, y, lz) != voxel::BlockId::MobSpawner) {
                                 continue;
                             }
                             const core::BlockPos pos{cx * EngineConfig::CHUNK_WIDTH + lx, y,

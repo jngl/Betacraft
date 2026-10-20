@@ -9,7 +9,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 
 // S5.2 block updates scheduled for a later game tick (Beta World.scheduleBlockUpdate /
 // TickNextTick): falling sand now, redstone later (S8.6). A min-heap on the due tick, at most
@@ -45,4 +45,4 @@ private:
     uint64_t m_nextSequence{0};
 };
 
-} // namespace betacraft::world
+} // namespace betacraft::voxel

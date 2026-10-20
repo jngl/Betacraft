@@ -18,7 +18,7 @@ namespace betacraft::test::redstone {
 using betacraft::redstone::GridRedstoneVoxelAccess;
 using betacraft::redstone::RedstoneEngine;
 using betacraft::redstone::RedstoneTickStats;
-using world::BlockId;
+using voxel::BlockId;
 
 constexpr int32_t kY = 1; // Circuits stand on the floor
 
@@ -26,7 +26,7 @@ struct Bench {
     explicit Bench(int32_t sx = 32, int32_t sy = 6, int32_t sz = 32,
                    uint32_t budget = RedstoneEngine::kMaxEvaluationsPerTick)
         : grid(sx, sy, sz), engine(std::make_unique<RedstoneEngine>(grid, nullptr, budget)) {
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         grid.fill({0, 0, 0}, {sx - 1, 0, sz - 1}, BlockId::Stone);
     }
 
@@ -95,7 +95,7 @@ private:
 
 // A lever standing on the floor, on or off.
 inline uint8_t floorLever(bool on) {
-    return static_cast<uint8_t>(world::kAttachFloor | (on ? world::kLeverOnBit : 0));
+    return static_cast<uint8_t>(voxel::kAttachFloor | (on ? voxel::kLeverOnBit : 0));
 }
 
 } // namespace betacraft::test::redstone

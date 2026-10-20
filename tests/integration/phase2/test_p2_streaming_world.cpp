@@ -27,7 +27,7 @@ using streaming::RawMeshBuffer;
 using voxel::SectionCoord;
 using streaming::WorldMeshStreamer;
 using streaming::WorldMeshStreamerConfig;
-using world::BlockId;
+using voxel::BlockId;
 
 namespace {
 
@@ -108,7 +108,7 @@ struct FakeGpu {
 class P2StreamingWorld : public ::testing::Test {
 protected:
     void SetUp() override {
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
         m_region = test::p2worldgen::squareRegion({0, 0}, 2);
         test::p2worldgen::loadAll(*m_world, m_region);

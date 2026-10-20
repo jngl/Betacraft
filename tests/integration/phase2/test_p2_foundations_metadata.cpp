@@ -14,15 +14,15 @@
 #include <vector>
 
 using namespace betacraft;
-using world::BlockId;
-using world::Chunk;
-using world::PalettedSection;
+using voxel::BlockId;
+using voxel::Chunk;
+using voxel::PalettedSection;
 
 namespace {
 
 class P2FoundationsMetadata : public ::testing::Test {
 protected:
-    void SetUp() override { world::BlockRegistry::initialize(); }
+    void SetUp() override { voxel::BlockRegistry::initialize(); }
 };
 
 constexpr int32_t kPocketY = 120;
@@ -100,12 +100,12 @@ TEST_F(P2FoundationsMetadata, SectionBlocksSurviveEveryPaletteWidthAfterTheLayou
     // The packed block storage moved to an exact-size buffer to make room for the metadata
     // pointer; walk 4 -> 8 -> 16 bit promotions and copies to pin it.
     PalettedSection sec(BlockId::Air, 15, 0);
-    std::vector<world::BlockStateId> oracle(PalettedSection::VOLUME, 0);
+    std::vector<voxel::BlockStateId> oracle(PalettedSection::VOLUME, 0);
     for (int i = 0; i < 300; ++i) {
         const int lx = i % 16;
         const int ly = (i / 16) % 16;
         const int lz = i / 256;
-        const auto state = static_cast<world::BlockStateId>(1000 + i);
+        const auto state = static_cast<voxel::BlockStateId>(1000 + i);
         sec.setBlock(lx, ly, lz, state);
         oracle[PalettedSection::voxelIndex(lx, ly, lz)] = state;
         if (i == 10) {
@@ -188,12 +188,12 @@ TEST_F(P2FoundationsMetadata, GeneratedAndLegacyWaterDecodesAsSourceUnderTheWorl
     // turn every ocean into the thinnest flowing water, which is why World stores Beta decay.
     test::TempDir dir;
     world::World w(173173ULL, dir.path());
-    const world::Chunk& c = w.ensureChunkLoaded({0, 0});
+    const voxel::Chunk& c = w.ensureChunkLoaded({0, 0});
     int waterCells = 0;
     for (int z = 0; z < Chunk::DEPTH; ++z)
         for (int x = 0; x < Chunk::WIDTH; ++x)
             for (int y = 0; y < Chunk::HEIGHT; ++y) {
-                if (!world::isWaterBlock(c.getBlock(x, y, z))) continue;
+                if (!voxel::isWaterBlock(c.getBlock(x, y, z))) continue;
                 ++waterCells;
                 ASSERT_EQ(c.getMetadata(x, y, z), 0);
                 ASSERT_TRUE(fluids::FluidState::fromBetaDecay(fluids::FluidType::Water, c.getMetadata(x, y, z)).isSource());
@@ -207,8 +207,8 @@ TEST_F(P2FoundationsMetadata, GeneratedAndLegacyWaterDecodesAsSourceUnderTheWorl
 TEST_F(P2FoundationsMetadata, WorldMetadataOnABorderLeavesTheNeighbourMeshClean) {
     test::TempDir dir;
     world::World w(173173ULL, dir.path());
-    world::Chunk& east = w.ensureChunkLoaded({0, 0});
-    world::Chunk& west = w.ensureChunkLoaded({-1, 0});
+    voxel::Chunk& east = w.ensureChunkLoaded({0, 0});
+    voxel::Chunk& west = w.ensureChunkLoaded({-1, 0});
     ASSERT_TRUE(w.setBlock(0, kPocketY, 5, BlockId::Water));
     west.setMeshDirty(false);
     east.setMeshDirty(false);

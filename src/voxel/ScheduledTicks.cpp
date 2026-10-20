@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 
 namespace {
 
@@ -41,4 +41,4 @@ void ScheduledTickQueue::clear() noexcept {
     m_pending.clear();
 }
 
-} // namespace betacraft::world
+} // namespace betacraft::voxel

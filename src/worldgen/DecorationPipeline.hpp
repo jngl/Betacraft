@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 class Chunk;
 }
 
@@ -20,10 +20,10 @@ namespace betacraft::worldgen {
 class ChunkAccess {
 public:
     virtual ~ChunkAccess() = default;
-    [[nodiscard]] virtual world::Chunk* findChunk(core::ChunkCoord coord) noexcept = 0;
+    [[nodiscard]] virtual voxel::Chunk* findChunk(core::ChunkCoord coord) noexcept = 0;
 };
 
-// Adapts a callable `world::Chunk*(core::ChunkCoord)` (e.g. a lambda over
+// Adapts a callable `voxel::Chunk*(core::ChunkCoord)` (e.g. a lambda over
 // World::getChunkMutable) so World does not have to inherit from ChunkAccess.
 // The callable must not throw (findChunk is noexcept).
 template <typename Fn>
@@ -31,7 +31,7 @@ class FunctionChunkAccess final : public ChunkAccess {
 public:
     explicit FunctionChunkAccess(Fn fn) noexcept(std::is_nothrow_move_constructible_v<Fn>)
         : m_fn(std::move(fn)) {}
-    [[nodiscard]] world::Chunk* findChunk(core::ChunkCoord coord) noexcept override { return m_fn(coord); }
+    [[nodiscard]] voxel::Chunk* findChunk(core::ChunkCoord coord) noexcept override { return m_fn(coord); }
 
 private:
     Fn m_fn;
@@ -97,7 +97,7 @@ public:
     // (terrain + caves) for `coord`. Since planning is a pure function of seed + pass-1
     // terrain, this reproduces the original plan without persisting it. Ignored (empty) if
     // pass1Copy belongs to another coordinate or the chunk is already registered.
-    std::vector<core::ChunkCoord> onDecoratedChunkLoaded(core::ChunkCoord coord, const world::Chunk& pass1Copy);
+    std::vector<core::ChunkCoord> onDecoratedChunkLoaded(core::ChunkCoord coord, const voxel::Chunk& pass1Copy);
 
     // Forget a chunk. Neighbours waiting on it stall until it returns. An undecorated chunk
     // whose plan a decorated neighbour already rasterized keeps that plan in memory, so a

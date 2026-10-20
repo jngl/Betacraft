@@ -19,8 +19,8 @@
 
 using namespace betacraft;
 using namespace betacraft::worldgen;
-using world::BlockId;
-using world::Chunk;
+using voxel::BlockId;
+using voxel::Chunk;
 
 namespace {
 
@@ -69,7 +69,7 @@ const std::vector<Sample>& samples() {
 } // namespace
 
 TEST(Dungeons, TheFixtureHasDungeons) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     size_t rooms = 0;
     for (const Sample& s : samples()) rooms += s.dungeons.size();
     EXPECT_GE(rooms, 3U);
@@ -200,7 +200,7 @@ TEST(DungeonLoot, DeterministicKnownItemsOnly) {
         const auto slots = rollDungeonChestLoot(SEED, pos);
         differs |= slots != first;
         size_t nonEmpty = 0;
-        for (const world::StoredStack& s : slots) {
+        for (const voxel::StoredStack& s : slots) {
             if (s.empty()) continue;
             ++nonEmpty;
             EXPECT_TRUE(allowed.contains(s.id)) << s.id;

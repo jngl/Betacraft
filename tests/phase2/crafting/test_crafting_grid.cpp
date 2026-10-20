@@ -6,8 +6,8 @@
 using namespace betacraft::crafting;
 
 namespace {
-constexpr ItemId kPlanks = toItemId(betacraft::world::BlockId::OakPlanks);
-constexpr ItemId kCobble = toItemId(betacraft::world::BlockId::Cobblestone);
+constexpr ItemId kPlanks = toItemId(betacraft::voxel::BlockId::OakPlanks);
+constexpr ItemId kCobble = toItemId(betacraft::voxel::BlockId::Cobblestone);
 } // namespace
 
 TEST(CraftingGrid, InventoryGridIs2x2) {

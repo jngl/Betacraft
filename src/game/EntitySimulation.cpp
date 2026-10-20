@@ -191,10 +191,10 @@ void EntitySimulation::tickPlayerSurvival(world::World& world, physics::Player& 
     // Beta EntityLiving.onEntityUpdate: eyes inside an opaque solid block (fallen sand, a
     // closing piston) hurt by 1 every tick, the resistance window spacing the hits.
     const glm::vec3 eye = player.getEyePosition();
-    const world::BlockId eyeBlock = world.getBlock(static_cast<int32_t>(std::floor(eye.x)),
+    const voxel::BlockId eyeBlock = world.getBlock(static_cast<int32_t>(std::floor(eye.x)),
                                                    static_cast<int32_t>(std::floor(eye.y)),
                                                    static_cast<int32_t>(std::floor(eye.z)));
-    if (world::BlockRegistry::isOpaque(eyeBlock) && world::BlockRegistry::isSolid(eyeBlock)) {
+    if (voxel::BlockRegistry::isOpaque(eyeBlock) && voxel::BlockRegistry::isSolid(eyeBlock)) {
         (void)damagePlayer(player, {.amount = gameplay::kSuffocationDamage, .cause = DamageCause::Suffocation}, events);
     }
     if (player.isTouchingCactus()) {
@@ -260,7 +260,7 @@ ecs::EntityId EntitySimulation::spawnBlockDrop(const gameplay::ItemStack& stack,
     return spawnItem(stack, pos, velocity);
 }
 
-bool EntitySimulation::spawnNaturalDrop(world::BlockId block, const core::BlockPos& cell, uint8_t meta) {
+bool EntitySimulation::spawnNaturalDrop(voxel::BlockId block, const core::BlockPos& cell, uint8_t meta) {
     // Beta dropBlockAsItem without a player: the bare-hand drop table, nothing to wear.
     gameplay::ItemStack noTool{};
     const gameplay::BlockBreakOutcome outcome = gameplay::breakBlockWith(block, noTool, m_rng.next(), meta);
@@ -302,7 +302,7 @@ void EntitySimulation::tickFallingBlocks(world::World& world) {
     (void)spawnFallingBlocks(world);
     struct Landed {
         ecs::EntityId entity;
-        world::BlockId id;
+        voxel::BlockId id;
         FallingBlockStep step;
     };
     std::vector<Landed> landed;
@@ -327,7 +327,7 @@ void EntitySimulation::tickFallingBlocks(world::World& world) {
 
 size_t EntitySimulation::spawnRemovedBlockEntityDrops(world::World& world) {
     size_t spawned = 0;
-    const auto drop = [&](const world::StoredStack& s, const core::BlockPos& pos) {
+    const auto drop = [&](const voxel::StoredStack& s, const core::BlockPos& pos) {
         if (s.empty()) return;
         const physics::InventorySlot slot{s.id, s.count, s.damage};
         if (spawnBlockDrop(toItemStack(slot), pos) != ecs::NULL_ENTITY) {
@@ -335,12 +335,12 @@ size_t EntitySimulation::spawnRemovedBlockEntityDrops(world::World& world) {
         }
     };
     for (const world::World::RemovedBlockEntity& removed : world.takeRemovedBlockEntities()) {
-        if (const auto* furnace = std::get_if<world::FurnaceData>(&removed.entity)) {
+        if (const auto* furnace = std::get_if<voxel::FurnaceData>(&removed.entity)) {
             drop(furnace->input, removed.pos);
             drop(furnace->fuel, removed.pos);
             drop(furnace->output, removed.pos);
-        } else if (const auto* chest = std::get_if<world::ChestData>(&removed.entity)) {
-            for (const world::StoredStack& s : chest->slots) {
+        } else if (const auto* chest = std::get_if<voxel::ChestData>(&removed.entity)) {
+            for (const voxel::StoredStack& s : chest->slots) {
                 drop(s, removed.pos);
             }
         }
@@ -356,8 +356,8 @@ void EntitySimulation::tickBlockEntities(world::World& world) {
     };
     std::vector<Change> changes;
     const crafting::SmeltingBook& book = crafting::SmeltingBook::beta();
-    world.blockEntities().forEach([&](const core::BlockPos& pos, world::BlockEntity& entity) {
-        auto* furnace = std::get_if<world::FurnaceData>(&entity);
+    world.blockEntities().forEach([&](const core::BlockPos& pos, voxel::BlockEntity& entity) {
+        auto* furnace = std::get_if<voxel::FurnaceData>(&entity);
         if (furnace == nullptr) return;
         const crafting::FurnaceTickResult r = crafting::tickFurnace(*furnace, book);
         if (r.changed) {
@@ -367,9 +367,9 @@ void EntitySimulation::tickBlockEntities(world::World& world) {
     // Block edits after the walk: setBlock must not run while the store is being iterated.
     for (const Change& c : changes) {
         if (c.litChanged) {
-            const world::BlockId current = world.getBlock(c.pos);
-            if (current == world::BlockId::Furnace || current == world::BlockId::LitFurnace) {
-                (void)world.setBlock(c.pos, c.burning ? world::BlockId::LitFurnace : world::BlockId::Furnace);
+            const voxel::BlockId current = world.getBlock(c.pos);
+            if (current == voxel::BlockId::Furnace || current == voxel::BlockId::LitFurnace) {
+                (void)world.setBlock(c.pos, c.burning ? voxel::BlockId::LitFurnace : voxel::BlockId::Furnace);
             }
         }
         world.markBlockEntityChanged(c.pos);
@@ -525,7 +525,7 @@ void EntitySimulation::handleAttack(world::World& world, physics::Player& player
     }
 
     const core::BlockPos pos = actions.target.blockPos;
-    const world::BlockId block = world.getBlock(pos); // The live block, not the raycast snapshot
+    const voxel::BlockId block = world.getBlock(pos); // The live block, not the raycast snapshot
     // Fly mode is a debug camera, not Beta's airborne state: it does not slow digging.
     const gameplay::DigConditions conditions{.inWater = player.isHeadUnderWater(),
                                              .onGround = player.isOnGround() || player.isFlying()};
@@ -552,9 +552,9 @@ void EntitySimulation::handleAttack(world::World& world, physics::Player& player
 }
 
 void EntitySimulation::breakBlock(world::World& world, physics::Player& player, const core::BlockPos& pos,
-                             world::BlockId block, GameTickEvents& events) {
+                             voxel::BlockId block, GameTickEvents& events) {
     gameplay::ItemStack held = toItemStack(player.getHeldItem());
-    if (block == world::BlockId::TNT && !player.isCreative()) {
+    if (block == voxel::BlockId::TNT && !player.isCreative()) {
         // S6.6: TNT broken in Survival lights instead of dropping (Beta BlockTNT with the
         // ignite bit); the tool wears as on any block.
         if (primeTnt(world, pos) == ecs::NULL_ENTITY) {
@@ -565,7 +565,7 @@ void EntitySimulation::breakBlock(world::World& world, physics::Player& player, 
         events.blockBroken = BlockBreakEvent{pos, block, false, ecs::NULL_ENTITY};
         return;
     }
-    if (block == world::BlockId::Chest) {
+    if (block == voxel::BlockId::Chest) {
         (void)fillDungeonChest(world, pos); // S6.10: the loot is drawn before it spills out
     }
     const gameplay::BlockBreakOutcome outcome =
@@ -573,11 +573,11 @@ void EntitySimulation::breakBlock(world::World& world, physics::Player& player, 
     if (!outcome.broken) {
         return;
     }
-    world::BlockId replacement = world::BlockId::Air;
+    voxel::BlockId replacement = voxel::BlockId::Air;
     if (outcome.meltsIntoWater) {
-        const world::BlockId below = world.getBlock(pos.x, pos.y - 1, pos.z);
-        if (world::BlockRegistry::isSolid(below) || world::BlockRegistry::isLiquid(below)) {
-            replacement = world::BlockId::Water;
+        const voxel::BlockId below = world.getBlock(pos.x, pos.y - 1, pos.z);
+        if (voxel::BlockRegistry::isSolid(below) || voxel::BlockRegistry::isLiquid(below)) {
+            replacement = voxel::BlockId::Water;
         }
     }
     if (!world.setBlock(pos, replacement)) {
@@ -766,7 +766,7 @@ void EntitySimulation::runExplosionQueue(world::World& world, physics::Player& p
 }
 
 ecs::EntityId EntitySimulation::primeTnt(world::World& world, const core::BlockPos& cell, int32_t fuse) {
-    if (world.getBlock(cell) != world::BlockId::TNT || !world.setBlock(cell, world::BlockId::Air)) {
+    if (world.getBlock(cell) != voxel::BlockId::TNT || !world.setBlock(cell, voxel::BlockId::Air)) {
         return ecs::NULL_ENTITY;
     }
     const ecs::EntityId e = m_entities.create();
@@ -796,7 +796,7 @@ std::optional<ecs::EntityId> EntitySimulation::igniteTnt(world::World& world, ph
     physics::InventorySlot held = player.getHeldItem();
     if (!target.hit || player.isDead() || held.isEmpty() ||
         gameplay::canonicalize(held.id) != gameplay::items::FlintAndSteel ||
-        world.getBlock(target.blockPos) != world::BlockId::TNT) {
+        world.getBlock(target.blockPos) != voxel::BlockId::TNT) {
         return std::nullopt;
     }
     const ecs::EntityId e = primeTnt(world, target.blockPos);
@@ -827,12 +827,12 @@ void EntitySimulation::explode(world::World& world, physics::Player& player, glm
     const std::vector<core::BlockPos> cells =
         gameplay::explosionBlocks(gameplay::ExplosionInput{centre, power, m_rng.next()},
                                   [&](int32_t x, int32_t y, int32_t z) {
-                                      const world::BlockId id = world.getBlock(x, y, z);
-                                      return id == world::BlockId::Air ? -1.0f
-                                                                       : world::BlockRegistry::get(id).blastResistance;
+                                      const voxel::BlockId id = world.getBlock(x, y, z);
+                                      return id == voxel::BlockId::Air ? -1.0f
+                                                                       : voxel::BlockRegistry::get(id).blastResistance;
                                   });
     const auto isSolid = [&](int32_t x, int32_t y, int32_t z) {
-        return world::BlockRegistry::isSolid(world.getBlock(x, y, z));
+        return voxel::BlockRegistry::isSolid(world.getBlock(x, y, z));
     };
     const float radius = gameplay::kExplosionDamageRadiusFactor * power;
     constexpr float kPerTick = static_cast<float>(gameplay::kTicksPerSecond);
@@ -890,21 +890,21 @@ void EntitySimulation::explode(world::World& world, physics::Player& player, glm
     size_t destroyed = 0;
     std::vector<core::BlockPos> tnt;
     for (const core::BlockPos& p : cells) {
-        const world::BlockId id = world.getBlock(p); // Live: a door's other half is already gone
-        if (id == world::BlockId::Air) {
+        const voxel::BlockId id = world.getBlock(p); // Live: a door's other half is already gone
+        if (id == voxel::BlockId::Air) {
             continue;
         }
-        if (id == world::BlockId::TNT) {
+        if (id == voxel::BlockId::TNT) {
             tnt.push_back(p);
             continue;
         }
-        if (id == world::BlockId::Chest) {
+        if (id == voxel::BlockId::Chest) {
             (void)fillDungeonChest(world, p); // S6.10
         }
         const uint8_t meta = world.getMetadata(p);
         const bool drops = m_rng.nextFloat() < kExplosionDropChance;
         const uint64_t dropSeed = m_rng.next();
-        if (!world.setBlock(p, world::BlockId::Air)) {
+        if (!world.setBlock(p, voxel::BlockId::Air)) {
             continue;
         }
         ++destroyed;
@@ -934,8 +934,8 @@ size_t EntitySimulation::tickPressurePlates(world::World& world, const physics::
         for (int32_t x = static_cast<int32_t>(std::floor(box.min.x)); x <= static_cast<int32_t>(std::floor(box.max.x)); ++x) {
             for (int32_t z = static_cast<int32_t>(std::floor(box.min.z)); z <= static_cast<int32_t>(std::floor(box.max.z));
                  ++z) {
-                const world::BlockId id = world.getBlock(x, y, z);
-                if (id != world::BlockId::WoodPressurePlate && (id != world::BlockId::StonePressurePlate || !living)) {
+                const voxel::BlockId id = world.getBlock(x, y, z);
+                if (id != voxel::BlockId::WoodPressurePlate && (id != voxel::BlockId::StonePressurePlate || !living)) {
                     continue;
                 }
                 const auto fx = static_cast<float>(x);
@@ -984,18 +984,18 @@ int32_t EntitySimulation::pickUpItems(physics::Player& player) {
 }
 
 std::optional<uint8_t> placementMetadata(const world::World& world, const physics::Player& player,
-                                         world::BlockId block, const core::BlockPos& pos, core::FaceDir clickedFace) {
+                                         voxel::BlockId block, const core::BlockPos& pos, core::FaceDir clickedFace) {
     switch (block) {
-        case world::BlockId::Leaves:
+        case voxel::BlockId::Leaves:
             return world::kLeavesPlayerPlacedBit;
-        case world::BlockId::Ladder: {
+        case voxel::BlockId::Ladder: {
             // Beta BlockLadder.onBlockPlaced: the clicked wall when it is a normal cube, else
             // the first normal cube around in the order +Z, -Z, +X, -X; no wall, no ladder.
             const auto wallAt = [&](uint8_t meta) {
-                const glm::ivec3 d = world::ladderSupportOffset(meta);
-                return world::isNormalCube(world.getBlock(pos.x + d.x, pos.y + d.y, pos.z + d.z));
+                const glm::ivec3 d = voxel::ladderSupportOffset(meta);
+                return voxel::isNormalCube(world.getBlock(pos.x + d.x, pos.y + d.y, pos.z + d.z));
             };
-            if (const std::optional<uint8_t> clicked = world::ladderMetaForClickedFace(clickedFace);
+            if (const std::optional<uint8_t> clicked = voxel::ladderMetaForClickedFace(clickedFace);
                 clicked && wallAt(*clicked)) {
                 return clicked;
             }
@@ -1006,57 +1006,57 @@ std::optional<uint8_t> placementMetadata(const world::World& world, const physic
             }
             return std::nullopt;
         }
-        case world::BlockId::WoodStairs:
-        case world::BlockId::CobbleStairs: {
+        case voxel::BlockId::WoodStairs:
+        case voxel::BlockId::CobbleStairs: {
             const glm::vec3 look = player.getLookDirection();
-            return world::stairsMetaForLook(look.x, look.z);
+            return voxel::stairsMetaForLook(look.x, look.z);
         }
         // S8.5: a lever on any side or on top of a normal cube, a button on its sides, a
         // redstone torch and the plates on top of one (Beta canPlaceBlockAt).
-        case world::BlockId::Lever:
-        case world::BlockId::StoneButton: {
-            const std::optional<uint8_t> attach = world::attachmentForClickedFace(clickedFace);
-            if (!attach || (block == world::BlockId::StoneButton && *attach == world::kAttachFloor)) {
+        case voxel::BlockId::Lever:
+        case voxel::BlockId::StoneButton: {
+            const std::optional<uint8_t> attach = voxel::attachmentForClickedFace(clickedFace);
+            if (!attach || (block == voxel::BlockId::StoneButton && *attach == voxel::kAttachFloor)) {
                 return std::nullopt;
             }
-            const glm::ivec3 d = world::attachmentOffset(*attach);
-            if (!world::isNormalCube(world.getBlock(pos.x + d.x, pos.y + d.y, pos.z + d.z))) {
+            const glm::ivec3 d = voxel::attachmentOffset(*attach);
+            if (!voxel::isNormalCube(world.getBlock(pos.x + d.x, pos.y + d.y, pos.z + d.z))) {
                 return std::nullopt;
             }
             return attach;
         }
-        case world::BlockId::RedstoneTorchOn:
-        case world::BlockId::StonePressurePlate:
-        case world::BlockId::WoodPressurePlate:
-            if (!world::isNormalCube(world.getBlock(pos.x, pos.y - 1, pos.z))) {
+        case voxel::BlockId::RedstoneTorchOn:
+        case voxel::BlockId::StonePressurePlate:
+        case voxel::BlockId::WoodPressurePlate:
+            if (!voxel::isNormalCube(world.getBlock(pos.x, pos.y - 1, pos.z))) {
                 return std::nullopt;
             }
-            return block == world::BlockId::RedstoneTorchOn ? world::kAttachFloor : uint8_t{0};
-        case world::BlockId::Piston: {
+            return block == voxel::BlockId::RedstoneTorchOn ? voxel::kAttachFloor : uint8_t{0};
+        case voxel::BlockId::Piston: {
             const glm::vec3 look = player.getLookDirection();
-            return world::pistonMetaForLook(look.x, look.y, look.z);
+            return voxel::pistonMetaForLook(look.x, look.y, look.z);
         }
         default:
             return uint8_t{0};
     }
 }
 
-std::optional<world::BlockId> placeHeldBlock(world::World& world, physics::Player& player,
+std::optional<voxel::BlockId> placeHeldBlock(world::World& world, physics::Player& player,
                                              const physics::RaycastHit& target) {
     const physics::InventorySlot held = player.getHeldItem();
     if (!target.hit || held.isEmpty() || !crafting::isPlaceableBlock(held.id)) {
         return std::nullopt;
     }
-    const auto block = static_cast<world::BlockId>(held.id);
+    const auto block = static_cast<voxel::BlockId>(held.id);
     // Doors, beds and crops come from their items (ItemUse): a lone half or a crop off
     // farmland is never placed as a block.
-    if (world::isDoorBlock(block) || block == world::BlockId::Bed || block == world::BlockId::Crops ||
-        block == world::BlockId::RedstoneWire || block == world::BlockId::RedstoneTorchOff) {
+    if (voxel::isDoorBlock(block) || block == voxel::BlockId::Bed || block == voxel::BlockId::Crops ||
+        block == voxel::BlockId::RedstoneWire || block == voxel::BlockId::RedstoneTorchOff) {
         return std::nullopt; // S8.5: wire comes from redstone dust, an unlit torch from a lit one
     }
     const core::BlockPos pos = target.adjacentPos;
-    if (pos.y < 0 || pos.y >= world::Chunk::HEIGHT ||
-        !world::BlockRegistry::get(world.getBlock(pos)).replaceable) {
+    if (pos.y < 0 || pos.y >= voxel::Chunk::HEIGHT ||
+        !voxel::BlockRegistry::get(world.getBlock(pos)).replaceable) {
         return std::nullopt;
     }
     // A placed block starts at metadata 0; for a fluid poured into flowing fluid of the same
@@ -1067,7 +1067,7 @@ std::optional<world::BlockId> placeHeldBlock(world::World& world, physics::Playe
         return std::nullopt;
     }
     const uint8_t meta = *placedMeta;
-    if (world::BlockRegistry::get(block).solid &&
+    if (voxel::BlockRegistry::get(block).solid &&
         player.getAABB().intersects(math::AABB::fromBlock(pos.x, pos.y, pos.z, block, meta))) {
         return std::nullopt;
     }
@@ -1079,11 +1079,11 @@ std::optional<world::BlockId> placeHeldBlock(world::World& world, physics::Playe
 }
 
 bool fillDungeonChest(world::World& world, const core::BlockPos& pos) {
-    if (world.getBlock(pos) != world::BlockId::Chest || world.getMetadata(pos) != worldgen::kChestLootPendingMeta) {
+    if (world.getBlock(pos) != voxel::BlockId::Chest || world.getMetadata(pos) != worldgen::kChestLootPendingMeta) {
         return false;
     }
-    world::BlockEntity& entity = world.blockEntities().getOrCreate(pos, world::BlockId::Chest);
-    if (auto* chest = std::get_if<world::ChestData>(&entity)) {
+    voxel::BlockEntity& entity = world.blockEntities().getOrCreate(pos, voxel::BlockId::Chest);
+    if (auto* chest = std::get_if<voxel::ChestData>(&entity)) {
         chest->slots = worldgen::rollDungeonChestLoot(world.getSeed(), pos);
     }
     world.markBlockEntityChanged(pos);
@@ -1092,33 +1092,33 @@ bool fillDungeonChest(world::World& world, const core::BlockPos& pos) {
 }
 
 std::optional<core::BlockPos> bedHeadAt(const world::World& world, const core::BlockPos& pos) {
-    if (world.getBlock(pos) != world::BlockId::Bed) {
+    if (world.getBlock(pos) != voxel::BlockId::Bed) {
         return std::nullopt;
     }
     const uint8_t meta = world.getMetadata(pos);
-    const glm::ivec3 d = world::bedPartnerOffset(meta);
+    const glm::ivec3 d = voxel::bedPartnerOffset(meta);
     const core::BlockPos other = pos.offset(d.x, d.y, d.z);
-    if (world.getBlock(other) != world::BlockId::Bed ||
-        (world.getMetadata(other) & world::kBedHeadBit) == (meta & world::kBedHeadBit)) {
+    if (world.getBlock(other) != voxel::BlockId::Bed ||
+        (world.getMetadata(other) & voxel::kBedHeadBit) == (meta & voxel::kBedHeadBit)) {
         return std::nullopt;
     }
-    return (meta & world::kBedHeadBit) != 0 ? pos : other;
+    return (meta & voxel::kBedHeadBit) != 0 ? pos : other;
 }
 
 std::optional<glm::vec3> bedRespawnPoint(const world::World& world, const core::BlockPos& bedHead) {
     if (bedHeadAt(world, bedHead) != std::optional<core::BlockPos>{bedHead}) {
         return std::nullopt;
     }
-    const glm::ivec3 dir = world::bedHeadDirection(world.getMetadata(bedHead));
+    const glm::ivec3 dir = voxel::bedHeadDirection(world.getMetadata(bedHead));
     // Beta: the 3x3 around the head, then the 3x3 around the foot.
     for (int32_t half = 0; half <= 1; ++half) {
         const int32_t x0 = bedHead.x - dir.x * half - 1;
         const int32_t z0 = bedHead.z - dir.z * half - 1;
         for (int32_t x = x0; x <= x0 + 2; ++x) {
             for (int32_t z = z0; z <= z0 + 2; ++z) {
-                if (world::isNormalCube(world.getBlock(x, bedHead.y - 1, z)) &&
-                    world.getBlock(x, bedHead.y, z) == world::BlockId::Air &&
-                    world.getBlock(x, bedHead.y + 1, z) == world::BlockId::Air) {
+                if (voxel::isNormalCube(world.getBlock(x, bedHead.y - 1, z)) &&
+                    world.getBlock(x, bedHead.y, z) == voxel::BlockId::Air &&
+                    world.getBlock(x, bedHead.y + 1, z) == voxel::BlockId::Air) {
                     return glm::vec3(static_cast<float>(x) + 0.5f, static_cast<float>(bedHead.y),
                                      static_cast<float>(z) + 0.5f);
                 }

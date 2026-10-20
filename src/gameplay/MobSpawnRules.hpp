@@ -43,7 +43,7 @@ inline constexpr int32_t kThunderSkylightSubtracted = 10;
 [[nodiscard]] bool hostileLightOk(uint8_t sky, uint8_t effective, SplitMix64& rng) noexcept;
 
 // EntityAnimal.getCanSpawnHere: standing on grass in effective light above 8.
-[[nodiscard]] bool passiveSpawnOk(world::BlockId below, uint8_t effective) noexcept;
+[[nodiscard]] bool passiveSpawnOk(voxel::BlockId below, uint8_t effective) noexcept;
 
 // SpawnerAnimals: base * eligibleChunks / 256, capped at the hard cap of the category.
 [[nodiscard]] int32_t mobCap(MobCategory category, size_t eligibleChunks) noexcept;

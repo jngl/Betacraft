@@ -176,7 +176,7 @@ uint64_t FluidSimulator::runUntilIdle(uint64_t maxTicks) {
 // Writes, wake-ups and side effects
 // ---------------------------------------------------------------------------------------
 
-void FluidSimulator::emit(FluidEventKind kind, const core::BlockPos& pos, world::BlockId block) {
+void FluidSimulator::emit(FluidEventKind kind, const core::BlockPos& pos, voxel::BlockId block) {
     if (m_events.size() < m_config.maxBufferedEvents) {
         m_events.push_back({kind, pos, block});
     }
@@ -210,7 +210,7 @@ void FluidSimulator::writeFluid(const core::BlockPos& pos, FluidState state) {
     wakeNeighbours(pos, true);
 }
 
-void FluidSimulator::writeBlock(const core::BlockPos& pos, world::BlockId id) {
+void FluidSimulator::writeBlock(const core::BlockPos& pos, voxel::BlockId id) {
     m_access.setBlock(pos, id);
     // No hardening cascade from here: a new solid block never adds water, and lava that
     // was already touching water is resolved on its own scheduled update instead. This
@@ -236,11 +236,11 @@ bool FluidSimulator::tryHarden(const core::BlockPos& pos) {
         return false;
     }
     const int decay = f.betaDecay();
-    world::BlockId result = world::BlockId::Air;
+    voxel::BlockId result = voxel::BlockId::Air;
     if (decay == 0) {
-        result = world::BlockId::Obsidian;
+        result = voxel::BlockId::Obsidian;
     } else if (decay <= kMaxHardeningDecay) {
-        result = world::BlockId::Cobblestone;
+        result = voxel::BlockId::Cobblestone;
     } else {
         return false;
     }
@@ -363,8 +363,8 @@ void FluidSimulator::updateCell(const core::BlockPos& pos) {
     const core::BlockPos below = pos.offset(0, -1, 0);
     if (canDisplace(below, type)) {
         if (type == FluidType::Lava && m_access.getFluid(below).type == FluidType::Water) {
-            writeBlock(below, world::BlockId::Stone);
-            emit(FluidEventKind::Fizz, below, world::BlockId::Stone);
+            writeBlock(below, voxel::BlockId::Stone);
+            emit(FluidEventKind::Fizz, below, voxel::BlockId::Stone);
             return;
         }
         flowInto(below, type, FluidState::kFallingDecay);
@@ -395,10 +395,10 @@ void FluidSimulator::flowInto(const core::BlockPos& pos, FluidType type, int dec
     // Beta flowIntoBlock(): lava destroys what it displaces with the mix effects (fizz,
     // no drop) whether that is water or a plant/torch; only water drops the block.
     const FluidState there = m_access.getFluid(pos);
-    const world::BlockId displaced = there.isEmpty() ? m_access.getBlock(pos) : world::BlockId::Air;
-    if (!there.isEmpty() || displaced != world::BlockId::Air) {
+    const voxel::BlockId displaced = there.isEmpty() ? m_access.getBlock(pos) : voxel::BlockId::Air;
+    if (!there.isEmpty() || displaced != voxel::BlockId::Air) {
         if (type == FluidType::Lava) {
-            emit(FluidEventKind::Fizz, pos, world::BlockId::Air);
+            emit(FluidEventKind::Fizz, pos, voxel::BlockId::Air);
         } else {
             emit(FluidEventKind::BlockWashedAway, pos, displaced);
         }

@@ -25,7 +25,7 @@ struct InventorySlot {
     constexpr InventorySlot() noexcept = default;
     constexpr InventorySlot(gameplay::ItemId item, int32_t n, int32_t wear = 0) noexcept
         : id(item), count(n), damage(wear) {}
-    constexpr InventorySlot(world::BlockId block, int32_t n) noexcept
+    constexpr InventorySlot(voxel::BlockId block, int32_t n) noexcept
         : id(gameplay::toItemId(block)), count(n) {}
 
     [[nodiscard]] constexpr bool isEmpty() const noexcept {
@@ -47,7 +47,7 @@ struct PlayerInput {
 
 struct StepEvent {
     bool triggered{false};
-    world::BlockId groundBlock{world::BlockId::Grass};
+    voxel::BlockId groundBlock{voxel::BlockId::Grass};
     bool splashedWater{false};
     // S5.7: fall distance of a landing during this step (0 without one) and the cell the feet
     // came down on (Beta Entity.fall: floor(y - 0.2)), for trampling farmland.
@@ -209,7 +209,7 @@ public:
     void setHeldItem(InventorySlot slot) noexcept { setInventorySlot(static_cast<size_t>(m_selectedSlot), slot); }
 
     bool addItem(gameplay::ItemId id, int32_t count = 1) noexcept;
-    bool addItem(world::BlockId id, int32_t count = 1) noexcept { return addItem(gameplay::toItemId(id), count); }
+    bool addItem(voxel::BlockId id, int32_t count = 1) noexcept { return addItem(gameplay::toItemId(id), count); }
     // Merges into matching stacks (same id and wear) up to gameplay::maxStackSize, then fills
     // empty slots. Returns how many items did not fit; those are left to the caller.
     [[nodiscard]] int32_t insertStack(InventorySlot stack) noexcept;
@@ -220,11 +220,11 @@ public:
                                              bool mergeOnly = false) noexcept;
     bool consumeHeldItem(int32_t count = 1) noexcept;
     bool consumeItem(gameplay::ItemId id, int32_t count = 1) noexcept;
-    bool consumeItem(world::BlockId id, int32_t count = 1) noexcept {
+    bool consumeItem(voxel::BlockId id, int32_t count = 1) noexcept {
         return consumeItem(gameplay::toItemId(id), count);
     }
     [[nodiscard]] int32_t countItem(gameplay::ItemId id) const noexcept;
-    [[nodiscard]] int32_t countItem(world::BlockId id) const noexcept { return countItem(gameplay::toItemId(id)); }
+    [[nodiscard]] int32_t countItem(voxel::BlockId id) const noexcept { return countItem(gameplay::toItemId(id)); }
 
     // S6.7 armor (Beta InventoryPlayer.armorInventory), indexed by gameplay::ArmorSlot
     // (helmet, chestplate, leggings, boots). The setter stores what it is given; the

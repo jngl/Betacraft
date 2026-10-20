@@ -13,8 +13,8 @@
 #include <memory>
 
 using namespace betacraft;
-using world::BlockId;
-using world::Chunk;
+using voxel::BlockId;
+using voxel::Chunk;
 
 namespace {
 
@@ -32,14 +32,14 @@ namespace {
     for (int32_t y = minY; y < Chunk::HEIGHT; ++y)
         for (int32_t z = 0; z < Chunk::DEPTH; ++z)
             for (int32_t x = 0; x < Chunk::WIDTH; ++x)
-                if (world::isWaterBlock(c.getBlock(x, y, z))) ++n;
+                if (voxel::isWaterBlock(c.getBlock(x, y, z))) ++n;
     return n;
 }
 
 } // namespace
 
 TEST(S1FluidPersistence, GeneratedFluidSettlingMarksNothingModified) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir{"betacraft_s1_fluids_"};
     world::World w(test::p2worldgen::kSeed, dir.path());
     test::p2worldgen::loadAll(w, test::p2worldgen::squareRegion({0, 0}, 2));
@@ -63,7 +63,7 @@ TEST(S1FluidPersistence, GeneratedFluidSettlingMarksNothingModified) {
 }
 
 TEST(S1FluidPersistence, PlayerWaterFlowingAcrossASeamIsPersisted) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir{"betacraft_s1_fluids_"};
     constexpr int32_t kFloorY = 119;
     constexpr int32_t kY = 120;

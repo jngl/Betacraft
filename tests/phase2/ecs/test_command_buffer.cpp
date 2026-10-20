@@ -131,8 +131,8 @@ TEST(EcsCommandBuffer, DeathHandlerSpawnsLootWithoutTouchingIteratedPools) {
         }
         const glm::vec3 at = t.pos;
         cb.defer([at](Registry& r) {
-            (void)EntityFactory::spawnItemDrop(r, at, world::BlockId::Dirt, 1);
-            (void)EntityFactory::spawnItemDrop(r, at, world::BlockId::Sand, 1);
+            (void)EntityFactory::spawnItemDrop(r, at, voxel::BlockId::Dirt, 1);
+            (void)EntityFactory::spawnItemDrop(r, at, voxel::BlockId::Sand, 1);
         });
         cb.destroy(e);
         EXPECT_EQ(t.pos, deathPos.at(e)); // still this entity's component: nothing moved yet

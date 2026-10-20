@@ -11,9 +11,9 @@ ParticleSystem::ParticleSystem() noexcept
     m_particles.reserve(512);
 }
 
-void ParticleSystem::spawnBlockBreakBurst(const world::World& world, core::BlockPos pos, world::BlockId blockId, int count) {
-    if (blockId == world::BlockId::Air) return;
-    const auto& def = world::BlockRegistry::get(blockId);
+void ParticleSystem::spawnBlockBreakBurst(const world::World& world, core::BlockPos pos, voxel::BlockId blockId, int count) {
+    if (blockId == voxel::BlockId::Air) return;
+    const auto& def = voxel::BlockRegistry::get(blockId);
     const glm::vec4 tileUV = TextureAtlas::getTileUV(def.tileForFace(core::FaceDir::PosZ));
 
     glm::vec3 tint(1.0f);
@@ -59,9 +59,9 @@ void ParticleSystem::spawnBlockBreakBurst(const world::World& world, core::Block
     }
 }
 
-void ParticleSystem::spawnMiningHitParticles(const world::World& world, core::BlockPos pos, core::FaceDir face, world::BlockId blockId, int count) {
-    if (blockId == world::BlockId::Air) return;
-    const auto& def = world::BlockRegistry::get(blockId);
+void ParticleSystem::spawnMiningHitParticles(const world::World& world, core::BlockPos pos, core::FaceDir face, voxel::BlockId blockId, int count) {
+    if (blockId == voxel::BlockId::Air) return;
+    const auto& def = voxel::BlockRegistry::get(blockId);
     const glm::vec4 tileUV = TextureAtlas::getTileUV(def.tileForFace(face));
     const glm::ivec3 n = core::faceNormal(face);
 
@@ -94,7 +94,7 @@ void ParticleSystem::spawnMiningHitParticles(const world::World& world, core::Bl
 
 void ParticleSystem::spawnExplosionBurst(const glm::vec3& centre, float power, int count) {
     const glm::vec4 tileUV = TextureAtlas::getTileUV(
-        world::BlockRegistry::get(world::BlockId::Wool).tileForFace(core::FaceDir::PosZ));
+        voxel::BlockRegistry::get(voxel::BlockId::Wool).tileForFace(core::FaceDir::PosZ));
     std::uniform_real_distribution<float> unit(-1.0f, 1.0f);
     std::uniform_real_distribution<float> uvDist(0.0f, 0.7f);
     std::uniform_real_distribution<float> lifeDist(0.6f, 1.4f);
@@ -119,7 +119,7 @@ void ParticleSystem::spawnExplosionBurst(const glm::vec3& centre, float power, i
 
 void ParticleSystem::spawnRainSplash(const glm::vec3& at, int count) {
     const glm::vec4 tileUV = TextureAtlas::getTileUV(
-        world::BlockRegistry::get(world::BlockId::Water).tileForFace(core::FaceDir::PosY));
+        voxel::BlockRegistry::get(voxel::BlockId::Water).tileForFace(core::FaceDir::PosY));
     std::uniform_real_distribution<float> unit(-1.0f, 1.0f);
     std::uniform_real_distribution<float> uvDist(0.0f, 0.7f);
     std::uniform_real_distribution<float> lifeDist(0.15f, 0.35f);
@@ -155,7 +155,7 @@ void ParticleSystem::update(float dt, const world::World& world) noexcept {
         const int32_t by = static_cast<int32_t>(std::floor(nextPos.y));
         const int32_t bz = static_cast<int32_t>(std::floor(nextPos.z));
 
-        if (world::BlockRegistry::isSolid(world.getBlock(bx, by, bz))) {
+        if (voxel::BlockRegistry::isSolid(world.getBlock(bx, by, bz))) {
             p.velocity.y = 0.0f;
             p.velocity.x *= 0.6f;
             p.velocity.z *= 0.6f;

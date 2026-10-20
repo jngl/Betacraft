@@ -391,7 +391,7 @@ namespace {
 
 // --- Legacy writers (region storage disabled) --------------------------------------------
 
-bool WorldStorage::saveLegacyChunk(const world::Chunk& chunk) const {
+bool WorldStorage::saveLegacyChunk(const voxel::Chunk& chunk) const {
     if (!ensureDirectoryExists()) return false;
     return writeFile(m_legacy->chunkFilePath(chunk.getCoord()), chunk.serializeRLE());
 }
@@ -486,12 +486,12 @@ void WorldStorage::quarantineChunk(core::ChunkCoord coord) const {
     }
 }
 
-std::vector<world::BlockEntityEntry> WorldStorage::decodeBundleBlockEntities(core::ChunkCoord coord,
+std::vector<voxel::BlockEntityEntry> WorldStorage::decodeBundleBlockEntities(core::ChunkCoord coord,
                                                                              const ChunkBundle& bundle) const {
     if (bundle.blockEntities.empty()) {
         return {};
     }
-    auto entries = world::decodeBlockEntities(coord, bundle.blockEntities);
+    auto entries = voxel::decodeBlockEntities(coord, bundle.blockEntities);
     if (entries) {
         return std::move(*entries);
     }
@@ -587,13 +587,13 @@ std::optional<worldgen::DecorationRecord> WorldStorage::loadDecorationRecord(cor
     return m_legacy->readDecoration(coord);
 }
 
-bool WorldStorage::saveBlockEntities(core::ChunkCoord coord, std::span<const world::BlockEntityEntry> entries) const {
+bool WorldStorage::saveBlockEntities(core::ChunkCoord coord, std::span<const voxel::BlockEntityEntry> entries) const {
     if (m_readOnly) {
         return false;
     }
     std::vector<uint8_t> encoded;
     if (!entries.empty()) {
-        encoded = world::encodeBlockEntities(entries);
+        encoded = voxel::encodeBlockEntities(entries);
     }
     if (!m_regionWrites) {
         return saveLegacyBlockEntities(coord, encoded);
@@ -601,7 +601,7 @@ bool WorldStorage::saveBlockEntities(core::ChunkCoord coord, std::span<const wor
     return editBundle(coord, [&encoded](ChunkBundle& b) { b.blockEntities = std::move(encoded); });
 }
 
-std::vector<world::BlockEntityEntry> WorldStorage::loadBlockEntities(core::ChunkCoord coord) const {
+std::vector<voxel::BlockEntityEntry> WorldStorage::loadBlockEntities(core::ChunkCoord coord) const {
     if (m_regions->contains(coord)) {
         if (auto bundle = loadChunkBundle(coord)) {
             return decodeBundleBlockEntities(coord, *bundle);
@@ -612,7 +612,7 @@ std::vector<world::BlockEntityEntry> WorldStorage::loadBlockEntities(core::Chunk
     return decodeBundleBlockEntities(coord, legacy);
 }
 
-bool WorldStorage::saveChunk(const world::Chunk& chunk) const {
+bool WorldStorage::saveChunk(const voxel::Chunk& chunk) const {
     if (m_readOnly) {
         return false;
     }
@@ -622,7 +622,7 @@ bool WorldStorage::saveChunk(const world::Chunk& chunk) const {
     return editBundle(chunk.getCoord(), [&chunk](ChunkBundle& b) { b.blocks = chunk.serializeRLE(); });
 }
 
-bool WorldStorage::loadChunk(world::Chunk& chunk) const {
+bool WorldStorage::loadChunk(voxel::Chunk& chunk) const {
     const auto bundle = loadChunkBundle(chunk.getCoord());
     if (!bundle || bundle->blocks.empty()) {
         return false;

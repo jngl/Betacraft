@@ -75,12 +75,12 @@ TEST_F(P2AiWorld, WorldNavQueryReadsBlocks) {
     EXPECT_EQ(ai::classifyBlock(BlockId::Fence, 0), ai::NavCell::Fence);
     EXPECT_EQ(ai::classifyBlock(BlockId::Torch, 0), ai::NavCell::Passable);
     EXPECT_EQ(ai::classifyBlock(BlockId::WoodDoor, 0), ai::NavCell::DoorClosed);
-    EXPECT_EQ(ai::classifyBlock(BlockId::WoodDoor, world::kDoorOpenBit | world::kDoorUpperBit),
+    EXPECT_EQ(ai::classifyBlock(BlockId::WoodDoor, voxel::kDoorOpenBit | voxel::kDoorUpperBit),
               ai::NavCell::DoorOpen);
     // S8.8: the iron door reads the same open bit, which only redstone changes.
     EXPECT_EQ(ai::classifyBlock(BlockId::IronDoor, 0), ai::NavCell::DoorClosed);
-    EXPECT_EQ(ai::classifyBlock(BlockId::IronDoor, world::kDoorOpenBit), ai::NavCell::DoorOpen);
-    EXPECT_EQ(ai::classifyBlock(BlockId::IronDoor, world::kDoorOpenBit | world::kDoorUpperBit), ai::NavCell::DoorOpen);
+    EXPECT_EQ(ai::classifyBlock(BlockId::IronDoor, voxel::kDoorOpenBit), ai::NavCell::DoorOpen);
+    EXPECT_EQ(ai::classifyBlock(BlockId::IronDoor, voxel::kDoorOpenBit | voxel::kDoorUpperBit), ai::NavCell::DoorOpen);
     // The other redstone parts never collide: mobs walk over wire and plates.
     for (const BlockId id : {BlockId::RedstoneWire, BlockId::StonePressurePlate, BlockId::WoodPressurePlate,
                              BlockId::Lever, BlockId::StoneButton, BlockId::RedstoneTorchOn}) {

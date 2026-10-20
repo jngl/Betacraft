@@ -77,7 +77,7 @@ TEST_F(P2FixesGameplay, ClickReleasedBeforeTheGameTickDoesNotStartMiningASlowBlo
 // --- Beta 1.7.3 hardness ---------------------------------------------------------------
 
 TEST(P2FixesHardness, BlockHardnessIsBetaBlockStrength) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     // Block.setHardness values from Beta 1.7.3 Block.java.
     const std::pair<BlockId, float> beta[] = {
         {BlockId::Stone, 1.5f},        {BlockId::Grass, 0.6f},       {BlockId::Dirt, 0.5f},
@@ -96,13 +96,13 @@ TEST(P2FixesHardness, BlockHardnessIsBetaBlockStrength) {
         {BlockId::Clay, 0.6f},         {BlockId::SugarCane, 0.0f},   {BlockId::Glowstone, 0.3f},
     };
     for (const auto& [id, hardness] : beta) {
-        EXPECT_FLOAT_EQ(world::BlockRegistry::get(id).hardness, hardness) << world::BlockRegistry::get(id).name;
+        EXPECT_FLOAT_EQ(voxel::BlockRegistry::get(id).hardness, hardness) << voxel::BlockRegistry::get(id).name;
     }
 }
 
 TEST_F(P2FixesGameplay, TorchesSaplingsAndSugarCaneBreakOnTheClickWithoutAHitDelay) {
     for (const BlockId id : {BlockId::Torch, BlockId::Sapling, BlockId::SugarCane, BlockId::TNT}) {
-        EXPECT_TRUE(gameplay::computeDig(id, {}).instant) << world::BlockRegistry::get(id).name;
+        EXPECT_TRUE(gameplay::computeDig(id, {}).instant) << voxel::BlockRegistry::get(id).name;
     }
     // Two torches in a row, clicked on consecutive ticks: no blockHitDelay between them.
     const core::BlockPos second{kRock.x, kRock.y, kRock.z + 1};
@@ -121,7 +121,7 @@ TEST_F(P2FixesGameplay, TorchesSaplingsAndSugarCaneBreakOnTheClickWithoutAHitDel
 }
 
 TEST(P2FixesHardness, DigTicksFollowBetaHardness) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     using gameplay::ToolKind;
     using gameplay::ToolMaterial;
     EXPECT_EQ(gameplay::computeDig(BlockId::OakLog, {}).ticks, 60); // 2.0 x 30
@@ -159,7 +159,7 @@ TEST_F(P2FixesGameplay, DiamondRedstoneAndSnowOresDropTheirBetaItems) {
 }
 
 TEST(P2FixesRecipes, GlowstoneDustAndSnowballsCraftBackIntoTheirBlocks) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     const crafting::RecipeResult glowstone = craft2x2(items::GlowstoneDust);
     EXPECT_EQ(glowstone.id, gameplay::toItemId(BlockId::Glowstone));
     EXPECT_EQ(glowstone.count, 1);
@@ -193,7 +193,7 @@ TEST_F(P2FixesGameplay, MiningTheBlockUnderAStackOfSugarCaneDropsEveryCane) {
 }
 
 TEST(P2FixesSupport, ATorchThatLosesItsSupportTakesItsLightWithIt) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir{"betacraft_p2_fixes_support_"};
     world::World w(test::p2worldgen::kSeed, dir.path());
     test::p2worldgen::loadAll(w, test::p2worldgen::squareRegion({0, 0}, 1));

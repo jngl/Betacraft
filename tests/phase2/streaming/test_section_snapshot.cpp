@@ -15,8 +15,8 @@ using betacraft::streaming::kMissingVoxel;
 using betacraft::streaming::SectionNeighborhoodSnapshot18;
 using betacraft::streaming::VoxelSample;
 using betacraft::voxel::SectionCoord;
-using betacraft::world::BlockId;
-using betacraft::world::BlockStateId;
+using betacraft::voxel::BlockId;
+using betacraft::voxel::BlockStateId;
 using betacraft::world::World;
 using Snap = SectionNeighborhoodSnapshot18;
 
@@ -209,7 +209,7 @@ TEST(SectionSnapshot, ConcurrentReadersSeeIdenticalData) {
 class SnapshotWorldCapture : public ::testing::Test {
 protected:
     void SetUp() override {
-        betacraft::world::BlockRegistry::initialize();
+        betacraft::voxel::BlockRegistry::initialize();
         m_world = std::make_unique<World>(1234ULL, m_dir.path());
     }
 

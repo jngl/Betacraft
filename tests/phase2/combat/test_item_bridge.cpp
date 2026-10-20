@@ -12,7 +12,7 @@
 using namespace betacraft;
 using physics::InventorySlot;
 using physics::Player;
-using world::BlockId;
+using voxel::BlockId;
 namespace items = gameplay::items;
 
 // Cross-module agreement both libraries promised once linked together.

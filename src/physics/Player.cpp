@@ -143,15 +143,15 @@ bool Player::collidesWithWorld(const math::AABB& box, const world::World& world)
     for (int32_t y = minY; y <= maxY; ++y) {
         for (int32_t z = minZ; z <= maxZ; ++z) {
             for (int32_t x = minX; x <= maxX; ++x) {
-                const world::BlockId id = world.getBlock(x, y, z);
-                if (!world::BlockRegistry::isSolid(id)) {
+                const voxel::BlockId id = world.getBlock(x, y, z);
+                if (!voxel::BlockRegistry::isSolid(id)) {
                     continue;
                 }
-                const uint8_t meta = world::shapeDependsOnMetadata(world::BlockRegistry::get(id).shape)
+                const uint8_t meta = voxel::shapeDependsOnMetadata(voxel::BlockRegistry::get(id).shape)
                     ? world.getMetadata(x, y, z)
                     : uint8_t{0};
                 const bool hit = math::AABB::forEachBlockBox(x, y, z, id, meta, [&](math::AABB blockBox) {
-                    if (id == world::BlockId::Cactus) {
+                    if (id == voxel::BlockId::Cactus) {
                         // Beta BlockCactus.getCollisionBoundingBox is also 1/16 short on top
                         // (the selection box is not), so standing on a cactus is contact too.
                         blockBox.max.y -= 1.0f / 16.0f;
@@ -190,19 +190,19 @@ StepEvent Player::fixedUpdate(float dt, const PlayerInput& input, const world::W
     const int32_t byEye     = static_cast<int32_t>(std::floor(m_position.y + m_eyeHeightCurrent));
     const int32_t bz = static_cast<int32_t>(std::floor(m_position.z));
 
-    const world::BlockId feetLow = world.getBlock(bx, byFeetLow, bz);
-    const world::BlockId feetMid = world.getBlock(bx, byFeetMid, bz);
+    const voxel::BlockId feetLow = world.getBlock(bx, byFeetLow, bz);
+    const voxel::BlockId feetMid = world.getBlock(bx, byFeetMid, bz);
     // Both liquids are swum through; only water splashes, drowns and slows digging (Beta
     // Material.water checks).
-    m_inWater = world::BlockRegistry::isLiquid(feetLow) || world::BlockRegistry::isLiquid(feetMid);
+    m_inWater = voxel::BlockRegistry::isLiquid(feetLow) || voxel::BlockRegistry::isLiquid(feetMid);
     const bool wasInWaterMaterial = m_inWaterMaterial;
-    m_inWaterMaterial = world::isWaterBlock(feetLow) || world::isWaterBlock(feetMid);
-    const bool atWaterSurface = m_inWater && !world::BlockRegistry::isLiquid(world.getBlock(bx, byWaist, bz));
-    m_headUnderWater = world::isWaterBlock(world.getBlock(bx, byEye, bz));
-    m_inLava = world::isLavaBlock(feetLow) || world::isLavaBlock(feetMid);
+    m_inWaterMaterial = voxel::isWaterBlock(feetLow) || voxel::isWaterBlock(feetMid);
+    const bool atWaterSurface = m_inWater && !voxel::BlockRegistry::isLiquid(world.getBlock(bx, byWaist, bz));
+    m_headUnderWater = voxel::isWaterBlock(world.getBlock(bx, byEye, bz));
+    m_inLava = voxel::isLavaBlock(feetLow) || voxel::isLavaBlock(feetMid);
     const int32_t byFeet = static_cast<int32_t>(std::floor(m_position.y));
-    m_onLadder = world.getBlock(bx, byFeet, bz) == world::BlockId::Ladder ||
-                 world.getBlock(bx, byEye, bz) == world::BlockId::Ladder;
+    m_onLadder = world.getBlock(bx, byFeet, bz) == voxel::BlockId::Ladder ||
+                 world.getBlock(bx, byEye, bz) == voxel::BlockId::Ladder;
 
     if (m_inWaterMaterial && !wasInWaterMaterial && m_velocity.y < -2.5f) {
         stepEvent.splashedWater = true;
@@ -416,7 +416,7 @@ StepEvent Player::fixedUpdate(float dt, const PlayerInput& input, const world::W
         for (int32_t y = y0; y <= y1 && !m_touchingCactus; ++y) {
             for (int32_t z = z0; z <= z1 && !m_touchingCactus; ++z) {
                 for (int32_t x = x0; x <= x1; ++x) {
-                    if (world.getBlock(x, y, z) == world::BlockId::Cactus) {
+                    if (world.getBlock(x, y, z) == voxel::BlockId::Cactus) {
                         m_touchingCactus = true;
                         break;
                     }
@@ -437,9 +437,9 @@ StepEvent Player::fixedUpdate(float dt, const PlayerInput& input, const world::W
             const int32_t gx = static_cast<int32_t>(std::floor(m_position.x));
             const int32_t gy = static_cast<int32_t>(std::floor(m_position.y - 0.1f));
             const int32_t gz = static_cast<int32_t>(std::floor(m_position.z));
-            world::BlockId b = world.getBlock(gx, gy, gz);
-            if (b == world::BlockId::Air) {
-                b = world::BlockId::Stone;
+            voxel::BlockId b = world.getBlock(gx, gy, gz);
+            if (b == voxel::BlockId::Air) {
+                b = voxel::BlockId::Stone;
             }
             stepEvent.groundBlock = b;
         }

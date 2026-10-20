@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <array>
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 
 namespace {
 
@@ -232,4 +232,4 @@ std::optional<std::vector<BlockEntityEntry>> decodeBlockEntities(core::ChunkCoor
     return out;
 }
 
-} // namespace betacraft::world
+} // namespace betacraft::voxel

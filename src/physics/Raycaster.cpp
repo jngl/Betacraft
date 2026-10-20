@@ -111,14 +111,14 @@ RaycastHit Raycaster::cast(
     float dist = 0.0f;
 
     while (dist <= maxDistance) {
-        const world::BlockId id = world.getBlock(x, y, z);
-        const world::BlockDef& def = world::BlockRegistry::get(id);
+        const voxel::BlockId id = world.getBlock(x, y, z);
+        const voxel::BlockDef& def = voxel::BlockRegistry::get(id);
         // A liquid source is hit like a whole cube in LiquidSources mode.
-        const bool liquidSource = mode == RaycastMode::LiquidSources && world::BlockRegistry::isLiquid(id) &&
+        const bool liquidSource = mode == RaycastMode::LiquidSources && voxel::BlockRegistry::isLiquid(id) &&
                                   world.getMetadata(x, y, z) == 0;
         if (def.selectable || liquidSource) {
             const uint8_t meta = world.getMetadata(x, y, z);
-            const bool wholeCell = liquidSource || def.shape == world::RenderShape::Cube;
+            const bool wholeCell = liquidSource || def.shape == voxel::RenderShape::Cube;
             float subT = dist;
             core::FaceDir subFace = steppedFace;
             if (wholeCell ||

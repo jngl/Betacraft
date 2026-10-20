@@ -40,7 +40,7 @@ struct PlayerActions {
 
 struct BlockBreakEvent {
     core::BlockPos pos{};
-    world::BlockId block{world::BlockId::Air};
+    voxel::BlockId block{voxel::BlockId::Air};
     bool dropped{false}; // An item entity was spawned (correct tool / harvest level)
     ecs::EntityId drop{ecs::NULL_ENTITY};
 };
@@ -314,9 +314,9 @@ private:
     void handleAttack(world::World& world, physics::Player& player, const PlayerActions& actions,
                       GameTickEvents& events);
     void breakBlock(world::World& world, physics::Player& player, const core::BlockPos& pos,
-                    world::BlockId block, GameTickEvents& events);
+                    voxel::BlockId block, GameTickEvents& events);
     void attackEntity(physics::Player& player, ecs::EntityId target, GameTickEvents& events);
-    bool spawnNaturalDrop(world::BlockId block, const core::BlockPos& cell, uint8_t meta = 0);
+    bool spawnNaturalDrop(voxel::BlockId block, const core::BlockPos& cell, uint8_t meta = 0);
     void runEntitySystems(world::World& world, physics::Player& player, float timeOfDay,
                           const storage::WeatherState& weather, GameTickEvents& events);
     void tickPrimedTnt();
@@ -360,12 +360,12 @@ private:
 // the wall side of a ladder (nullopt when no normal cube can hold it), the orientation of
 // stairs from the look direction, 0 otherwise.
 std::optional<uint8_t> placementMetadata(const world::World& world, const physics::Player& player,
-                                         world::BlockId block, const core::BlockPos& pos, core::FaceDir clickedFace);
+                                         voxel::BlockId block, const core::BlockPos& pos, core::FaceDir clickedFace);
 
 // Right-click placement of the held block at `target.adjacentPos` (Beta ItemBlock.onItemUse):
 // the cell must be replaceable (air, liquids, tall grass) and a solid block must not overlap
 // the player. Consumes one item and returns the placed block, nullopt when nothing changed.
-std::optional<world::BlockId> placeHeldBlock(world::World& world, physics::Player& player,
+std::optional<voxel::BlockId> placeHeldBlock(world::World& world, physics::Player& player,
                                              const physics::RaycastHit& target);
 
 // S6.10: a dungeon chest (Chest with worldgen::kChestLootPendingMeta) draws its loot on first

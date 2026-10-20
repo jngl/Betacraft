@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 
 using BlockStateId = uint16_t;
 
@@ -136,4 +136,4 @@ static_assert(sizeof(PalettedSection) == 64, "PalettedSection must be exactly 64
 static_assert(sizeof(DenseNibbleArray) == PalettedSection::VOLUME / 2, "one nibble per voxel");
 static_assert(alignof(PalettedSection) == 64, "PalettedSection must be aligned to 64 bytes");
 
-} // namespace betacraft::world
+} // namespace betacraft::voxel

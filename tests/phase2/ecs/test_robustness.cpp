@@ -60,7 +60,7 @@ TEST(EcsRobustness, MovementIgnoresNonFiniteDeltaTime) {
 TEST(EcsRobustness, ItemDropsIgnoreNonFiniteDeltaTime) {
     for (const float dt : {NaN, INF, -INF}) {
         Registry reg;
-        const EntityId e = EntityFactory::spawnItemDrop(reg, {}, world::BlockId::Dirt, 1);
+        const EntityId e = EntityFactory::spawnItemDrop(reg, {}, voxel::BlockId::Dirt, 1);
         EXPECT_EQ(ItemDropSystem::update(reg, dt), 0U) << dt;
         ASSERT_TRUE(reg.valid(e)) << dt;
         EXPECT_FLOAT_EQ(reg.get<ItemDropComp>(e).ageSeconds, 0.0f) << dt;

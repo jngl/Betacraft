@@ -22,7 +22,7 @@ TEST(RedstoneSources, ButtonReleasesAfter20Ticks) {
     const core::BlockPos block{5, kY, 5};
     const core::BlockPos button{4, kY, 5};
     b.put(block, BlockId::Stone);
-    b.put(button, BlockId::StoneButton, world::kAttachWallPosX);
+    b.put(button, BlockId::StoneButton, voxel::kAttachWallPosX);
     b.wirePath({{6, 5}, {8, 5}});
     b.settle();
     ASSERT_EQ(b.power(6, 5), 0);
@@ -36,11 +36,11 @@ TEST(RedstoneSources, ButtonReleasesAfter20Ticks) {
     EXPECT_EQ(b.power(8, 5), 13);
     while (b.now < pressed + RedstoneEngine::kButtonTicks - 1) {
         (void)b.tick();
-        ASSERT_NE(b.meta(button) & world::kButtonPressedBit, 0) << "tick " << b.now - pressed;
+        ASSERT_NE(b.meta(button) & voxel::kButtonPressedBit, 0) << "tick " << b.now - pressed;
     }
     (void)b.tick();
-    EXPECT_EQ(b.meta(button) & world::kButtonPressedBit, 0) << "released after 20 ticks";
-    EXPECT_EQ(b.meta(button) & world::kAttachMask, world::kAttachWallPosX) << "attachment kept";
+    EXPECT_EQ(b.meta(button) & voxel::kButtonPressedBit, 0) << "released after 20 ticks";
+    EXPECT_EQ(b.meta(button) & voxel::kAttachMask, voxel::kAttachWallPosX) << "attachment kept";
     EXPECT_EQ(countEvents(b, RedstoneEventKind::Click), 1u);
     EXPECT_EQ(b.power(6, 5), 0);
 }
@@ -57,7 +57,7 @@ TEST(RedstoneSources, PlateStaysWhileEntityOn) {
     for (int32_t i = 0; i < 100; ++i) {
         (void)b.engine->reportPlateContact(plate);
         (void)b.tick();
-        ASSERT_NE(b.meta(plate) & world::kPlatePressedBit, 0) << "tick " << i;
+        ASSERT_NE(b.meta(plate) & voxel::kPlatePressedBit, 0) << "tick " << i;
         if (i > 0) {
             ASSERT_EQ(b.power(6, 5), 15) << "tick " << i;
         }
@@ -67,7 +67,7 @@ TEST(RedstoneSources, PlateStaysWhileEntityOn) {
     int32_t up = -1;
     for (int32_t i = 0; i < 25 && up < 0; ++i) {
         (void)b.tick();
-        if ((b.meta(plate) & world::kPlatePressedBit) == 0) up = i + 1;
+        if ((b.meta(plate) & voxel::kPlatePressedBit) == 0) up = i + 1;
     }
     ASSERT_GT(up, 0);
     EXPECT_LE(up, static_cast<int32_t>(RedstoneEngine::kPlateTicks));
@@ -87,13 +87,13 @@ TEST(RedstoneSources, LeverToggles) {
     for (int32_t round = 0; round < 3; ++round) {
         ASSERT_TRUE(b.engine->toggleLever(lever));
         b.settle();
-        EXPECT_NE(b.meta(lever) & world::kLeverOnBit, 0);
-        EXPECT_EQ(b.meta(lever) & world::kAttachMask, world::kAttachFloor);
+        EXPECT_NE(b.meta(lever) & voxel::kLeverOnBit, 0);
+        EXPECT_EQ(b.meta(lever) & voxel::kAttachMask, voxel::kAttachFloor);
         EXPECT_EQ(b.power(5, 4), 15);
         EXPECT_EQ(b.power(7, 4), 13);
         ASSERT_TRUE(b.engine->toggleLever(lever));
         b.settle();
-        EXPECT_EQ(b.meta(lever) & world::kLeverOnBit, 0);
+        EXPECT_EQ(b.meta(lever) & voxel::kLeverOnBit, 0);
         EXPECT_EQ(b.power(5, 4), 0);
         EXPECT_EQ(b.power(7, 4), 0);
     }
@@ -103,7 +103,7 @@ TEST(RedstoneSources, LeverToggles) {
     const core::BlockPos wallBlock{10, kY, 10};
     const core::BlockPos wallLever{9, kY, 10};
     b.put(wallBlock, BlockId::Stone);
-    b.put(wallLever, BlockId::Lever, static_cast<uint8_t>(world::kAttachWallPosX | world::kLeverOnBit));
+    b.put(wallLever, BlockId::Lever, static_cast<uint8_t>(voxel::kAttachWallPosX | voxel::kLeverOnBit));
     b.wirePath({{11, 10}, {12, 10}});
     b.settle();
     EXPECT_EQ(b.power(11, 10), 15);

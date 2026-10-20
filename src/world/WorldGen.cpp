@@ -31,28 +31,28 @@ BiomeSample WorldGen::sampleBiome(int32_t worldX, int32_t worldZ) const noexcept
     const float temp = std::clamp(static_cast<float>(tRaw * 0.85 + 0.52), 0.0f, 1.0f);
     const float humid = std::clamp(static_cast<float>(hRaw * 0.85 + 0.50) * temp, 0.0f, 1.0f);
 
-    BiomeId biome = BiomeId::Plains;
+    voxel::BiomeId biome = voxel::BiomeId::Plains;
     if (temp < 0.22f) {
-        biome = (humid < 0.12f) ? BiomeId::Tundra : BiomeId::Taiga;
+        biome = (humid < 0.12f) ? voxel::BiomeId::Tundra : voxel::BiomeId::Taiga;
     } else if (temp < 0.45f) {
-        biome = (humid < 0.22f) ? BiomeId::Shrubland : BiomeId::Forest;
+        biome = (humid < 0.22f) ? voxel::BiomeId::Shrubland : voxel::BiomeId::Forest;
     } else if (temp < 0.76f) {
         if (humid < 0.22f) {
-            biome = BiomeId::Plains;
+            biome = voxel::BiomeId::Plains;
         } else if (humid < 0.56f) {
-            biome = BiomeId::Forest;
+            biome = voxel::BiomeId::Forest;
         } else {
-            biome = BiomeId::SeasonalForest;
+            biome = voxel::BiomeId::SeasonalForest;
         }
     } else {
         if (humid < 0.19f) {
-            biome = BiomeId::Desert;
+            biome = voxel::BiomeId::Desert;
         } else if (humid < 0.42f) {
-            biome = BiomeId::Savanna;
+            biome = voxel::BiomeId::Savanna;
         } else if (humid < 0.68f) {
-            biome = BiomeId::Swampland;
+            biome = voxel::BiomeId::Swampland;
         } else {
-            biome = BiomeId::Rainforest;
+            biome = voxel::BiomeId::Rainforest;
         }
     }
 
@@ -80,19 +80,19 @@ BiomeSample WorldGen::sampleBiome(int32_t worldX, int32_t worldZ) const noexcept
     };
 }
 
-void WorldGen::populateBiomeColumns(Chunk& chunk) const noexcept {
-    const int32_t baseX = chunk.getCoord().x * Chunk::WIDTH;
-    const int32_t baseZ = chunk.getCoord().z * Chunk::DEPTH;
+void WorldGen::populateBiomeColumns(voxel::Chunk& chunk) const noexcept {
+    const int32_t baseX = chunk.getCoord().x * voxel::Chunk::WIDTH;
+    const int32_t baseZ = chunk.getCoord().z * voxel::Chunk::DEPTH;
 
-    for (int32_t lz = 0; lz < Chunk::DEPTH; ++lz) {
-        for (int32_t lx = 0; lx < Chunk::WIDTH; ++lx) {
+    for (int32_t lz = 0; lz < voxel::Chunk::DEPTH; ++lz) {
+        for (int32_t lx = 0; lx < voxel::Chunk::WIDTH; ++lx) {
             const BiomeSample sample = sampleBiome(baseX + lx, baseZ + lz);
             chunk.setColumnBiome(lx, lz, sample.biome, sample.grassTint, sample.foliageTint);
         }
     }
 }
 
-void WorldGen::fillTerrainColumn(int32_t wx, int32_t wz, BiomeId biome, Column& out) const noexcept {
+void WorldGen::fillTerrainColumn(int32_t wx, int32_t wz, voxel::BiomeId biome, Column& out) const noexcept {
     constexpr int32_t seaLevel = core::EngineConfig::SEA_LEVEL;
 
     const double cont = m_continentNoise.fbm2D(wx * 0.0042, wz * 0.0042, 4, 2.0, 0.5);
@@ -100,20 +100,20 @@ void WorldGen::fillTerrainColumn(int32_t wx, int32_t wz, BiomeId biome, Column& 
     const double mountainMask = std::max(0.0, m_continentNoise.noise2D(wx * 0.0065 + 40.0, wz * 0.0065 - 40.0));
 
     double targetHeight = static_cast<double>(seaLevel) + 4.0 + cont * 20.0 + detail * 8.0 + mountainMask * 22.0;
-    if (biome == BiomeId::Desert || biome == BiomeId::Plains) {
+    if (biome == voxel::BiomeId::Desert || biome == voxel::BiomeId::Plains) {
         targetHeight = static_cast<double>(seaLevel) + 3.0 + cont * 10.0 + detail * 4.0;
     }
 
-    for (int32_t y = 0; y < Chunk::HEIGHT; ++y) {
-        BlockId& block = out[static_cast<size_t>(y)];
+    for (int32_t y = 0; y < voxel::Chunk::HEIGHT; ++y) {
+        voxel::BlockId& block = out[static_cast<size_t>(y)];
         if (y == 0) {
-            block = BlockId::Bedrock;
+            block = voxel::BlockId::Bedrock;
             continue;
         }
         if (y <= 3) {
             const uint32_t h = math::PerlinNoise::hashCoords(wx, y, wz, m_seed);
             if (static_cast<int32_t>(h % 4U) >= y) {
-                block = BlockId::Bedrock;
+                block = voxel::BlockId::Bedrock;
                 continue;
             }
         }
@@ -126,11 +126,11 @@ void WorldGen::fillTerrainColumn(int32_t wx, int32_t wz, BiomeId biome, Column& 
         }
 
         if (density > 0.0) {
-            block = BlockId::Stone;
+            block = voxel::BlockId::Stone;
         } else if (y <= seaLevel) {
-            block = (y == seaLevel && biome == BiomeId::Tundra) ? BlockId::Ice : BlockId::Water;
+            block = (y == seaLevel && biome == voxel::BiomeId::Tundra) ? voxel::BlockId::Ice : voxel::BlockId::Water;
         } else {
-            block = BlockId::Air;
+            block = voxel::BlockId::Air;
         }
     }
 }
@@ -142,74 +142,74 @@ worldgen::ColumnContext WorldGen::columnContext(int32_t worldX, int32_t worldZ) 
     Column column{};
     fillTerrainColumn(worldX, worldZ, sampleBiome(worldX, worldZ).biome, column);
     return worldgen::CaveCarver::scanColumnBlocks(
-        [&column](int32_t y) noexcept { return column[static_cast<size_t>(y)]; }, Chunk::HEIGHT);
+        [&column](int32_t y) noexcept { return column[static_cast<size_t>(y)]; }, voxel::Chunk::HEIGHT);
 }
 
-void WorldGen::generateChunk(Chunk& chunk) const noexcept {
+void WorldGen::generateChunk(voxel::Chunk& chunk) const noexcept {
     populateBiomeColumns(chunk);
 
-    const int32_t baseX = chunk.getCoord().x * Chunk::WIDTH;
-    const int32_t baseZ = chunk.getCoord().z * Chunk::DEPTH;
+    const int32_t baseX = chunk.getCoord().x * voxel::Chunk::WIDTH;
+    const int32_t baseZ = chunk.getCoord().z * voxel::Chunk::DEPTH;
     constexpr int32_t seaLevel = core::EngineConfig::SEA_LEVEL;
 
     // 1. Base 3D terrain density + 2D continental heightmap (Beta 1.7.3 overhang terrain)
     Column column{};
-    for (int32_t lz = 0; lz < Chunk::DEPTH; ++lz) {
-        for (int32_t lx = 0; lx < Chunk::WIDTH; ++lx) {
+    for (int32_t lz = 0; lz < voxel::Chunk::DEPTH; ++lz) {
+        for (int32_t lx = 0; lx < voxel::Chunk::WIDTH; ++lx) {
             fillTerrainColumn(baseX + lx, baseZ + lz, chunk.getColumnBiome(lx, lz), column);
-            for (int32_t y = 0; y < Chunk::HEIGHT; ++y) {
+            for (int32_t y = 0; y < voxel::Chunk::HEIGHT; ++y) {
                 chunk.setBlock(lx, y, lz, column[static_cast<size_t>(y)], false);
             }
         }
     }
 
     // 2. Surface replacement (Grass, Dirt, Sand, Gravel beaches, Sandstone, Clay)
-    for (int32_t lz = 0; lz < Chunk::DEPTH; ++lz) {
-        for (int32_t lx = 0; lx < Chunk::WIDTH; ++lx) {
+    for (int32_t lz = 0; lz < voxel::Chunk::DEPTH; ++lz) {
+        for (int32_t lx = 0; lx < voxel::Chunk::WIDTH; ++lx) {
             const int32_t wx = baseX + lx;
             const int32_t wz = baseZ + lz;
-            const BiomeId biome = chunk.getColumnBiome(lx, lz);
+            const voxel::BiomeId biome = chunk.getColumnBiome(lx, lz);
             const double beachVal = m_beachNoise.noise2D(wx * 0.035, wz * 0.035);
 
             int32_t runDepth = -1;
-            for (int32_t y = Chunk::HEIGHT - 1; y >= 1; --y) {
-                const BlockId current = chunk.getBlock(lx, y, lz);
-                if (current == BlockId::Air || current == BlockId::Water || current == BlockId::Ice) {
+            for (int32_t y = voxel::Chunk::HEIGHT - 1; y >= 1; --y) {
+                const voxel::BlockId current = chunk.getBlock(lx, y, lz);
+                if (current == voxel::BlockId::Air || current == voxel::BlockId::Water || current == voxel::BlockId::Ice) {
                     runDepth = -1;
                     continue;
                 }
 
-                if (current == BlockId::Stone) {
+                if (current == voxel::BlockId::Stone) {
                     ++runDepth;
-                    const bool underwater = (y + 1 < Chunk::HEIGHT) &&
-                                            (chunk.getBlock(lx, y + 1, lz) == BlockId::Water ||
-                                             chunk.getBlock(lx, y + 1, lz) == BlockId::Ice);
+                    const bool underwater = (y + 1 < voxel::Chunk::HEIGHT) &&
+                                            (chunk.getBlock(lx, y + 1, lz) == voxel::BlockId::Water ||
+                                             chunk.getBlock(lx, y + 1, lz) == voxel::BlockId::Ice);
 
                     if (runDepth == 0) {
                         if (underwater) {
                             if (beachVal > 0.35 && y >= seaLevel - 4) {
-                                chunk.setBlock(lx, y, lz, BlockId::Clay, false);
+                                chunk.setBlock(lx, y, lz, voxel::BlockId::Clay, false);
                             } else if (beachVal < -0.15) {
-                                chunk.setBlock(lx, y, lz, BlockId::Gravel, false);
+                                chunk.setBlock(lx, y, lz, voxel::BlockId::Gravel, false);
                             } else if (y >= seaLevel - 3) {
-                                chunk.setBlock(lx, y, lz, BlockId::Sand, false);
+                                chunk.setBlock(lx, y, lz, voxel::BlockId::Sand, false);
                             } else {
-                                chunk.setBlock(lx, y, lz, BlockId::Dirt, false);
+                                chunk.setBlock(lx, y, lz, voxel::BlockId::Dirt, false);
                             }
                         } else if (y <= seaLevel + 1 && beachVal > -0.25) {
-                            chunk.setBlock(lx, y, lz, (beachVal > 0.42) ? BlockId::Gravel : BlockId::Sand, false);
-                        } else if (biome == BiomeId::Desert) {
-                            chunk.setBlock(lx, y, lz, BlockId::Sand, false);
-                        } else if (biome == BiomeId::Tundra) {
-                            chunk.setBlock(lx, y, lz, BlockId::SnowGrass, false);
+                            chunk.setBlock(lx, y, lz, (beachVal > 0.42) ? voxel::BlockId::Gravel : voxel::BlockId::Sand, false);
+                        } else if (biome == voxel::BiomeId::Desert) {
+                            chunk.setBlock(lx, y, lz, voxel::BlockId::Sand, false);
+                        } else if (biome == voxel::BiomeId::Tundra) {
+                            chunk.setBlock(lx, y, lz, voxel::BlockId::SnowGrass, false);
                         } else {
-                            chunk.setBlock(lx, y, lz, BlockId::Grass, false);
+                            chunk.setBlock(lx, y, lz, voxel::BlockId::Grass, false);
                         }
                     } else if (runDepth <= 3) {
-                        if (biome == BiomeId::Desert || (y <= seaLevel + 1 && beachVal > -0.25)) {
-                            chunk.setBlock(lx, y, lz, (runDepth == 3) ? BlockId::Sandstone : BlockId::Sand, false);
+                        if (biome == voxel::BiomeId::Desert || (y <= seaLevel + 1 && beachVal > -0.25)) {
+                            chunk.setBlock(lx, y, lz, (runDepth == 3) ? voxel::BlockId::Sandstone : voxel::BlockId::Sand, false);
                         } else {
-                            chunk.setBlock(lx, y, lz, BlockId::Dirt, false);
+                            chunk.setBlock(lx, y, lz, voxel::BlockId::Dirt, false);
                         }
                     }
                 }
@@ -222,8 +222,8 @@ void WorldGen::generateChunk(Chunk& chunk) const noexcept {
     // just generated; ring columns of neighbours come from the identical column function.
     const core::ChunkCoord coord = chunk.getCoord();
     auto sampleColumn = [this, &chunk, coord](int32_t wx, int32_t wz) noexcept {
-        if (core::floorDiv(wx, Chunk::WIDTH) == coord.x && core::floorDiv(wz, Chunk::DEPTH) == coord.z) {
-            return worldgen::CaveCarver::scanColumn(chunk, core::floorMod(wx, Chunk::WIDTH), core::floorMod(wz, Chunk::DEPTH));
+        if (core::floorDiv(wx, voxel::Chunk::WIDTH) == coord.x && core::floorDiv(wz, voxel::Chunk::DEPTH) == coord.z) {
+            return worldgen::CaveCarver::scanColumn(chunk, core::floorMod(wx, voxel::Chunk::WIDTH), core::floorMod(wz, voxel::Chunk::DEPTH));
         }
         return columnContext(wx, wz);
     };

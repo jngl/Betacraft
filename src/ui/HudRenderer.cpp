@@ -344,9 +344,9 @@ void HudRenderer::render(
         const int32_t bx = static_cast<int32_t>(std::floor(p.x));
         const int32_t by = static_cast<int32_t>(std::floor(p.y));
         const int32_t bz = static_cast<int32_t>(std::floor(p.z));
-        const int32_t cx = core::floorDiv(bx, world::Chunk::WIDTH);
-        const int32_t cz = core::floorDiv(bz, world::Chunk::DEPTH);
-        const world::BiomeId biome = world.getBiomeAt(bx, bz);
+        const int32_t cx = core::floorDiv(bx, voxel::Chunk::WIDTH);
+        const int32_t cz = core::floorDiv(bz, voxel::Chunk::DEPTH);
+        const voxel::BiomeId biome = world.getBiomeAt(bx, bz);
         const uint8_t skyL = world.getSkyLight(bx, by + 1, bz);
         const uint8_t blkL = world.getBlockLight(bx, by + 1, bz);
 
@@ -360,13 +360,13 @@ void HudRenderer::render(
            << ctx.renderStats.pendingMeshJobs;
         l3 << "x: " << std::fixed << std::setprecision(2) << p.x
            << "  y: " << p.y << "  z: " << p.z << "  (Chunk " << cx << ", " << cz << ")";
-        l4 << "Biome: " << world::biomeName(biome)
+        l4 << "Biome: " << voxel::biomeName(biome)
            << "  Light: " << static_cast<int>(skyL) << " sky / " << static_cast<int>(blkL) << " block";
         l5 << "Smooth Lighting [L]: " << (config.smoothLighting ? "ON" : "OFF")
            << "  Fly [F]: " << (player.isFlying() ? "ON" : "OFF")
            << "  Music [M]: " << (ctx.musicEnabled ? "ON" : "OFF");
         if (ctx.targetHit.hit) {
-            const auto& tDef = world::BlockRegistry::get(ctx.targetHit.blockId);
+            const auto& tDef = voxel::BlockRegistry::get(ctx.targetHit.blockId);
             l6 << "Target: " << tDef.name << " (" << ctx.targetHit.blockPos.x << ", "
                << ctx.targetHit.blockPos.y << ", " << ctx.targetHit.blockPos.z << ")";
         } else {

@@ -30,7 +30,7 @@ struct ItemAppearance {
     std::array<uint8_t, 6> faceTiles{}; // PosX, NegX, PosY, NegY, PosZ, NegZ
     glm::vec3 tint{1.0f};
     bool flat{true}; // Thin card (items, tools, flora, torches) rather than a cube
-    std::optional<world::BlockId> block; // The world block it is, if any
+    std::optional<voxel::BlockId> block; // The world block it is, if any
     bool tintGrassTop{false};
     bool tintFoliage{false};
 

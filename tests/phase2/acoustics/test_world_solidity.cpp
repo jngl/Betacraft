@@ -15,8 +15,8 @@ namespace {
 
 using namespace betacraft::acoustics;
 using betacraft::core::BlockPos;
-using betacraft::world::BlockId;
-using betacraft::world::BlockRegistry;
+using betacraft::voxel::BlockId;
+using betacraft::voxel::BlockRegistry;
 
 struct FakeBlockSource {
     std::unordered_map<BlockPos, BlockId> blocks;

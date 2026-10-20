@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <string_view>
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 
 enum class BlockId : uint8_t {
     Air = 0,
@@ -249,4 +249,4 @@ private:
     static bool s_initialized;
 };
 
-} // namespace betacraft::world
+} // namespace betacraft::voxel

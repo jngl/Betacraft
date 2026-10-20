@@ -65,21 +65,21 @@ constexpr uint32_t faceDirToNormalIdx(core::FaceDir dir) noexcept {
 }
 
 bool shouldRenderBlockFace(
-    world::BlockId selfId,
-    const world::BlockDef& selfDef,
-    world::BlockId neighborId,
-    const world::BlockDef& neighborDef
+    voxel::BlockId selfId,
+    const voxel::BlockDef& selfDef,
+    voxel::BlockId neighborId,
+    const voxel::BlockDef& neighborDef
 ) noexcept {
-    if (neighborId == world::BlockId::Air) {
+    if (neighborId == voxel::BlockId::Air) {
         return true;
     }
-    if (world::BlockRegistry::isLiquid(selfId)) {
-        return !world::isSameLiquid(selfId, neighborId);
+    if (voxel::BlockRegistry::isLiquid(selfId)) {
+        return !voxel::isSameLiquid(selfId, neighborId);
     }
-    if (selfDef.layer == world::RenderLayer::Translucent && neighborId == selfId) {
+    if (selfDef.layer == voxel::RenderLayer::Translucent && neighborId == selfId) {
         return false;
     }
-    if (neighborDef.opaque && neighborDef.shape == world::RenderShape::Cube) {
+    if (neighborDef.opaque && neighborDef.shape == voxel::RenderShape::Cube) {
         return false;
     }
     return true;
@@ -119,9 +119,9 @@ VertexLightSample sampleVertexAOAndLight(
     const glm::ivec3 s2Pos = baseNeighbor + tangent2;
     const glm::ivec3 cornerPos = baseNeighbor + tangent1 + tangent2;
 
-    const bool s1Opaque = world::BlockRegistry::isOpaque(world.getBlock(s1Pos.x, s1Pos.y, s1Pos.z));
-    const bool s2Opaque = world::BlockRegistry::isOpaque(world.getBlock(s2Pos.x, s2Pos.y, s2Pos.z));
-    const bool cOpaque  = world::BlockRegistry::isOpaque(world.getBlock(cornerPos.x, cornerPos.y, cornerPos.z));
+    const bool s1Opaque = voxel::BlockRegistry::isOpaque(world.getBlock(s1Pos.x, s1Pos.y, s1Pos.z));
+    const bool s2Opaque = voxel::BlockRegistry::isOpaque(world.getBlock(s2Pos.x, s2Pos.y, s2Pos.z));
+    const bool cOpaque  = voxel::BlockRegistry::isOpaque(world.getBlock(cornerPos.x, cornerPos.y, cornerPos.z));
 
     int occluded = 0;
     if (s1Opaque && s2Opaque) {
@@ -300,33 +300,33 @@ void ChunkMeshGL::drawTranslucent() const noexcept {
 
 ChunkMeshData ChunkMesher::buildMesh(
     const world::World& world,
-    const world::Chunk& chunk,
+    const voxel::Chunk& chunk,
     bool smoothLighting
 ) {
     ChunkMeshData meshData;
     meshData.opaqueVertices.reserve(16384);
     meshData.translucentVertices.reserve(2048);
 
-    const int32_t baseX = chunk.getCoord().x * world::Chunk::WIDTH;
-    const int32_t baseZ = chunk.getCoord().z * world::Chunk::DEPTH;
+    const int32_t baseX = chunk.getCoord().x * voxel::Chunk::WIDTH;
+    const int32_t baseZ = chunk.getCoord().z * voxel::Chunk::DEPTH;
 
-    for (int32_t y = 0; y < world::Chunk::HEIGHT; ++y) {
+    for (int32_t y = 0; y < voxel::Chunk::HEIGHT; ++y) {
         const uint32_t secY = static_cast<uint32_t>(y / 16);
         const uint32_t localY = static_cast<uint32_t>(y % 16);
 
-        for (int32_t lz = 0; lz < world::Chunk::DEPTH; ++lz) {
-            for (int32_t lx = 0; lx < world::Chunk::WIDTH; ++lx) {
-                const world::BlockId id = chunk.getBlock(lx, y, lz);
-                if (id == world::BlockId::Air) {
+        for (int32_t lz = 0; lz < voxel::Chunk::DEPTH; ++lz) {
+            for (int32_t lx = 0; lx < voxel::Chunk::WIDTH; ++lx) {
+                const voxel::BlockId id = chunk.getBlock(lx, y, lz);
+                if (id == voxel::BlockId::Air) {
                     continue;
                 }
 
-                const world::BlockDef& def = world::BlockRegistry::get(id);
+                const voxel::BlockDef& def = voxel::BlockRegistry::get(id);
                 const int32_t wx = baseX + lx;
                 const int32_t wz = baseZ + lz;
 
                 std::vector<PackedChunkVertex>& targetBuffer =
-                    (def.layer == world::RenderLayer::Translucent)
+                    (def.layer == voxel::RenderLayer::Translucent)
                         ? meshData.translucentVertices
                         : meshData.opaqueVertices;
 
@@ -338,7 +338,7 @@ ChunkMeshData ChunkMesher::buildMesh(
                 const uint32_t biomeTintVal = def.tintGrassTop ? 128u : (def.tintFoliage ? 160u : 255u);
 
                 // Special geometry: Cross-billboard Flora (TallGrass, Flowers, Sapling, SugarCane)
-                if (def.shape == world::RenderShape::Cross) {
+                if (def.shape == voxel::RenderShape::Cross) {
                     const uint32_t matTile = def.tileForFace(core::FaceDir::PosZ);
                     const uint32_t normalIdx = 6; // Cross-billboard Flora (explicit UV mapping)
                     const uint32_t w1 = PackedChunkVertex::packWord1(
@@ -372,7 +372,7 @@ ChunkMeshData ChunkMesher::buildMesh(
                 }
 
                 // Special geometry: Torch (5 quads = 20 sommets)
-                if (def.shape == world::RenderShape::Torch) {
+                if (def.shape == voxel::RenderShape::Torch) {
                     const uint32_t tile = def.tileForFace(core::FaceDir::PosZ);
                     const uint32_t w1 = PackedChunkVertex::packWord1(skyLight, blkLight, 255, 0, false, false, secY);
 
@@ -400,7 +400,7 @@ ChunkMeshData ChunkMesher::buildMesh(
                 }
 
                 // S5.4 ladders, doors, fences, stairs...: boxes inside the cell (BlockShapeMesher)
-                if (world::isDetailedShape(def.shape)) {
+                if (voxel::isDetailedShape(def.shape)) {
                     const auto sample = [&](int32_t dx, int32_t dy, int32_t dz) {
                         const int32_t sx = wx + dx;
                         const int32_t sy = y + dy;
@@ -414,18 +414,18 @@ ChunkMeshData ChunkMesher::buildMesh(
                 }
 
                 // Cube / Slab / Cactus / Liquid faces
-                const bool isSlab = (def.shape == world::RenderShape::Slab);
-                const bool isTranslucent = (def.layer == world::RenderLayer::Translucent);
+                const bool isSlab = (def.shape == voxel::RenderShape::Slab);
+                const bool isTranslucent = (def.layer == voxel::RenderLayer::Translucent);
 
                 for (int faceIdx = 0; faceIdx < 6; ++faceIdx) {
                     const auto dir = static_cast<core::FaceDir>(faceIdx);
                     const glm::ivec3 n = core::faceNormal(dir);
                     const glm::ivec3 nbPos(wx + n.x, y + n.y, wz + n.z);
 
-                    const world::BlockId nbId = world.getBlock(nbPos.x, nbPos.y, nbPos.z);
-                    const world::BlockDef& nbDef = world::BlockRegistry::get(nbId);
+                    const voxel::BlockId nbId = world.getBlock(nbPos.x, nbPos.y, nbPos.z);
+                    const voxel::BlockDef& nbDef = voxel::BlockRegistry::get(nbId);
 
-                    if (def.shape != world::RenderShape::Cactus &&
+                    if (def.shape != voxel::RenderShape::Cactus &&
                         !(isSlab && dir == core::FaceDir::PosY) &&
                         !shouldRenderBlockFace(id, def, nbId, nbDef)) {
                         continue;

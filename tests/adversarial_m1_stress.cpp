@@ -14,6 +14,7 @@
 
 using namespace betacraft;
 using namespace betacraft::world;
+using namespace betacraft::voxel;
 using namespace betacraft::physics;
 
 static int g_testsPassed = 0;

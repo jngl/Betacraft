@@ -27,7 +27,7 @@ namespace items = gameplay::items;
 inline constexpr ItemId kAir = gameplay::kNoItem;
 inline constexpr uint8_t kMaxStackSize = 64;
 
-// Numbers below 256 are reserved for world::BlockId (the legacy block/item
+// Numbers below 256 are reserved for voxel::BlockId (the legacy block/item
 // space); it says nothing about whether the codebase defines that number.
 [[nodiscard]] constexpr bool isBlockRange(ItemId id) noexcept {
     return id < 256;
@@ -35,39 +35,39 @@ inline constexpr uint8_t kMaxStackSize = 64;
 
 namespace detail {
 
-// Every enumerator world::BlockId defines (Air excluded). The enum has gaps
+// Every enumerator voxel::BlockId defines (Air excluded). The enum has gaps
 // (19, 22, ...) and stops at Count = 106, so a range check alone would hand out
 // numbers without a BlockDef. Test ItemIds.ToBlockIdAgreesWithBlockRegistry
 // fails if this list drifts from BlockRegistry.
-inline constexpr world::BlockId kDefinedBlockIds[] = {
-    world::BlockId::Stone, world::BlockId::Grass, world::BlockId::Dirt, world::BlockId::Cobblestone,
-    world::BlockId::OakPlanks, world::BlockId::Sapling, world::BlockId::Bedrock, world::BlockId::Water,
-    world::BlockId::StillWater, world::BlockId::Lava, world::BlockId::StillLava, world::BlockId::Sand,
-    world::BlockId::Gravel, world::BlockId::GoldOre, world::BlockId::IronOre,
-    world::BlockId::CoalOre, world::BlockId::OakLog, world::BlockId::Leaves, world::BlockId::Glass,
-    world::BlockId::LapisOre, world::BlockId::Sandstone, world::BlockId::TallGrass, world::BlockId::DeadBush,
-    world::BlockId::Piston, world::BlockId::PistonHead, world::BlockId::Wool, world::BlockId::Dandelion,
-    world::BlockId::Rose, world::BlockId::CobbleSlab, world::BlockId::Bricks, world::BlockId::TNT,
-    world::BlockId::Bookshelf, world::BlockId::MossyCobble, world::BlockId::Obsidian, world::BlockId::Torch,
-    world::BlockId::MobSpawner,
-    world::BlockId::Chest, world::BlockId::DiamondOre, world::BlockId::CraftingTable, world::BlockId::Furnace,
-    world::BlockId::LitFurnace,
-    world::BlockId::RedstoneOre, world::BlockId::SnowGrass, world::BlockId::Ice, world::BlockId::SnowBlock,
-    world::BlockId::Cactus, world::BlockId::Clay, world::BlockId::SugarCane, world::BlockId::Glowstone,
-    world::BlockId::BirchLog, world::BlockId::PineLog, world::BlockId::Stick, world::BlockId::CoalItem,
-    world::BlockId::WoodPickaxe, world::BlockId::StonePickaxe, world::BlockId::IronPickaxe,
-    world::BlockId::DiamondPickaxe,
+inline constexpr voxel::BlockId kDefinedBlockIds[] = {
+    voxel::BlockId::Stone, voxel::BlockId::Grass, voxel::BlockId::Dirt, voxel::BlockId::Cobblestone,
+    voxel::BlockId::OakPlanks, voxel::BlockId::Sapling, voxel::BlockId::Bedrock, voxel::BlockId::Water,
+    voxel::BlockId::StillWater, voxel::BlockId::Lava, voxel::BlockId::StillLava, voxel::BlockId::Sand,
+    voxel::BlockId::Gravel, voxel::BlockId::GoldOre, voxel::BlockId::IronOre,
+    voxel::BlockId::CoalOre, voxel::BlockId::OakLog, voxel::BlockId::Leaves, voxel::BlockId::Glass,
+    voxel::BlockId::LapisOre, voxel::BlockId::Sandstone, voxel::BlockId::TallGrass, voxel::BlockId::DeadBush,
+    voxel::BlockId::Piston, voxel::BlockId::PistonHead, voxel::BlockId::Wool, voxel::BlockId::Dandelion,
+    voxel::BlockId::Rose, voxel::BlockId::CobbleSlab, voxel::BlockId::Bricks, voxel::BlockId::TNT,
+    voxel::BlockId::Bookshelf, voxel::BlockId::MossyCobble, voxel::BlockId::Obsidian, voxel::BlockId::Torch,
+    voxel::BlockId::MobSpawner,
+    voxel::BlockId::Chest, voxel::BlockId::DiamondOre, voxel::BlockId::CraftingTable, voxel::BlockId::Furnace,
+    voxel::BlockId::LitFurnace,
+    voxel::BlockId::RedstoneOre, voxel::BlockId::SnowGrass, voxel::BlockId::Ice, voxel::BlockId::SnowBlock,
+    voxel::BlockId::Cactus, voxel::BlockId::Clay, voxel::BlockId::SugarCane, voxel::BlockId::Glowstone,
+    voxel::BlockId::BirchLog, voxel::BlockId::PineLog, voxel::BlockId::Stick, voxel::BlockId::CoalItem,
+    voxel::BlockId::WoodPickaxe, voxel::BlockId::StonePickaxe, voxel::BlockId::IronPickaxe,
+    voxel::BlockId::DiamondPickaxe,
     // S5.4 shapes
-    world::BlockId::Bed, world::BlockId::WoodStairs, world::BlockId::Crops, world::BlockId::Farmland,
-    world::BlockId::WoodDoor, world::BlockId::Ladder, world::BlockId::CobbleStairs, world::BlockId::Fence,
+    voxel::BlockId::Bed, voxel::BlockId::WoodStairs, voxel::BlockId::Crops, voxel::BlockId::Farmland,
+    voxel::BlockId::WoodDoor, voxel::BlockId::Ladder, voxel::BlockId::CobbleStairs, voxel::BlockId::Fence,
     // S8.5 redstone
-    world::BlockId::RedstoneWire, world::BlockId::Lever, world::BlockId::StonePressurePlate, world::BlockId::IronDoor,
-    world::BlockId::WoodPressurePlate, world::BlockId::RedstoneTorchOff, world::BlockId::RedstoneTorchOn,
-    world::BlockId::StoneButton
+    voxel::BlockId::RedstoneWire, voxel::BlockId::Lever, voxel::BlockId::StonePressurePlate, voxel::BlockId::IronDoor,
+    voxel::BlockId::WoodPressurePlate, voxel::BlockId::RedstoneTorchOff, voxel::BlockId::RedstoneTorchOn,
+    voxel::BlockId::StoneButton
 };
 
 [[nodiscard]] constexpr bool isDefinedBlockId(ItemId id) noexcept {
-    for (const world::BlockId b : kDefinedBlockIds) {
+    for (const voxel::BlockId b : kDefinedBlockIds) {
         if (static_cast<ItemId>(b) == id) {
             return true;
         }
@@ -77,29 +77,29 @@ inline constexpr world::BlockId kDefinedBlockIds[] = {
 
 } // namespace detail
 
-// The world::BlockId with this number, only if the codebase defines it (so
+// The voxel::BlockId with this number, only if the codebase defines it (so
 // the result can index BlockRegistry). The legacy item-only ids 100..105 are
 // included as numbers, but nothing produces them since S2.10 (stick, coal and
 // the pickaxes are Beta numbers now). Every item >= 256 returns nullopt.
-[[nodiscard]] constexpr std::optional<world::BlockId> toBlockId(ItemId id) noexcept {
+[[nodiscard]] constexpr std::optional<voxel::BlockId> toBlockId(ItemId id) noexcept {
     if (id == kAir) {
-        return world::BlockId::Air;
+        return voxel::BlockId::Air;
     }
     if (!isBlockRange(id) || !detail::isDefinedBlockId(id)) {
         return std::nullopt;
     }
-    return static_cast<world::BlockId>(id);
+    return static_cast<voxel::BlockId>(id);
 }
 
 // True when the item can be put down as a world block: a defined BlockId that
-// is not item-only. Item-only ids start at 100 (world::BlockId::Stick).
+// is not item-only. Item-only ids start at 100 (voxel::BlockId::Stick).
 [[nodiscard]] constexpr bool isPlaceableBlock(ItemId id) noexcept {
-    return id != kAir && id < toItemId(world::BlockId::Stick) && detail::isDefinedBlockId(id);
+    return id != kAir && id < toItemId(voxel::BlockId::Stick) && detail::isDefinedBlockId(id);
 }
 
 namespace detail {
 [[nodiscard]] constexpr bool everyPlaceableBlockFitsAByte() noexcept {
-    for (const world::BlockId b : kDefinedBlockIds) {
+    for (const voxel::BlockId b : kDefinedBlockIds) {
         if (isPlaceableBlock(toItemId(b)) && toItemId(b) > 255) {
             return false;
         }

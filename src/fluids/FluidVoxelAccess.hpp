@@ -9,8 +9,8 @@ namespace betacraft::fluids {
 // Beta's blockBlocksFlow(): fluids wash away non-solid decorations (plants, torches)
 // but are stopped by everything else, including sugar cane (reeds). Kept constexpr and
 // registry-free so it works before BlockRegistry::initialize() and in unit tests.
-[[nodiscard]] constexpr bool defaultBlocksFlow(world::BlockId id) noexcept {
-    using world::BlockId;
+[[nodiscard]] constexpr bool defaultBlocksFlow(voxel::BlockId id) noexcept {
+    using voxel::BlockId;
     switch (id) {
         case BlockId::Air:
         case BlockId::Water:
@@ -61,9 +61,9 @@ public:
     IFluidVoxelAccess& operator=(const IFluidVoxelAccess&) = delete;
 
     [[nodiscard]] virtual bool isLoaded(const core::BlockPos& pos) const noexcept = 0;
-    [[nodiscard]] virtual world::BlockId getBlock(const core::BlockPos& pos) const noexcept = 0;
+    [[nodiscard]] virtual voxel::BlockId getBlock(const core::BlockPos& pos) const noexcept = 0;
     [[nodiscard]] virtual FluidState getFluid(const core::BlockPos& pos) const noexcept = 0;
-    virtual void setBlock(const core::BlockPos& pos, world::BlockId id) = 0;
+    virtual void setBlock(const core::BlockPos& pos, voxel::BlockId id) = 0;
     virtual void setFluid(const core::BlockPos& pos, FluidState state) = 0;
 
     // Whether the non-fluid content of the cell stops fluid. Overridable so a World

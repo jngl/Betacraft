@@ -19,7 +19,7 @@ using betacraft::fluids::FluidSimulator;
 using betacraft::fluids::FluidState;
 using betacraft::fluids::FluidType;
 using betacraft::fluids::GridFluidVoxelAccess;
-using betacraft::world::BlockId;
+using betacraft::voxel::BlockId;
 
 // A grid with a stone floor at y = 0 and air above.
 inline std::unique_ptr<GridFluidVoxelAccess> makeFlatWorld(int32_t sx, int32_t sy, int32_t sz) {

@@ -11,8 +11,8 @@ namespace {
 
 // Sky and plain air: no capture, no job. A palette can keep a single Air entry after edits,
 // so this only skips the cheap common case; the snapshot's own check catches the rest.
-[[nodiscard]] bool isTriviallyEmpty(const world::PalettedSection& section) noexcept {
-    return section.isHomogeneous() && section.getBlock(0, 0, 0) == world::BlockId::Air;
+[[nodiscard]] bool isTriviallyEmpty(const voxel::PalettedSection& section) noexcept {
+    return section.isHomogeneous() && section.getBlock(0, 0, 0) == voxel::BlockId::Air;
 }
 
 } // namespace
@@ -84,7 +84,7 @@ void WorldMeshStreamer::update(world::World& world, const glm::vec3& viewerPos, 
     }
     // Their queued job was dropped for a nearer one; nothing else would refresh them.
     for (const voxel::SectionCoord sc : m_pipeline->takeEvictedSections()) {
-        if (world::Chunk* chunk = world.getChunkMutable(sc.chunk())) {
+        if (voxel::Chunk* chunk = world.getChunkMutable(sc.chunk())) {
             chunk->markSectionDirty(static_cast<size_t>(sc.y));
         }
     }
@@ -96,9 +96,9 @@ void WorldMeshStreamer::update(world::World& world, const glm::vec3& viewerPos, 
     std::vector<Candidate> dirty;
     for (const auto& [coord, tracked] : m_chunks) {
         if (!tracked.decoratedReported) continue;
-        const world::Chunk* chunk = world.getChunk(coord);
+        const voxel::Chunk* chunk = world.getChunk(coord);
         if (chunk == nullptr || chunk->dirtySectionMask() == 0) continue;
-        for (size_t s = 0; s < world::Chunk::SECTIONS_PER_CHUNK; ++s) {
+        for (size_t s = 0; s < voxel::Chunk::SECTIONS_PER_CHUNK; ++s) {
             if (chunk->isSectionDirty(s)) {
                 const voxel::SectionCoord sc{coord.x, static_cast<int32_t>(s), coord.z};
                 dirty.push_back({sc, sc.distanceSqTo(viewerPos)});
@@ -113,7 +113,7 @@ void WorldMeshStreamer::update(world::World& world, const glm::vec3& viewerPos, 
     for (const Candidate& c : dirty) {
         if (submitted >= m_config.maxRequestsPerUpdate) break;
         ++processed;
-        world::Chunk* chunk = world.getChunkMutable(c.coord.chunk());
+        voxel::Chunk* chunk = world.getChunkMutable(c.coord.chunk());
         const size_t s = static_cast<size_t>(c.coord.y);
         std::shared_ptr<const SectionNeighborhoodSnapshot18> snapshot;
         if (!isTriviallyEmpty(chunk->getSection(s))) {

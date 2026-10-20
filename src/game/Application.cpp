@@ -52,8 +52,8 @@ namespace {
         view.container[i] = screen.containerSlot(world, i);
     }
     if (const std::optional<core::BlockPos> pos = screen.containerPos()) {
-        if (const world::BlockEntity* entity = world.blockEntities().find(*pos)) {
-            if (const auto* furnace = std::get_if<world::FurnaceData>(entity)) {
+        if (const voxel::BlockEntity* entity = world.blockEntities().find(*pos)) {
+            if (const auto* furnace = std::get_if<voxel::FurnaceData>(entity)) {
                 view.cookProgress = crafting::cookProgress(*furnace);
                 view.burnProgress = crafting::burnProgress(*furnace);
             }
@@ -63,12 +63,12 @@ namespace {
 }
 
 // The screen a right click on `block` opens (step 2 of the right-click order), if any.
-[[nodiscard]] std::optional<ui::ScreenKind> activatedScreen(world::BlockId block) noexcept {
+[[nodiscard]] std::optional<ui::ScreenKind> activatedScreen(voxel::BlockId block) noexcept {
     switch (block) {
-        case world::BlockId::CraftingTable: return ui::ScreenKind::Workbench3x3;
-        case world::BlockId::Furnace:
-        case world::BlockId::LitFurnace: return ui::ScreenKind::Furnace;
-        case world::BlockId::Chest: return ui::ScreenKind::Chest;
+        case voxel::BlockId::CraftingTable: return ui::ScreenKind::Workbench3x3;
+        case voxel::BlockId::Furnace:
+        case voxel::BlockId::LitFurnace: return ui::ScreenKind::Furnace;
+        case voxel::BlockId::Chest: return ui::ScreenKind::Chest;
         default: return std::nullopt;
     }
 }
@@ -87,7 +87,7 @@ Application::~Application() noexcept {
 
 bool Application::initialize() {
     core::Logger::info("Application", "Starting ", m_config.windowTitle, " ...");
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
         core::Logger::error("Application", "SDL_Init failed: ", SDL_GetError());
@@ -467,23 +467,23 @@ void Application::processEvents() {
                     } else if (ev.button.button == SDL_BUTTON_MIDDLE) {
                         // Pick Block: Creative conjures a full stack, Survival (Beta) only
                         // selects a hotbar slot that already holds the block.
-                        if (m_inWorld.state.currentTarget.hit && m_inWorld.state.currentTarget.blockId != world::BlockId::Bedrock) {
+                        if (m_inWorld.state.currentTarget.hit && m_inWorld.state.currentTarget.blockId != voxel::BlockId::Bedrock) {
                             // A lit furnace is a furnace in hand: a placed LitFurnace without a
                             // block entity would glow forever.
-                            const world::BlockId picked = m_inWorld.state.currentTarget.blockId == world::BlockId::LitFurnace
-                                ? world::BlockId::Furnace
+                            const voxel::BlockId picked = m_inWorld.state.currentTarget.blockId == voxel::BlockId::LitFurnace
+                                ? voxel::BlockId::Furnace
                                 : m_inWorld.state.currentTarget.blockId;
                             // Doors, beds and crops are picked as the item that places them.
                             gameplay::ItemId pickedItem = gameplay::toItemId(picked);
                             switch (picked) {
-                                case world::BlockId::WoodDoor: pickedItem = gameplay::items::WoodenDoor; break;
-                                case world::BlockId::IronDoor: pickedItem = gameplay::items::IronDoor; break;
-                                case world::BlockId::RedstoneWire: pickedItem = gameplay::items::Redstone; break;
-                                case world::BlockId::RedstoneTorchOff:
-                                    pickedItem = gameplay::toItemId(world::BlockId::RedstoneTorchOn);
+                                case voxel::BlockId::WoodDoor: pickedItem = gameplay::items::WoodenDoor; break;
+                                case voxel::BlockId::IronDoor: pickedItem = gameplay::items::IronDoor; break;
+                                case voxel::BlockId::RedstoneWire: pickedItem = gameplay::items::Redstone; break;
+                                case voxel::BlockId::RedstoneTorchOff:
+                                    pickedItem = gameplay::toItemId(voxel::BlockId::RedstoneTorchOn);
                                     break;
-                                case world::BlockId::Bed: pickedItem = gameplay::items::Bed; break;
-                                case world::BlockId::Crops: pickedItem = gameplay::items::Seeds; break;
+                                case voxel::BlockId::Bed: pickedItem = gameplay::items::Bed; break;
+                                case voxel::BlockId::Crops: pickedItem = gameplay::items::Seeds; break;
                                 default: break;
                             }
                             if (player().isCreative()) {
@@ -623,8 +623,8 @@ void Application::openInventoryScreen(crafting::GridSize grid) {
 }
 
 void Application::openContainerScreen(ui::ScreenKind kind, const core::BlockPos& pos) {
-    const world::BlockId block = world().getBlock(pos);
-    if (!world::hasBlockEntity(block)) {
+    const voxel::BlockId block = world().getBlock(pos);
+    if (!voxel::hasBlockEntity(block)) {
         return;
     }
     (void)fillDungeonChest(world(), pos);                  // S6.10: loot drawn on first open
@@ -643,9 +643,9 @@ void Application::closeContainerIfOutOfReach() {
         return;
     }
     const glm::vec3 d = player().getEyePosition() - core::blockCentre(*pos);
-    const world::BlockEntity* entity = world().blockEntities().find(*pos);
+    const voxel::BlockEntity* entity = world().blockEntities().find(*pos);
     if (glm::dot(d, d) > kContainerReachSq || entity == nullptr ||
-        !world::blockEntityMatches(world().getBlock(*pos), *entity)) {
+        !voxel::blockEntityMatches(world().getBlock(*pos), *entity)) {
         closeInventoryScreen();
     }
 }
@@ -757,12 +757,12 @@ void Application::handleRightClickAction() {
     if (onBlock && !player().isSneaking()) {
         // S8.7: a lever switches, a button goes down (their click comes back as a redstone
         // event); an iron door takes the click and does nothing (Beta BlockDoor.blockActivated).
-        const world::BlockId targeted = m_inWorld.state.currentTarget.blockId;
-        if (targeted == world::BlockId::Lever || targeted == world::BlockId::StoneButton ||
-            targeted == world::BlockId::IronDoor) {
-            if (targeted == world::BlockId::Lever) {
+        const voxel::BlockId targeted = m_inWorld.state.currentTarget.blockId;
+        if (targeted == voxel::BlockId::Lever || targeted == voxel::BlockId::StoneButton ||
+            targeted == voxel::BlockId::IronDoor) {
+            if (targeted == voxel::BlockId::Lever) {
                 (void)world().toggleLever(m_inWorld.state.currentTarget.blockPos);
-            } else if (targeted == world::BlockId::StoneButton) {
+            } else if (targeted == voxel::BlockId::StoneButton) {
                 (void)world().pressButton(m_inWorld.state.currentTarget.blockPos);
             }
             player().triggerHandSwing();
@@ -783,7 +783,7 @@ void Application::handleRightClickAction() {
         }
         // Creative: clicking a piston pushes the blocks opposite to the clicked face (no
         // redstone yet). In Survival a piston is just a block to build against.
-        if (player().isCreative() && m_inWorld.state.currentTarget.blockId == world::BlockId::Piston) {
+        if (player().isCreative() && m_inWorld.state.currentTarget.blockId == voxel::BlockId::Piston) {
             core::FaceDir pushDir = m_inWorld.state.currentTarget.face;
             switch (m_inWorld.state.currentTarget.face) {
                 case core::FaceDir::PosX: pushDir = core::FaceDir::NegX; break;
@@ -815,8 +815,8 @@ void Application::handleRightClickAction() {
             m_inWorld.state.placeCooldown = 0.16f;
             return;
         }
-        if (const std::optional<world::BlockId> placed = placeHeldBlock(world(), player(), m_inWorld.state.currentTarget)) {
-            const world::BlockDef& def = world::BlockRegistry::get(*placed);
+        if (const std::optional<voxel::BlockId> placed = placeHeldBlock(world(), player(), m_inWorld.state.currentTarget)) {
+            const voxel::BlockDef& def = voxel::BlockRegistry::get(*placed);
             player().triggerHandSwing();
             playWorldSound(core::blockCentre(m_inWorld.state.currentTarget.adjacentPos),
                            [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockPlace(def.sound, a); });
@@ -846,7 +846,7 @@ void Application::playItemUseEffects(const ItemUseResult& used) {
     player().triggerHandSwing();
     if (used.kind == ItemUseKind::BucketFilled || used.kind == ItemUseKind::BucketEmptied) {
         // Beta has no bucket sound: a splash for water, the fizz for lava.
-        if (world::isLavaBlock(used.block)) {
+        if (voxel::isLavaBlock(used.block)) {
             playWorldSound(core::blockCentre(used.pos),
                            [&](const audio::VoiceAcoustics& a) { return m_audio.playLavaFizz(0.6f, a); });
         } else {
@@ -855,7 +855,7 @@ void Application::playItemUseEffects(const ItemUseResult& used) {
         }
         return;
     }
-    const world::BlockDef& def = world::BlockRegistry::get(used.block);
+    const voxel::BlockDef& def = voxel::BlockRegistry::get(used.block);
     playWorldSound(core::blockCentre(used.pos),
                    [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockPlace(def.sound, a); });
     if (used.wear == gameplay::WearResult::Broken) {
@@ -878,7 +878,7 @@ bool Application::activateDoorOrBed() {
         m_inWorld.state.placeCooldown = 0.18f;
         return true;
     }
-    if (world().getBlock(pos) != world::BlockId::Bed) {
+    if (world().getBlock(pos) != voxel::BlockId::Bed) {
         return false;
     }
     switch (m_session->trySleep(pos)) {
@@ -919,7 +919,7 @@ void Application::fixedUpdate(float fixedDt) {
     if (stepEv.splashedWater) {
         playWorldSound(player().getPosition(), [&](const audio::VoiceAcoustics& a) { return m_audio.playWaterSplash(a); });
     } else if (stepEv.triggered) {
-        const auto& groundDef = world::BlockRegistry::get(stepEv.groundBlock);
+        const auto& groundDef = voxel::BlockRegistry::get(stepEv.groundBlock);
         playWorldSound(player().getPosition(),
                        [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockStep(groundDef.sound, a); });
     }
@@ -1007,7 +1007,7 @@ void Application::tickWeatherEffects(const std::optional<glm::vec3>& strike) {
 std::string Application::weatherDebugLine() const {
     std::ostringstream out;
     const glm::vec3 feet = player().getPosition();
-    const world::BiomeId biome = world().getBiomeAt(static_cast<int32_t>(std::floor(feet.x)),
+    const voxel::BiomeId biome = world().getBiomeAt(static_cast<int32_t>(std::floor(feet.x)),
                                                      static_cast<int32_t>(std::floor(feet.z)));
     const world::Precipitation precip = world::precipitationAt(biome);
     out << "Weather: " << (m_session->weather().raining ? (m_session->weather().thundering ? "storm" : "rain") : "clear") << std::fixed
@@ -1029,11 +1029,11 @@ void Application::playRedstoneEffects(const std::vector<redstone::RedstoneEvent>
         const glm::vec3 at = core::blockCentre(ev.pos);
         switch (ev.kind) {
             case redstone::RedstoneEventKind::Click: {
-                const world::BlockId block = world().getBlock(ev.pos);
+                const voxel::BlockId block = world().getBlock(ev.pos);
                 const uint8_t meta = world().getMetadata(ev.pos);
-                const bool down = block == world::BlockId::Lever       ? (meta & world::kLeverOnBit) != 0
-                                : block == world::BlockId::StoneButton ? (meta & world::kButtonPressedBit) != 0
-                                                                       : (meta & world::kPlatePressedBit) != 0;
+                const bool down = block == voxel::BlockId::Lever       ? (meta & voxel::kLeverOnBit) != 0
+                                : block == voxel::BlockId::StoneButton ? (meta & voxel::kButtonPressedBit) != 0
+                                                                       : (meta & voxel::kPlatePressedBit) != 0;
                 playWorldSound(at, [&](const audio::VoiceAcoustics& a) {
                     return m_audio.playSound(audio::SoundEffect::Click, 0.3f, down ? 0.6f : 0.5f, a);
                 });
@@ -1063,8 +1063,8 @@ void Application::playGameTickEffects(const GameTickEvents& events) {
         player().triggerHandSwing();
         // Beta plays the dig sound every 4 ticks of a held dig.
         if (m_inWorld.state.digTicks++ % 4 == 0) {
-            const world::BlockId block = world().getBlock(m_inWorld.state.currentTarget.blockPos);
-            const world::BlockDef& def = world::BlockRegistry::get(block);
+            const voxel::BlockId block = world().getBlock(m_inWorld.state.currentTarget.blockPos);
+            const voxel::BlockDef& def = voxel::BlockRegistry::get(block);
             playWorldSound(core::blockCentre(m_inWorld.state.currentTarget.blockPos),
                            [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockDigHit(def.sound, a); });
             m_inWorld.state.particles.spawnMiningHitParticles(world(), m_inWorld.state.currentTarget.blockPos, m_inWorld.state.currentTarget.face, block, 2);
@@ -1074,7 +1074,7 @@ void Application::playGameTickEffects(const GameTickEvents& events) {
     }
     if (events.blockBroken) {
         const BlockBreakEvent& broken = *events.blockBroken;
-        const world::BlockDef& def = world::BlockRegistry::get(broken.block);
+        const voxel::BlockDef& def = voxel::BlockRegistry::get(broken.block);
         m_inWorld.state.particles.spawnBlockBreakBurst(world(), broken.pos, broken.block, 24);
         playWorldSound(core::blockCentre(broken.pos),
                        [&](const audio::VoiceAcoustics& a) { return m_audio.playBlockBreak(def.sound, a); });
@@ -1295,7 +1295,7 @@ void Application::renderWorldFrame(int framebufferWidth, int framebufferHeight) 
     sim().entities().view<ecs::TransformComp, ecs::PrimedTntComp>().each(
         [&](ecs::EntityId, const ecs::TransformComp& t, const ecs::PrimedTntComp& tnt) {
             const float flash = tnt.fuse <= kTntFlashTicks && (tnt.fuse / 2) % 2 == 0 ? 0.8f : 0.0f;
-            m_inWorld.state.fallingBlockInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), world::BlockId::TNT, flash});
+            m_inWorld.state.fallingBlockInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), voxel::BlockId::TNT, flash});
         });
     // S6.2 arrows, along their flight.
     m_inWorld.state.arrowInstances.clear();

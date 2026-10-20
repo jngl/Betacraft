@@ -53,12 +53,12 @@ glm::vec3 DynamicLightManager::heldLightPosition(const glm::vec3& eyePos, const 
 }
 
 bool DynamicLightManager::submitHeldItem(const glm::vec3& eyePos, const glm::vec3& lookDir,
-                                         world::BlockId heldItem) {
+                                         voxel::BlockId heldItem) {
     const auto light = makeEmitterLight(heldItem, heldLightPosition(eyePos, lookDir), LightSource::HeldItem);
     return light.has_value() && submit(*light);
 }
 
-bool DynamicLightManager::submitDroppedItem(const glm::vec3& position, world::BlockId item) {
+bool DynamicLightManager::submitDroppedItem(const glm::vec3& position, voxel::BlockId item) {
     const auto light = makeEmitterLight(item, position, LightSource::DroppedItem);
     return light.has_value() && submit(*light);
 }

@@ -113,8 +113,8 @@ ArrowTickResult tickArrows(ecs::Registry& reg, const world::World& world, ecs::E
 
         if (arrow.inGround) {
             v.linear = glm::vec3(0.0f);
-            const world::BlockId holder = world.getBlock(arrow.stuckIn);
-            if (!world::BlockRegistry::isSolid(holder)) {
+            const voxel::BlockId holder = world.getBlock(arrow.stuckIn);
+            if (!voxel::BlockRegistry::isSolid(holder)) {
                 arrow.inGround = false; // Its block went away: it falls again
                 arrow.groundTicks = 0;
                 arrow.flightTicks = 0;
@@ -132,7 +132,7 @@ ArrowTickResult tickArrows(ecs::Registry& reg, const world::World& world, ecs::E
             const glm::vec3 dir = seg / len;
             const physics::RaycastHit block = physics::Raycaster::cast(world, from, dir, len);
             // Flowers, tall grass and torches let arrows through; solid blocks stop them.
-            const float blockDist = block.hit && block.distance <= len && world::BlockRegistry::isSolid(block.blockId)
+            const float blockDist = block.hit && block.distance <= len && voxel::BlockRegistry::isSolid(block.blockId)
                                         ? block.distance
                                         : -1.0f;
 
@@ -192,7 +192,7 @@ ArrowTickResult tickArrows(ecs::Registry& reg, const world::World& world, ecs::E
         }
 
         const core::BlockPos cell = cellOf(t.pos);
-        const float drag = world::isWaterBlock(world.getBlock(cell.x, cell.y, cell.z)) ? kArrowWaterDrag : kArrowDrag;
+        const float drag = voxel::isWaterBlock(world.getBlock(cell.x, cell.y, cell.z)) ? kArrowWaterDrag : kArrowDrag;
         v.linear *= drag;
         v.linear.y -= kArrowGravityPerTick;
         faceAlong(t, v.linear);

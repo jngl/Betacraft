@@ -19,27 +19,27 @@ namespace betacraft::world {
 
 namespace {
 
-void foldLegacyItemIds(StoredStack& s) noexcept {
+void foldLegacyItemIds(voxel::StoredStack& s) noexcept {
     s.id = gameplay::canonicalize(s.id);
 }
 
-void foldLegacyItemIds(FurnaceData& f) noexcept {
+void foldLegacyItemIds(voxel::FurnaceData& f) noexcept {
     foldLegacyItemIds(f.input);
     foldLegacyItemIds(f.fuel);
     foldLegacyItemIds(f.output);
 }
 
-void foldLegacyItemIds(ChestData& c) noexcept {
-    for (StoredStack& s : c.slots) foldLegacyItemIds(s);
+void foldLegacyItemIds(voxel::ChestData& c) noexcept {
+    for (voxel::StoredStack& s : c.slots) foldLegacyItemIds(s);
 }
 
 [[nodiscard]] constexpr core::ChunkCoord chunkOf(int32_t wx, int32_t wz) noexcept {
-    return {core::floorDiv(wx, Chunk::WIDTH), core::floorDiv(wz, Chunk::DEPTH)};
+    return {core::floorDiv(wx, voxel::Chunk::WIDTH), core::floorDiv(wz, voxel::Chunk::DEPTH)};
 }
 
-[[nodiscard]] constexpr fluids::FluidType fluidTypeOf(BlockId id) noexcept {
-    if (isWaterBlock(id)) return fluids::FluidType::Water;
-    if (isLavaBlock(id)) return fluids::FluidType::Lava;
+[[nodiscard]] constexpr fluids::FluidType fluidTypeOf(voxel::BlockId id) noexcept {
+    if (voxel::isWaterBlock(id)) return fluids::FluidType::Water;
+    if (voxel::isLavaBlock(id)) return fluids::FluidType::Lava;
     return fluids::FluidType::None;
 }
 
@@ -52,10 +52,10 @@ public:
     explicit FluidAccess(World& world) noexcept : m_world(world) {}
 
     [[nodiscard]] bool isLoaded(const core::BlockPos& pos) const noexcept override {
-        return pos.y >= 0 && pos.y < Chunk::HEIGHT && m_world.getChunk(chunkOf(pos.x, pos.z)) != nullptr;
+        return pos.y >= 0 && pos.y < voxel::Chunk::HEIGHT && m_world.getChunk(chunkOf(pos.x, pos.z)) != nullptr;
     }
 
-    [[nodiscard]] BlockId getBlock(const core::BlockPos& pos) const noexcept override {
+    [[nodiscard]] voxel::BlockId getBlock(const core::BlockPos& pos) const noexcept override {
         return m_world.getBlock(pos);
     }
 
@@ -63,20 +63,20 @@ public:
         return m_world.getFluid(pos);
     }
 
-    void setBlock(const core::BlockPos& pos, BlockId id) override {
+    void setBlock(const core::BlockPos& pos, voxel::BlockId id) override {
         (void)m_world.applyBlockEdit(pos.x, pos.y, pos.z, id, EditOrigin::Simulation);
         (void)m_world.applyMetadataEdit(pos.x, pos.y, pos.z, 0, EditOrigin::Simulation);
     }
 
     void setFluid(const core::BlockPos& pos, fluids::FluidState state) override {
         if (state.isEmpty()) {
-            setBlock(pos, BlockId::Air);
+            setBlock(pos, voxel::BlockId::Air);
             return;
         }
         // Keep a still/flowing variant already there: only the level changes, no relight.
-        const BlockId current = m_world.getBlock(pos);
-        const BlockId canonical = state.type == fluids::FluidType::Lava ? BlockId::Lava : BlockId::Water;
-        (void)m_world.applyBlockEdit(pos.x, pos.y, pos.z, isSameLiquid(current, canonical) ? current : canonical,
+        const voxel::BlockId current = m_world.getBlock(pos);
+        const voxel::BlockId canonical = state.type == fluids::FluidType::Lava ? voxel::BlockId::Lava : voxel::BlockId::Water;
+        (void)m_world.applyBlockEdit(pos.x, pos.y, pos.z, voxel::isSameLiquid(current, canonical) ? current : canonical,
                                      EditOrigin::Simulation);
         (void)m_world.applyMetadataEdit(pos.x, pos.y, pos.z, static_cast<uint8_t>(state.betaDecay()),
                                         EditOrigin::Simulation);
@@ -93,13 +93,13 @@ public:
     explicit RedstoneAccess(World& world) noexcept : m_world(world) {}
 
     [[nodiscard]] bool isLoaded(const core::BlockPos& pos) const noexcept override {
-        return pos.y >= 0 && pos.y < Chunk::HEIGHT && m_world.getChunk(chunkOf(pos.x, pos.z)) != nullptr;
+        return pos.y >= 0 && pos.y < voxel::Chunk::HEIGHT && m_world.getChunk(chunkOf(pos.x, pos.z)) != nullptr;
     }
-    [[nodiscard]] BlockId getBlock(const core::BlockPos& pos) const noexcept override { return m_world.getBlock(pos); }
+    [[nodiscard]] voxel::BlockId getBlock(const core::BlockPos& pos) const noexcept override { return m_world.getBlock(pos); }
     [[nodiscard]] uint8_t getMetadata(const core::BlockPos& pos) const noexcept override {
         return m_world.getMetadata(pos);
     }
-    void setBlock(const core::BlockPos& pos, BlockId id, uint8_t meta) override {
+    void setBlock(const core::BlockPos& pos, voxel::BlockId id, uint8_t meta) override {
         (void)m_world.setBlockWithMetadata(pos.x, pos.y, pos.z, id, meta);
     }
     void setMetadata(const core::BlockPos& pos, uint8_t meta) override {
@@ -142,7 +142,7 @@ World::World(uint64_t seed, std::filesystem::path saveDir)
       m_genWorkers(world::defaultGenWorkerCount()),
       m_ioStore(std::make_unique<StorageIo>(m_storage)),
       m_io(std::make_unique<storage::ChunkIoWorker>(*m_ioStore)) {
-    BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     auto find = [this](core::ChunkCoord c) noexcept { return getChunkMutable(c); };
     m_chunkAccess = std::make_unique<worldgen::FunctionChunkAccess<decltype(find)>>(find);
     resetDecorationPipeline(seed);
@@ -204,7 +204,7 @@ fluids::FluidTickStats World::tick() {
     m_redstone->setTime(m_tickCount);
     m_dueTicks.clear();
     (void)m_scheduledTicks.drainDue(m_tickCount, m_dueTicks, kMaxScheduledTicksPerTick);
-    for (const ScheduledTickQueue::Entry& entry : m_dueTicks) {
+    for (const voxel::ScheduledTickQueue::Entry& entry : m_dueTicks) {
         runScheduledTick(entry);
     }
     m_redstoneStats = m_redstoneEnabled ? m_redstone->tick(m_tickCount) : redstone::RedstoneTickStats{};
@@ -227,9 +227,9 @@ std::vector<redstone::RedstoneEvent> World::takeRedstoneEvents() noexcept {
     return m_redstone->takeEvents();
 }
 
-void World::notifyRedstone(int32_t wx, int32_t wy, int32_t wz, BlockId oldId, BlockId newId) {
+void World::notifyRedstone(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId oldId, voxel::BlockId newId) {
     if (m_redstoneEnabled && (redstone::isRedstoneComponent(oldId) || redstone::isRedstoneComponent(newId) ||
-                              isNormalCube(oldId) != isNormalCube(newId))) {
+                              voxel::isNormalCube(oldId) != voxel::isNormalCube(newId))) {
         m_redstone->onBlockChanged({wx, wy, wz});
     }
 }
@@ -237,21 +237,21 @@ void World::notifyRedstone(int32_t wx, int32_t wy, int32_t wz, BlockId oldId, Bl
 void World::rescheduleRedstone(core::ChunkCoord coord) {
     // Scheduled updates are not saved: a torch whose input changed just before the save, a
     // button or a plate still down, would otherwise stay as they are.
-    const Chunk* chunk = getChunk(coord);
+    const voxel::Chunk* chunk = getChunk(coord);
     if (chunk == nullptr || !m_redstoneEnabled) {
         return;
     }
-    const auto wanted = [](BlockId id) { return redstone::isRedstoneComponent(id) && id != BlockId::RedstoneWire; };
-    for (size_t s = 0; s < Chunk::SECTIONS_PER_CHUNK; ++s) {
+    const auto wanted = [](voxel::BlockId id) { return redstone::isRedstoneComponent(id) && id != voxel::BlockId::RedstoneWire; };
+    for (size_t s = 0; s < voxel::Chunk::SECTIONS_PER_CHUNK; ++s) {
         if (!chunk->getSection(s).mayContain(wanted)) {
             continue;
         }
-        const int32_t yBase = static_cast<int32_t>(s) * PalettedSection::SIZE;
-        for (int32_t y = yBase; y < yBase + PalettedSection::SIZE; ++y) {
-            for (int32_t lz = 0; lz < Chunk::DEPTH; ++lz) {
-                for (int32_t lx = 0; lx < Chunk::WIDTH; ++lx) {
+        const int32_t yBase = static_cast<int32_t>(s) * voxel::PalettedSection::SIZE;
+        for (int32_t y = yBase; y < yBase + voxel::PalettedSection::SIZE; ++y) {
+            for (int32_t lz = 0; lz < voxel::Chunk::DEPTH; ++lz) {
+                for (int32_t lx = 0; lx < voxel::Chunk::WIDTH; ++lx) {
                     if (wanted(chunk->getBlock(lx, y, lz))) {
-                        m_redstone->onBlockLoaded({coord.x * Chunk::WIDTH + lx, y, coord.z * Chunk::DEPTH + lz});
+                        m_redstone->onBlockLoaded({coord.x * voxel::Chunk::WIDTH + lx, y, coord.z * voxel::Chunk::DEPTH + lz});
                     }
                 }
             }
@@ -260,7 +260,7 @@ void World::rescheduleRedstone(core::ChunkCoord coord) {
 }
 
 bool World::scheduleBlockTick(core::BlockPos pos, int32_t delayTicks) {
-    if (pos.y < 0 || pos.y >= Chunk::HEIGHT || getChunk(chunkOf(pos.x, pos.z)) == nullptr) {
+    if (pos.y < 0 || pos.y >= voxel::Chunk::HEIGHT || getChunk(chunkOf(pos.x, pos.z)) == nullptr) {
         return false;
     }
     const auto delay = static_cast<uint64_t>(std::max(delayTicks, 1));
@@ -269,14 +269,14 @@ bool World::scheduleBlockTick(core::BlockPos pos, int32_t delayTicks) {
 
 void World::scheduleFallingChecks(int32_t wx, int32_t wy, int32_t wz) {
     for (int32_t dy = 0; dy <= 1; ++dy) {
-        const BlockId id = getBlock(wx, wy + dy, wz);
-        if (id == BlockId::Sand || id == BlockId::Gravel) {
+        const voxel::BlockId id = getBlock(wx, wy + dy, wz);
+        if (id == voxel::BlockId::Sand || id == voxel::BlockId::Gravel) {
             (void)scheduleBlockTick({wx, wy + dy, wz}, kFallingBlockDelayTicks);
         }
     }
 }
 
-void World::runScheduledTick(const ScheduledTickQueue::Entry& entry) {
+void World::runScheduledTick(const voxel::ScheduledTickQueue::Entry& entry) {
     const core::BlockPos pos = entry.pos;
     if (getBlock(pos) != entry.block) {
         return; // Replaced since it was scheduled
@@ -287,13 +287,13 @@ void World::runScheduledTick(const ScheduledTickQueue::Entry& entry) {
         }
         return;
     }
-    if (entry.block == BlockId::Sand || entry.block == BlockId::Gravel) {
+    if (entry.block == voxel::BlockId::Sand || entry.block == voxel::BlockId::Gravel) {
         // Beta BlockSand.tryToFall: over air or liquid the block leaves the grid as an entity.
-        const BlockId below = getBlock(pos.x, pos.y - 1, pos.z);
-        if (pos.y <= 0 || (below != BlockId::Air && !BlockRegistry::isLiquid(below))) {
+        const voxel::BlockId below = getBlock(pos.x, pos.y - 1, pos.z);
+        if (pos.y <= 0 || (below != voxel::BlockId::Air && !voxel::BlockRegistry::isLiquid(below))) {
             return;
         }
-        const int32_t changed = applyBlockEdit(pos.x, pos.y, pos.z, BlockId::Air, EditOrigin::Player);
+        const int32_t changed = applyBlockEdit(pos.x, pos.y, pos.z, voxel::BlockId::Air, EditOrigin::Player);
         if (changed == 0) {
             return;
         }
@@ -326,13 +326,13 @@ void World::tickRandomBlocks(const glm::vec3& centre, gameplay::SplitMix64& rng,
         return a.x != b.x ? a.x < b.x : a.z < b.z;
     });
 
-    constexpr int32_t kPerSection = kRandomTicksPerChunk / static_cast<int32_t>(Chunk::SECTIONS_PER_CHUNK);
+    constexpr int32_t kPerSection = kRandomTicksPerChunk / static_cast<int32_t>(voxel::Chunk::SECTIONS_PER_CHUNK);
     for (const core::ChunkCoord coord : coords) {
-        Chunk* chunk = getChunkMutable(coord);
+        voxel::Chunk* chunk = getChunkMutable(coord);
         if (chunk == nullptr) continue;
-        for (size_t s = 0; s < Chunk::SECTIONS_PER_CHUNK; ++s) {
-            const PalettedSection& section = chunk->getSection(s);
-            if (!section.mayContain([](BlockId id) { return hasRandomTick(id); })) {
+        for (size_t s = 0; s < voxel::Chunk::SECTIONS_PER_CHUNK; ++s) {
+            const voxel::PalettedSection& section = chunk->getSection(s);
+            if (!section.mayContain([](voxel::BlockId id) { return hasRandomTick(id); })) {
                 continue;
             }
             for (int32_t i = 0; i < kPerSection; ++i) {
@@ -340,10 +340,10 @@ void World::tickRandomBlocks(const glm::vec3& centre, gameplay::SplitMix64& rng,
                 const auto lx = static_cast<int32_t>(r & 15U);
                 const auto lz = static_cast<int32_t>((r >> 4U) & 15U);
                 const auto ly = static_cast<int32_t>((r >> 8U) & 15U);
-                const BlockId id = section.getBlock(lx, ly, lz);
+                const voxel::BlockId id = section.getBlock(lx, ly, lz);
                 if (const RandomTickFn fn = kRandomTick[static_cast<size_t>(id)]) {
-                    const int32_t wy = static_cast<int32_t>(s) * PalettedSection::SIZE + ly;
-                    fn(*this, {coord.x * Chunk::WIDTH + lx, wy, coord.z * Chunk::DEPTH + lz},
+                    const int32_t wy = static_cast<int32_t>(s) * voxel::PalettedSection::SIZE + ly;
+                    fn(*this, {coord.x * voxel::Chunk::WIDTH + lx, wy, coord.z * voxel::Chunk::DEPTH + lz},
                        chunk->getMetadata(lx, wy, lz), rng);
                 }
             }
@@ -357,12 +357,12 @@ uint8_t World::getEffectiveLight(core::BlockPos pos) const noexcept {
 }
 
 bool World::breakBlockNaturally(core::BlockPos pos) {
-    const BlockId old = getBlock(pos);
-    if (old == BlockId::Air) {
+    const voxel::BlockId old = getBlock(pos);
+    if (old == voxel::BlockId::Air) {
         return false;
     }
     const uint8_t oldMeta = getMetadata(pos);
-    const int32_t changed = applyBlockEdit(pos.x, pos.y, pos.z, BlockId::Air, EditOrigin::Player);
+    const int32_t changed = applyBlockEdit(pos.x, pos.y, pos.z, voxel::BlockId::Air, EditOrigin::Player);
     if (changed == 0) {
         return false;
     }
@@ -382,7 +382,7 @@ void World::flagLeavesForDecay(int32_t wx, int32_t wy, int32_t wz, int32_t radiu
     for (int32_t dy = -radius; dy <= radius; ++dy) {
         for (int32_t dz = -radius; dz <= radius; ++dz) {
             for (int32_t dx = -radius; dx <= radius; ++dx) {
-                if (getBlock(wx + dx, wy + dy, wz + dz) != BlockId::Leaves) continue;
+                if (getBlock(wx + dx, wy + dy, wz + dz) != voxel::BlockId::Leaves) continue;
                 const uint8_t meta = getMetadata(wx + dx, wy + dy, wz + dz);
                 if ((meta & kLeavesCheckDecayBit) == 0) {
                     (void)applyMetadataEdit(wx + dx, wy + dy, wz + dz,
@@ -399,17 +399,17 @@ std::vector<fluids::FluidEvent> World::takeFluidEvents() noexcept {
 
 fluids::FluidState World::getFluid(core::BlockPos pos) const noexcept {
     // The simulator's hottest read: one chunk lookup for both the id and the nibble.
-    if (pos.y < 0 || pos.y >= Chunk::HEIGHT) return {};
-    const Chunk* chunk = getChunk(chunkOf(pos.x, pos.z));
+    if (pos.y < 0 || pos.y >= voxel::Chunk::HEIGHT) return {};
+    const voxel::Chunk* chunk = getChunk(chunkOf(pos.x, pos.z));
     if (!chunk) return {};
-    const int32_t lx = core::floorMod(pos.x, Chunk::WIDTH);
-    const int32_t lz = core::floorMod(pos.z, Chunk::DEPTH);
+    const int32_t lx = core::floorMod(pos.x, voxel::Chunk::WIDTH);
+    const int32_t lz = core::floorMod(pos.z, voxel::Chunk::DEPTH);
     const fluids::FluidType type = fluidTypeOf(chunk->getBlock(lx, pos.y, lz));
     if (type == fluids::FluidType::None) return {};
     return fluids::FluidState::fromBetaDecay(type, chunk->getMetadata(lx, pos.y, lz));
 }
 
-Chunk& World::ensureChunkLoaded(core::ChunkCoord coord) {
+voxel::Chunk& World::ensureChunkLoaded(core::ChunkCoord coord) {
     auto it = m_chunks.find(coord);
     if (it != m_chunks.end()) {
         return *it->second;
@@ -424,7 +424,7 @@ Chunk& World::ensureChunkLoaded(core::ChunkCoord coord) {
     } else {
         bundle = m_storage.loadChunkBundle(coord);
     }
-    auto chunk = std::make_unique<Chunk>(coord);
+    auto chunk = std::make_unique<voxel::Chunk>(coord);
     const bool loadedFromDisk = deserializeBundle(bundle, chunk);
     if (!loadedFromDisk) {
         m_worldGen.generateChunk(*chunk); // pass 1
@@ -432,31 +432,31 @@ Chunk& World::ensureChunkLoaded(core::ChunkCoord coord) {
     return integrateChunk(std::move(chunk), loadedFromDisk, std::move(bundle), false);
 }
 
-bool World::deserializeBundle(std::optional<storage::ChunkBundle>& bundle, std::unique_ptr<Chunk>& chunk) {
+bool World::deserializeBundle(std::optional<storage::ChunkBundle>& bundle, std::unique_ptr<voxel::Chunk>& chunk) {
     if (!bundle || bundle->blocks.empty()) {
         return false;
     }
     if (!chunk->deserializeRLE(bundle->blocks)) {
         const core::ChunkCoord coord = chunk->getCoord();
         m_storage.quarantineChunk(coord); // Regenerated by the caller; the bytes are kept aside
-        chunk = std::make_unique<Chunk>(coord);
+        chunk = std::make_unique<voxel::Chunk>(coord);
         return false;
     }
     m_worldGen.populateBiomeColumns(*chunk);
     return true;
 }
 
-Chunk& World::integrateChunk(std::unique_ptr<Chunk> chunk, bool loadedFromDisk,
+voxel::Chunk& World::integrateChunk(std::unique_ptr<voxel::Chunk> chunk, bool loadedFromDisk,
                              std::optional<storage::ChunkBundle> bundle, bool lit) {
     const core::ChunkCoord coord = chunk->getCoord();
-    Chunk& ref = *chunk;
+    voxel::Chunk& ref = *chunk;
     m_chunks.emplace(coord, std::move(chunk));
     if (loadedFromDisk) {
-        std::vector<BlockEntityEntry> entities = m_storage.decodeBundleBlockEntities(coord, *bundle);
-        std::erase_if(entities, [&ref](const BlockEntityEntry& e) {
-            const BlockId block = ref.getBlock(core::floorMod(e.first.x, Chunk::WIDTH), e.first.y,
-                                               core::floorMod(e.first.z, Chunk::DEPTH));
-            if (blockEntityMatches(block, e.second)) {
+        std::vector<voxel::BlockEntityEntry> entities = m_storage.decodeBundleBlockEntities(coord, *bundle);
+        std::erase_if(entities, [&ref](const voxel::BlockEntityEntry& e) {
+            const voxel::BlockId block = ref.getBlock(core::floorMod(e.first.x, voxel::Chunk::WIDTH), e.first.y,
+                                               core::floorMod(e.first.z, voxel::Chunk::DEPTH));
+            if (voxel::blockEntityMatches(block, e.second)) {
                 return false;
             }
             core::Logger::warn("World", "Discarding block entity at ", e.first.x, " ", e.first.y, " ", e.first.z,
@@ -464,7 +464,7 @@ Chunk& World::integrateChunk(std::unique_ptr<Chunk> chunk, bool loadedFromDisk,
             return true;
         });
         // S2.10: chest and furnace stacks saved with the legacy ids 100..105 load as Beta numbers.
-        for (BlockEntityEntry& e : entities) {
+        for (voxel::BlockEntityEntry& e : entities) {
             std::visit([](auto& data) { foldLegacyItemIds(data); }, e.second);
         }
         m_blockEntities.insertChunk(coord, std::move(entities));
@@ -497,7 +497,7 @@ Chunk& World::integrateChunk(std::unique_ptr<Chunk> chunk, bool loadedFromDisk,
     for (int32_t dz = -1; dz <= 1; ++dz) {
         for (int32_t dx = -1; dx <= 1; ++dx) {
             if (dx == 0 && dz == 0) continue;
-            if (Chunk* nb = getChunkMutable({coord.x + dx, coord.z + dz})) {
+            if (voxel::Chunk* nb = getChunkMutable({coord.x + dx, coord.z + dz})) {
                 nb->setMeshDirty(true);
             }
         }
@@ -520,21 +520,21 @@ std::vector<core::ChunkCoord> World::registerForDecoration(core::ChunkCoord coor
 }
 
 void World::relightDecoratedChunk(core::ChunkCoord coord) noexcept {
-    Chunk* chunk = getChunkMutable(coord);
+    voxel::Chunk* chunk = getChunkMutable(coord);
     if (!chunk) return;
     // Logs and leaves shade what pass 1 lit as open sky.
     chunk->recalculateLighting();
     syncChunkLightingWithNeighbors(coord);
     for (int32_t dz = -1; dz <= 1; ++dz) {
         for (int32_t dx = -1; dx <= 1; ++dx) {
-            if (Chunk* c = getChunkMutable({coord.x + dx, coord.z + dz})) {
+            if (voxel::Chunk* c = getChunkMutable({coord.x + dx, coord.z + dz})) {
                 c->setMeshDirty(true);
             }
         }
     }
 }
 
-bool World::persistChunk(const Chunk& chunk) {
+bool World::persistChunk(const voxel::Chunk& chunk) {
     if (m_saveDisabled) {
         return false;
     }
@@ -544,15 +544,15 @@ bool World::persistChunk(const Chunk& chunk) {
     bundle.blocks = chunk.serializeRLE();
     bundle.decoration = worldgen::DecorationRecord{plan == nullptr || m_decoration->isDecorated(coord),
                                                    plan ? *plan : worldgen::FeaturePlan{}};
-    const std::vector<BlockEntityEntry> entities = m_blockEntities.chunkEntries(coord);
+    const std::vector<voxel::BlockEntityEntry> entities = m_blockEntities.chunkEntries(coord);
     if (!entities.empty()) {
-        bundle.blockEntities = encodeBlockEntities(entities);
+        bundle.blockEntities = voxel::encodeBlockEntities(entities);
     }
     // S7.5 (bug 8 under the new storage): only player-touched chunks and their neighbours
     // ever reach the store; a write outside them is a regression the F3 counter shows.
     if (!persistSimulationEdits(coord)) {
         ++m_storageStats.unsolicitedBundleWrites;
-        core::Logger::warn("World", "Chunk ", coord.x, ",", coord.z, " saved without any player edit around it");
+        core::Logger::warn("World", "voxel::Chunk ", coord.x, ",", coord.z, " saved without any player edit around it");
     }
     // S7.6: serialised here, compressed and written by the I/O worker.
     m_io->enqueueSave({coord, m_storage.encodeChunkBundle(bundle)});
@@ -560,19 +560,19 @@ bool World::persistChunk(const Chunk& chunk) {
     return true;
 }
 
-const Chunk* World::getChunk(core::ChunkCoord coord) const noexcept {
+const voxel::Chunk* World::getChunk(core::ChunkCoord coord) const noexcept {
     const auto it = m_chunks.find(coord);
     return (it != m_chunks.end()) ? it->second.get() : nullptr;
 }
 
-Chunk* World::getChunkMutable(core::ChunkCoord coord) noexcept {
+voxel::Chunk* World::getChunkMutable(core::ChunkCoord coord) noexcept {
     const auto it = m_chunks.find(coord);
     return (it != m_chunks.end()) ? it->second.get() : nullptr;
 }
 
 void World::updateChunksAround(const glm::vec3& centerPos, int32_t radiusChunks, int32_t maxNewPerCall) {
-    const int32_t centerCX = core::floorDiv(static_cast<int32_t>(std::floor(centerPos.x)), Chunk::WIDTH);
-    const int32_t centerCZ = core::floorDiv(static_cast<int32_t>(std::floor(centerPos.z)), Chunk::DEPTH);
+    const int32_t centerCX = core::floorDiv(static_cast<int32_t>(std::floor(centerPos.x)), voxel::Chunk::WIDTH);
+    const int32_t centerCZ = core::floorDiv(static_cast<int32_t>(std::floor(centerPos.z)), voxel::Chunk::DEPTH);
 
     // Load closest missing chunks in spiral / radial order
     std::vector<core::ChunkCoord> missing;
@@ -656,8 +656,8 @@ void World::cancelStreamRequest(core::ChunkCoord coord) {
 }
 
 void World::requestChunksAround(const glm::vec3& centerPos, int32_t radiusChunks) {
-    const int32_t centerCX = core::floorDiv(static_cast<int32_t>(std::floor(centerPos.x)), Chunk::WIDTH);
-    const int32_t centerCZ = core::floorDiv(static_cast<int32_t>(std::floor(centerPos.z)), Chunk::DEPTH);
+    const int32_t centerCX = core::floorDiv(static_cast<int32_t>(std::floor(centerPos.x)), voxel::Chunk::WIDTH);
+    const int32_t centerCZ = core::floorDiv(static_cast<int32_t>(std::floor(centerPos.z)), voxel::Chunk::DEPTH);
     genPipeline().setCenter({centerCX, centerCZ});
     unloadDistantChunks(centerCX, centerCZ, radiusChunks);
 
@@ -705,10 +705,10 @@ void World::pumpStreaming() {
     }
     // The store kept the previous bundle: save these chunks again later.
     for (const storage::SaveJob& failed : m_io->takeFailedSaves()) {
-        if (Chunk* chunk = getChunkMutable(failed.coord)) {
+        if (voxel::Chunk* chunk = getChunkMutable(failed.coord)) {
             chunk->setModified(true);
         } else {
-            core::Logger::error("World", "Chunk ", failed.coord.x, ",", failed.coord.z,
+            core::Logger::error("World", "voxel::Chunk ", failed.coord.x, ",", failed.coord.z,
                                 " could not be saved and is no longer loaded");
         }
     }
@@ -729,7 +729,7 @@ World::IntegrationStats World::integrateReadyChunks(std::chrono::nanoseconds bud
                 continue;
             }
             std::optional<storage::ChunkBundle> bundle = storage::decodeBundle(it->second.bundleBytes);
-            auto chunk = std::make_unique<Chunk>(coord);
+            auto chunk = std::make_unique<voxel::Chunk>(coord);
             if (!deserializeBundle(bundle, chunk)) {
                 // Nothing usable stored (or quarantined just now): generate it like a new chunk.
                 it->second = StreamRequest{StreamRequest::Stage::Generating, {}, 0};
@@ -841,35 +841,35 @@ const storage::WorldStorage& World::getStorage() const {
     return m_storage;
 }
 
-BlockId World::getBlock(int32_t wx, int32_t wy, int32_t wz) const noexcept {
-    if (wy < 0 || wy >= Chunk::HEIGHT) {
-        return BlockId::Air;
+voxel::BlockId World::getBlock(int32_t wx, int32_t wy, int32_t wz) const noexcept {
+    if (wy < 0 || wy >= voxel::Chunk::HEIGHT) {
+        return voxel::BlockId::Air;
     }
     const core::ChunkCoord coord{
-        core::floorDiv(wx, Chunk::WIDTH),
-        core::floorDiv(wz, Chunk::DEPTH)
+        core::floorDiv(wx, voxel::Chunk::WIDTH),
+        core::floorDiv(wz, voxel::Chunk::DEPTH)
     };
-    const Chunk* chunk = getChunk(coord);
+    const voxel::Chunk* chunk = getChunk(coord);
     if (!chunk) {
-        return BlockId::Air;
+        return voxel::BlockId::Air;
     }
-    const int32_t lx = core::floorMod(wx, Chunk::WIDTH);
-    const int32_t lz = core::floorMod(wz, Chunk::DEPTH);
+    const int32_t lx = core::floorMod(wx, voxel::Chunk::WIDTH);
+    const int32_t lz = core::floorMod(wz, voxel::Chunk::DEPTH);
     return chunk->getBlock(lx, wy, lz);
 }
 
 void World::markNeighborChunksDirty(core::ChunkCoord coord, int32_t lx, int32_t wy, int32_t lz) noexcept {
     // The voxel's own chunk marked itself; only a voxel on a column seam is also inside the
     // 18^3 meshing neighbourhood of sections in the adjacent columns.
-    if (lx != 0 && lx != Chunk::WIDTH - 1 && lz != 0 && lz != Chunk::DEPTH - 1) {
+    if (lx != 0 && lx != voxel::Chunk::WIDTH - 1 && lz != 0 && lz != voxel::Chunk::DEPTH - 1) {
         return;
     }
     const voxel::SectionBox box =
-        voxel::sectionsSeeingVoxel(coord.x * Chunk::WIDTH + lx, wy, coord.z * Chunk::DEPTH + lz);
+        voxel::sectionsSeeingVoxel(coord.x * voxel::Chunk::WIDTH + lx, wy, coord.z * voxel::Chunk::DEPTH + lz);
     for (int32_t cz = box.min.z; cz <= box.max.z; ++cz) {
         for (int32_t cx = box.min.x; cx <= box.max.x; ++cx) {
             if (cx == coord.x && cz == coord.z) continue;
-            if (Chunk* nb = getChunkMutable({cx, cz})) {
+            if (voxel::Chunk* nb = getChunkMutable({cx, cz})) {
                 for (int32_t sy = box.min.y; sy <= box.max.y; ++sy) {
                     nb->markSectionDirty(static_cast<size_t>(sy));
                 }
@@ -878,7 +878,7 @@ void World::markNeighborChunksDirty(core::ChunkCoord coord, int32_t lx, int32_t 
     }
 }
 
-bool World::setBlock(int32_t wx, int32_t wy, int32_t wz, BlockId id) {
+bool World::setBlock(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId id) {
     const int32_t changed = applyBlockEdit(wx, wy, wz, id, EditOrigin::Player);
     notifyFluidColumn(wx, wy, wz, changed);
     if (changed > 0) {
@@ -893,7 +893,7 @@ bool World::setBlock(int32_t wx, int32_t wy, int32_t wz, BlockId id) {
 bool World::persistSimulationEdits(core::ChunkCoord coord) const noexcept {
     for (int32_t dz = -1; dz <= 1; ++dz) {
         for (int32_t dx = -1; dx <= 1; ++dx) {
-            const Chunk* c = getChunk({coord.x + dx, coord.z + dz});
+            const voxel::Chunk* c = getChunk({coord.x + dx, coord.z + dz});
             if (c != nullptr && c->isPlayerTouched()) {
                 return true;
             }
@@ -902,22 +902,22 @@ bool World::persistSimulationEdits(core::ChunkCoord coord) const noexcept {
     return false;
 }
 
-int32_t World::applyBlockEdit(int32_t wx, int32_t wy, int32_t wz, BlockId id, EditOrigin origin) {
-    if (wy < 0 || wy >= Chunk::HEIGHT) {
+int32_t World::applyBlockEdit(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId id, EditOrigin origin) {
+    if (wy < 0 || wy >= voxel::Chunk::HEIGHT) {
         return 0;
     }
     const core::ChunkCoord coord{
-        core::floorDiv(wx, Chunk::WIDTH),
-        core::floorDiv(wz, Chunk::DEPTH)
+        core::floorDiv(wx, voxel::Chunk::WIDTH),
+        core::floorDiv(wz, voxel::Chunk::DEPTH)
     };
-    Chunk* chunk = getChunkMutable(coord);
+    voxel::Chunk* chunk = getChunkMutable(coord);
     if (!chunk) {
         return 0;
     }
 
-    const int32_t lx = core::floorMod(wx, Chunk::WIDTH);
-    const int32_t lz = core::floorMod(wz, Chunk::DEPTH);
-    const BlockId oldId = chunk->getBlock(lx, wy, lz);
+    const int32_t lx = core::floorMod(wx, voxel::Chunk::WIDTH);
+    const int32_t lz = core::floorMod(wz, voxel::Chunk::DEPTH);
+    const voxel::BlockId oldId = chunk->getBlock(lx, wy, lz);
     if (oldId == id) {
         return 0;
     }
@@ -932,7 +932,7 @@ int32_t World::applyBlockEdit(int32_t wx, int32_t wy, int32_t wz, BlockId id, Ed
 
     // The single hook for block entities: mining, placing, fluids, pistons and explosions
     // all end up here.
-    if (hasBlockEntity(oldId) && !keepsBlockEntity(oldId, id)) {
+    if (voxel::hasBlockEntity(oldId) && !voxel::keepsBlockEntity(oldId, id)) {
         if (auto entity = m_blockEntities.take({wx, wy, wz})) {
             m_removedBlockEntities.push_back({{wx, wy, wz}, oldId, std::move(*entity)});
             chunk->setModified(true); // The .be file must lose it too
@@ -941,26 +941,26 @@ int32_t World::applyBlockEdit(int32_t wx, int32_t wy, int32_t wz, BlockId id, Ed
 
     // If a supporting block was removed, break unsupported flora or torches directly above
     const size_t firstBreak = m_unsupportedBreaks.size();
-    if (id == BlockId::Air && wy + 1 < Chunk::HEIGHT) {
-        for (int32_t cy = wy + 1; cy < Chunk::HEIGHT; ++cy) {
-            const BlockId above = chunk->getBlock(lx, cy, lz);
-            const BlockDef& aboveDef = BlockRegistry::get(above);
+    if (id == voxel::BlockId::Air && wy + 1 < voxel::Chunk::HEIGHT) {
+        for (int32_t cy = wy + 1; cy < voxel::Chunk::HEIGHT; ++cy) {
+            const voxel::BlockId above = chunk->getBlock(lx, cy, lz);
+            const voxel::BlockDef& aboveDef = voxel::BlockRegistry::get(above);
             // S8.5: wire and plates lie on the block, a lever or a torch may stand on it.
-            const bool standing = (aboveDef.shape == RenderShape::Torch || aboveDef.shape == RenderShape::Lever) &&
-                                  attachmentOffset(chunk->getMetadata(lx, cy, lz)).y < 0;
-            if (aboveDef.shape == RenderShape::Cross || above == BlockId::Cactus || standing ||
-                aboveDef.shape == RenderShape::Crops || aboveDef.shape == RenderShape::Flat) {
+            const bool standing = (aboveDef.shape == voxel::RenderShape::Torch || aboveDef.shape == voxel::RenderShape::Lever) &&
+                                  voxel::attachmentOffset(chunk->getMetadata(lx, cy, lz)).y < 0;
+            if (aboveDef.shape == voxel::RenderShape::Cross || above == voxel::BlockId::Cactus || standing ||
+                aboveDef.shape == voxel::RenderShape::Crops || aboveDef.shape == voxel::RenderShape::Flat) {
                 m_unsupportedBreaks.push_back({{wx, cy, wz}, above, chunk->getMetadata(lx, cy, lz)});
-                chunk->setBlock(lx, cy, lz, BlockId::Air, markModified);
+                chunk->setBlock(lx, cy, lz, voxel::BlockId::Air, markModified);
                 ++changed;
             } else {
                 break;
             }
         }
-    } else if (oldId == BlockId::Farmland && wy + 1 < Chunk::HEIGHT && chunk->getBlock(lx, wy + 1, lz) == BlockId::Crops) {
+    } else if (oldId == voxel::BlockId::Farmland && wy + 1 < voxel::Chunk::HEIGHT && chunk->getBlock(lx, wy + 1, lz) == voxel::BlockId::Crops) {
         // S5.7: crops only stay on farmland (Beta BlockCrops.canThisPlantGrowOnThisBlockID).
-        m_unsupportedBreaks.push_back({{wx, wy + 1, wz}, BlockId::Crops, chunk->getMetadata(lx, wy + 1, lz)});
-        chunk->setBlock(lx, wy + 1, lz, BlockId::Air, markModified);
+        m_unsupportedBreaks.push_back({{wx, wy + 1, wz}, voxel::BlockId::Crops, chunk->getMetadata(lx, wy + 1, lz)});
+        chunk->setBlock(lx, wy + 1, lz, voxel::BlockId::Air, markModified);
         ++changed;
     }
 
@@ -968,25 +968,25 @@ int32_t World::applyBlockEdit(int32_t wx, int32_t wy, int32_t wz, BlockId id, Ed
     // the opened cell pulls light in from its brightest neighbour.
     for (size_t i = m_unsupportedBreaks.size(); i > firstBreak; --i) {
         const UnsupportedBreak& broken = m_unsupportedBreaks[i - 1];
-        m_diffLighting->setBlockAndUpdateLighting(broken.pos.x, broken.pos.y, broken.pos.z, BlockId::Air,
+        m_diffLighting->setBlockAndUpdateLighting(broken.pos.x, broken.pos.y, broken.pos.z, voxel::BlockId::Air,
                                                   broken.block);
     }
     m_diffLighting->setBlockAndUpdateLighting(wx, wy, wz, id, oldId);
     for (int32_t i = 0; i < changed; ++i) {
         markNeighborChunksDirty(coord, lx, wy + i, lz);
     }
-    if (id == BlockId::Air && (isLogBlock(oldId) || oldId == BlockId::Leaves)) {
+    if (id == voxel::BlockId::Air && (isLogBlock(oldId) || oldId == voxel::BlockId::Leaves)) {
         flagLeavesForDecay(wx, wy, wz, isLogBlock(oldId) ? kLeavesSupportRange : 1, origin);
     }
-    if (isNormalCube(oldId) && !isNormalCube(id)) {
+    if (voxel::isNormalCube(oldId) && !voxel::isNormalCube(id)) {
         breakDetachedWallBlocks(wx, wy, wz, origin);
     }
-    if (isDoorBlock(oldId) || oldId == BlockId::Bed) {
+    if (voxel::isDoorBlock(oldId) || oldId == voxel::BlockId::Bed) {
         removeOtherHalf(wx, wy, wz, oldId, oldMeta, origin);
     }
     // Beta BlockFarmland.onNeighborBlockChange: a solid block on farmland turns it to dirt.
-    if (BlockRegistry::isSolid(id) && wy > 0 && chunk->getBlock(lx, wy - 1, lz) == BlockId::Farmland) {
-        if (applyBlockEdit(wx, wy - 1, wz, BlockId::Dirt, origin) > 0) {
+    if (voxel::BlockRegistry::isSolid(id) && wy > 0 && chunk->getBlock(lx, wy - 1, lz) == voxel::BlockId::Farmland) {
+        if (applyBlockEdit(wx, wy - 1, wz, voxel::BlockId::Dirt, origin) > 0) {
             (void)applyMetadataEdit(wx, wy - 1, wz, 0, origin);
             m_fluids->notifyBlockChanged({wx, wy - 1, wz});
         }
@@ -994,24 +994,24 @@ int32_t World::applyBlockEdit(int32_t wx, int32_t wy, int32_t wz, BlockId id, Ed
     notifyRedstone(wx, wy, wz, oldId, id);
     for (size_t i = firstBreak; i < m_unsupportedBreaks.size(); ++i) {
         const UnsupportedBreak& broken = m_unsupportedBreaks[i];
-        notifyRedstone(broken.pos.x, broken.pos.y, broken.pos.z, broken.block, BlockId::Air);
+        notifyRedstone(broken.pos.x, broken.pos.y, broken.pos.z, broken.block, voxel::BlockId::Air);
     }
     return changed;
 }
 
-void World::removeOtherHalf(int32_t wx, int32_t wy, int32_t wz, BlockId id, uint8_t meta, EditOrigin origin) {
+void World::removeOtherHalf(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId id, uint8_t meta, EditOrigin origin) {
     // Beta BlockDoor/BlockBed.onNeighborBlockChange: a half whose partner went away goes too.
     // The half the caller removed carries the one drop, so this one is not recorded.
-    const bool door = isDoorBlock(id);
-    const glm::ivec3 d = door ? doorPartnerOffset(meta) : bedPartnerOffset(meta);
-    const uint8_t halfBit = door ? kDoorUpperBit : kBedHeadBit;
+    const bool door = voxel::isDoorBlock(id);
+    const glm::ivec3 d = door ? voxel::doorPartnerOffset(meta) : voxel::bedPartnerOffset(meta);
+    const uint8_t halfBit = door ? voxel::kDoorUpperBit : voxel::kBedHeadBit;
     const int32_t x = wx + d.x;
     const int32_t y = wy + d.y;
     const int32_t z = wz + d.z;
     if (getBlock(x, y, z) != id || (getMetadata(x, y, z) & halfBit) == (meta & halfBit)) {
         return; // Not its other half
     }
-    const int32_t changed = applyBlockEdit(x, y, z, BlockId::Air, origin);
+    const int32_t changed = applyBlockEdit(x, y, z, voxel::BlockId::Air, origin);
     if (changed > 0) {
         (void)applyMetadataEdit(x, y, z, 0, origin);
         notifyFluidColumn(x, y, z, changed);
@@ -1025,16 +1025,16 @@ void World::breakDetachedWallBlocks(int32_t wx, int32_t wy, int32_t wz, EditOrig
     for (const glm::ivec3& d : kSides) {
         const int32_t x = wx + d.x;
         const int32_t z = wz + d.z;
-        const BlockId side = getBlock(x, wy, z);
+        const voxel::BlockId side = getBlock(x, wy, z);
         const uint8_t sideMeta = getMetadata(x, wy, z);
         // S8.5: levers, buttons and redstone torches hanging on that wall go too.
-        const bool hangs = side == BlockId::Ladder ? ladderSupportOffset(sideMeta) == -d
-                         : (side == BlockId::Lever || side == BlockId::StoneButton || side == BlockId::RedstoneTorchOn ||
-                            side == BlockId::RedstoneTorchOff) && attachmentOffset(sideMeta) == -d;
+        const bool hangs = side == voxel::BlockId::Ladder ? voxel::ladderSupportOffset(sideMeta) == -d
+                         : (side == voxel::BlockId::Lever || side == voxel::BlockId::StoneButton || side == voxel::BlockId::RedstoneTorchOn ||
+                            side == voxel::BlockId::RedstoneTorchOff) && voxel::attachmentOffset(sideMeta) == -d;
         if (!hangs) {
             continue;
         }
-        if (applyBlockEdit(x, wy, z, BlockId::Air, origin) > 0) {
+        if (applyBlockEdit(x, wy, z, voxel::BlockId::Air, origin) > 0) {
             (void)applyMetadataEdit(x, wy, z, 0, origin);
             m_unsupportedBreaks.push_back({{x, wy, z}, side, sideMeta});
             m_fluids->notifyBlockChanged({x, wy, z});
@@ -1042,9 +1042,9 @@ void World::breakDetachedWallBlocks(int32_t wx, int32_t wy, int32_t wz, EditOrig
     }
     // S5.6: a door stands on a normal cube (Beta BlockDoor.onNeighborBlockChange); its lower
     // half breaks with the drop and takes the upper half along.
-    if (const BlockId door = getBlock(wx, wy + 1, wz); wy + 1 < Chunk::HEIGHT && isDoorBlock(door)) {
+    if (const voxel::BlockId door = getBlock(wx, wy + 1, wz); wy + 1 < voxel::Chunk::HEIGHT && voxel::isDoorBlock(door)) {
         const uint8_t meta = getMetadata(wx, wy + 1, wz);
-        if ((meta & kDoorUpperBit) == 0 && applyBlockEdit(wx, wy + 1, wz, BlockId::Air, origin) > 0) {
+        if ((meta & voxel::kDoorUpperBit) == 0 && applyBlockEdit(wx, wy + 1, wz, voxel::BlockId::Air, origin) > 0) {
             (void)applyMetadataEdit(wx, wy + 1, wz, 0, origin);
             m_unsupportedBreaks.push_back({{wx, wy + 1, wz}, door, meta});
             m_fluids->notifyBlockChanged({wx, wy + 1, wz});
@@ -1053,10 +1053,10 @@ void World::breakDetachedWallBlocks(int32_t wx, int32_t wy, int32_t wz, EditOrig
 }
 
 uint8_t World::getMetadata(int32_t wx, int32_t wy, int32_t wz) const noexcept {
-    if (wy < 0 || wy >= Chunk::HEIGHT) return 0;
-    const Chunk* chunk = getChunk({core::floorDiv(wx, Chunk::WIDTH), core::floorDiv(wz, Chunk::DEPTH)});
+    if (wy < 0 || wy >= voxel::Chunk::HEIGHT) return 0;
+    const voxel::Chunk* chunk = getChunk({core::floorDiv(wx, voxel::Chunk::WIDTH), core::floorDiv(wz, voxel::Chunk::DEPTH)});
     if (!chunk) return 0;
-    return chunk->getMetadata(core::floorMod(wx, Chunk::WIDTH), wy, core::floorMod(wz, Chunk::DEPTH));
+    return chunk->getMetadata(core::floorMod(wx, voxel::Chunk::WIDTH), wy, core::floorMod(wz, voxel::Chunk::DEPTH));
 }
 
 bool World::setMetadata(int32_t wx, int32_t wy, int32_t wz, uint8_t meta) {
@@ -1066,12 +1066,12 @@ bool World::setMetadata(int32_t wx, int32_t wy, int32_t wz, uint8_t meta) {
 }
 
 bool World::applyMetadataEdit(int32_t wx, int32_t wy, int32_t wz, uint8_t meta, EditOrigin origin) {
-    if (wy < 0 || wy >= Chunk::HEIGHT) return false;
-    const core::ChunkCoord coord{core::floorDiv(wx, Chunk::WIDTH), core::floorDiv(wz, Chunk::DEPTH)};
-    Chunk* chunk = getChunkMutable(coord);
+    if (wy < 0 || wy >= voxel::Chunk::HEIGHT) return false;
+    const core::ChunkCoord coord{core::floorDiv(wx, voxel::Chunk::WIDTH), core::floorDiv(wz, voxel::Chunk::DEPTH)};
+    voxel::Chunk* chunk = getChunkMutable(coord);
     if (!chunk) return false;
-    const int32_t lx = core::floorMod(wx, Chunk::WIDTH);
-    const int32_t lz = core::floorMod(wz, Chunk::DEPTH);
+    const int32_t lx = core::floorMod(wx, voxel::Chunk::WIDTH);
+    const int32_t lz = core::floorMod(wz, voxel::Chunk::DEPTH);
     const uint8_t nibble = meta & 0x0FU;
     if (chunk->getMetadata(lx, wy, lz) == nibble) return false;
     if (origin == EditOrigin::Player) {
@@ -1081,8 +1081,8 @@ bool World::applyMetadataEdit(int32_t wx, int32_t wy, int32_t wz, uint8_t meta, 
     chunk->setMetadata(lx, wy, lz, nibble, markModified);
     // S5.4: re-mesh only where the metadata shapes the block (door state, ladder side, crop
     // stage...). Fluid level changes keep re-meshing nothing.
-    const BlockId id = chunk->getBlock(lx, wy, lz);
-    if (shapeDependsOnMetadata(BlockRegistry::get(id).shape)) {
+    const voxel::BlockId id = chunk->getBlock(lx, wy, lz);
+    if (voxel::shapeDependsOnMetadata(voxel::BlockRegistry::get(id).shape)) {
         chunk->markSectionsAround(wy);
         markNeighborChunksDirty(coord, lx, wy, lz);
     }
@@ -1092,7 +1092,7 @@ bool World::applyMetadataEdit(int32_t wx, int32_t wy, int32_t wz, uint8_t meta, 
     return true;
 }
 
-bool World::setBlockWithMetadata(int32_t wx, int32_t wy, int32_t wz, BlockId id, uint8_t meta) {
+bool World::setBlockWithMetadata(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId id, uint8_t meta) {
     const int32_t blockChanged = applyBlockEdit(wx, wy, wz, id, EditOrigin::Player);
     const bool metaChanged = applyMetadataEdit(wx, wy, wz, meta, EditOrigin::Player);
     notifyFluidColumn(wx, wy, wz, std::max(blockChanged, metaChanged ? 1 : 0));
@@ -1106,8 +1106,8 @@ bool World::setBlockWithMetadata(int32_t wx, int32_t wy, int32_t wz, BlockId id,
 }
 
 void World::markBlockEntityChanged(core::BlockPos pos) noexcept {
-    if (pos.y < 0 || pos.y >= Chunk::HEIGHT) return;
-    if (Chunk* chunk = getChunkMutable(chunkOf(pos.x, pos.z))) {
+    if (pos.y < 0 || pos.y >= voxel::Chunk::HEIGHT) return;
+    if (voxel::Chunk* chunk = getChunkMutable(chunkOf(pos.x, pos.z))) {
         chunk->setModified(true);
         chunk->markPlayerTouched();
     }
@@ -1135,25 +1135,25 @@ void World::scheduleUnsettledFluids(core::ChunkCoord coord) {
     // Worldgen and saves write fluid without the simulator, and fluid that stopped at this
     // chunk's border (unloaded cells are walls) may now move into it. Queue only the cells
     // whose update would change something: a whole ocean is settled and costs no ticks.
-    const int32_t x0 = coord.x * Chunk::WIDTH;
-    const int32_t z0 = coord.z * Chunk::DEPTH;
+    const int32_t x0 = coord.x * voxel::Chunk::WIDTH;
+    const int32_t z0 = coord.z * voxel::Chunk::DEPTH;
     const auto visit = [this](int32_t wx, int32_t wy, int32_t wz) {
         const core::BlockPos p{wx, wy, wz};
         if (!m_fluids->isSettled(p)) {
             m_fluids->scheduleUpdate(p);
         }
     };
-    if (const Chunk* chunk = getChunk(coord)) {
-        for (size_t s = 0; s < Chunk::SECTIONS_PER_CHUNK; ++s) {
-            const PalettedSection& section = chunk->getSection(s);
-            if (section.isHomogeneous() && !BlockRegistry::isLiquid(section.getBlock(0, 0, 0))) {
+    if (const voxel::Chunk* chunk = getChunk(coord)) {
+        for (size_t s = 0; s < voxel::Chunk::SECTIONS_PER_CHUNK; ++s) {
+            const voxel::PalettedSection& section = chunk->getSection(s);
+            if (section.isHomogeneous() && !voxel::BlockRegistry::isLiquid(section.getBlock(0, 0, 0))) {
                 continue;
             }
-            const int32_t yBase = static_cast<int32_t>(s) * PalettedSection::SIZE;
-            for (int32_t y = yBase; y < yBase + PalettedSection::SIZE; ++y) {
-                for (int32_t lz = 0; lz < Chunk::DEPTH; ++lz) {
-                    for (int32_t lx = 0; lx < Chunk::WIDTH; ++lx) {
-                        if (BlockRegistry::isLiquid(chunk->getBlock(lx, y, lz))) {
+            const int32_t yBase = static_cast<int32_t>(s) * voxel::PalettedSection::SIZE;
+            for (int32_t y = yBase; y < yBase + voxel::PalettedSection::SIZE; ++y) {
+                for (int32_t lz = 0; lz < voxel::Chunk::DEPTH; ++lz) {
+                    for (int32_t lx = 0; lx < voxel::Chunk::WIDTH; ++lx) {
+                        if (voxel::BlockRegistry::isLiquid(chunk->getBlock(lx, y, lz))) {
                             visit(x0 + lx, y, z0 + lz);
                         }
                     }
@@ -1163,28 +1163,28 @@ void World::scheduleUnsettledFluids(core::ChunkCoord coord) {
     }
     // The ring just outside, in resident neighbours.
     const auto visitColumn = [&](int32_t wx, int32_t wz) {
-        const Chunk* nb = getChunk(chunkOf(wx, wz));
+        const voxel::Chunk* nb = getChunk(chunkOf(wx, wz));
         if (!nb) return;
-        const int32_t lx = core::floorMod(wx, Chunk::WIDTH);
-        const int32_t lz = core::floorMod(wz, Chunk::DEPTH);
-        for (int32_t y = 0; y < Chunk::HEIGHT; ++y) {
-            if (BlockRegistry::isLiquid(nb->getBlock(lx, y, lz))) {
+        const int32_t lx = core::floorMod(wx, voxel::Chunk::WIDTH);
+        const int32_t lz = core::floorMod(wz, voxel::Chunk::DEPTH);
+        for (int32_t y = 0; y < voxel::Chunk::HEIGHT; ++y) {
+            if (voxel::BlockRegistry::isLiquid(nb->getBlock(lx, y, lz))) {
                 visit(wx, y, wz);
             }
         }
     };
-    for (int32_t i = 0; i < Chunk::WIDTH; ++i) {
+    for (int32_t i = 0; i < voxel::Chunk::WIDTH; ++i) {
         visitColumn(x0 + i, z0 - 1);
-        visitColumn(x0 + i, z0 + Chunk::DEPTH);
+        visitColumn(x0 + i, z0 + voxel::Chunk::DEPTH);
     }
-    for (int32_t i = 0; i < Chunk::DEPTH; ++i) {
+    for (int32_t i = 0; i < voxel::Chunk::DEPTH; ++i) {
         visitColumn(x0 - 1, z0 + i);
-        visitColumn(x0 + Chunk::WIDTH, z0 + i);
+        visitColumn(x0 + voxel::Chunk::WIDTH, z0 + i);
     }
 }
 
 bool World::triggerPistonPush(core::BlockPos pistonPos, core::FaceDir pushDir) {
-    if (getBlock(pistonPos) != BlockId::Piston) {
+    if (getBlock(pistonPos) != voxel::BlockId::Piston) {
         return false;
     }
 
@@ -1199,11 +1199,11 @@ bool World::triggerPistonPush(core::BlockPos pistonPos, core::FaceDir pushDir) {
             pistonPos.y + step.y * i,
             pistonPos.z + step.z * i
         };
-        if (checkPos.y <= 0 || checkPos.y >= Chunk::HEIGHT) {
+        if (checkPos.y <= 0 || checkPos.y >= voxel::Chunk::HEIGHT) {
             return false;
         }
-        const BlockId b = getBlock(checkPos);
-        const BlockDef& def = BlockRegistry::get(b);
+        const voxel::BlockId b = getBlock(checkPos);
+        const voxel::BlockDef& def = voxel::BlockRegistry::get(b);
         if (def.replaceable) {
             chainLength = i - 1;
             break;
@@ -1211,18 +1211,18 @@ bool World::triggerPistonPush(core::BlockPos pistonPos, core::FaceDir pushDir) {
         // Beta getMobilityFlag() == 1 (BlockDoor, BlockBed, Material.circuits/plants): the
         // block ends the line and breaks with its drop instead of moving, so a door or a bed
         // never ends up as an orphaned half and a crop never leaves its farmland.
-        if (isDoorBlock(b) || b == BlockId::Bed || b == BlockId::Ladder || b == BlockId::Crops ||
-            b == BlockId::RedstoneWire || b == BlockId::Lever || b == BlockId::StoneButton ||
-            b == BlockId::RedstoneTorchOff || b == BlockId::RedstoneTorchOn ||
-            b == BlockId::StonePressurePlate || b == BlockId::WoodPressurePlate) {
+        if (voxel::isDoorBlock(b) || b == voxel::BlockId::Bed || b == voxel::BlockId::Ladder || b == voxel::BlockId::Crops ||
+            b == voxel::BlockId::RedstoneWire || b == voxel::BlockId::Lever || b == voxel::BlockId::StoneButton ||
+            b == voxel::BlockId::RedstoneTorchOff || b == voxel::BlockId::RedstoneTorchOn ||
+            b == voxel::BlockId::StonePressurePlate || b == voxel::BlockId::WoodPressurePlate) {
             chainLength = i - 1;
             destroyed = checkPos;
             break;
         }
-        if (b == BlockId::Bedrock || b == BlockId::Obsidian || b == BlockId::MobSpawner || i == MAX_PUSH_BLOCKS + 1) {
+        if (b == voxel::BlockId::Bedrock || b == voxel::BlockId::Obsidian || b == voxel::BlockId::MobSpawner || i == MAX_PUSH_BLOCKS + 1) {
             return false; // Immovable or exceeds 12-block limit
         }
-        if (hasBlockEntity(b) || m_blockEntities.find(checkPos) != nullptr) {
+        if (voxel::hasBlockEntity(b) || m_blockEntities.find(checkPos) != nullptr) {
             return false; // Beta BlockPistonBase.canPushBlock: tile entities never move
         }
     }
@@ -1232,9 +1232,9 @@ bool World::triggerPistonPush(core::BlockPos pistonPos, core::FaceDir pushDir) {
     }
     if (destroyed) {
         // Its other half (door, bed) goes without a drop through applyBlockEdit.
-        const BlockId id = getBlock(*destroyed);
+        const voxel::BlockId id = getBlock(*destroyed);
         const uint8_t meta = getMetadata(*destroyed);
-        if (setBlockWithMetadata(destroyed->x, destroyed->y, destroyed->z, BlockId::Air, 0)) {
+        if (setBlockWithMetadata(destroyed->x, destroyed->y, destroyed->z, voxel::BlockId::Air, 0)) {
             m_unsupportedBreaks.push_back({*destroyed, id, meta});
         }
     }
@@ -1262,56 +1262,56 @@ bool World::triggerPistonPush(core::BlockPos pistonPos, core::FaceDir pushDir) {
         pistonPos.y + step.y,
         pistonPos.z + step.z
     };
-    setBlock(frontPos, BlockId::Air);
+    setBlock(frontPos, voxel::BlockId::Air);
     return true;
 }
 
 uint8_t World::getSkyLight(int32_t wx, int32_t wy, int32_t wz) const noexcept {
-    if (wy >= Chunk::HEIGHT) return 15;
+    if (wy >= voxel::Chunk::HEIGHT) return 15;
     if (wy < 0) return 0;
     const core::ChunkCoord coord{
-        core::floorDiv(wx, Chunk::WIDTH),
-        core::floorDiv(wz, Chunk::DEPTH)
+        core::floorDiv(wx, voxel::Chunk::WIDTH),
+        core::floorDiv(wz, voxel::Chunk::DEPTH)
     };
-    const Chunk* chunk = getChunk(coord);
+    const voxel::Chunk* chunk = getChunk(coord);
     if (!chunk) return 15;
-    return chunk->getSkyLight(core::floorMod(wx, Chunk::WIDTH), wy, core::floorMod(wz, Chunk::DEPTH));
+    return chunk->getSkyLight(core::floorMod(wx, voxel::Chunk::WIDTH), wy, core::floorMod(wz, voxel::Chunk::DEPTH));
 }
 
 uint8_t World::getBlockLight(int32_t wx, int32_t wy, int32_t wz) const noexcept {
-    if (wy < 0 || wy >= Chunk::HEIGHT) return 0;
+    if (wy < 0 || wy >= voxel::Chunk::HEIGHT) return 0;
     const core::ChunkCoord coord{
-        core::floorDiv(wx, Chunk::WIDTH),
-        core::floorDiv(wz, Chunk::DEPTH)
+        core::floorDiv(wx, voxel::Chunk::WIDTH),
+        core::floorDiv(wz, voxel::Chunk::DEPTH)
     };
-    const Chunk* chunk = getChunk(coord);
+    const voxel::Chunk* chunk = getChunk(coord);
     if (!chunk) return 0;
-    return chunk->getBlockLight(core::floorMod(wx, Chunk::WIDTH), wy, core::floorMod(wz, Chunk::DEPTH));
+    return chunk->getBlockLight(core::floorMod(wx, voxel::Chunk::WIDTH), wy, core::floorMod(wz, voxel::Chunk::DEPTH));
 }
 
 void World::setSkyLight(int32_t wx, int32_t wy, int32_t wz, uint8_t val) noexcept {
-    if (wy < 0 || wy >= Chunk::HEIGHT) return;
+    if (wy < 0 || wy >= voxel::Chunk::HEIGHT) return;
     const core::ChunkCoord coord{
-        core::floorDiv(wx, Chunk::WIDTH),
-        core::floorDiv(wz, Chunk::DEPTH)
+        core::floorDiv(wx, voxel::Chunk::WIDTH),
+        core::floorDiv(wz, voxel::Chunk::DEPTH)
     };
-    if (Chunk* chunk = getChunkMutable(coord)) {
-        const int32_t lx = core::floorMod(wx, Chunk::WIDTH);
-        const int32_t lz = core::floorMod(wz, Chunk::DEPTH);
+    if (voxel::Chunk* chunk = getChunkMutable(coord)) {
+        const int32_t lx = core::floorMod(wx, voxel::Chunk::WIDTH);
+        const int32_t lz = core::floorMod(wz, voxel::Chunk::DEPTH);
         chunk->setSkyLight(lx, wy, lz, val);
         markNeighborChunksDirty(coord, lx, wy, lz);
     }
 }
 
 void World::setBlockLight(int32_t wx, int32_t wy, int32_t wz, uint8_t val) noexcept {
-    if (wy < 0 || wy >= Chunk::HEIGHT) return;
+    if (wy < 0 || wy >= voxel::Chunk::HEIGHT) return;
     const core::ChunkCoord coord{
-        core::floorDiv(wx, Chunk::WIDTH),
-        core::floorDiv(wz, Chunk::DEPTH)
+        core::floorDiv(wx, voxel::Chunk::WIDTH),
+        core::floorDiv(wz, voxel::Chunk::DEPTH)
     };
-    if (Chunk* chunk = getChunkMutable(coord)) {
-        const int32_t lx = core::floorMod(wx, Chunk::WIDTH);
-        const int32_t lz = core::floorMod(wz, Chunk::DEPTH);
+    if (voxel::Chunk* chunk = getChunkMutable(coord)) {
+        const int32_t lx = core::floorMod(wx, voxel::Chunk::WIDTH);
+        const int32_t lz = core::floorMod(wz, voxel::Chunk::DEPTH);
         chunk->setBlockLight(lx, wy, lz, val);
         markNeighborChunksDirty(coord, lx, wy, lz);
     }
@@ -1320,11 +1320,11 @@ void World::setBlockLight(int32_t wx, int32_t wy, int32_t wz, uint8_t val) noexc
 namespace {
 
 void syncLightPair(
-    Chunk& a, int32_t ax, int32_t ay, int32_t az,
-    Chunk& b, int32_t bx, int32_t by, int32_t bz
+    voxel::Chunk& a, int32_t ax, int32_t ay, int32_t az,
+    voxel::Chunk& b, int32_t bx, int32_t by, int32_t bz
 ) noexcept {
-    const BlockDef& defA = BlockRegistry::get(a.getBlock(ax, ay, az));
-    const BlockDef& defB = BlockRegistry::get(b.getBlock(bx, by, bz));
+    const voxel::BlockDef& defA = voxel::BlockRegistry::get(a.getBlock(ax, ay, az));
+    const voxel::BlockDef& defB = voxel::BlockRegistry::get(b.getBlock(bx, by, bz));
 
     // 1. Block Light
     const uint8_t blkA = a.getBlockLight(ax, ay, az);
@@ -1363,50 +1363,50 @@ void syncLightPair(
 
 } // namespace
 
-void World::syncBorderLighting(Chunk& chunkA, Chunk& chunkB) noexcept {
+void World::syncBorderLighting(voxel::Chunk& chunkA, voxel::Chunk& chunkB) noexcept {
     const auto ca = chunkA.getCoord();
     const auto cb = chunkB.getCoord();
 
     if (ca.x + 1 == cb.x && ca.z == cb.z) {
         // chunkB is East (+X) of chunkA
-        for (int32_t lz = 0; lz < Chunk::DEPTH; ++lz) {
-            for (int32_t y = 0; y < Chunk::HEIGHT; ++y) {
-                syncLightPair(chunkA, Chunk::WIDTH - 1, y, lz, chunkB, 0, y, lz);
+        for (int32_t lz = 0; lz < voxel::Chunk::DEPTH; ++lz) {
+            for (int32_t y = 0; y < voxel::Chunk::HEIGHT; ++y) {
+                syncLightPair(chunkA, voxel::Chunk::WIDTH - 1, y, lz, chunkB, 0, y, lz);
             }
         }
     } else if (ca.x - 1 == cb.x && ca.z == cb.z) {
         // chunkB is West (-X) of chunkA
-        for (int32_t lz = 0; lz < Chunk::DEPTH; ++lz) {
-            for (int32_t y = 0; y < Chunk::HEIGHT; ++y) {
-                syncLightPair(chunkA, 0, y, lz, chunkB, Chunk::WIDTH - 1, y, lz);
+        for (int32_t lz = 0; lz < voxel::Chunk::DEPTH; ++lz) {
+            for (int32_t y = 0; y < voxel::Chunk::HEIGHT; ++y) {
+                syncLightPair(chunkA, 0, y, lz, chunkB, voxel::Chunk::WIDTH - 1, y, lz);
             }
         }
     } else if (ca.x == cb.x && ca.z + 1 == cb.z) {
         // chunkB is North (+Z) of chunkA
-        for (int32_t lx = 0; lx < Chunk::WIDTH; ++lx) {
-            for (int32_t y = 0; y < Chunk::HEIGHT; ++y) {
-                syncLightPair(chunkA, lx, y, Chunk::DEPTH - 1, chunkB, lx, y, 0);
+        for (int32_t lx = 0; lx < voxel::Chunk::WIDTH; ++lx) {
+            for (int32_t y = 0; y < voxel::Chunk::HEIGHT; ++y) {
+                syncLightPair(chunkA, lx, y, voxel::Chunk::DEPTH - 1, chunkB, lx, y, 0);
             }
         }
     } else if (ca.x == cb.x && ca.z - 1 == cb.z) {
         // chunkB is South (-Z) of chunkA
-        for (int32_t lx = 0; lx < Chunk::WIDTH; ++lx) {
-            for (int32_t y = 0; y < Chunk::HEIGHT; ++y) {
-                syncLightPair(chunkA, lx, y, 0, chunkB, lx, y, Chunk::DEPTH - 1);
+        for (int32_t lx = 0; lx < voxel::Chunk::WIDTH; ++lx) {
+            for (int32_t y = 0; y < voxel::Chunk::HEIGHT; ++y) {
+                syncLightPair(chunkA, lx, y, 0, chunkB, lx, y, voxel::Chunk::DEPTH - 1);
             }
         }
     }
 }
 
 void World::syncChunkLightingWithNeighbors(core::ChunkCoord coord) noexcept {
-    Chunk* chunk = getChunkMutable(coord);
+    voxel::Chunk* chunk = getChunkMutable(coord);
     if (!chunk) return;
 
     static constexpr int32_t ndx[4] = {1, -1, 0, 0};
     static constexpr int32_t ndz[4] = {0, 0, 1, -1};
 
     for (int i = 0; i < 4; ++i) {
-        if (Chunk* nb = getChunkMutable({coord.x + ndx[i], coord.z + ndz[i]})) {
+        if (voxel::Chunk* nb = getChunkMutable({coord.x + ndx[i], coord.z + ndz[i]})) {
             syncBorderLighting(*chunk, *nb);
         }
     }
@@ -1414,38 +1414,38 @@ void World::syncChunkLightingWithNeighbors(core::ChunkCoord coord) noexcept {
 
 glm::vec3 World::getGrassTint(int32_t wx, int32_t wz) const noexcept {
     const core::ChunkCoord coord{
-        core::floorDiv(wx, Chunk::WIDTH),
-        core::floorDiv(wz, Chunk::DEPTH)
+        core::floorDiv(wx, voxel::Chunk::WIDTH),
+        core::floorDiv(wz, voxel::Chunk::DEPTH)
     };
-    const Chunk* chunk = getChunk(coord);
+    const voxel::Chunk* chunk = getChunk(coord);
     if (!chunk) {
         return m_worldGen.sampleBiome(wx, wz).grassTint;
     }
-    return chunk->getGrassTint(core::floorMod(wx, Chunk::WIDTH), core::floorMod(wz, Chunk::DEPTH));
+    return chunk->getGrassTint(core::floorMod(wx, voxel::Chunk::WIDTH), core::floorMod(wz, voxel::Chunk::DEPTH));
 }
 
 glm::vec3 World::getFoliageTint(int32_t wx, int32_t wz) const noexcept {
     const core::ChunkCoord coord{
-        core::floorDiv(wx, Chunk::WIDTH),
-        core::floorDiv(wz, Chunk::DEPTH)
+        core::floorDiv(wx, voxel::Chunk::WIDTH),
+        core::floorDiv(wz, voxel::Chunk::DEPTH)
     };
-    const Chunk* chunk = getChunk(coord);
+    const voxel::Chunk* chunk = getChunk(coord);
     if (!chunk) {
         return m_worldGen.sampleBiome(wx, wz).foliageTint;
     }
-    return chunk->getFoliageTint(core::floorMod(wx, Chunk::WIDTH), core::floorMod(wz, Chunk::DEPTH));
+    return chunk->getFoliageTint(core::floorMod(wx, voxel::Chunk::WIDTH), core::floorMod(wz, voxel::Chunk::DEPTH));
 }
 
-BiomeId World::getBiomeAt(int32_t wx, int32_t wz) const noexcept {
+voxel::BiomeId World::getBiomeAt(int32_t wx, int32_t wz) const noexcept {
     const core::ChunkCoord coord{
-        core::floorDiv(wx, Chunk::WIDTH),
-        core::floorDiv(wz, Chunk::DEPTH)
+        core::floorDiv(wx, voxel::Chunk::WIDTH),
+        core::floorDiv(wz, voxel::Chunk::DEPTH)
     };
-    const Chunk* chunk = getChunk(coord);
+    const voxel::Chunk* chunk = getChunk(coord);
     if (!chunk) {
         return m_worldGen.sampleBiome(wx, wz).biome;
     }
-    return chunk->getColumnBiome(core::floorMod(wx, Chunk::WIDTH), core::floorMod(wz, Chunk::DEPTH));
+    return chunk->getColumnBiome(core::floorMod(wx, voxel::Chunk::WIDTH), core::floorMod(wz, voxel::Chunk::DEPTH));
 }
 
 glm::vec3 World::findSafeSpawnPosition() noexcept {
@@ -1464,19 +1464,19 @@ glm::vec3 World::findSafeSpawnPosition() noexcept {
                 const int32_t wz = 8 + dz * 2;
                 // The whole 3x3 so the candidate chunk is decorated: a tree planted after the
                 // search could otherwise grow through the player.
-                const core::ChunkCoord cc{core::floorDiv(wx, Chunk::WIDTH), core::floorDiv(wz, Chunk::DEPTH)};
+                const core::ChunkCoord cc{core::floorDiv(wx, voxel::Chunk::WIDTH), core::floorDiv(wz, voxel::Chunk::DEPTH)};
                 for (int32_t nz = -1; nz <= 1; ++nz) {
                     for (int32_t nx = -1; nx <= 1; ++nx) {
                         ensureChunkLoaded({cc.x + nx, cc.z + nz});
                     }
                 }
-                for (int32_t y = Chunk::HEIGHT - 3; y >= core::EngineConfig::SEA_LEVEL; --y) {
-                    const BlockId ground = getBlock(wx, y, wz);
-                    const BlockId feet = getBlock(wx, y + 1, wz);
-                    const BlockId head = getBlock(wx, y + 2, wz);
-                    if (BlockRegistry::isSolid(ground) && ground != BlockId::Leaves && ground != BlockId::Cactus &&
-                        !BlockRegistry::isSolid(feet) && !BlockRegistry::isLiquid(feet) &&
-                        !BlockRegistry::isSolid(head) && !BlockRegistry::isLiquid(head)) {
+                for (int32_t y = voxel::Chunk::HEIGHT - 3; y >= core::EngineConfig::SEA_LEVEL; --y) {
+                    const voxel::BlockId ground = getBlock(wx, y, wz);
+                    const voxel::BlockId feet = getBlock(wx, y + 1, wz);
+                    const voxel::BlockId head = getBlock(wx, y + 2, wz);
+                    if (voxel::BlockRegistry::isSolid(ground) && ground != voxel::BlockId::Leaves && ground != voxel::BlockId::Cactus &&
+                        !voxel::BlockRegistry::isSolid(feet) && !voxel::BlockRegistry::isLiquid(feet) &&
+                        !voxel::BlockRegistry::isSolid(head) && !voxel::BlockRegistry::isLiquid(head)) {
                         return glm::vec3(static_cast<float>(wx) + 0.5f, static_cast<float>(y + 1) + 0.01f, static_cast<float>(wz) + 0.5f);
                     }
                 }
@@ -1488,13 +1488,13 @@ glm::vec3 World::findSafeSpawnPosition() noexcept {
 }
 
 glm::vec3 World::findStandableAbove(glm::vec3 pos) const noexcept {
-    const auto blocksPlayer = [](BlockId id) noexcept {
-        return BlockRegistry::isSolid(id) || BlockRegistry::isLiquid(id);
+    const auto blocksPlayer = [](voxel::BlockId id) noexcept {
+        return voxel::BlockRegistry::isSolid(id) || voxel::BlockRegistry::isLiquid(id);
     };
     const int32_t wx = static_cast<int32_t>(std::floor(pos.x));
     const int32_t wz = static_cast<int32_t>(std::floor(pos.z));
     const int32_t startY = std::max(0, static_cast<int32_t>(std::floor(pos.y)));
-    for (int32_t y = startY; y + 1 < Chunk::HEIGHT; ++y) {
+    for (int32_t y = startY; y + 1 < voxel::Chunk::HEIGHT; ++y) {
         if (!blocksPlayer(getBlock(wx, y, wz)) && !blocksPlayer(getBlock(wx, y + 1, wz))) {
             // Keep the original feet height when it is already free (e.g. 70.01 on a slab top).
             const float feetY = y == startY ? std::max(pos.y, static_cast<float>(y)) : static_cast<float>(y) + 0.01f;

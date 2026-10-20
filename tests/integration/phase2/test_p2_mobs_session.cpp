@@ -38,7 +38,7 @@
 using namespace betacraft;
 using gameplay::MobCategory;
 using gameplay::MobKind;
-using world::BlockId;
+using voxel::BlockId;
 
 namespace {
 
@@ -50,13 +50,13 @@ constexpr float kNoon = 0.25f;
 class P2MobsSession : public ::testing::Test {
 protected:
     void SetUp() override {
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
         for (const core::ChunkCoord c : test::p2worldgen::squareRegion({0, 0}, kRadius)) {
-            world::Chunk& chunk = m_world->ensureChunkLoaded(c);
-            for (int32_t z = 0; z < world::Chunk::DEPTH; ++z) {
-                for (int32_t x = 0; x < world::Chunk::WIDTH; ++x) {
-                    for (int32_t y = 0; y < world::Chunk::HEIGHT; ++y) {
+            voxel::Chunk& chunk = m_world->ensureChunkLoaded(c);
+            for (int32_t z = 0; z < voxel::Chunk::DEPTH; ++z) {
+                for (int32_t x = 0; x < voxel::Chunk::WIDTH; ++x) {
+                    for (int32_t y = 0; y < voxel::Chunk::HEIGHT; ++y) {
                         BlockId id = BlockId::Air;
                         if (y == 0) id = BlockId::Bedrock;
                         else if (y < kGroundY - 3) id = BlockId::Stone;
@@ -162,9 +162,9 @@ TEST_F(P2MobsSession, ZombiesSpawnInADarkCaveAtNoon) {
     constexpr int32_t kCaveFloorY = 30;
     for (int32_t cz = -3; cz <= 3; ++cz) {
         for (int32_t cx = -3; cx <= 3; ++cx) {
-            world::Chunk& chunk = m_world->ensureChunkLoaded({cx, cz});
-            for (int32_t z = 0; z < world::Chunk::DEPTH; ++z) {
-                for (int32_t x = 0; x < world::Chunk::WIDTH; ++x) {
+            voxel::Chunk& chunk = m_world->ensureChunkLoaded({cx, cz});
+            for (int32_t z = 0; z < voxel::Chunk::DEPTH; ++z) {
+                for (int32_t x = 0; x < voxel::Chunk::WIDTH; ++x) {
                     for (int32_t y = kCaveFloorY; y < kCaveFloorY + 3; ++y) {
                         chunk.setBlock(x, y, z, BlockId::Air, false);
                     }

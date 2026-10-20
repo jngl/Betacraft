@@ -18,8 +18,8 @@
 #include <vector>
 
 using namespace betacraft;
-using world::BlockId;
-using world::Chunk;
+using voxel::BlockId;
+using voxel::Chunk;
 using worldgen::kBetaOreVeins;
 
 namespace {

@@ -5,6 +5,7 @@
 
 using namespace betacraft;
 using namespace betacraft::world;
+using namespace betacraft::voxel;
 
 TEST(DifferentialLightingTest, AnalyticalManhattanShellFormula) {
     // S(0) = 1, S(r) = 4r^2 + 2 for r >= 1

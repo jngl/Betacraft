@@ -7,11 +7,11 @@ namespace betacraft::crafting {
 
 namespace {
 
-[[nodiscard]] world::StoredStack toStored(const SlotStack& s) noexcept {
-    return world::StoredStack{s.id, s.count, s.damage};
+[[nodiscard]] voxel::StoredStack toStored(const SlotStack& s) noexcept {
+    return voxel::StoredStack{s.id, s.count, s.damage};
 }
 
-void takeOne(world::StoredStack& s) noexcept {
+void takeOne(voxel::StoredStack& s) noexcept {
     if (s.count > 0) {
         --s.count;
     }
@@ -22,7 +22,7 @@ void takeOne(world::StoredStack& s) noexcept {
 
 } // namespace
 
-bool canSmelt(const world::FurnaceData& furnace, const SmeltingBook& book) noexcept {
+bool canSmelt(const voxel::FurnaceData& furnace, const SmeltingBook& book) noexcept {
     if (furnace.input.empty()) {
         return false;
     }
@@ -40,7 +40,7 @@ bool canSmelt(const world::FurnaceData& furnace, const SmeltingBook& book) noexc
     return static_cast<int32_t>(furnace.output.count) + result->count <= limit;
 }
 
-FurnaceTickResult tickFurnace(world::FurnaceData& furnace, const SmeltingBook& book) noexcept {
+FurnaceTickResult tickFurnace(voxel::FurnaceData& furnace, const SmeltingBook& book) noexcept {
     FurnaceTickResult out{};
     const bool wasBurning = furnace.burnTicks > 0;
     if (furnace.burnTicks > 0) {
@@ -84,11 +84,11 @@ FurnaceTickResult tickFurnace(world::FurnaceData& furnace, const SmeltingBook& b
     return out;
 }
 
-float cookProgress(const world::FurnaceData& furnace) noexcept {
+float cookProgress(const voxel::FurnaceData& furnace) noexcept {
     return std::clamp(static_cast<float>(furnace.cookTicks) / static_cast<float>(kSmeltTicks), 0.0f, 1.0f);
 }
 
-float burnProgress(const world::FurnaceData& furnace) noexcept {
+float burnProgress(const voxel::FurnaceData& furnace) noexcept {
     if (furnace.burnTicks <= 0) {
         return 0.0f;
     }

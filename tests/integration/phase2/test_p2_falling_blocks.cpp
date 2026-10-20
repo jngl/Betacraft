@@ -56,12 +56,12 @@ protected:
 // --- S5.2 ScheduledTickQueue ---------------------------------------------------------------
 
 TEST(S5ScheduledTicks, DrainsInDueOrderThenSchedulingOrder) {
-    world::ScheduledTickQueue q;
+    voxel::ScheduledTickQueue q;
     EXPECT_TRUE(q.schedule({0, 1, 0}, BlockId::Sand, 5));
     EXPECT_TRUE(q.schedule({1, 1, 0}, BlockId::Sand, 3));
     EXPECT_TRUE(q.schedule({2, 1, 0}, BlockId::Gravel, 5));
     EXPECT_TRUE(q.schedule({3, 1, 0}, BlockId::Sand, 9));
-    std::vector<world::ScheduledTickQueue::Entry> out;
+    std::vector<voxel::ScheduledTickQueue::Entry> out;
     EXPECT_EQ(q.drainDue(2, out), 0U);
     EXPECT_EQ(q.drainDue(5, out), 3U);
     ASSERT_EQ(out.size(), 3U);
@@ -73,11 +73,11 @@ TEST(S5ScheduledTicks, DrainsInDueOrderThenSchedulingOrder) {
 }
 
 TEST(S5ScheduledTicks, OnePendingEntryPerPosition) {
-    world::ScheduledTickQueue q;
+    voxel::ScheduledTickQueue q;
     EXPECT_TRUE(q.schedule({4, 5, 6}, BlockId::Sand, 10));
     EXPECT_FALSE(q.schedule({4, 5, 6}, BlockId::Gravel, 2)) << "duplicates are ignored";
     EXPECT_TRUE(q.isScheduled({4, 5, 6}));
-    std::vector<world::ScheduledTickQueue::Entry> out;
+    std::vector<voxel::ScheduledTickQueue::Entry> out;
     EXPECT_EQ(q.drainDue(9, out), 0U);
     EXPECT_EQ(q.drainDue(10, out), 1U);
     EXPECT_EQ(out[0].block, BlockId::Sand);
@@ -86,9 +86,9 @@ TEST(S5ScheduledTicks, OnePendingEntryPerPosition) {
 }
 
 TEST(S5ScheduledTicks, DrainRespectsTheCap) {
-    world::ScheduledTickQueue q;
+    voxel::ScheduledTickQueue q;
     for (int32_t i = 0; i < 10; ++i) ASSERT_TRUE(q.schedule({i, 0, 0}, BlockId::Sand, 1));
-    std::vector<world::ScheduledTickQueue::Entry> out;
+    std::vector<voxel::ScheduledTickQueue::Entry> out;
     EXPECT_EQ(q.drainDue(1, out, 4), 4U);
     EXPECT_EQ(q.size(), 6U);
     EXPECT_EQ(out.back().pos.x, 3);
@@ -184,7 +184,7 @@ TEST_F(S5FallingBlocks, SandOnATorchFallsWhenTheTorchBreaksWithItsFloor) {
 
 TEST_F(S5FallingBlocks, FloatingGeneratedSandFallsOnlyAfterANeighbourChanges) {
     // Worldgen writes straight into the chunk: no scheduled update.
-    world::Chunk* chunk = m_world->getChunkMutable({0, 0});
+    voxel::Chunk* chunk = m_world->getChunkMutable({0, 0});
     ASSERT_NE(chunk, nullptr);
     chunk->setBlock(6, kY + 3, 6, BlockId::Sand, false);
     (void)settle(40);

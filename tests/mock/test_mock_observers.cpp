@@ -14,15 +14,15 @@ using namespace testing;
 class IWorldEventListener {
 public:
     virtual ~IWorldEventListener() = default;
-    virtual void onBlockPlaced(const core::BlockPos& pos, world::BlockId block) = 0;
-    virtual void onBlockDestroyed(const core::BlockPos& pos, world::BlockId block) = 0;
+    virtual void onBlockPlaced(const core::BlockPos& pos, voxel::BlockId block) = 0;
+    virtual void onBlockDestroyed(const core::BlockPos& pos, voxel::BlockId block) = 0;
     virtual void onPistonActivated(const core::BlockPos& pos, core::FaceDir dir) = 0;
 };
 
 class MockWorldEventListener : public IWorldEventListener {
 public:
-    MOCK_METHOD(void, onBlockPlaced, (const core::BlockPos& pos, world::BlockId block), (override));
-    MOCK_METHOD(void, onBlockDestroyed, (const core::BlockPos& pos, world::BlockId block), (override));
+    MOCK_METHOD(void, onBlockPlaced, (const core::BlockPos& pos, voxel::BlockId block), (override));
+    MOCK_METHOD(void, onBlockDestroyed, (const core::BlockPos& pos, voxel::BlockId block), (override));
     MOCK_METHOD(void, onPistonActivated, (const core::BlockPos& pos, core::FaceDir dir), (override));
 };
 
@@ -30,14 +30,14 @@ public:
 class IInventoryObserver {
 public:
     virtual ~IInventoryObserver() = default;
-    virtual void onSlotUpdated(size_t slotIndex, world::BlockId id, int32_t count) = 0;
-    virtual void onItemCrafted(world::BlockId resultId, int32_t count) = 0;
+    virtual void onSlotUpdated(size_t slotIndex, voxel::BlockId id, int32_t count) = 0;
+    virtual void onItemCrafted(voxel::BlockId resultId, int32_t count) = 0;
 };
 
 class MockInventoryObserver : public IInventoryObserver {
 public:
-    MOCK_METHOD(void, onSlotUpdated, (size_t slotIndex, world::BlockId id, int32_t count), (override));
-    MOCK_METHOD(void, onItemCrafted, (world::BlockId resultId, int32_t count), (override));
+    MOCK_METHOD(void, onSlotUpdated, (size_t slotIndex, voxel::BlockId id, int32_t count), (override));
+    MOCK_METHOD(void, onItemCrafted, (voxel::BlockId resultId, int32_t count), (override));
 };
 
 // 3. Mock Sound Dispatcher
@@ -59,16 +59,16 @@ TEST(GMockTests, WorldModificationEventSequence) {
 
     {
         InSequence seq;
-        EXPECT_CALL(listener, onBlockPlaced(pos1, world::BlockId::Stone)).Times(1);
-        EXPECT_CALL(listener, onBlockPlaced(pos2, world::BlockId::Piston)).Times(1);
+        EXPECT_CALL(listener, onBlockPlaced(pos1, voxel::BlockId::Stone)).Times(1);
+        EXPECT_CALL(listener, onBlockPlaced(pos2, voxel::BlockId::Piston)).Times(1);
         EXPECT_CALL(listener, onPistonActivated(pos2, core::FaceDir::PosX)).Times(1);
-        EXPECT_CALL(listener, onBlockDestroyed(pos1, world::BlockId::Stone)).Times(1);
+        EXPECT_CALL(listener, onBlockDestroyed(pos1, voxel::BlockId::Stone)).Times(1);
     }
 
-    listener.onBlockPlaced(pos1, world::BlockId::Stone);
-    listener.onBlockPlaced(pos2, world::BlockId::Piston);
+    listener.onBlockPlaced(pos1, voxel::BlockId::Stone);
+    listener.onBlockPlaced(pos2, voxel::BlockId::Piston);
     listener.onPistonActivated(pos2, core::FaceDir::PosX);
-    listener.onBlockDestroyed(pos1, world::BlockId::Stone);
+    listener.onBlockDestroyed(pos1, voxel::BlockId::Stone);
 }
 
 TEST(GMockTests, InventoryObserverWithMatchers) {
@@ -76,17 +76,17 @@ TEST(GMockTests, InventoryObserverWithMatchers) {
 
     EXPECT_CALL(observer, onSlotUpdated(
         0,
-        Eq(world::BlockId::OakLog),
+        Eq(voxel::BlockId::OakLog),
         Gt(0)
     )).Times(1);
 
     EXPECT_CALL(observer, onItemCrafted(
-        Eq(world::BlockId::OakPlanks),
+        Eq(voxel::BlockId::OakPlanks),
         Eq(4)
     )).Times(1);
 
-    observer.onSlotUpdated(0, world::BlockId::OakLog, 16);
-    observer.onItemCrafted(world::BlockId::OakPlanks, 4);
+    observer.onSlotUpdated(0, voxel::BlockId::OakLog, 16);
+    observer.onItemCrafted(voxel::BlockId::OakPlanks, 4);
 }
 
 TEST(GMockTests, SoundDispatcherMocking) {

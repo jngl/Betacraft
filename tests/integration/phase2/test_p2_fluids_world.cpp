@@ -20,8 +20,8 @@ using fluids::FluidEvent;
 using fluids::FluidEventKind;
 using fluids::FluidState;
 using fluids::FluidType;
-using world::BlockId;
-using world::Chunk;
+using voxel::BlockId;
+using voxel::Chunk;
 
 namespace {
 
@@ -34,7 +34,7 @@ constexpr int32_t kLavaTicks = 30;
 class P2FluidsWorld : public ::testing::Test {
 protected:
     void SetUp() override {
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
         test::p2worldgen::loadAll(*m_world, test::p2worldgen::squareRegion({0, 0}, 1));
         // Glass keeps the floor cheap to light; it blocks flow like any solid block. The
@@ -234,7 +234,7 @@ TEST_F(P2FluidsWorld, FluidTickStatsAreReported) {
 // --- Chunk streaming ---------------------------------------------------------------
 
 TEST(P2FluidsStreaming, FlowStoppedAtAnUnloadedChunkResumesWhenItLoads) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir;
     world::World w(test::p2worldgen::kSeed, dir.path());
     (void)w.ensureChunkLoaded({0, 0});
@@ -253,7 +253,7 @@ TEST(P2FluidsStreaming, FlowStoppedAtAnUnloadedChunkResumesWhenItLoads) {
 }
 
 TEST(P2FluidsStreaming, WaterSavedMidFlowResumesAfterReload) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir;
     const auto region = test::p2worldgen::squareRegion({0, 0}, 1);
     {
@@ -278,7 +278,7 @@ TEST(P2FluidsStreaming, WaterSavedMidFlowResumesAfterReload) {
 TEST(P2FluidsStreaming, SettledOceanQueuesNoFluidWorkOnLoad) {
     // The open sea around chunk (-5,8): thousands of generated water sources that can't
     // move must not flood the queue (and delay the player's own water behind them).
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir;
     world::World w(test::p2worldgen::kSeed, dir.path());
     test::p2worldgen::loadAll(w, test::p2worldgen::squareRegion({-5, 8}, 1));
@@ -287,7 +287,7 @@ TEST(P2FluidsStreaming, SettledOceanQueuesNoFluidWorkOnLoad) {
         for (int32_t y = 0; y < Chunk::HEIGHT; ++y)
             for (int32_t z = 0; z < Chunk::DEPTH; ++z)
                 for (int32_t x = 0; x < Chunk::WIDTH; ++x)
-                    if (world::isWaterBlock(chunk->getBlock(x, y, z))) ++water;
+                    if (voxel::isWaterBlock(chunk->getBlock(x, y, z))) ++water;
     }
     ASSERT_GT(water, 5000U) << "test region must be sea";
     EXPECT_LT(w.getFluidSimulator().pendingUpdates(), water / 100U);
@@ -296,7 +296,7 @@ TEST(P2FluidsStreaming, SettledOceanQueuesNoFluidWorkOnLoad) {
 TEST(P2FluidsStreaming, UnsettledGeneratedFluidIsScheduledOnLoad) {
     // Worldgen writes fluid without the simulator; the load scan must queue any generated
     // fluid that can move (e.g. cave lava or aquifer water open to a carved pocket).
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir;
     world::World w(test::p2worldgen::kSeed, dir.path());
     test::p2worldgen::loadAll(w, test::p2worldgen::squareRegion({0, 0}, 2));
@@ -307,7 +307,7 @@ TEST(P2FluidsStreaming, UnsettledGeneratedFluidIsScheduledOnLoad) {
             for (int32_t z = 0; z < Chunk::DEPTH; ++z)
                 for (int32_t x = 0; x < Chunk::WIDTH; ++x) {
                     const core::BlockPos p{coord.x * Chunk::WIDTH + x, y, coord.z * Chunk::DEPTH + z};
-                    if (world::BlockRegistry::isLiquid(chunk->getBlock(x, y, z)) && !sim.isSettled(p)) ++unsettled;
+                    if (voxel::BlockRegistry::isLiquid(chunk->getBlock(x, y, z)) && !sim.isSettled(p)) ++unsettled;
                 }
     }
     ASSERT_GT(unsettled, 0U) << "seed 173173173 generates movable fluid around spawn";
@@ -323,7 +323,7 @@ TEST(P2FluidsStreaming, UnsettledGeneratedFluidIsScheduledOnLoad) {
 }
 
 TEST(P2FluidsStreaming, FluidSeedFollowsTheWorldSeed) {
-    world::BlockRegistry::initialize();
+    voxel::BlockRegistry::initialize();
     test::TempDir dir;
     world::World w(1234ULL, dir.path());
     EXPECT_EQ(w.getFluidSimulator().config().randomSeed, 1234ULL);

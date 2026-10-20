@@ -76,15 +76,15 @@ ItemAppearance itemAppearance(gameplay::ItemId rawId) {
     const gameplay::ItemId id = gameplay::canonicalize(rawId);
     ItemAppearance out{};
     // Stick, coal and the four pickaxes keep the sprite and name of their legacy BlockDef.
-    std::optional<world::BlockId> block = gameplay::legacyItemBlock(id);
+    std::optional<voxel::BlockId> block = gameplay::legacyItemBlock(id);
     if (!block) block = crafting::toBlockId(id);
-    if (block && *block != world::BlockId::Air) {
-        const world::BlockDef& def = world::BlockRegistry::get(*block);
+    if (block && *block != voxel::BlockId::Air) {
+        const voxel::BlockDef& def = voxel::BlockRegistry::get(*block);
         out.name = std::string(def.name);
         out.faceTiles = def.faceTiles;
-        out.flat = def.isItemOnly || def.shape == world::RenderShape::Cross || def.shape == world::RenderShape::Torch ||
-                   def.shape == world::RenderShape::Ladder || def.shape == world::RenderShape::Crops ||
-                   def.shape == world::RenderShape::Lever || def.id == world::BlockId::RedstoneWire;
+        out.flat = def.isItemOnly || def.shape == voxel::RenderShape::Cross || def.shape == voxel::RenderShape::Torch ||
+                   def.shape == voxel::RenderShape::Ladder || def.shape == voxel::RenderShape::Crops ||
+                   def.shape == voxel::RenderShape::Lever || def.id == voxel::BlockId::RedstoneWire;
         out.tintGrassTop = def.tintGrassTop;
         out.tintFoliage = def.tintFoliage;
         if (!def.isItemOnly) {
@@ -115,17 +115,17 @@ ItemAppearance itemAppearance(gameplay::ItemId rawId) {
     // S5.6 / S5.8: the door and the bed items show their block's sprite.
     if (id == items::WoodenDoor) {
         out.name = "Wooden Door";
-        out.faceTiles = allFaces(world::kDoorUpperTile);
+        out.faceTiles = allFaces(voxel::kDoorUpperTile);
         return out;
     }
     if (id == items::IronDoor) { // S8.5
         out.name = "Iron Door";
-        out.faceTiles = allFaces(world::kIronDoorUpperTile);
+        out.faceTiles = allFaces(voxel::kIronDoorUpperTile);
         return out;
     }
     if (id == items::Bed) {
         out.name = "Bed";
-        out.faceTiles = allFaces(world::kBedHeadTopTile);
+        out.faceTiles = allFaces(voxel::kBedHeadTopTile);
         return out;
     }
     if (id == items::GlowstoneDust) {

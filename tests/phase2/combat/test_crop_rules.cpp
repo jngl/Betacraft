@@ -8,7 +8,7 @@
 #include <array>
 
 using namespace betacraft::gameplay;
-using betacraft::world::BlockId;
+using betacraft::voxel::BlockId;
 
 namespace {
 

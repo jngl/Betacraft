@@ -17,7 +17,7 @@ using game::SlotButton;
 using physics::InventorySlot;
 using physics::Player;
 using gameplay::toItemId;
-using world::BlockId;
+using voxel::BlockId;
 namespace items = gameplay::items;
 
 namespace {
@@ -67,7 +67,7 @@ void placeOne(InventoryCrafting& ui, Player& p, gameplay::ItemId id, size_t inde
 class P2GameplayCrafting : public ::testing::Test {
 protected:
     void SetUp() override {
-        world::BlockRegistry::initialize();
+        voxel::BlockRegistry::initialize();
         clearInventory(m_player);
     }
 

@@ -32,7 +32,7 @@ inline constexpr float kBucketReach = 5.0f;
 struct ItemUseResult {
     ItemUseKind kind{ItemUseKind::DoorPlaced};
     core::BlockPos pos{};                        // The changed cell (lower door half, bed foot, farmland, crop)
-    world::BlockId block{world::BlockId::Air};   // What it became
+    voxel::BlockId block{voxel::BlockId::Air};   // What it became
     gameplay::WearResult wear{gameplay::WearResult::Unchanged}; // Hoe wear
 };
 

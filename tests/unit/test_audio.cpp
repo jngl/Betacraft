@@ -9,7 +9,7 @@
 #include <vector>
 
 using namespace betacraft::audio;
-using namespace betacraft::world;
+using namespace betacraft::voxel;
 using namespace testing;
 
 TEST(AudioEngineTest, LifecycleAndPlaybackCalls) {

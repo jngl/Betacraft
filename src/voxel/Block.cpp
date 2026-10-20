@@ -1,6 +1,6 @@
 #include "voxel/Block.hpp"
 
-namespace betacraft::world {
+namespace betacraft::voxel {
 
 std::array<BlockDef, 256> BlockRegistry::s_defs{};
 bool BlockRegistry::s_initialized = false;
@@ -1339,4 +1339,4 @@ float BlockRegistry::getPickaxeSpeedMultiplier(BlockId heldItem, BlockId targetB
     return 1.0f;
 }
 
-} // namespace betacraft::world
+} // namespace betacraft::voxel

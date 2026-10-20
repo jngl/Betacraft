@@ -8,9 +8,9 @@
 
 namespace betacraft::worldgen {
 
-using world::BiomeId;
-using world::BlockId;
-using world::Chunk;
+using voxel::BiomeId;
+using voxel::BlockId;
+using voxel::Chunk;
 
 bool featureIntersectsChunk(const Feature& f, core::ChunkCoord coord) noexcept {
     const FeatureBounds b = featureBounds(f);

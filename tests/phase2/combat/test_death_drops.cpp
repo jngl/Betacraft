@@ -6,7 +6,7 @@
 #include <cmath>
 
 using namespace betacraft::gameplay;
-using betacraft::world::BlockId;
+using betacraft::voxel::BlockId;
 
 namespace {
 const glm::vec3 kEye{10.0f, 65.62f, -4.0f};
