@@ -49,23 +49,23 @@ WorldSession::WorldSession(const OpenOptions& options)
     m_simulation.setPathfinding(m_features.mobPathfinding); // S8.3, --no-pathfinding
     m_world->setRedstoneEnabled(m_features.redstone);       // S8.7, --no-redstone
 
-    world::WorldLevelData saved{};
+    storage::WorldLevelData saved{};
     m_levelStatus = m_world->loadLevelDataStatus(saved);
     // S7.4: convert a pre-Sprint 7 chunks/ save before any chunk is read (never in a read-only
     // session: a too new or unreadable level.dat skips it).
-    if (m_levelStatus == world::LevelLoadStatus::Ok || m_levelStatus == world::LevelLoadStatus::LegacyV1 ||
-        m_levelStatus == world::LevelLoadStatus::Missing) {
+    if (m_levelStatus == storage::LevelLoadStatus::Ok || m_levelStatus == storage::LevelLoadStatus::LegacyV1 ||
+        m_levelStatus == storage::LevelLoadStatus::Missing) {
         migrateLegacyStorage(options, saved.storageFormat);
     }
 
-    if (m_levelStatus == world::LevelLoadStatus::Ok || m_levelStatus == world::LevelLoadStatus::LegacyV1) {
+    if (m_levelStatus == storage::LevelLoadStatus::Ok || m_levelStatus == storage::LevelLoadStatus::LegacyV1) {
         m_world->setSeed(saved.seed);
         setTimeOfDay(saved.timeOfDay);
         m_weather = saved.weather; // S8.9: a level.dat without weather keys is clear
         // Position first: setPosition clears the fall distance restorePlayer brings back.
         m_player.setPosition(saved.playerPos);
         m_player.setRotation(saved.playerYaw, saved.playerPitch);
-        if (m_levelStatus == world::LevelLoadStatus::Ok) {
+        if (m_levelStatus == storage::LevelLoadStatus::Ok) {
             if (saved.player) {
                 restorePlayer(m_player, *saved.player, saved.itemsScheme);
             }
@@ -87,7 +87,7 @@ WorldSession::WorldSession(const OpenOptions& options)
         m_spawnPoint = m_world->findSafeSpawnPosition();
         m_player.setPosition(m_spawnPoint);
         m_world->updateChunksAround(m_spawnPoint, kArrivalChunkRadius, kArrivalMaxNewChunks);
-        if (m_levelStatus == world::LevelLoadStatus::Missing) {
+        if (m_levelStatus == storage::LevelLoadStatus::Missing) {
             m_awaitingGameMode = true;
             if (options.newWorld) {
                 m_name = options.newWorld->name;
@@ -100,7 +100,7 @@ WorldSession::WorldSession(const OpenOptions& options)
             m_player.setGameMode(options.defaultGameMode);
             applyStarterKit(m_player, options.defaultGameMode);
             core::Logger::error("WorldSession", "level.dat in ", dir,
-                                m_levelStatus == world::LevelLoadStatus::TooNew ? " is from a newer version"
+                                m_levelStatus == storage::LevelLoadStatus::TooNew ? " is from a newer version"
                                                                                 : " is unreadable",
                                 ": saving is disabled for this session.");
         }
@@ -110,7 +110,7 @@ WorldSession::WorldSession(const OpenOptions& options)
     m_weatherRng = gameplay::SplitMix64(m_world->getSeed() ^ 0x7765617468657221ULL);
     m_simulation.reseed(m_world->getSeed() ^ 0x656E746974696573ULL); // Drops, spawning, mobs
     if (!m_features.weather) {
-        m_weather = world::WeatherState{}; // --no-weather: always clear (and saved clear)
+        m_weather = storage::WeatherState{}; // --no-weather: always clear (and saved clear)
     }
     // Create World chose the mode already: the world starts at once.
     if (m_awaitingGameMode && options.newWorld) {
@@ -155,10 +155,10 @@ void WorldSession::startNewWorld(core::GameMode mode) {
     (void)save(); // The choice survives a crash
 }
 
-world::WorldLevelData WorldSession::makeLevelData(std::vector<physics::InventorySlot>* overflow) const {
+storage::WorldLevelData WorldSession::makeLevelData(std::vector<physics::InventorySlot>* overflow) const {
     const std::vector<physics::InventorySlot> pending = m_crafting.pendingStacks();
-    world::WorldLevelData data{};
-    data.itemsScheme = world::kCurrentItemsScheme;
+    storage::WorldLevelData data{};
+    data.itemsScheme = storage::kCurrentItemsScheme;
     data.seed = m_world->getSeed();
     data.playerPos = m_player.getPosition();
     data.playerYaw = m_player.getYaw();
@@ -184,7 +184,7 @@ SaveResult WorldSession::save() {
     // player (and never duplicates them, unlike dropping copies).
     SaveResult result{};
     std::vector<physics::InventorySlot> overflow;
-    world::WorldLevelData data = makeLevelData(&overflow);
+    storage::WorldLevelData data = makeLevelData(&overflow);
     if (!overflow.empty()) {
         closeCrafting();
         result.closedCrafting = true;

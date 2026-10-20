@@ -22,11 +22,11 @@ namespace {
 
 } // namespace
 
-world::PlayerSaveData capturePlayer(const physics::Player& player, std::span<const physics::InventorySlot> pending) {
+storage::PlayerSaveData capturePlayer(const physics::Player& player, std::span<const physics::InventorySlot> pending) {
     return capturePlayer(player, pending, nullptr);
 }
 
-world::PlayerSaveData capturePlayer(const physics::Player& player, std::span<const physics::InventorySlot> pending,
+storage::PlayerSaveData capturePlayer(const physics::Player& player, std::span<const physics::InventorySlot> pending,
                                     std::vector<physics::InventorySlot>* overflow) {
     physics::Player copy = player;
     for (const physics::InventorySlot& stack : pending) {
@@ -40,7 +40,7 @@ world::PlayerSaveData capturePlayer(const physics::Player& player, std::span<con
         }
     }
 
-    world::PlayerSaveData data{};
+    storage::PlayerSaveData data{};
     data.mode = copy.gameMode();
     data.health = copy.health().current;
     data.air = copy.breath().air;
@@ -50,19 +50,19 @@ world::PlayerSaveData capturePlayer(const physics::Player& player, std::span<con
     for (size_t i = 0; i < data.inventory.size() && i < physics::Player::TOTAL_INVENTORY_SIZE; ++i) {
         const physics::InventorySlot slot = copy.getInventorySlot(i);
         if (!slot.isEmpty()) {
-            data.inventory[i] = world::SavedStack{slot.id, slot.count, slot.damage};
+            data.inventory[i] = storage::SavedStack{slot.id, slot.count, slot.damage};
         }
     }
     for (size_t i = 0; i < data.armor.size() && i < physics::Player::ARMOR_SLOT_COUNT; ++i) {
         const physics::InventorySlot slot = copy.getArmorSlot(i);
         if (!slot.isEmpty()) {
-            data.armor[i] = world::SavedStack{slot.id, slot.count, slot.damage};
+            data.armor[i] = storage::SavedStack{slot.id, slot.count, slot.damage};
         }
     }
     return data;
 }
 
-void restorePlayer(physics::Player& player, const world::PlayerSaveData& data, uint32_t itemsScheme) {
+void restorePlayer(physics::Player& player, const storage::PlayerSaveData& data, uint32_t itemsScheme) {
     player.setGameMode(data.mode);
     player.setHealth(std::clamp(data.health, 0, gameplay::kPlayerMaxHealth));
     player.breath().air = std::clamp(data.air, 0, gameplay::kMaxAirTicks);
@@ -71,12 +71,12 @@ void restorePlayer(physics::Player& player, const world::PlayerSaveData& data, u
     player.burning().fireTicks = std::clamp(data.fireTicks, 0, gameplay::kLavaFireTicks);
 
     for (size_t i = 0; i < physics::Player::TOTAL_INVENTORY_SIZE && i < data.inventory.size(); ++i) {
-        const world::SavedStack& saved = data.inventory[i];
+        const storage::SavedStack& saved = data.inventory[i];
         if (saved.id == gameplay::kNoItem || saved.count <= 0) {
             player.setInventorySlot(i, {});
             continue;
         }
-        if (gameplay::isLegacyItemId(saved.id) && itemsScheme >= world::kCurrentItemsScheme) {
+        if (gameplay::isLegacyItemId(saved.id) && itemsScheme >= storage::kCurrentItemsScheme) {
             core::Logger::warn("PlayerPersistence", "Legacy item id ", saved.id, " in an items_scheme ", itemsScheme,
                                " save (slot ", i, "): folded");
         }
@@ -92,7 +92,7 @@ void restorePlayer(physics::Player& player, const world::PlayerSaveData& data, u
 
     // S6.8: an armor slot holds one piece of its own type; anything else empties it.
     for (size_t i = 0; i < physics::Player::ARMOR_SLOT_COUNT && i < data.armor.size(); ++i) {
-        const world::SavedStack& saved = data.armor[i];
+        const storage::SavedStack& saved = data.armor[i];
         player.setArmorSlot(i, {});
         if (saved.id == gameplay::kNoItem || saved.count <= 0) {
             continue;

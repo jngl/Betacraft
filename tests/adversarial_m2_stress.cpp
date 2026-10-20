@@ -8,10 +8,10 @@
 #include <span>
 
 #include "render/PackedChunkVertex.hpp"
+#include "tests/test_helpers.hpp"
+#include "voxel/Block.hpp"
 #include "world/DifferentialLightingEngine.hpp"
 #include "world/World.hpp"
-#include "world/Block.hpp"
-#include "tests/test_helpers.hpp"
 
 using namespace betacraft;
 using namespace betacraft::render;

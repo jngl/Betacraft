@@ -97,7 +97,7 @@ enum class RenderShape : uint8_t {
     Slab,
     Cactus,
     Liquid,
-    // S5.4 shapes whose geometry and boxes come from world/BlockShapes.hpp. All but Fence
+    // S5.4 shapes whose geometry and boxes come from voxel/BlockShapes.hpp. All but Fence
     // depend on the metadata (Fence depends on its neighbours).
     Ladder,
     Door,
@@ -107,7 +107,7 @@ enum class RenderShape : uint8_t {
     Farmland,
     Stairs,
     // S8.5: a plate lying on the floor (redstone wire, pressure plates) and a small part
-    // attached to a wall or the floor (lever, button), both from world/BlockShapes.hpp.
+    // attached to a wall or the floor (lever, button), both from voxel/BlockShapes.hpp.
     Flat,
     Lever
 };

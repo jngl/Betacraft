@@ -4,7 +4,7 @@
 #include "gameplay/Crops.hpp"
 #include "gameplay/ItemIds.hpp"
 #include "math/AABB.hpp"
-#include "world/BlockShapes.hpp"
+#include "voxel/BlockShapes.hpp"
 #include "world/World.hpp"
 
 #include <cmath>

@@ -5,7 +5,7 @@
 
 #include "P2WorldgenSupport.hpp"
 #include "storage/RegionChunkStore.hpp"
-#include "world/BlockEntityStore.hpp"
+#include "voxel/BlockEntityStore.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>
@@ -58,7 +58,7 @@ TEST(P2StorageRegionWorld, EditSaveReloadThroughRegions) {
         w.markBlockEntityChanged(chestPos);
         (void)w.ensureChunkLoaded({40, 0});
         ASSERT_TRUE(w.setBlock(far, BlockId::Obsidian));
-        w.saveModifiedChunks(world::WorldLevelData{});
+        w.saveModifiedChunks(storage::WorldLevelData{});
         EXPECT_EQ(w.getStorageStats().unsolicitedBundleWrites, 0U);
         EXPECT_EQ(w.getStorageStats().bundlesWritten, 3U);
 
@@ -69,7 +69,7 @@ TEST(P2StorageRegionWorld, EditSaveReloadThroughRegions) {
         ASSERT_EQ(w.getChunk({-1, 0}), nullptr);
         loadAll(w, squareRegion({0, 0}, 1));
         EXPECT_EQ(w.getBlock(glass.offset(0, 1, 0)), BlockId::Glass);
-        w.saveModifiedChunks(world::WorldLevelData{});
+        w.saveModifiedChunks(storage::WorldLevelData{});
         for (const core::ChunkCoord c : {core::ChunkCoord{-1, 0}, core::ChunkCoord{0, 0}}) {
             auto copy = std::make_unique<Chunk>(c);
             ASSERT_TRUE(copy->deserializeRLE(w.getChunk(c)->serializeRLE()));
@@ -107,7 +107,7 @@ TEST(P2StorageRegionWorld, UntouchedFluidChunksNotWritten) {
         updates += w.tick().processed;
     }
     ASSERT_GT(updates, 0U) << "the seed's generated fluid must move for this test to mean anything";
-    w.saveModifiedChunks(world::WorldLevelData{});
+    w.saveModifiedChunks(storage::WorldLevelData{});
     w.updateChunksAround(glm::vec3(8000.0f, 70.0f, 8000.0f), 0, 0); // Unloads every chunk
     EXPECT_EQ(w.getStorageStats().bundlesWritten, 0U);
     EXPECT_EQ(w.getStorageStats().unsolicitedBundleWrites, 0U);
@@ -126,7 +126,7 @@ TEST(P2StorageRegionWorld, UntouchedFluidChunksNotWritten) {
         (void)w.tick();
     }
     ASSERT_GT(countWater(*w.getChunk({1, 0}), 100), 0);
-    w.saveModifiedChunks(world::WorldLevelData{});
+    w.saveModifiedChunks(storage::WorldLevelData{});
     w.updateChunksAround(glm::vec3(8000.0f, 70.0f, 8000.0f), 0, 0);
     EXPECT_GE(w.getStorageStats().bundlesWritten, 2U);
     EXPECT_EQ(w.getStorageStats().unsolicitedBundleWrites, 0U);

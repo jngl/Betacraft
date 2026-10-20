@@ -5,9 +5,9 @@
 #include "tests/integration/phase2/P2WorldgenSupport.hpp"
 #include "tests/test_helpers.hpp"
 
+#include "storage/WorldStorage.hpp"
 #include "world/World.hpp"
 #include "world/WorldGen.hpp"
-#include "world/WorldStorage.hpp"
 #include "worldgen/DecorationFeatures.hpp"
 #include "worldgen/DecorationPipeline.hpp"
 
@@ -68,7 +68,7 @@ TEST_F(P2WorldgenPersistence, DecoratedChunkIsNotRedecoratedAfterReload) {
                     if (isDecorationBlock(c.getBlock(lx, y, lz))) chopped = core::BlockPos{lx, y, lz};
         ASSERT_TRUE(chopped.has_value());
         ASSERT_TRUE(w.setBlock(*chopped, BlockId::Air)); // the player removes it
-        w.saveModifiedChunks(world::WorldLevelData{});
+        w.saveModifiedChunks(storage::WorldLevelData{});
     }
 
     world::World w(kSeed, dir.path());
@@ -103,7 +103,7 @@ TEST_F(P2WorldgenPersistence, EditedUndecoratedChunkKeepsItsSavedPlanAcrossSessi
         ASSERT_TRUE(w.setBlock(soil, BlockId::Air));
         const worldgen::FeaturePlanner planner(kSeed);
         ASSERT_NE(planner.plan(*w.getChunk(edge.owner)), *w.getDecorationPipeline().findPlan(edge.owner));
-        w.saveModifiedChunks(world::WorldLevelData{});
+        w.saveModifiedChunks(storage::WorldLevelData{});
     }
 
     world::World w(kSeed, dir.path());
@@ -125,7 +125,7 @@ TEST_F(P2WorldgenPersistence, SaveWithoutDecorationRecordLoadsAsDecoratedAndUnto
             for (int32_t lx = 0; lx < Chunk::WIDTH; ++lx)
                 for (int32_t y = 0; y < 70; ++y)
                     original.setBlock(lx, y, lz, y == 0 ? BlockId::Bedrock : (y == 69 ? BlockId::Grass : BlockId::Dirt));
-        const world::WorldStorage storage(dir.path());
+        const storage::WorldStorage storage(dir.path());
         ASSERT_TRUE(storage.saveChunk(original));
     }
 

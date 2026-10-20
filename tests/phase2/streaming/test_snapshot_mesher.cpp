@@ -14,10 +14,10 @@
 using betacraft::render::PackedChunkVertex;
 using betacraft::streaming::MeshOptions;
 using betacraft::streaming::RawMeshBuffer;
-using betacraft::streaming::SectionCoord;
 using betacraft::streaming::SectionNeighborhoodSnapshot18;
 using betacraft::streaming::SnapshotMesher;
 using betacraft::streaming::VoxelSample;
+using betacraft::voxel::SectionCoord;
 using betacraft::world::BlockId;
 using betacraft::world::BlockStateId;
 using betacraft::world::World;

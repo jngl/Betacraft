@@ -8,7 +8,7 @@
 #include "game/PlayerPersistence.hpp"
 #include "gameplay/Health.hpp"
 #include "gameplay/Survival.hpp"
-#include "world/WorldStorage.hpp"
+#include "storage/WorldStorage.hpp"
 
 #include <string>
 
@@ -161,16 +161,16 @@ TEST_F(S3Environment, FireTicksSurviveSaveReload) {
     const int32_t fire = m_player.burning().fireTicks;
     ASSERT_EQ(fire, gameplay::kLavaFireTicks - 37);
 
-    world::WorldLevelData level{};
-    level.itemsScheme = world::kCurrentItemsScheme;
+    storage::WorldLevelData level{};
+    level.itemsScheme = storage::kCurrentItemsScheme;
     level.player = game::capturePlayer(m_player);
     EXPECT_EQ(level.player->fireTicks, fire);
-    const std::string text = world::encodeLevelData(level);
+    const std::string text = storage::encodeLevelData(level);
     EXPECT_NE(text.find("player.fire " + std::to_string(fire)), std::string::npos);
     EXPECT_EQ(text.rfind("BETACRAFT_LEVEL_V2", 0), 0U) << "a new key, no version change";
 
-    world::WorldLevelData loaded{};
-    ASSERT_EQ(world::decodeLevelData(text, loaded), world::LevelLoadStatus::Ok);
+    storage::WorldLevelData loaded{};
+    ASSERT_EQ(storage::decodeLevelData(text, loaded), storage::LevelLoadStatus::Ok);
     ASSERT_TRUE(loaded.player.has_value());
     physics::Player after;
     game::restorePlayer(after, *loaded.player, loaded.itemsScheme);
@@ -183,17 +183,17 @@ TEST_F(S3Environment, FireTicksSurviveSaveReload) {
     // Not burning: no key, and an old file without it reads as not burning.
     physics::Player cold;
     level.player = game::capturePlayer(cold);
-    const std::string coldText = world::encodeLevelData(level);
+    const std::string coldText = storage::encodeLevelData(level);
     EXPECT_EQ(coldText.find("player.fire"), std::string::npos);
-    world::WorldLevelData coldLoaded{};
-    ASSERT_EQ(world::decodeLevelData(coldText, coldLoaded), world::LevelLoadStatus::Ok);
+    storage::WorldLevelData coldLoaded{};
+    ASSERT_EQ(storage::decodeLevelData(coldText, coldLoaded), storage::LevelLoadStatus::Ok);
     physics::Player restored;
     restored.burning().fireTicks = 123;
     game::restorePlayer(restored, *coldLoaded.player);
     EXPECT_EQ(restored.burning().fireTicks, 0);
 
     // A corrupted value is clamped to the lava maximum.
-    world::PlayerSaveData bad = *loaded.player;
+    storage::PlayerSaveData bad = *loaded.player;
     bad.fireTicks = 1 << 30;
     game::restorePlayer(restored, bad);
     EXPECT_EQ(restored.burning().fireTicks, gameplay::kLavaFireTicks);

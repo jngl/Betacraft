@@ -5,7 +5,7 @@
 #include "gameplay/ItemIds.hpp"
 #include "gameplay/Survival.hpp"
 #include "math/AABB.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 #include "world/World.hpp"
 
 #include <algorithm>

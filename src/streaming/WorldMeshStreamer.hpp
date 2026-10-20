@@ -2,7 +2,7 @@
 
 #include "core/Types.hpp"
 #include "streaming/AsyncChunkPipeline.hpp"
-#include "streaming/SectionCoord.hpp"
+#include "voxel/SectionCoord.hpp"
 
 #include <chrono>
 #include <cstddef>
@@ -82,18 +82,18 @@ private:
 
     void rebuildPipeline();
     // The section has no geometry any more: forget it and schedule its GPU deletion.
-    void dropSection(SectionCoord coord);
+    void dropSection(voxel::SectionCoord coord);
     // The chunk left the World: cancel its column and delete whatever it had on the GPU.
     void forgetChunk(core::ChunkCoord coord);
 
     WorldMeshStreamerConfig m_config;
     std::unique_ptr<AsyncChunkPipeline> m_pipeline;
     std::unordered_map<core::ChunkCoord, TrackedChunk> m_chunks;
-    std::unordered_map<SectionCoord, uint64_t> m_versions;
+    std::unordered_map<voxel::SectionCoord, uint64_t> m_versions;
     // Sections that may own a GPU mesh: they need an explicit deletion when they empty
     // out or their chunk unloads.
-    std::unordered_set<SectionCoord> m_meshed;
-    std::vector<SectionCoord> m_pendingRemovals;
+    std::unordered_set<voxel::SectionCoord> m_meshed;
+    std::vector<voxel::SectionCoord> m_pendingRemovals;
     size_t m_deferredSections{0}; // dirty sections the last update left for later
     bool m_remeshAll{false};
 };

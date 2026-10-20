@@ -1,15 +1,15 @@
 #include "audio/AudioEngine.hpp"
 #include "core/Types.hpp"
 #include "game/StarterKit.hpp"
-#include "math/PerlinNoise.hpp"
 #include "math/AABB.hpp"
+#include "math/PerlinNoise.hpp"
 #include "physics/Player.hpp"
 #include "physics/Raycaster.hpp"
 #include "render/ChunkMesher.hpp"
 #include "render/TextureAtlas.hpp"
 #include "ui/CraftingSystem.hpp"
-#include "world/Block.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/World.hpp"
 
 #include <cmath>

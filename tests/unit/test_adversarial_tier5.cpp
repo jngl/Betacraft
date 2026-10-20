@@ -1,11 +1,11 @@
 #include "physics/Player.hpp"
-#include "world/PalettedSection.hpp"
-#include "world/Chunk.hpp"
-#include "world/DifferentialLightingEngine.hpp"
-#include "world/World.hpp"
-#include "world/Block.hpp"
 #include "render/PackedChunkVertex.hpp"
 #include "tests/test_helpers.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/Chunk.hpp"
+#include "voxel/PalettedSection.hpp"
+#include "world/DifferentialLightingEngine.hpp"
+#include "world/World.hpp"
 
 #include <gtest/gtest.h>
 #include <random>

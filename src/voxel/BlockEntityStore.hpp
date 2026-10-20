@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/Types.hpp"
-#include "world/Block.hpp"
-#include "world/BlockEntity.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/BlockEntity.hpp"
 
 #include <cstdint>
 #include <optional>
@@ -66,6 +66,9 @@ public:
 private:
     std::unordered_map<core::ChunkCoord, std::unordered_map<uint16_t /*lx|lz<<4|y<<8*/, BlockEntity>> m_byChunk;
 };
+
+// Save format version of the encoding below (conventions §1).
+inline constexpr uint32_t kBlockEntityFormatVersion = 1;
 
 // .be file (conventions §1): "BCBE", u8 version (kBlockEntityFormatVersion), u16 entry count,
 // then per entry u8 lx, u8 y, u8 lz, u8 kind (1 = furnace, 2 = chest) and its slots as

@@ -1,6 +1,6 @@
 #include "streaming/SectionNeighborhoodSnapshot18.hpp"
 
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/World.hpp"
 
 #include <algorithm>
@@ -23,7 +23,7 @@ static_assert(kMissingVoxel.state == kAirState && kMissingVoxel.skyLight == 15 &
 } // namespace
 
 std::shared_ptr<const SectionNeighborhoodSnapshot18> SectionNeighborhoodSnapshot18::capture(
-    const world::World& world, SectionCoord coord) {
+    const world::World& world, voxel::SectionCoord coord) {
     // Resolve the 3x3 neighbourhood of chunk columns once: per-voxel hash-map lookups
     // through World::getBlock would dominate the capture cost on the tick thread.
     std::array<const world::Chunk*, 9> columns{};

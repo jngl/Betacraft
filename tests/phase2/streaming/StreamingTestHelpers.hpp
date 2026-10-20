@@ -3,8 +3,8 @@
 // Shared fixtures for the P1.1 streaming test-suite. Kept free of SDL/GL so the
 // suite runs headless (and under ThreadSanitizer) on CI machines.
 
-#include "streaming/SectionCoord.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/SectionCoord.hpp"
 #include "world/World.hpp"
 
 #include <atomic>
@@ -19,7 +19,7 @@
 namespace betacraft::streaming {
 
 // Readable gtest diagnostics for SectionCoord (found by ADL).
-inline void PrintTo(const SectionCoord& c, std::ostream* os) { *os << "(" << c.x << "," << c.y << "," << c.z << ")"; }
+inline void PrintTo(const voxel::SectionCoord& c, std::ostream* os) { *os << "(" << c.x << "," << c.y << "," << c.z << ")"; }
 
 } // namespace betacraft::streaming
 

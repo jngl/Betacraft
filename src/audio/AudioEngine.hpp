@@ -4,8 +4,8 @@
 #include "acoustics/AcousticVoiceBank.hpp"
 #include "core/MpscRingBuffer.hpp"
 #include "core/Types.hpp"
-#include "world/Block.hpp"
 #include "miniaudio.h"
+#include "voxel/Block.hpp"
 
 #include <array>
 #include <atomic>

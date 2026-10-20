@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gameplay/ItemIds.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <glm/glm.hpp>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <algorithm>
 #include <array>

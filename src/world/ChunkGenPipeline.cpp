@@ -1,9 +1,9 @@
-#include "streaming/ChunkGenPipeline.hpp"
+#include "world/ChunkGenPipeline.hpp"
 
 #include <iterator>
 #include <utility>
 
-namespace betacraft::streaming {
+namespace betacraft::world {
 
 ChunkGenPipeline::ChunkGenPipeline(std::shared_ptr<const world::WorldGen> gen, ChunkGenConfig config)
     : m_gen(std::move(gen)) {
@@ -245,4 +245,4 @@ ChunkGenStats ChunkGenPipeline::stats() const {
     return m_stats;
 }
 
-} // namespace betacraft::streaming
+} // namespace betacraft::world

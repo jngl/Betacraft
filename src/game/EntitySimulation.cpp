@@ -16,7 +16,7 @@
 #include "gameplay/Knockback.hpp"
 #include "gameplay/MobSpawnRules.hpp"
 #include "gameplay/Survival.hpp"
-#include "world/BlockShapes.hpp"
+#include "voxel/BlockShapes.hpp"
 #include "world/BlockTicks.hpp"
 #include "world/World.hpp"
 #include "worldgen/Dungeons.hpp"
@@ -63,7 +63,7 @@ EntitySimulation::EntitySimulation(uint64_t seed)
     : m_rng(seed), m_spawnRng(seed ^ 0x6D6F62737061776EULL), m_mobRng(seed ^ 0x6D6F626C6976696EULL) {}
 
 GameTickEvents EntitySimulation::tick(world::World& world, physics::Player& player, const PlayerActions& actions,
-                                 float timeOfDay, const world::WeatherState& weather) {
+                                 float timeOfDay, const storage::WeatherState& weather) {
     // Hits and explosions recorded by explode() calls made between ticks come first.
     GameTickEvents events = std::exchange(m_pendingEvents, GameTickEvents{});
     m_tickEvents = &events;
@@ -114,7 +114,7 @@ void EntitySimulation::reseed(uint64_t seed) noexcept {
 }
 
 void EntitySimulation::spawnMobs(world::World& world, const physics::Player& player, float timeOfDay,
-                                 const world::WeatherState& weather) {
+                                 const storage::WeatherState& weather) {
     if (!m_naturalSpawning) {
         return;
     }
@@ -650,7 +650,7 @@ void EntitySimulation::setPathfinding(bool enabled) {
 }
 
 void EntitySimulation::runEntitySystems(world::World& world, physics::Player& player, float timeOfDay,
-                                        const world::WeatherState& weather, GameTickEvents& events) {
+                                        const storage::WeatherState& weather, GameTickEvents& events) {
     const float sun = gameplay::sunBrightness(timeOfDay);
     acquireTargets(m_entities, world, m_playerProxy, player.gameMode(), m_ticks, player.isDead(), sun);
     if (m_pathfinding) {

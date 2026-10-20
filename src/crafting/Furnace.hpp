@@ -1,7 +1,7 @@
 #pragma once
 
 #include "crafting/SmeltingRecipes.hpp"
-#include "world/BlockEntity.hpp"
+#include "voxel/BlockEntity.hpp"
 
 namespace betacraft::crafting {
 

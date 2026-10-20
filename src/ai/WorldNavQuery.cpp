@@ -1,7 +1,7 @@
 #include "ai/WorldNavQuery.hpp"
 
-#include "world/BlockShapes.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/BlockShapes.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/World.hpp"
 
 namespace betacraft::ai {

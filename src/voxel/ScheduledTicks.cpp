@@ -1,4 +1,4 @@
-#include "world/ScheduledTicks.hpp"
+#include "voxel/ScheduledTicks.hpp"
 
 #include <algorithm>
 

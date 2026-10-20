@@ -6,7 +6,7 @@
 
 #include "game/FallingBlocks.hpp"
 #include "gameplay/ItemIds.hpp"
-#include "world/ScheduledTicks.hpp"
+#include "voxel/ScheduledTicks.hpp"
 
 #include <set>
 #include <vector>

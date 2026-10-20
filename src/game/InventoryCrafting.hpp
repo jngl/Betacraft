@@ -1,11 +1,11 @@
 #pragma once
 
+#include "core/Types.hpp"
 #include "crafting/CraftingGrid.hpp"
 #include "crafting/RecipeRegistry.hpp"
-#include "core/Types.hpp"
 #include "physics/Player.hpp"
 #include "ui/ScreenKind.hpp"
-#include "world/BlockEntity.hpp"
+#include "voxel/BlockEntity.hpp"
 
 #include <cstddef>
 #include <cstdint>

@@ -9,7 +9,7 @@
 #include "lighting/DynamicLightManager.hpp"
 #include "physics/Player.hpp"
 #include "render/WorldRenderer.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <gtest/gtest.h>
 

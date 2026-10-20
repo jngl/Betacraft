@@ -4,12 +4,12 @@
 #include "fluids/FluidSimulator.hpp"
 #include "gameplay/SplitMix64.hpp"
 #include "redstone/RedstoneEngine.hpp"
-#include "world/Block.hpp"
-#include "world/BlockEntityStore.hpp"
-#include "world/Chunk.hpp"
-#include "world/ScheduledTicks.hpp"
+#include "storage/WorldStorage.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/BlockEntityStore.hpp"
+#include "voxel/Chunk.hpp"
+#include "voxel/ScheduledTicks.hpp"
 #include "world/WorldGen.hpp"
-#include "world/WorldStorage.hpp"
 
 #include <chrono>
 #include <cstddef>
@@ -26,10 +26,6 @@ namespace betacraft::storage {
 class ChunkIoWorker;
 }
 
-namespace betacraft::streaming {
-class ChunkGenPipeline;
-}
-
 namespace betacraft::worldgen {
 class ChunkAccess;
 class DecorationPipeline;
@@ -37,6 +33,7 @@ class DecorationPipeline;
 
 namespace betacraft::world {
 
+class ChunkGenPipeline;
 class DifferentialLightingEngine;
 
 // Who made an edit: the player (and the game rules acting for it: pistons, mining, placing)
@@ -252,10 +249,10 @@ public:
     [[nodiscard]] glm::vec3 findStandableAbove(glm::vec3 pos) const noexcept;
 
     // queueModifiedChunks, then flushStorage (its result is not reported).
-    void saveModifiedChunks(const WorldLevelData& levelData);
+    void saveModifiedChunks(const storage::WorldLevelData& levelData);
     // level.dat, then every modified chunk queued on the I/O worker, without waiting for the
     // writes: flushStorage() writes them and reports a failure. Nothing when saving is disabled.
-    void queueModifiedChunks(const WorldLevelData& levelData);
+    void queueModifiedChunks(const storage::WorldLevelData& levelData);
     // Read-only session (level.dat too new or unreadable, conventions §1.2): nothing, neither
     // level.dat nor chunks, is written to the save directory.
     void setSaveDisabled(bool disabled);
@@ -263,7 +260,7 @@ public:
     // FeatureFlags::regionStorage (S7.3); see WorldStorage::setRegionStorageEnabled.
     void setRegionStorageEnabled(bool enabled);
     // Waits for the I/O worker first, so the store holds every save queued so far.
-    [[nodiscard]] const WorldStorage& getStorage() const;
+    [[nodiscard]] const storage::WorldStorage& getStorage() const;
     // S7.4: whether this save still has legacy chunks to convert, given level.dat's
     // storage_format, and the conversion itself (call before any chunk is loaded).
     [[nodiscard]] bool needsStorageMigration(uint32_t levelStorageFormat) const {
@@ -280,11 +277,11 @@ public:
         uint64_t unsolicitedBundleWrites{0};
     };
     [[nodiscard]] const StorageStats& getStorageStats() const noexcept { return m_storageStats; }
-    [[nodiscard]] LevelLoadStatus loadLevelDataStatus(WorldLevelData& outData) const {
+    [[nodiscard]] storage::LevelLoadStatus loadLevelDataStatus(storage::WorldLevelData& outData) const {
         return m_storage.loadLevelDataStatus(outData);
     }
     // True for Ok and LegacyV1.
-    [[nodiscard]] bool loadLevelData(WorldLevelData& outData) const {
+    [[nodiscard]] bool loadLevelData(storage::WorldLevelData& outData) const {
         return m_storage.loadLevelData(outData);
     }
 
@@ -331,7 +328,7 @@ private:
     // pool) and re-marks resident chunks whose save failed.
     void pumpStreaming();
     void cancelStreamRequest(core::ChunkCoord coord);
-    streaming::ChunkGenPipeline& genPipeline();
+    ChunkGenPipeline& genPipeline();
 
     // Sand and gravel at `pos` and just above it get a falling check (S5.3).
     void scheduleFallingChecks(int32_t wx, int32_t wy, int32_t wz);
@@ -346,7 +343,7 @@ private:
     void removeOtherHalf(int32_t wx, int32_t wy, int32_t wz, BlockId id, uint8_t meta, EditOrigin origin);
 
     WorldGen m_worldGen;
-    WorldStorage m_storage;
+    storage::WorldStorage m_storage;
     bool m_saveDisabled{false};
     std::unordered_map<core::ChunkCoord, std::unique_ptr<Chunk>> m_chunks;
     std::unique_ptr<DifferentialLightingEngine> m_diffLighting;
@@ -382,7 +379,7 @@ private:
     uint64_t m_nextLoadTicket{1};
     std::shared_ptr<const WorldGen> m_sharedGen; // What the generation workers read
     size_t m_genWorkers;
-    std::unique_ptr<streaming::ChunkGenPipeline> m_genPipeline;
+    std::unique_ptr<ChunkGenPipeline> m_genPipeline;
     std::chrono::nanoseconds m_lastIntegration{0};
     std::deque<std::chrono::nanoseconds> m_integrationWindow;
 

@@ -38,17 +38,17 @@ target_link_libraries(miniaudio_lib PUBLIC Threads::Threads ${CMAKE_DL_LIBS} m)
 set(BETACRAFT_CORE_SOURCES
     src/core/Logger.cpp
     src/math/PerlinNoise.cpp
-    src/world/Block.cpp
-    src/world/PalettedSection.cpp
-    src/world/Chunk.cpp
+    src/voxel/Block.cpp
+    src/voxel/PalettedSection.cpp
+    src/voxel/Chunk.cpp
+    src/voxel/BlockEntityStore.cpp
+    src/voxel/ScheduledTicks.cpp
     src/world/DifferentialLightingEngine.cpp
     src/world/WorldGen.cpp
-    src/world/WorldStorage.cpp
     src/world/World.cpp
-    src/world/BlockEntityStore.cpp
     src/world/BlockTicks.cpp
-    src/world/ScheduledTicks.cpp
     src/world/Weather.cpp
+    src/world/ChunkGenPipeline.cpp
     src/physics/Raycaster.cpp
     src/physics/Player.cpp
     src/render/GLHeaders.cpp

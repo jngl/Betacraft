@@ -57,7 +57,7 @@ TEST(S1FluidPersistence, GeneratedFluidSettlingMarksNothingModified) {
     for (const auto& [coord, chunk] : w.getChunks()) {
         EXPECT_FALSE(chunk->isModified()) << "chunk " << coord.x << "," << coord.z;
     }
-    w.saveModifiedChunks(world::WorldLevelData{});
+    w.saveModifiedChunks(storage::WorldLevelData{});
     EXPECT_EQ(chunkFileCount(dir.path()), 0U) << "exploring without editing writes no .chk";
     EXPECT_FALSE(std::filesystem::exists(dir.path() / "region")) << "nor any region bundle (S7.3)";
 }
@@ -90,7 +90,7 @@ TEST(S1FluidPersistence, PlayerWaterFlowingAcrossASeamIsPersisted) {
         EXPECT_TRUE(east->isModified()) << "a neighbour of a player-touched chunk keeps simulation edits";
         EXPECT_FALSE(east->isPlayerTouched()) << "simulation edits do not spread the touched flag";
 
-        w.saveModifiedChunks(world::WorldLevelData{});
+        w.saveModifiedChunks(storage::WorldLevelData{});
         // Reload the column into a second world on the same save and compare.
         world::World reloaded(test::p2worldgen::kSeed, dir.path());
         const Chunk& again = reloaded.ensureChunkLoaded({1, 0});

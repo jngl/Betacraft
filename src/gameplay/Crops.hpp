@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gameplay/SplitMix64.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <array>
 #include <cstdint>

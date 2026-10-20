@@ -3,11 +3,11 @@
 #include "core/Config.hpp"
 #include "core/Types.hpp"
 #include "math/AABB.hpp"
-#include "world/Block.hpp"
-#include "world/PalettedSection.hpp"
-#include "world/Chunk.hpp"
-#include "world/World.hpp"
 #include "physics/Player.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/Chunk.hpp"
+#include "voxel/PalettedSection.hpp"
+#include "world/World.hpp"
 
 #include <vector>
 #include <random>

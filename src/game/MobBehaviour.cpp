@@ -5,7 +5,7 @@
 #include "game/Projectiles.hpp"
 #include "gameplay/MobSpawnRules.hpp"
 #include "physics/Raycaster.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 #include "world/World.hpp"
 
 #include <algorithm>
@@ -140,7 +140,7 @@ std::vector<MobMeleeHit> meleeContact(ecs::Registry& reg, const world::World& wo
 namespace {
 
 void sunBurnImpl(ecs::Registry& reg, const world::World& world, float timeOfDay, gameplay::SplitMix64& rng,
-                 const world::WeatherState* weather) {
+                 const storage::WeatherState* weather) {
     const float brightness = gameplay::sunBrightness(timeOfDay);
     if (!(brightness > 0.5f)) {
         return;
@@ -175,7 +175,7 @@ void sunBurnImpl(ecs::Registry& reg, const world::World& world, float timeOfDay,
 }
 
 std::vector<ecs::EntityId> tickBurningImpl(ecs::Registry& reg, const world::World& world,
-                                           const world::WeatherState* weather) {
+                                           const storage::WeatherState* weather) {
     std::vector<ecs::EntityId> hurt;
     std::vector<ecs::EntityId> putOut;
     std::vector<ecs::EntityId> damaged;
@@ -217,7 +217,7 @@ void sunBurn(ecs::Registry& reg, const world::World& world, float timeOfDay, gam
 }
 
 void sunBurn(ecs::Registry& reg, const world::World& world, float timeOfDay, gameplay::SplitMix64& rng,
-             const world::WeatherState& weather) {
+             const storage::WeatherState& weather) {
     sunBurnImpl(reg, world, timeOfDay, rng, &weather);
 }
 
@@ -226,7 +226,7 @@ std::vector<ecs::EntityId> tickBurning(ecs::Registry& reg, const world::World& w
 }
 
 std::vector<ecs::EntityId> tickBurning(ecs::Registry& reg, const world::World& world,
-                                       const world::WeatherState& weather) {
+                                       const storage::WeatherState& weather) {
     return tickBurningImpl(reg, world, &weather);
 }
 

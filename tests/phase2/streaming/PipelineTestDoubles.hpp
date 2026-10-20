@@ -35,11 +35,11 @@ inline SnapPtr emptySnap() { return std::make_shared<const Snap>(); }
 // vertex encodes the section coordinate (so uploads are traceable).
 struct RecordingMesher {
     std::mutex mutex;
-    std::vector<SectionCoord> order;
+    std::vector<voxel::SectionCoord> order;
     std::atomic<int> calls{0};
 
     MeshFunction fn() {
-        return [this](const Snap&, SectionCoord c, const MeshOptions&, std::stop_token) -> std::optional<RawMeshBuffer> {
+        return [this](const Snap&, voxel::SectionCoord c, const MeshOptions&, std::stop_token) -> std::optional<RawMeshBuffer> {
             {
                 const std::lock_guard lock(mutex);
                 order.push_back(c);
@@ -50,7 +50,7 @@ struct RecordingMesher {
             return m;
         };
     }
-    std::vector<SectionCoord> snapshotOrder() {
+    std::vector<voxel::SectionCoord> snapshotOrder() {
         const std::lock_guard lock(mutex);
         return order;
     }
@@ -72,7 +72,7 @@ struct GateMesher {
     std::atomic<int> sawStop{0};
 
     MeshFunction fn() {
-        return [this](const Snap&, SectionCoord, const MeshOptions&, std::stop_token st) -> std::optional<RawMeshBuffer> {
+        return [this](const Snap&, voxel::SectionCoord, const MeshOptions&, std::stop_token st) -> std::optional<RawMeshBuffer> {
             calls.fetch_add(1);
             if (!startedOnce.exchange(true)) startedPromise.set_value();
             std::unique_lock lock(mutex);

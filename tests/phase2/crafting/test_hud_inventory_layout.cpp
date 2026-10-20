@@ -5,7 +5,7 @@
 
 #include "gameplay/ItemIds.hpp"
 #include "physics/Player.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <gtest/gtest.h>
 

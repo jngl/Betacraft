@@ -5,8 +5,8 @@
 #include "render/TextureAtlas.hpp"
 #include "render/WorldRenderer.hpp"
 #include "tests/test_helpers.hpp"
-#include "world/Block.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>

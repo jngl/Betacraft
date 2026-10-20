@@ -89,7 +89,7 @@ void sunBurn(ecs::Registry& reg, const world::World& world, float timeOfDay, gam
 // S8.10: the same under `weather`. A mob standing in the rain (world::isRainingAt at its feet
 // or eyes: Beta Entity.isWet) never catches fire.
 void sunBurn(ecs::Registry& reg, const world::World& world, float timeOfDay, gameplay::SplitMix64& rng,
-             const world::WeatherState& weather);
+             const storage::WeatherState& weather);
 
 // One tick of fire: 1 damage (HealthSystem::applyDamage) every kBurnDamageIntervalTicks,
 // the fire goes out when it runs down or the mob touches water. Returns the mobs the fire
@@ -97,7 +97,7 @@ void sunBurn(ecs::Registry& reg, const world::World& world, float timeOfDay, gam
 std::vector<ecs::EntityId> tickBurning(ecs::Registry& reg, const world::World& world);
 // S8.10: rain also puts the fire out (Beta Entity.isWet: in water or in the rain).
 std::vector<ecs::EntityId> tickBurning(ecs::Registry& reg, const world::World& world,
-                                       const world::WeatherState& weather);
+                                       const storage::WeatherState& weather);
 
 // True while `e` has a BurningComp with ticks left.
 [[nodiscard]] bool isBurning(const ecs::Registry& reg, ecs::EntityId e);

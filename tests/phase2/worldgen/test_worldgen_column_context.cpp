@@ -2,8 +2,8 @@
 // uses for ring columns of chunks that are not generated yet. It must give exactly what
 // CaveCarver::scanColumn reads from the generated chunk, or carving would differ on either
 // side of a chunk border depending on which chunk was generated first.
-#include "world/Block.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/WorldGen.hpp"
 #include "worldgen/CaveCarver.hpp"
 

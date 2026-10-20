@@ -2,7 +2,7 @@
 
 #include "core/Types.hpp"
 #include "gameplay/ItemStack.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <cstdint>
 #include <limits>

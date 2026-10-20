@@ -1,6 +1,6 @@
 // P2.6 — Item id scheme shared with the tools/combat module (P2.5).
 #include "crafting/ItemIds.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <gtest/gtest.h>
 

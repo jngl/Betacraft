@@ -1,6 +1,6 @@
 #include "world/Weather.hpp"
 
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 #include "world/World.hpp"
 
 #include <algorithm>
@@ -38,7 +38,7 @@ void tickTimer(bool& flag, int32_t& time, int32_t activeMin, int32_t activeRange
 
 } // namespace
 
-void tickWeather(WeatherState& state, gameplay::SplitMix64& rng) {
+void tickWeather(storage::WeatherState& state, gameplay::SplitMix64& rng) {
     tickTimer(state.thundering, state.thunderTime, kThunderMinTicks, kThunderRangeTicks, rng);
     tickTimer(state.raining, state.rainTime, kRainMinTicks, kRainRangeTicks, rng);
     state.prevRainStrength = state.rainStrength;
@@ -48,7 +48,7 @@ void tickWeather(WeatherState& state, gameplay::SplitMix64& rng) {
     state.thunderStrength = ramp(state.thunderStrength, state.thundering && state.raining);
 }
 
-void cycleWeather(WeatherState& state, gameplay::SplitMix64& rng) {
+void cycleWeather(storage::WeatherState& state, gameplay::SplitMix64& rng) {
     if (!state.raining) {
         state.raining = true;
         state.thundering = false;
@@ -71,23 +71,23 @@ Precipitation precipitationAt(BiomeId biome) noexcept {
     }
 }
 
-float rainStrengthAt(const WeatherState& state, float partialTick) noexcept {
+float rainStrengthAt(const storage::WeatherState& state, float partialTick) noexcept {
     return std::clamp(glm::mix(state.prevRainStrength, state.rainStrength, std::clamp(partialTick, 0.0f, 1.0f)), 0.0f,
                       1.0f);
 }
 
-float thunderStrengthAt(const WeatherState& state, float partialTick) noexcept {
+float thunderStrengthAt(const storage::WeatherState& state, float partialTick) noexcept {
     // Beta getWeightedThunderStrength: the thunder strength scaled by the rain strength.
     const float t = std::clamp(partialTick, 0.0f, 1.0f);
     return std::clamp(glm::mix(state.prevThunderStrength, state.thunderStrength, t), 0.0f, 1.0f) *
            rainStrengthAt(state, t);
 }
 
-bool isRaining(const WeatherState& state) noexcept {
+bool isRaining(const storage::WeatherState& state) noexcept {
     return state.rainStrength > kRainingThreshold;
 }
 
-bool isThundering(const WeatherState& state) noexcept {
+bool isThundering(const storage::WeatherState& state) noexcept {
     return state.thunderStrength * state.rainStrength > kThunderingThreshold;
 }
 
@@ -112,7 +112,7 @@ int32_t precipitationHeight(const World& world, int32_t x, int32_t z) noexcept {
     return 0;
 }
 
-bool isRainingAt(const World& world, const WeatherState& state, const glm::vec3& pos) noexcept {
+bool isRainingAt(const World& world, const storage::WeatherState& state, const glm::vec3& pos) noexcept {
     if (!isRaining(state)) {
         return false;
     }
@@ -125,7 +125,7 @@ bool isRainingAt(const World& world, const WeatherState& state, const glm::vec3&
     return y >= precipitationHeight(world, x, z);
 }
 
-bool rollLightning(const WeatherState& state, size_t loadedChunks, gameplay::SplitMix64& rng) noexcept {
+bool rollLightning(const storage::WeatherState& state, size_t loadedChunks, gameplay::SplitMix64& rng) noexcept {
     if (!isThundering(state)) {
         return false;
     }

@@ -5,7 +5,7 @@
 #include "game/MobBehaviour.hpp"
 #include "gameplay/MeleeCombat.hpp"
 #include "physics/Raycaster.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 #include "world/World.hpp"
 
 #include <cmath>

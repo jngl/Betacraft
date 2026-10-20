@@ -3,10 +3,10 @@
 #include "tests/test_helpers.hpp"
 
 #include "fluids/FluidState.hpp"
-#include "world/Chunk.hpp"
-#include "world/PalettedSection.hpp"
+#include "storage/WorldStorage.hpp"
+#include "voxel/Chunk.hpp"
+#include "voxel/PalettedSection.hpp"
 #include "world/World.hpp"
-#include "world/WorldStorage.hpp"
 
 #include <gtest/gtest.h>
 
@@ -301,7 +301,7 @@ TEST_F(P2FoundationsMetadata, FluidLevelsSurviveWorldSaveAndReload) {
         world::World w(173173ULL, dir.path());
         w.ensureChunkLoaded({0, 0});
         ASSERT_TRUE(w.setBlockWithMetadata(3, kPocketY, 3, BlockId::Water, nibble));
-        w.saveModifiedChunks(world::WorldLevelData{});
+        w.saveModifiedChunks(storage::WorldLevelData{});
     }
     {
         world::World w(173173ULL, dir.path());
@@ -317,9 +317,9 @@ TEST_F(P2FoundationsMetadata, OnlyAMetadataEditStillGetsSaved) {
         world::World w(173173ULL, dir.path());
         w.ensureChunkLoaded({0, 0});
         ASSERT_TRUE(w.setBlock(3, kPocketY, 3, BlockId::Water));
-        w.saveModifiedChunks(world::WorldLevelData{});
+        w.saveModifiedChunks(storage::WorldLevelData{});
         ASSERT_TRUE(w.setMetadata(3, kPocketY, 3, 0x0A));
-        w.saveModifiedChunks(world::WorldLevelData{});
+        w.saveModifiedChunks(storage::WorldLevelData{});
     }
     world::World w(173173ULL, dir.path());
     w.ensureChunkLoaded({0, 0});

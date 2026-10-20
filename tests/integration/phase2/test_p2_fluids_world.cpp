@@ -265,7 +265,7 @@ TEST(P2FluidsStreaming, WaterSavedMidFlowResumesAfterReload) {
         for (int32_t i = 0; i < kWaterTicks * 2; ++i) (void)w.tick();
         ASSERT_EQ(w.getFluid({10, kY, 8}), FluidState::fromBetaDecay(FluidType::Water, 2));
         ASSERT_TRUE(w.getFluid({11, kY, 8}).isEmpty());
-        w.saveModifiedChunks(world::WorldLevelData{});
+        w.saveModifiedChunks(storage::WorldLevelData{});
     }
     world::World w(test::p2worldgen::kSeed, dir.path());
     test::p2worldgen::loadAll(w, region);

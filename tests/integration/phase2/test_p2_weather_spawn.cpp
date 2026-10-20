@@ -20,8 +20,8 @@
 #include "gameplay/SplitMix64.hpp"
 #include "physics/Player.hpp"
 #include "render/WeatherRenderer.hpp"
-#include "world/Block.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/Weather.hpp"
 #include "world/World.hpp"
 
@@ -43,8 +43,8 @@ constexpr int32_t kGroundY = 63; // grass layer; feet stand at kGroundY + 1
 constexpr int32_t kRadius = 4;   // 9 x 9 loaded chunks
 constexpr float kNoon = 0.25f;
 
-[[nodiscard]] world::WeatherState fullStorm() {
-    return world::WeatherState{.raining = true,
+[[nodiscard]] storage::WeatherState fullStorm() {
+    return storage::WeatherState{.raining = true,
                                .thundering = true,
                                .rainTime = 100000,
                                .thunderTime = 100000,
@@ -54,8 +54,8 @@ constexpr float kNoon = 0.25f;
                                .prevThunderStrength = 1.0f};
 }
 
-[[nodiscard]] world::WeatherState fullRain() {
-    world::WeatherState w = fullStorm();
+[[nodiscard]] storage::WeatherState fullRain() {
+    storage::WeatherState w = fullStorm();
     w.thundering = false;
     w.thunderStrength = 0.0f;
     w.prevThunderStrength = 0.0f;
@@ -145,13 +145,13 @@ protected:
 
     game::EntitySimulation m_session{99ULL};
     physics::Player m_player;
-    world::WeatherState m_weather{}; // What the WorldSession would hand to each tick
+    storage::WeatherState m_weather{}; // What the WorldSession would hand to each tick
 };
 
 } // namespace
 
 TEST_F(P2WeatherWorld, ThunderAllowsDaytimeHostiles) {
-    const auto runSpawner = [&](const world::WeatherState& weather, int32_t ticks) {
+    const auto runSpawner = [&](const storage::WeatherState& weather, int32_t ticks) {
         ecs::Registry reg;
         ecs::CommandBuffer commands;
         game::MobSpawner spawner;
@@ -172,7 +172,7 @@ TEST_F(P2WeatherWorld, ThunderAllowsDaytimeHostiles) {
     };
 
     // Clear or merely rainy noon: no hostile on the sunlit surface.
-    EXPECT_EQ(runSpawner(world::WeatherState{}, 2000).first, 0);
+    EXPECT_EQ(runSpawner(storage::WeatherState{}, 2000).first, 0);
     EXPECT_EQ(runSpawner(fullRain(), 2000).first, 0);
     // A thunderstorm: hostiles appear in broad daylight.
     const auto [stormHostiles, seen] = runSpawner(fullStorm(), 2000);
@@ -198,7 +198,7 @@ TEST_F(P2WeatherSession, RainStopsZombieBurning) {
     EXPECT_EQ(m_session.entities().get<ecs::HealthComp>(wet).current, gameplay::mobDef(MobKind::Zombie).maxHealth);
 
     // The rain stops: the sun burns them again.
-    m_weather = world::WeatherState{};
+    m_weather = storage::WeatherState{};
     EXPECT_TRUE(burnsWithin(wet, 600));
 }
 

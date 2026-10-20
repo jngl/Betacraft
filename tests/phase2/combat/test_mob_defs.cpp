@@ -2,7 +2,7 @@
 // and death drops of the pig, the sheep and the zombie; S6.1 skeleton, spider, creeper, cow.
 #include "gameplay/ItemIds.hpp"
 #include "gameplay/MobDefs.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <gtest/gtest.h>
 

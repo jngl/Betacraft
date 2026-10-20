@@ -12,7 +12,7 @@
 #include "game/ItemUse.hpp"
 #include "gameplay/Crops.hpp"
 #include "gameplay/ItemIds.hpp"
-#include "world/BlockShapes.hpp"
+#include "voxel/BlockShapes.hpp"
 #include "world/BlockTicks.hpp"
 
 using namespace betacraft;

@@ -89,7 +89,8 @@ Data Flow:
 ## Code Layout
 - `src/core/`: Engine configuration, math types, input types.
 - `src/physics/`: Player physics, bounding boxes, fixed timestep integration.
-- `src/world/`: `PalettedSection.hpp/cpp`, `Chunk.hpp/cpp`, `World.hpp/cpp`, `DifferentialLightingEngine.hpp/cpp`.
+- `src/voxel/`: block and chunk data, depending only on `core`: `Block`, `BlockShapes.hpp`, `BlockEntity.hpp`, `BlockEntityStore`, `PalettedSection`, `Chunk`, `ScheduledTicks`, `SectionCoord.hpp`.
+- `src/world/`: the orchestrator above `worldgen`, `storage`, `fluids`, `redstone` and `gameplay`: `World`, `WorldGen`, `BlockTicks`, `Weather`, `DifferentialLightingEngine`, `ChunkGenPipeline`.
 - `src/render/`: `PackedChunkVertex.hpp/cpp`, `ChunkMesher.hpp/cpp`, `WorldRenderer.hpp/cpp`, `TextRenderer.hpp/cpp`, `GLHeaders.hpp/cpp`.
 - `src/audio/`: `MpscRingBuffer.hpp`, `AudioEngine.hpp/cpp`.
 - `src/ui/`: `ScreenState.hpp`, `TitleScreen.hpp/cpp`, `OptionsMenu.hpp/cpp`, `InputManager.hpp/cpp`.
@@ -208,7 +209,7 @@ Phase 2 Data Flow:
 - `AcousticsController::update(now, listener, query)`, `acousticsAt(source, ...) -> std::optional<audio::VoiceAcoustics>` (`occlusionGain`, `lpfCutoffHz`, `reverbSend`), `reset()`. World-backed queries run on the game thread only.
 
 ## Phase 2 Code Layout
-- `src/streaming/`: `AsyncChunkPipeline`, `ChunkLifecycle.hpp`, `PingPongStaging.hpp`, `UploadBudget.hpp`, `SectionCoord.hpp`, `SectionNeighborhoodSnapshot18`, `SnapshotMesher`, `WorldMeshStreamer`.
+- `src/streaming/`: `AsyncChunkPipeline`, `ChunkLifecycle.hpp`, `PingPongStaging.hpp`, `UploadBudget.hpp`, `SectionNeighborhoodSnapshot18`, `SnapshotMesher`, `WorldMeshStreamer`.
 - `src/ecs/`: `Entity.hpp`, `SparseSet`, `ComponentPool.hpp`, `Registry`, `View.hpp`, `Group`, `CommandBuffer.hpp`, `Components.hpp`, `Systems`.
 - `src/gameplay/`: `ItemIds.hpp`, `ItemStack`, `ToolDefinitions`, `Harvesting`, `Combat`, `MeleeCombat`, `Knockback`, `Health`, `Survival`, `DeathDrops`, `SplitMix64.hpp`.
 - `src/crafting/`: `ItemIds.hpp`, `Ingredient.hpp`, `RecipeTypes.hpp`, `CraftingGrid`, `ShapedRecipe`, `ShapelessRecipe`, `RecipeRegistry`, `BetaRecipes`.

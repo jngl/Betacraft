@@ -1,4 +1,4 @@
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 namespace betacraft::world {
 

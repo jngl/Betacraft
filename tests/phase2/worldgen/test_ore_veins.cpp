@@ -1,8 +1,8 @@
 // S6.9: Beta 1.7.3 ore veins (WorldGenMinable) traced chunk by chunk from the 9-chunk
 // neighbourhood: order independence, seamless borders, Beta's y ranges and frequencies, and
 // ore only ever replacing stone.
-#include "world/Block.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/Chunk.hpp"
 #include "worldgen/OreVeins.hpp"
 
 #include <gtest/gtest.h>

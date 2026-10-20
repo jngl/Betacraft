@@ -1,7 +1,7 @@
 #pragma once
 
-#include "world/Block.hpp"
-#include "world/BlockShapes.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/BlockShapes.hpp"
 #include <glm/glm.hpp>
 
 namespace betacraft::math {

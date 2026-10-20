@@ -5,7 +5,7 @@
 #include "gameplay/SplitMix64.hpp"
 #include "physics/Player.hpp"
 #include "physics/Raycaster.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <cstdint>
 #include <optional>

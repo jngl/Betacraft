@@ -8,7 +8,7 @@
 #include "game/ItemUse.hpp"
 #include "gameplay/ItemIds.hpp"
 #include "redstone/RedstoneEngine.hpp"
-#include "world/BlockShapes.hpp"
+#include "voxel/BlockShapes.hpp"
 
 #include <gtest/gtest.h>
 
@@ -154,7 +154,7 @@ TEST_F(P2RedstoneWorld, StatePersistsAcrossSaveReload) {
     ASSERT_TRUE(m_world->toggleLever(kLever));
     worldTicks(4);
     ASSERT_TRUE(doorOpen(kDoor));
-    m_world->saveModifiedChunks(world::WorldLevelData{});
+    m_world->saveModifiedChunks(storage::WorldLevelData{});
     m_world.reset();
 
     m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
@@ -194,7 +194,7 @@ TEST_F(P2RedstoneWorld, ChunkReloadReschedulesTorches) {
     // updates are not saved.
     ASSERT_TRUE(m_world->toggleLever(lever));
     ASSERT_TRUE(m_world->pressButton(button));
-    m_world->saveModifiedChunks(world::WorldLevelData{});
+    m_world->saveModifiedChunks(storage::WorldLevelData{});
     m_world.reset();
 
     m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());

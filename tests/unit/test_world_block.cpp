@@ -1,4 +1,4 @@
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

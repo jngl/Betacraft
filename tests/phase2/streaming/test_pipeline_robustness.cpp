@@ -20,7 +20,6 @@ using namespace std::chrono_literals;
 using betacraft::streaming::AsyncChunkPipeline;
 using betacraft::streaming::ChunkMeshResult;
 using betacraft::streaming::PipelineConfig;
-using betacraft::streaming::SectionCoord;
 using betacraft::streaming::SubmitResult;
 using betacraft::streaming::TaskPriority;
 using betacraft::streaming::test::drainAll;
@@ -29,6 +28,7 @@ using betacraft::streaming::test::kGenerousTimeout;
 using betacraft::streaming::test::RecordingMesher;
 using betacraft::streaming::test::stoneCube;
 using betacraft::streaming::test::threadedConfig;
+using betacraft::voxel::SectionCoord;
 
 namespace {
 

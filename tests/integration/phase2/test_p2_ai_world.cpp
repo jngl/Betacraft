@@ -5,7 +5,7 @@
 
 #include "ai/WorldNavQuery.hpp"
 #include "ecs/Systems.hpp"
-#include "world/BlockShapes.hpp"
+#include "voxel/BlockShapes.hpp"
 
 #include <gtest/gtest.h>
 

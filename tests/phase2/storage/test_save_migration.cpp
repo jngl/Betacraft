@@ -5,8 +5,8 @@
 #include "storage/LegacyChunkStore.hpp"
 #include "storage/RegionChunkStore.hpp"
 #include "storage/SaveMigration.hpp"
+#include "storage/WorldStorage.hpp"
 #include "tests/test_helpers.hpp"
-#include "world/WorldStorage.hpp"
 
 #include <gtest/gtest.h>
 
@@ -102,7 +102,7 @@ TEST(SaveMigration, MigratesChkDecAndBlockEntities) {
     EXPECT_FALSE(std::filesystem::exists(save / "chunks"));
 
     // WorldStorage reads them back from the regions.
-    const world::WorldStorage storage(save);
+    const storage::WorldStorage storage(save);
     const auto entities = storage.loadBlockEntities({0, 0});
     EXPECT_EQ(entities.size(), 2U) << "chest and furnace";
 }
@@ -179,12 +179,12 @@ TEST(SaveMigration, LegacyDirRenamedAndStorageFormatWrittenLast) {
     const std::string updated = test::storage::readText(save / "level.dat");
     EXPECT_EQ(updated, original + "storage_format 2\n") << "every other key kept as it was";
     EXPECT_EQ(test::storage::readText(save / "level.dat_old"), original);
-    world::WorldLevelData level;
-    ASSERT_EQ(world::decodeLevelData(updated, level), world::LevelLoadStatus::Ok);
-    EXPECT_EQ(level.storageFormat, world::kRegionStorageFormat);
+    storage::WorldLevelData level;
+    ASSERT_EQ(storage::decodeLevelData(updated, level), storage::LevelLoadStatus::Ok);
+    EXPECT_EQ(level.storageFormat, storage::kRegionStorageFormat);
     EXPECT_EQ(level.seed, 173173173ULL);
     ASSERT_TRUE(level.player.has_value());
-    EXPECT_EQ(level.player->inventory[0], (world::SavedStack{274, 1, 17}));
+    EXPECT_EQ(level.player->inventory[0], (storage::SavedStack{274, 1, 17}));
 
     // A level.dat from a newer engine refuses the migration and nothing changes.
     test::TempDir other("betacraft_migration_");
@@ -213,9 +213,9 @@ TEST(SaveMigration, IdempotentSecondRun) {
     EXPECT_FALSE(std::filesystem::exists(save / "chunks.migrated.1"));
 
     // The facade sees nothing left to do either.
-    world::WorldStorage storage(save);
-    EXPECT_FALSE(storage.needsMigration(world::kLegacyStorageFormat));
-    EXPECT_EQ(storage.storageFormat(), world::kRegionStorageFormat);
+    storage::WorldStorage storage(save);
+    EXPECT_FALSE(storage.needsMigration(storage::kLegacyStorageFormat));
+    EXPECT_EQ(storage.storageFormat(), storage::kRegionStorageFormat);
 
     // A V1 level.dat is migrated too but not rewritten (the game writes V2 on its next save).
     test::TempDir v1dir("betacraft_migration_");

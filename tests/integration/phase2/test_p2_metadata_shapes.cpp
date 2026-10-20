@@ -13,7 +13,7 @@
 #include "render/ChunkMesher.hpp"
 #include "streaming/SectionNeighborhoodSnapshot18.hpp"
 #include "streaming/SnapshotMesher.hpp"
-#include "world/BlockShapes.hpp"
+#include "voxel/BlockShapes.hpp"
 
 #include <glm/glm.hpp>
 

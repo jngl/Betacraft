@@ -2,7 +2,7 @@
 
 #include "gameplay/MobDefs.hpp"
 #include "gameplay/SplitMix64.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 #include <cstddef>
 #include <cstdint>

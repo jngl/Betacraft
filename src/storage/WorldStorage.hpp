@@ -4,9 +4,9 @@
 #include "core/Types.hpp"
 #include "storage/ChunkBundleCodec.hpp"
 #include "storage/SaveMigration.hpp"
-#include "world/BlockEntityStore.hpp"
-#include "world/Chunk.hpp"
-#include "world/Weather.hpp"
+#include "storage/WeatherState.hpp"
+#include "voxel/BlockEntityStore.hpp"
+#include "voxel/Chunk.hpp"
 #include "worldgen/FeaturePlanCodec.hpp"
 
 #include <array>
@@ -21,16 +21,13 @@
 #include <string_view>
 
 namespace betacraft::storage {
+
 class LegacyChunkStore;
 class RegionChunkStore;
-}
-
-namespace betacraft::world {
 
 // Save format versions (roadmap conventions §1): a reader accepts any version up to its own
 // and refuses newer ones without overwriting them.
 inline constexpr uint32_t kLevelFormatVersion = 2;
-inline constexpr uint32_t kBlockEntityFormatVersion = 1;
 // level.dat `items_scheme` (conventions §1.6): 1 = legacy ids 100..105 for stick, coal and
 // four pickaxes; 2 (S2.10, always written) = Beta item numbers only. A file without the key
 // is scheme 1; the loaders fold the legacy ids whatever the scheme.
@@ -102,7 +99,7 @@ enum class LevelLoadStatus : uint8_t {
 [[nodiscard]] LevelLoadStatus decodeLevelData(std::string_view text, WorldLevelData& out);
 
 // The save directory: level.dat plus the chunk stores (S7.3 facade). Chunks are written as
-// one storage::ChunkBundle per chunk into region files (region/r.X.Z.bcr); reads look in the
+// one ChunkBundle per chunk into region files (region/r.X.Z.bcr); reads look in the
 // regions first, then in the legacy chunks/ files of a save not migrated yet (read-only), so
 // an old save loads losslessly with or without migration. With region storage disabled
 // (FeatureFlags::regionStorage, --no-region-storage) and no region/ directory yet, the legacy
@@ -135,7 +132,7 @@ public:
     [[nodiscard]] bool needsMigration(uint32_t levelStorageFormat) const;
     // Runs storage::migrateLegacyChunks on this save (regions are closed first). Refused
     // (report not completed) for a read-only session.
-    storage::MigrationReport migrateLegacyChunks(const std::function<void(float)>& progress);
+    MigrationReport migrateLegacyChunks(const std::function<void(float)>& progress);
 
     // Always writes V2, atomically: level.dat.tmp, then the old file becomes level.dat_old
     // and the .tmp is renamed over level.dat. A V1 file is first copied once to
@@ -148,11 +145,11 @@ public:
     // S7.3 one chunk's bundle (region first, then legacy files). A region entry that cannot be
     // read or decoded is quarantined (outside read-only sessions) and the legacy files are
     // tried next. `blocks` is empty when only side records were saved for the coordinate.
-    [[nodiscard]] std::optional<storage::ChunkBundle> loadChunkBundle(core::ChunkCoord coord) const;
+    [[nodiscard]] std::optional<ChunkBundle> loadChunkBundle(core::ChunkCoord coord) const;
     // One atomic write of the whole chunk (not durable until flush()).
-    [[nodiscard]] bool saveChunkBundle(core::ChunkCoord coord, const storage::ChunkBundle& bundle);
-    [[nodiscard]] std::vector<uint8_t> encodeChunkBundle(const storage::ChunkBundle& bundle) const {
-        return storage::encodeBundle(bundle);
+    [[nodiscard]] bool saveChunkBundle(core::ChunkCoord coord, const ChunkBundle& bundle);
+    [[nodiscard]] std::vector<uint8_t> encodeChunkBundle(const ChunkBundle& bundle) const {
+        return encodeBundle(bundle);
     }
     // S7.6 the same two operations on encoded bundles, for the I/O worker thread (safe against
     // the main thread's own loads and saves of other chunks). Reading a legacy chunk re-encodes
@@ -164,8 +161,8 @@ public:
     // §1.5) so the regenerated chunk does not overwrite them. Nothing happens when read-only.
     void quarantineChunk(core::ChunkCoord coord) const;
     // The bundle's block entities; an unreadable record is quarantined like a .be was.
-    [[nodiscard]] std::vector<BlockEntityEntry> decodeBundleBlockEntities(core::ChunkCoord coord,
-                                                                         const storage::ChunkBundle& bundle) const;
+    [[nodiscard]] std::vector<world::BlockEntityEntry> decodeBundleBlockEntities(core::ChunkCoord coord,
+                                                                                const ChunkBundle& bundle) const;
     // Makes every region write durable (data fsynced, then headers).
     bool flush() const;
     // Flushes and closes the open region files.
@@ -175,10 +172,10 @@ public:
 
     // Pre-Sprint 7 entry points, kept as wrappers over the bundle of the chunk: each one
     // reads the current bundle, replaces its part and writes it back (durably).
-    [[nodiscard]] bool saveChunk(const Chunk& chunk) const;
+    [[nodiscard]] bool saveChunk(const world::Chunk& chunk) const;
     // False when there is no chunk. An unreadable one is quarantined with a warning
     // (.chk.corrupt for a legacy file) so the regenerated chunk does not silently overwrite it.
-    [[nodiscard]] bool loadChunk(Chunk& chunk) const;
+    [[nodiscard]] bool loadChunk(world::Chunk& chunk) const;
 
     // P3.4 decoration record kept with the chunk. Saves predating it have none.
     [[nodiscard]] bool saveDecorationRecord(core::ChunkCoord coord, const worldgen::DecorationRecord& record) const;
@@ -186,9 +183,9 @@ public:
 
     // S2.4 block entities (furnaces, chests) kept with the chunk; legacy files are written
     // atomically (.be.tmp renamed over .be). No entities: none stored. Saves predating it have none.
-    [[nodiscard]] bool saveBlockEntities(core::ChunkCoord coord, std::span<const BlockEntityEntry> entries) const;
+    [[nodiscard]] bool saveBlockEntities(core::ChunkCoord coord, std::span<const world::BlockEntityEntry> entries) const;
     // Empty when there are none; an unreadable record is ignored with a warning.
-    [[nodiscard]] std::vector<BlockEntityEntry> loadBlockEntities(core::ChunkCoord coord) const;
+    [[nodiscard]] std::vector<world::BlockEntityEntry> loadBlockEntities(core::ChunkCoord coord) const;
 
     [[nodiscard]] const std::filesystem::path& directory() const noexcept { return m_saveDir; }
 
@@ -198,15 +195,15 @@ private:
     template <typename Edit>
     [[nodiscard]] bool editBundle(core::ChunkCoord coord, Edit&& edit) const;
     // Pre-Sprint 7 writers (region storage disabled).
-    [[nodiscard]] bool saveLegacyChunk(const Chunk& chunk) const;
+    [[nodiscard]] bool saveLegacyChunk(const world::Chunk& chunk) const;
     [[nodiscard]] bool saveLegacyDecoration(core::ChunkCoord coord, const worldgen::DecorationRecord& record) const;
     [[nodiscard]] bool saveLegacyBlockEntities(core::ChunkCoord coord, std::span<const uint8_t> encoded) const;
 
     std::filesystem::path m_saveDir;
     bool m_readOnly{false};
     bool m_regionWrites{true};
-    std::unique_ptr<storage::RegionChunkStore> m_regions;
-    std::unique_ptr<storage::LegacyChunkStore> m_legacy;
+    std::unique_ptr<RegionChunkStore> m_regions;
+    std::unique_ptr<LegacyChunkStore> m_legacy;
 };
 
-} // namespace betacraft::world
+} // namespace betacraft::storage

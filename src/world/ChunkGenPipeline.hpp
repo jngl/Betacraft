@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/Types.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/WorldGen.hpp"
 
 #include <chrono>
@@ -18,7 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace betacraft::streaming {
+namespace betacraft::world {
 
 // Half the logical cores (meshing and the main thread keep the rest), never fewer than one.
 [[nodiscard]] inline size_t defaultGenWorkerCount() noexcept {
@@ -138,4 +138,4 @@ private:
     std::vector<std::jthread> m_workers; // Last member: threads die before the state they use
 };
 
-} // namespace betacraft::streaming
+} // namespace betacraft::world

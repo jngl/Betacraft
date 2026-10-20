@@ -1,8 +1,8 @@
 #include "render/WeatherRenderer.hpp"
 
 #include "core/Logger.hpp"
-#include "world/Block.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/Chunk.hpp"
 #include "world/Weather.hpp"
 #include "world/World.hpp"
 

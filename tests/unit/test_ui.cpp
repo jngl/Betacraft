@@ -1,7 +1,8 @@
-#include "physics/Player.hpp"
 #include "audio/AudioEngine.hpp"
-#include "tests/test_helpers.hpp"
+#include "physics/Player.hpp"
 #include "render/BitmapFont.hpp"
+#include "storage/WorldStorage.hpp"
+#include "tests/test_helpers.hpp"
 #include "ui/CraftingSystem.hpp"
 #include "ui/CreateWorldScreen.hpp"
 #include "ui/DeathScreen.hpp"
@@ -10,8 +11,7 @@
 #include "ui/TextField.hpp"
 #include "ui/TitleScreen.hpp"
 #include "ui/WorldSelectScreen.hpp"
-#include "world/Block.hpp"
-#include "world/WorldStorage.hpp"
+#include "voxel/Block.hpp"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -317,21 +317,21 @@ TEST(CreateWorldTest, ScreenProducesNewWorldParams) {
 // still to migrate, skips what is not a world and lists the most recent first.
 TEST(WorldSelectTest, ListWorldsReadsSummariesAndMigrationFlag) {
     test::TempDir root;
-    const auto writeLevel = [](const std::filesystem::path& dir, const world::WorldLevelData& data) {
+    const auto writeLevel = [](const std::filesystem::path& dir, const storage::WorldLevelData& data) {
         std::filesystem::create_directories(dir);
-        std::ofstream(dir / "level.dat", std::ios::binary) << world::encodeLevelData(data);
+        std::ofstream(dir / "level.dat", std::ios::binary) << storage::encodeLevelData(data);
     };
-    world::WorldLevelData legacy{};
+    storage::WorldLevelData legacy{};
     legacy.seed = 42;
     legacy.player.emplace();
     legacy.player->mode = core::GameMode::Creative;
     writeLevel(root.path() / "old", legacy);
     std::filesystem::create_directories(root.path() / "old" / "chunks");
 
-    world::WorldLevelData migrated{};
+    storage::WorldLevelData migrated{};
     migrated.seed = 7;
     migrated.name = "My Base: v2";
-    migrated.storageFormat = world::kRegionStorageFormat;
+    migrated.storageFormat = storage::kRegionStorageFormat;
     migrated.player.emplace();
     writeLevel(root.path() / "new", migrated);
     std::filesystem::create_directories(root.path() / "new" / "region");
@@ -354,10 +354,10 @@ TEST(WorldSelectTest, ListWorldsReadsSummariesAndMigrationFlag) {
     EXPECT_EQ(worlds[0].seed, 7U);
     EXPECT_EQ(worlds[0].mode, core::GameMode::Survival);
     EXPECT_FALSE(worlds[0].needsMigration);
-    EXPECT_EQ(worlds[0].status, world::LevelLoadStatus::Ok);
+    EXPECT_EQ(worlds[0].status, storage::LevelLoadStatus::Ok);
 
     EXPECT_EQ(worlds[1].path, root.path() / "toonew");
-    EXPECT_EQ(worlds[1].status, world::LevelLoadStatus::TooNew);
+    EXPECT_EQ(worlds[1].status, storage::LevelLoadStatus::TooNew);
     EXPECT_FALSE(worlds[1].needsMigration);
 
     EXPECT_EQ(worlds[2].name, "old") << "no name key: the folder name";
@@ -391,11 +391,11 @@ TEST(WorldSelectTest, ListWorldsReadsSummariesAndMigrationFlag) {
 
 // S7.8: level.dat keeps the world's display name (key "name", spaces included).
 TEST(WorldSelectTest, LevelDatNameRoundTrips) {
-    world::WorldLevelData data{};
+    storage::WorldLevelData data{};
     data.name = "Two  words: ok";
-    world::WorldLevelData read{};
-    ASSERT_EQ(world::decodeLevelData(world::encodeLevelData(data), read), world::LevelLoadStatus::Ok);
+    storage::WorldLevelData read{};
+    ASSERT_EQ(storage::decodeLevelData(storage::encodeLevelData(data), read), storage::LevelLoadStatus::Ok);
     EXPECT_EQ(read.name, "Two  words: ok");
-    EXPECT_EQ(world::encodeLevelData(world::WorldLevelData{}).find("name"), std::string::npos)
+    EXPECT_EQ(storage::encodeLevelData(storage::WorldLevelData{}).find("name"), std::string::npos)
         << "no key for an unnamed world";
 }

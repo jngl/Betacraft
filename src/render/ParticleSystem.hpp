@@ -2,7 +2,7 @@
 
 #include "core/Types.hpp"
 #include "render/ChunkMesher.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 #include "world/World.hpp"
 
 #include <glm/glm.hpp>

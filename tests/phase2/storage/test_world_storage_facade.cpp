@@ -4,15 +4,15 @@
 #include "StorageTestHelpers.hpp"
 #include "storage/RegionChunkStore.hpp"
 #include "storage/RegionFile.hpp"
+#include "storage/WorldStorage.hpp"
 #include "tests/test_helpers.hpp"
-#include "world/WorldStorage.hpp"
 
 #include <gtest/gtest.h>
 
 using namespace betacraft;
 using world::BlockId;
 using world::Chunk;
-using world::WorldStorage;
+using storage::WorldStorage;
 
 namespace {
 
@@ -41,12 +41,12 @@ TEST(WorldStorageFacade, WrappersShareOneBundle) {
     chest.slots[1] = {265, 5, 0};
     const std::vector<world::BlockEntityEntry> entities{{core::BlockPos{-33 * 16 + 1, 50, 70 * 16 + 1}, chest}};
     {
-        const WorldStorage storage(dir.path());
+        const storage::WorldStorage storage(dir.path());
         ASSERT_TRUE(storage.saveChunk(sampleChunk(c)));
         ASSERT_TRUE(storage.saveDecorationRecord(c, worldgen::DecorationRecord{false, {}}));
         ASSERT_TRUE(storage.saveBlockEntities(c, entities));
         // Durable at once, as the separate files were: another reader sees all three now.
-        const WorldStorage reader(dir.path());
+        const storage::WorldStorage reader(dir.path());
         Chunk loaded(c);
         EXPECT_TRUE(reader.loadChunk(loaded));
         EXPECT_EQ(loaded.getBlock(2, 40, 3), BlockId::Obsidian);
@@ -54,7 +54,7 @@ TEST(WorldStorageFacade, WrappersShareOneBundle) {
     EXPECT_TRUE(std::filesystem::exists(dir.path() / "region" / "r.-2.2.bcr"));
     EXPECT_FALSE(std::filesystem::exists(dir.path() / "chunks"));
 
-    const WorldStorage storage(dir.path());
+    const storage::WorldStorage storage(dir.path());
     const auto bundle = storage.loadChunkBundle(c);
     ASSERT_TRUE(bundle.has_value());
     EXPECT_FALSE(bundle->blocks.empty());
@@ -77,14 +77,14 @@ TEST(WorldStorageFacade, CorruptRegionEntryQuarantinedThenLegacyRead) {
     test::TempDir dir("betacraft_facade_");
     const core::ChunkCoord c{1, 2};
     {
-        WorldStorage storage(dir.path());
+        storage::WorldStorage storage(dir.path());
         ASSERT_TRUE(storage.saveChunk(sampleChunk(c)));
         // An older copy still in chunks/ (save not migrated yet).
         storage.setRegionStorageEnabled(false);
         EXPECT_TRUE(storage.isRegionStorageActive()) << "region/ exists: never back to legacy writes";
     }
     {
-        WorldStorage legacyWriter(dir.path() / "legacy_only");
+        storage::WorldStorage legacyWriter(dir.path() / "legacy_only");
         legacyWriter.setRegionStorageEnabled(false);
         ASSERT_FALSE(legacyWriter.isRegionStorageActive());
         Chunk older = sampleChunk(c);
@@ -97,7 +97,7 @@ TEST(WorldStorageFacade, CorruptRegionEntryQuarantinedThenLegacyRead) {
     }
     breakRegionEntry(dir.path(), c);
 
-    const WorldStorage storage(dir.path());
+    const storage::WorldStorage storage(dir.path());
     Chunk loaded(c);
     ASSERT_TRUE(storage.loadChunk(loaded)) << "falls back to the legacy copy";
     EXPECT_EQ(loaded.getBlock(5, 5, 5), BlockId::Glass);
@@ -116,7 +116,7 @@ TEST(WorldStorageFacade, ReadOnlyFacadeNeverTouchesRegions) {
     const core::ChunkCoord good{0, 0};
     const core::ChunkCoord bad{3, 0};
     {
-        const WorldStorage storage(dir.path());
+        const storage::WorldStorage storage(dir.path());
         ASSERT_TRUE(storage.saveChunk(sampleChunk(good)));
         ASSERT_TRUE(storage.saveChunk(sampleChunk(bad)));
     }
@@ -124,7 +124,7 @@ TEST(WorldStorageFacade, ReadOnlyFacadeNeverTouchesRegions) {
     const auto regionPath = dir.path() / "region" / "r.0.0.bcr";
     const auto before = test::storage::readBytes(regionPath);
 
-    WorldStorage storage(dir.path());
+    storage::WorldStorage storage(dir.path());
     storage.setReadOnly(true);
     Chunk ok(good);
     EXPECT_TRUE(storage.loadChunk(ok));
@@ -140,18 +140,18 @@ TEST(WorldStorageFacade, ReadOnlyFacadeNeverTouchesRegions) {
     EXPECT_EQ(test::storage::readBytes(regionPath), before);
     EXPECT_FALSE(std::filesystem::exists(dir.path() / "region" / "quarantine"));
     EXPECT_FALSE(std::filesystem::exists(dir.path() / "region" / "r.1.1.bcr"));
-    EXPECT_FALSE(storage.needsMigration(world::kLegacyStorageFormat));
+    EXPECT_FALSE(storage.needsMigration(storage::kLegacyStorageFormat));
     EXPECT_FALSE(storage.migrateLegacyChunks({}).completed);
 }
 
 TEST(WorldStorageFacade, StorageFormatKeyRoundTrips) {
-    world::WorldLevelData data{};
-    EXPECT_EQ(world::encodeLevelData(data).find("storage_format"), std::string::npos)
+    storage::WorldLevelData data{};
+    EXPECT_EQ(storage::encodeLevelData(data).find("storage_format"), std::string::npos)
         << "format 1 is the absence of the key";
-    data.storageFormat = world::kRegionStorageFormat;
-    world::WorldLevelData out{};
-    ASSERT_EQ(world::decodeLevelData(world::encodeLevelData(data), out), world::LevelLoadStatus::Ok);
-    EXPECT_EQ(out.storageFormat, world::kRegionStorageFormat);
-    ASSERT_EQ(world::decodeLevelData("BETACRAFT_LEVEL_V2\nseed 5\n", out), world::LevelLoadStatus::Ok);
-    EXPECT_EQ(out.storageFormat, world::kLegacyStorageFormat);
+    data.storageFormat = storage::kRegionStorageFormat;
+    storage::WorldLevelData out{};
+    ASSERT_EQ(storage::decodeLevelData(storage::encodeLevelData(data), out), storage::LevelLoadStatus::Ok);
+    EXPECT_EQ(out.storageFormat, storage::kRegionStorageFormat);
+    ASSERT_EQ(storage::decodeLevelData("BETACRAFT_LEVEL_V2\nseed 5\n", out), storage::LevelLoadStatus::Ok);
+    EXPECT_EQ(out.storageFormat, storage::kLegacyStorageFormat);
 }

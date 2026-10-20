@@ -8,8 +8,8 @@
 #include "crafting/SmeltingRecipes.hpp"
 #include "gameplay/Crops.hpp"
 #include "gameplay/ItemIds.hpp"
-#include "world/BlockEntity.hpp"
-#include "world/BlockEntityStore.hpp"
+#include "voxel/BlockEntity.hpp"
+#include "voxel/BlockEntityStore.hpp"
 
 #include <gtest/gtest.h>
 

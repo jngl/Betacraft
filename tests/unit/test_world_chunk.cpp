@@ -1,5 +1,5 @@
-#include "world/Block.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/Chunk.hpp"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

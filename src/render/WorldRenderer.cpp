@@ -594,7 +594,7 @@ RenderStats WorldRenderer::renderWorld(
         }
 
         const glm::vec3 minCorner(coord.worldOrigin());
-        const glm::vec3 maxCorner = minCorner + glm::vec3(static_cast<float>(streaming::SectionCoord::SIZE));
+        const glm::vec3 maxCorner = minCorner + glm::vec3(static_cast<float>(voxel::SectionCoord::SIZE));
 
         if (frustum.intersectsAABB(minCorner, maxCorner)) {
             visibleMeshes.emplace_back(coord, &mesh);

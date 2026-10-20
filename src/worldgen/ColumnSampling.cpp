@@ -1,6 +1,6 @@
 #include "worldgen/ColumnSampling.hpp"
 
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
 
 namespace betacraft::worldgen {
 

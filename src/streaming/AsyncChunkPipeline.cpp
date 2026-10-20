@@ -1,6 +1,6 @@
 #include "streaming/AsyncChunkPipeline.hpp"
 
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 #include "world/World.hpp"
 
 #include <algorithm>
@@ -55,7 +55,7 @@ AsyncChunkPipeline::~AsyncChunkPipeline() { shutdown(); }
 
 // ------------------------------------------------------------------ scheduling ----
 
-SubmitResult AsyncChunkPipeline::requestSectionMesh(SectionCoord coord,
+SubmitResult AsyncChunkPipeline::requestSectionMesh(voxel::SectionCoord coord,
                                                     std::shared_ptr<const SectionNeighborhoodSnapshot18> snapshot,
                                                     uint64_t version, TaskPriority priority) {
     if (!snapshot || !coord.hasValidY()) {
@@ -75,7 +75,7 @@ SubmitResult AsyncChunkPipeline::requestSectionMesh(SectionCoord coord,
     return result;
 }
 
-SubmitResult AsyncChunkPipeline::submitLocked(SectionCoord coord,
+SubmitResult AsyncChunkPipeline::submitLocked(voxel::SectionCoord coord,
                                               std::shared_ptr<const SectionNeighborhoodSnapshot18> snapshot,
                                               uint64_t version, TaskPriority priority) {
     if (m_shutdown) {
@@ -134,7 +134,7 @@ SubmitResult AsyncChunkPipeline::submitLocked(SectionCoord coord,
     return result;
 }
 
-SubmitResult AsyncChunkPipeline::requestSectionMeshFromWorld(const world::World& world, SectionCoord coord,
+SubmitResult AsyncChunkPipeline::requestSectionMeshFromWorld(const world::World& world, voxel::SectionCoord coord,
                                                              uint64_t version, TaskPriority priority) {
     if (!coord.hasValidY()) {
         return SubmitResult::RejectedInvalid;
@@ -165,7 +165,7 @@ void AsyncChunkPipeline::setViewer(const glm::vec3& pos, const glm::vec3& forwar
     rekeyPendingLocked();
 }
 
-void AsyncChunkPipeline::noteSectionVersion(SectionCoord coord, uint64_t version) {
+void AsyncChunkPipeline::noteSectionVersion(voxel::SectionCoord coord, uint64_t version) {
     StopList stale;
     {
         const std::lock_guard lock(m_mutex);
@@ -181,7 +181,7 @@ void AsyncChunkPipeline::noteSectionVersion(SectionCoord coord, uint64_t version
     requestStops(stale);
 }
 
-void AsyncChunkPipeline::cancelSection(SectionCoord coord) {
+void AsyncChunkPipeline::cancelSection(voxel::SectionCoord coord) {
     StopList stale;
     {
         const std::lock_guard lock(m_mutex);
@@ -195,8 +195,8 @@ void AsyncChunkPipeline::cancelChunk(core::ChunkCoord chunk) {
     StopList stale;
     {
         const std::lock_guard lock(m_mutex);
-        for (int32_t y = 0; y < SectionCoord::SECTIONS_PER_COLUMN; ++y) {
-            cancelSectionLocked(SectionCoord{chunk.x, y, chunk.z}, stale);
+        for (int32_t y = 0; y < voxel::SectionCoord::SECTIONS_PER_COLUMN; ++y) {
+            cancelSectionLocked(voxel::SectionCoord{chunk.x, y, chunk.z}, stale);
         }
         if (m_enforceLifecycle) {
             (void)m_lifecycle.advance(chunk, ChunkStage::Unloaded); // refused if already unloaded
@@ -205,27 +205,27 @@ void AsyncChunkPipeline::cancelChunk(core::ChunkCoord chunk) {
     requestStops(stale);
 }
 
-bool AsyncChunkPipeline::isCurrent(SectionCoord coord, uint64_t version) const {
+bool AsyncChunkPipeline::isCurrent(voxel::SectionCoord coord, uint64_t version) const {
     const std::lock_guard lock(m_mutex);
     const auto it = m_sections.find(coord);
     return it != m_sections.end() && it->second.version == version;
 }
 
-std::vector<SectionCoord> AsyncChunkPipeline::takeEvictedSections() {
-    std::vector<SectionCoord> evicted;
+std::vector<voxel::SectionCoord> AsyncChunkPipeline::takeEvictedSections() {
+    std::vector<voxel::SectionCoord> evicted;
     const std::lock_guard lock(m_mutex);
     evicted.swap(m_evicted);
     m_evictedSet.clear();
     // Report every section that still needs a request: still loaded, and no CURRENT
     // submission pending or in flight. A stale in-flight job (superseded before the
     // eviction) will be discarded, so it must not hide the section from the streamer.
-    std::erase_if(evicted, [this](const SectionCoord& c) {
+    std::erase_if(evicted, [this](const voxel::SectionCoord& c) {
         return !m_sections.contains(c) || isScheduledLocked(c);
     });
     return evicted;
 }
 
-bool AsyncChunkPipeline::isScheduled(SectionCoord coord) const {
+bool AsyncChunkPipeline::isScheduled(voxel::SectionCoord coord) const {
     const std::lock_guard lock(m_mutex);
     return isScheduledLocked(coord);
 }
@@ -289,7 +289,7 @@ DrainStats AsyncChunkPipeline::drainUploads(std::chrono::nanoseconds budget, con
             return current;
         },
         [this, &uploader](StagedResult& r) {
-            const SectionCoord coord = r.result.coord; // the uploader may move from r.result
+            const voxel::SectionCoord coord = r.result.coord; // the uploader may move from r.result
             try {
                 uploader(r.result);
             } catch (...) {
@@ -427,7 +427,7 @@ std::optional<AsyncChunkPipeline::RunningJob> AsyncChunkPipeline::popBestLocked(
     if (m_order.empty()) {
         return std::nullopt;
     }
-    const SectionCoord coord = m_order.begin()->coord;
+    const voxel::SectionCoord coord = m_order.begin()->coord;
     m_order.erase(m_order.begin());
     auto it = m_pending.find(coord);
     RunningJob job{coord, std::move(it->second.snapshot), it->second.version, it->second.ticket, {}};
@@ -481,7 +481,7 @@ void AsyncChunkPipeline::executeJob(RunningJob job, std::stop_token stopToken) {
     finishJobLocked(job.coord, job.ticket);
 }
 
-void AsyncChunkPipeline::finishJobLocked(SectionCoord coord, uint64_t ticket) {
+void AsyncChunkPipeline::finishJobLocked(voxel::SectionCoord coord, uint64_t ticket) {
     if (const auto it = m_inFlight.find(coord); it != m_inFlight.end()) {
         std::erase_if(it->second, [ticket](const InFlightEntry& e) { return e.ticket == ticket; });
         if (it->second.empty()) {
@@ -494,7 +494,7 @@ void AsyncChunkPipeline::finishJobLocked(SectionCoord coord, uint64_t ticket) {
     }
 }
 
-void AsyncChunkPipeline::eraseJobLocked(SectionCoord coord) {
+void AsyncChunkPipeline::eraseJobLocked(voxel::SectionCoord coord) {
     if (const auto it = m_pending.find(coord); it != m_pending.end()) {
         m_order.erase(it->second.key);
         m_pending.erase(it);
@@ -510,7 +510,7 @@ void AsyncChunkPipeline::rekeyPendingLocked() {
     m_order.swap(reordered);
 }
 
-float AsyncChunkPipeline::keyDistanceLocked(SectionCoord coord) const noexcept {
+float AsyncChunkPipeline::keyDistanceLocked(voxel::SectionCoord coord) const noexcept {
     // Radius of the sphere bounding a 16^3 section: 8 * sqrt(3).
     constexpr float kSectionRadius = 13.856406f;
     const glm::vec3 d = coord.centre() - m_viewer;
@@ -529,7 +529,7 @@ float AsyncChunkPipeline::keyDistanceLocked(SectionCoord coord) const noexcept {
 }
 
 void AsyncChunkPipeline::evictLocked(const JobKey& worst) {
-    const SectionCoord victim = worst.coord;
+    const voxel::SectionCoord victim = worst.coord;
     m_pending.erase(victim);
     m_order.erase(worst);
     // The evicted job carried the section's newest ticket: no submission of it may be
@@ -545,7 +545,7 @@ void AsyncChunkPipeline::evictLocked(const JobKey& worst) {
     ++m_stats.evicted;
 }
 
-bool AsyncChunkPipeline::isScheduledLocked(SectionCoord coord) const {
+bool AsyncChunkPipeline::isScheduledLocked(voxel::SectionCoord coord) const {
     if (m_pending.contains(coord)) {
         return true;
     }
@@ -558,7 +558,7 @@ bool AsyncChunkPipeline::isScheduledLocked(SectionCoord coord) const {
     return std::ranges::any_of(running->second, [current](const InFlightEntry& e) { return e.ticket == current; });
 }
 
-void AsyncChunkPipeline::cancelSectionLocked(SectionCoord coord, StopList& stale) {
+void AsyncChunkPipeline::cancelSectionLocked(voxel::SectionCoord coord, StopList& stale) {
     if (m_pending.contains(coord)) {
         eraseJobLocked(coord);
         ++m_stats.cancelled;
@@ -581,8 +581,8 @@ void AsyncChunkPipeline::refreshChunkStageLocked(core::ChunkCoord chunk) {
     bool any = false;
     bool allStaged = true;
     bool allUploaded = true;
-    for (int32_t y = 0; y < SectionCoord::SECTIONS_PER_COLUMN; ++y) {
-        const auto it = m_sections.find(SectionCoord{chunk.x, y, chunk.z});
+    for (int32_t y = 0; y < voxel::SectionCoord::SECTIONS_PER_COLUMN; ++y) {
+        const auto it = m_sections.find(voxel::SectionCoord{chunk.x, y, chunk.z});
         if (it == m_sections.end()) {
             continue; // never requested (e.g. empty sky) or cancelled: not part of the mesh
         }
@@ -610,7 +610,7 @@ void AsyncChunkPipeline::refreshChunkStageLocked(core::ChunkCoord chunk) {
     }
 }
 
-void AsyncChunkPipeline::collectStaleRunningLocked(SectionCoord coord, StopList& out) {
+void AsyncChunkPipeline::collectStaleRunningLocked(voxel::SectionCoord coord, StopList& out) {
     const auto running = m_inFlight.find(coord);
     if (running == m_inFlight.end()) {
         return;
@@ -634,7 +634,7 @@ bool AsyncChunkPipeline::isAccepted(SubmitResult r) noexcept {
     return r == SubmitResult::Accepted || r == SubmitResult::Replaced || r == SubmitResult::AcceptedEvictedOther;
 }
 
-bool AsyncChunkPipeline::isLatestSubmissionLocked(SectionCoord coord, uint64_t ticket) const {
+bool AsyncChunkPipeline::isLatestSubmissionLocked(voxel::SectionCoord coord, uint64_t ticket) const {
     const auto it = m_sections.find(coord);
     return ticket != 0 && it != m_sections.end() && it->second.ticket == ticket;
 }

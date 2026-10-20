@@ -16,7 +16,7 @@
 #include "gameplay/SplitMix64.hpp"
 #include "physics/Player.hpp"
 #include "physics/Raycaster.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 #include "world/Weather.hpp"
 
 #include <glm/glm.hpp>
@@ -156,13 +156,13 @@ public:
     // noon, the default). S8.10 `weather`: mobs in the rain do not burn and lose their fire
     // (clear by default). Natural spawning is spawnMobs, called after.
     GameTickEvents tick(world::World& world, physics::Player& player, const PlayerActions& actions,
-                        float timeOfDay = 0.25f, const world::WeatherState& weather = {});
+                        float timeOfDay = 0.25f, const storage::WeatherState& weather = {});
 
     // Natural mob spawning and despawning (MobSpawner) and the dungeon spawners (S6.10), when
     // naturalSpawning() is on. S8.10 rain and thunder darken spawning, and a thunderstorm lets
     // hostiles spawn by day. The WorldSession calls it once per game tick, after tick().
     void spawnMobs(world::World& world, const physics::Player& player, float timeOfDay,
-                   const world::WeatherState& weather);
+                   const storage::WeatherState& weather);
 
     // The single entry point for damage to the player (fall, drowning, void, and later lava,
     // mobs, explosions). Nothing happens in Creative or to a dead player; otherwise
@@ -318,7 +318,7 @@ private:
     void attackEntity(physics::Player& player, ecs::EntityId target, GameTickEvents& events);
     bool spawnNaturalDrop(world::BlockId block, const core::BlockPos& cell, uint8_t meta = 0);
     void runEntitySystems(world::World& world, physics::Player& player, float timeOfDay,
-                          const world::WeatherState& weather, GameTickEvents& events);
+                          const storage::WeatherState& weather, GameTickEvents& events);
     void tickPrimedTnt();
     void runExplosionQueue(world::World& world, physics::Player& player, GameTickEvents& events);
     // Moves the drops spawned after this tick's movement (m_lateDrops) by one tick.

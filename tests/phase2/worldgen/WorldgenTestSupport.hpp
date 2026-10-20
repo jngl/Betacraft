@@ -3,7 +3,7 @@
 // mixes oceans (floor < 64) and hills, usable both as a ColumnSampler and as a chunk filler.
 
 #include "core/Config.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
 #include "worldgen/CaveCarver.hpp"
 #include "worldgen/ColumnSampling.hpp"
 

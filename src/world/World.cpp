@@ -1,12 +1,12 @@
 #include "world/World.hpp"
-#include "world/BlockShapes.hpp"
-#include "world/BlockTicks.hpp"
-#include "world/DifferentialLightingEngine.hpp"
 #include "core/Logger.hpp"
 #include "gameplay/ItemIds.hpp"
 #include "storage/ChunkIoWorker.hpp"
-#include "streaming/ChunkGenPipeline.hpp"
-#include "streaming/SectionCoord.hpp"
+#include "voxel/BlockShapes.hpp"
+#include "voxel/SectionCoord.hpp"
+#include "world/BlockTicks.hpp"
+#include "world/ChunkGenPipeline.hpp"
+#include "world/DifferentialLightingEngine.hpp"
 #include "worldgen/DecorationPipeline.hpp"
 
 #include <algorithm>
@@ -117,7 +117,7 @@ private:
 // (regions, legacy fallback, quarantine, read-only), called from the worker thread.
 class World::StorageIo final : public storage::IChunkStore {
 public:
-    explicit StorageIo(WorldStorage& storage) noexcept : m_storage(storage) {}
+    explicit StorageIo(storage::WorldStorage& storage) noexcept : m_storage(storage) {}
 
     [[nodiscard]] std::optional<std::vector<uint8_t>> read(core::ChunkCoord coord) override {
         return m_storage.loadChunkBundleBytes(coord);
@@ -131,7 +131,7 @@ public:
     bool flush() override { return m_storage.flush(); }
 
 private:
-    WorldStorage& m_storage;
+    storage::WorldStorage& m_storage;
 };
 
 World::World(uint64_t seed, std::filesystem::path saveDir)
@@ -139,7 +139,7 @@ World::World(uint64_t seed, std::filesystem::path saveDir)
       m_storage(std::move(saveDir)),
       m_diffLighting(std::make_unique<DifferentialLightingEngine>(*this)),
       m_fluidAccess(std::make_unique<FluidAccess>(*this)),
-      m_genWorkers(streaming::defaultGenWorkerCount()),
+      m_genWorkers(world::defaultGenWorkerCount()),
       m_ioStore(std::make_unique<StorageIo>(m_storage)),
       m_io(std::make_unique<storage::ChunkIoWorker>(*m_ioStore)) {
     BlockRegistry::initialize();
@@ -638,11 +638,11 @@ void World::unloadDistantChunks(int32_t centerCX, int32_t centerCZ, int32_t radi
 
 // --- S7.7 asynchronous streaming ----------------------------------------------------------
 
-streaming::ChunkGenPipeline& World::genPipeline() {
+world::ChunkGenPipeline& World::genPipeline() {
     if (!m_genPipeline) {
         m_sharedGen = std::make_shared<const WorldGen>(m_worldGen.getSeed());
-        m_genPipeline = std::make_unique<streaming::ChunkGenPipeline>(m_sharedGen,
-                                                                      streaming::ChunkGenConfig{m_genWorkers});
+        m_genPipeline = std::make_unique<world::ChunkGenPipeline>(m_sharedGen,
+                                                                      world::ChunkGenConfig{m_genWorkers});
     }
     return *m_genPipeline;
 }
@@ -742,7 +742,7 @@ World::IntegrationStats World::integrateReadyChunks(std::chrono::nanoseconds bud
             return true;
         }
         if (!m_genPipeline) return false;
-        while (std::optional<streaming::GeneratedChunk> ready = m_genPipeline->popReady()) {
+        while (std::optional<world::GeneratedChunk> ready = m_genPipeline->popReady()) {
             const auto it = m_streamRequests.find(ready->coord);
             if (it == m_streamRequests.end() || it->second.stage != StreamRequest::Stage::Generating ||
                 m_chunks.contains(ready->coord)) {
@@ -837,7 +837,7 @@ void World::setRegionStorageEnabled(bool enabled) {
     m_storage.setRegionStorageEnabled(enabled);
 }
 
-const WorldStorage& World::getStorage() const {
+const storage::WorldStorage& World::getStorage() const {
     (void)m_io->waitIdle();
     return m_storage;
 }
@@ -865,8 +865,8 @@ void World::markNeighborChunksDirty(core::ChunkCoord coord, int32_t lx, int32_t 
     if (lx != 0 && lx != Chunk::WIDTH - 1 && lz != 0 && lz != Chunk::DEPTH - 1) {
         return;
     }
-    const streaming::SectionBox box =
-        streaming::sectionsSeeingVoxel(coord.x * Chunk::WIDTH + lx, wy, coord.z * Chunk::DEPTH + lz);
+    const voxel::SectionBox box =
+        voxel::sectionsSeeingVoxel(coord.x * Chunk::WIDTH + lx, wy, coord.z * Chunk::DEPTH + lz);
     for (int32_t cz = box.min.z; cz <= box.max.z; ++cz) {
         for (int32_t cx = box.min.x; cx <= box.max.x; ++cx) {
             if (cx == coord.x && cz == coord.z) continue;
@@ -1513,13 +1513,13 @@ storage::MigrationReport World::migrateLegacyStorage(const std::function<void(fl
     return m_storage.migrateLegacyChunks(progress);
 }
 
-void World::saveModifiedChunks(const WorldLevelData& levelData) {
+void World::saveModifiedChunks(const storage::WorldLevelData& levelData) {
     queueModifiedChunks(levelData);
     // Waits for the queued writes, then region headers after their data.
     (void)flushStorage();
 }
 
-void World::queueModifiedChunks(const WorldLevelData& levelData) {
+void World::queueModifiedChunks(const storage::WorldLevelData& levelData) {
     if (m_saveDisabled) {
         return;
     }

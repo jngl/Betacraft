@@ -29,11 +29,11 @@
 #include "core/Types.hpp"
 #include "physics/Player.hpp"
 #include "render/GLHeaders.hpp"
-#include "world/Block.hpp"
+#include "voxel/Block.hpp"
 
 // Check for presence of production implementation headers
-#if __has_include("world/PalettedSection.hpp")
-#include "world/PalettedSection.hpp"
+#if __has_include("voxel/PalettedSection.hpp")
+#include "voxel/PalettedSection.hpp"
 #define BETACRAFT_HAS_PROD_PALETTED_SECTION 1
 #else
 #define BETACRAFT_HAS_PROD_PALETTED_SECTION 0

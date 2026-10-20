@@ -1,8 +1,8 @@
 #pragma once
 
 #include "render/PackedChunkVertex.hpp"
-#include "world/Block.hpp"
-#include "world/BlockShapes.hpp"
+#include "voxel/Block.hpp"
+#include "voxel/BlockShapes.hpp"
 
 #include <algorithm>
 #include <array>

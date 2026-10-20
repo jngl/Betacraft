@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "world/PalettedSection.hpp"
-#include "world/Chunk.hpp"
+#include "voxel/Chunk.hpp"
+#include "voxel/PalettedSection.hpp"
 
 namespace betacraft::world {
 

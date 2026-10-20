@@ -3,10 +3,10 @@
 #include "core/Types.hpp"
 #include "streaming/ChunkLifecycle.hpp"
 #include "streaming/PingPongStaging.hpp"
-#include "streaming/SectionCoord.hpp"
 #include "streaming/SectionNeighborhoodSnapshot18.hpp"
 #include "streaming/SnapshotMesher.hpp"
 #include "streaming/UploadBudget.hpp"
+#include "voxel/SectionCoord.hpp"
 
 #include <atomic>
 #include <chrono>
@@ -48,7 +48,7 @@ enum class SubmitResult : uint8_t {
 };
 
 struct ChunkMeshResult {
-    SectionCoord coord{};
+    voxel::SectionCoord coord{};
     uint64_t version{0};
     RawMeshBuffer buffers;
 };
@@ -56,7 +56,7 @@ struct ChunkMeshResult {
 // Worker-side mesher. Must only read the snapshot; should poll the stop_token and
 // return std::nullopt when asked to stop. Injectable so tests can gate execution.
 using MeshFunction = std::function<std::optional<RawMeshBuffer>(
-    const SectionNeighborhoodSnapshot18&, SectionCoord, const MeshOptions&, std::stop_token)>;
+    const SectionNeighborhoodSnapshot18&, voxel::SectionCoord, const MeshOptions&, std::stop_token)>;
 
 using MeshUploader = std::function<void(ChunkMeshResult&)>;
 
@@ -64,7 +64,7 @@ using MeshUploader = std::function<void(ChunkMeshResult&)>;
 // drainUploads on the drain thread right before each upload; std::nullopt means the
 // section no longer exists. Because it runs on the drain thread, which in this engine is
 // the main thread owning the World, it may read World state directly.
-using SectionVersionSource = std::function<std::optional<uint64_t>(SectionCoord)>;
+using SectionVersionSource = std::function<std::optional<uint64_t>(voxel::SectionCoord)>;
 
 // N-1 logical cores (the main thread keeps one), never fewer than one worker.
 [[nodiscard]] inline size_t defaultPipelineWorkerCount() noexcept {
@@ -158,11 +158,11 @@ public:
     [[nodiscard]] static size_t defaultWorkerCount() noexcept { return defaultPipelineWorkerCount(); }
 
     // ---- main thread: scheduling -----------------------------------------------------
-    SubmitResult requestSectionMesh(SectionCoord coord, std::shared_ptr<const SectionNeighborhoodSnapshot18> snapshot,
+    SubmitResult requestSectionMesh(voxel::SectionCoord coord, std::shared_ptr<const SectionNeighborhoodSnapshot18> snapshot,
                                     uint64_t version, TaskPriority priority = TaskPriority::HighNear);
 
     // Captures the 18^3 snapshot synchronously on the calling thread, then submits.
-    SubmitResult requestSectionMeshFromWorld(const world::World& world, SectionCoord coord, uint64_t version,
+    SubmitResult requestSectionMeshFromWorld(const world::World& world, voxel::SectionCoord coord, uint64_t version,
                                              TaskPriority priority = TaskPriority::HighNear);
 
     // Re-keys every pending job by its distance to `pos` (O(n log n), call on movement).
@@ -173,24 +173,24 @@ public:
     void setViewer(const glm::vec3& pos, const glm::vec3& forward);
 
     // A block edit bumped the section version: anything older is now stale. Monotonic.
-    void noteSectionVersion(SectionCoord coord, uint64_t version);
+    void noteSectionVersion(voxel::SectionCoord coord, uint64_t version);
 
     // Section/chunk unloaded: drops the pending job and forgets the section, so in-flight
     // and staged results for it are discarded (running jobs are told to stop). A later
     // request starts from scratch. cancelChunk also moves the chunk to Unloaded.
-    void cancelSection(SectionCoord coord);
+    void cancelSection(voxel::SectionCoord coord);
     void cancelChunk(core::ChunkCoord chunk);
 
     // True when `version` is the newest version known for the section.
-    [[nodiscard]] bool isCurrent(SectionCoord coord, uint64_t version) const;
+    [[nodiscard]] bool isCurrent(voxel::SectionCoord coord, uint64_t version) const;
 
     // Sections whose pending job was evicted by the bounded queue since the last call.
     // Their mesh is now out of date and nothing will refresh it: the streamer should
     // request them again once they are close enough to win a queue slot.
-    [[nodiscard]] std::vector<SectionCoord> takeEvictedSections();
+    [[nodiscard]] std::vector<voxel::SectionCoord> takeEvictedSections();
     // True when a CURRENT submission is pending or in flight, i.e. a fresh mesh is coming
     // without another request. A superseded job still running does not count.
-    [[nodiscard]] bool isScheduled(SectionCoord coord) const;
+    [[nodiscard]] bool isScheduled(voxel::SectionCoord coord) const;
 
     // ---- chunk lifecycle (PipelineConfig::enforceChunkLifecycle) ----------------------------
     // Reports a stage produced outside the pipeline (terrain generation, lighting,
@@ -234,7 +234,7 @@ private:
         TaskPriority priority{TaskPriority::HighNear};
         float distanceSq{0.0f}; // never NaN (see keyDistanceLocked): strict weak ordering
         uint64_t sequence{0}; // FIFO tie-break and uniqueness
-        SectionCoord coord{};
+        voxel::SectionCoord coord{};
 
         bool operator<(const JobKey& o) const noexcept {
             if (priority != o.priority) return priority < o.priority;
@@ -251,7 +251,7 @@ private:
     };
 
     struct RunningJob {
-        SectionCoord coord{};
+        voxel::SectionCoord coord{};
         std::shared_ptr<const SectionNeighborhoodSnapshot18> snapshot;
         uint64_t version{0};
         uint64_t ticket{0};
@@ -283,27 +283,27 @@ private:
     };
 
     void workerLoop(std::stop_token stopToken);
-    [[nodiscard]] SubmitResult submitLocked(SectionCoord coord, std::shared_ptr<const SectionNeighborhoodSnapshot18> snapshot,
+    [[nodiscard]] SubmitResult submitLocked(voxel::SectionCoord coord, std::shared_ptr<const SectionNeighborhoodSnapshot18> snapshot,
                                             uint64_t version, TaskPriority priority);
-    void cancelSectionLocked(SectionCoord coord, StopList& stale);
+    void cancelSectionLocked(voxel::SectionCoord coord, StopList& stale);
     // Re-derives the column's Decorated/Meshed/Uploaded stage from its sections' progress.
     void refreshChunkStageLocked(core::ChunkCoord chunk);
     // Running jobs of `coord` that can no longer be uploaded: their stop must be requested.
-    void collectStaleRunningLocked(SectionCoord coord, StopList& out);
+    void collectStaleRunningLocked(voxel::SectionCoord coord, StopList& out);
     static void requestStops(StopList& stops) noexcept;
     [[nodiscard]] static bool isAccepted(SubmitResult r) noexcept;
     [[nodiscard]] std::optional<RunningJob> popBestLocked();
     void executeJob(RunningJob job, std::stop_token stopToken);
-    void finishJobLocked(SectionCoord coord, uint64_t ticket);
+    void finishJobLocked(voxel::SectionCoord coord, uint64_t ticket);
     void evictLocked(const JobKey& worst);
     void rekeyPendingLocked();
     // Squared distance, view-weighted. Never NaN, so JobKey::operator< stays a strict
     // weak ordering.
-    [[nodiscard]] float keyDistanceLocked(SectionCoord coord) const noexcept;
+    [[nodiscard]] float keyDistanceLocked(voxel::SectionCoord coord) const noexcept;
     // Pending, or a job carrying the section's current ticket is running.
-    [[nodiscard]] bool isScheduledLocked(SectionCoord coord) const;
-    void eraseJobLocked(SectionCoord coord);
-    [[nodiscard]] bool isLatestSubmissionLocked(SectionCoord coord, uint64_t ticket) const;
+    [[nodiscard]] bool isScheduledLocked(voxel::SectionCoord coord) const;
+    void eraseJobLocked(voxel::SectionCoord coord);
+    [[nodiscard]] bool isLatestSubmissionLocked(voxel::SectionCoord coord, uint64_t ticket) const;
 
     const size_t m_maxQueuedJobs;
     const bool m_enforceLifecycle;
@@ -319,12 +319,12 @@ private:
     std::condition_variable_any m_workCv;
     std::condition_variable m_idleCv;
     std::set<JobKey> m_order;
-    std::unordered_map<SectionCoord, PendingJob> m_pending;
-    std::unordered_map<SectionCoord, std::vector<InFlightEntry>> m_inFlight; // coord -> running jobs
+    std::unordered_map<voxel::SectionCoord, PendingJob> m_pending;
+    std::unordered_map<voxel::SectionCoord, std::vector<InFlightEntry>> m_inFlight; // coord -> running jobs
     size_t m_inFlightTotal{0};
-    std::unordered_map<SectionCoord, SectionState> m_sections;
-    std::vector<SectionCoord> m_evicted; // drained by takeEvictedSections(), eviction order
-    std::unordered_set<SectionCoord> m_evictedSet; // dedup: bounded by distinct sections
+    std::unordered_map<voxel::SectionCoord, SectionState> m_sections;
+    std::vector<voxel::SectionCoord> m_evicted; // drained by takeEvictedSections(), eviction order
+    std::unordered_set<voxel::SectionCoord> m_evictedSet; // dedup: bounded by distinct sections
     glm::vec3 m_viewer{0.0f};
     glm::vec3 m_forward{0.0f}; // unit length, or zero when there is no view direction
     uint64_t m_sequence{0};

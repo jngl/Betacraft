@@ -165,7 +165,7 @@ TEST_F(WorldSessionRespawn, AWorldSavedWhileDeadReopensDeadThenRespawns) {
 
     m_session = WorldSession::open(openOptions(m_dir.path()));
     ASSERT_NE(m_session, nullptr);
-    EXPECT_EQ(m_session->levelStatus(), world::LevelLoadStatus::Ok);
+    EXPECT_EQ(m_session->levelStatus(), storage::LevelLoadStatus::Ok);
     EXPECT_TRUE(player().isDead());
     EXPECT_EQ(m_session->bedSpawn(), std::optional<core::BlockPos>{m_bedHead});
 

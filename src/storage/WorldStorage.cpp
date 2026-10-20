@@ -1,4 +1,4 @@
-#include "world/WorldStorage.hpp"
+#include "storage/WorldStorage.hpp"
 #include "core/Logger.hpp"
 #include "storage/LegacyChunkStore.hpp"
 #include "storage/RegionChunkStore.hpp"
@@ -13,12 +13,12 @@
 #include <sstream>
 #include <vector>
 
-namespace betacraft::world {
+namespace betacraft::storage {
 
 WorldStorage::WorldStorage(std::filesystem::path saveDir)
     : m_saveDir(std::move(saveDir)),
-      m_regions(std::make_unique<storage::RegionChunkStore>(m_saveDir / "region")),
-      m_legacy(std::make_unique<storage::LegacyChunkStore>(m_saveDir)) {}
+      m_regions(std::make_unique<RegionChunkStore>(m_saveDir / "region")),
+      m_legacy(std::make_unique<LegacyChunkStore>(m_saveDir)) {}
 
 WorldStorage::~WorldStorage() = default; // The region store flushes on destruction
 WorldStorage::WorldStorage(WorldStorage&&) noexcept = default;
@@ -391,7 +391,7 @@ namespace {
 
 // --- Legacy writers (region storage disabled) --------------------------------------------
 
-bool WorldStorage::saveLegacyChunk(const Chunk& chunk) const {
+bool WorldStorage::saveLegacyChunk(const world::Chunk& chunk) const {
     if (!ensureDirectoryExists()) return false;
     return writeFile(m_legacy->chunkFilePath(chunk.getCoord()), chunk.serializeRLE());
 }
@@ -425,10 +425,10 @@ bool WorldStorage::saveLegacyBlockEntities(core::ChunkCoord coord, std::span<con
 
 // --- Bundles -------------------------------------------------------------------------------
 
-std::optional<storage::ChunkBundle> WorldStorage::loadChunkBundle(core::ChunkCoord coord) const {
+std::optional<ChunkBundle> WorldStorage::loadChunkBundle(core::ChunkCoord coord) const {
     if (m_regions->contains(coord)) {
         if (auto bytes = m_regions->read(coord)) {
-            if (auto bundle = storage::decodeBundle(*bytes)) {
+            if (auto bundle = decodeBundle(*bytes)) {
                 return bundle;
             }
         }
@@ -442,12 +442,12 @@ std::optional<storage::ChunkBundle> WorldStorage::loadChunkBundle(core::ChunkCoo
     return m_legacy->readBundle(coord);
 }
 
-bool WorldStorage::saveChunkBundle(core::ChunkCoord coord, const storage::ChunkBundle& bundle) {
+bool WorldStorage::saveChunkBundle(core::ChunkCoord coord, const ChunkBundle& bundle) {
     if (m_readOnly) {
         return false;
     }
     if (m_regionWrites) {
-        return ensureSaveRoot() && m_regions->write(coord, storage::encodeBundle(bundle));
+        return ensureSaveRoot() && m_regions->write(coord, encodeBundle(bundle));
     }
     // Pre-Sprint 7 order: record first (a chunk file without one would load as a pre-P3.4
     // decorated save), block entities next, so a chunk file never refers to newer contents.
@@ -458,9 +458,9 @@ bool WorldStorage::saveChunkBundle(core::ChunkCoord coord, const storage::ChunkB
 }
 
 std::optional<std::vector<uint8_t>> WorldStorage::loadChunkBundleBytes(core::ChunkCoord coord) const {
-    std::optional<storage::ChunkBundle> bundle = loadChunkBundle(coord);
+    std::optional<ChunkBundle> bundle = loadChunkBundle(coord);
     if (!bundle) return std::nullopt;
-    return storage::encodeBundle(*bundle);
+    return encodeBundle(*bundle);
 }
 
 bool WorldStorage::saveChunkBundleBytes(core::ChunkCoord coord, std::span<const uint8_t> bytes) {
@@ -470,7 +470,7 @@ bool WorldStorage::saveChunkBundleBytes(core::ChunkCoord coord, std::span<const 
     if (m_regionWrites) {
         return ensureSaveRoot() && m_regions->write(coord, bytes);
     }
-    const std::optional<storage::ChunkBundle> bundle = storage::decodeBundle(bytes);
+    const std::optional<ChunkBundle> bundle = decodeBundle(bytes);
     return bundle && saveChunkBundle(coord, *bundle);
 }
 
@@ -486,12 +486,12 @@ void WorldStorage::quarantineChunk(core::ChunkCoord coord) const {
     }
 }
 
-std::vector<BlockEntityEntry> WorldStorage::decodeBundleBlockEntities(core::ChunkCoord coord,
-                                                                     const storage::ChunkBundle& bundle) const {
+std::vector<world::BlockEntityEntry> WorldStorage::decodeBundleBlockEntities(core::ChunkCoord coord,
+                                                                            const ChunkBundle& bundle) const {
     if (bundle.blockEntities.empty()) {
         return {};
     }
-    auto entries = decodeBlockEntities(coord, bundle.blockEntities);
+    auto entries = world::decodeBlockEntities(coord, bundle.blockEntities);
     if (entries) {
         return std::move(*entries);
     }
@@ -536,7 +536,7 @@ bool WorldStorage::needsMigration(uint32_t levelStorageFormat) const {
            std::filesystem::is_directory(m_legacy->chunksDirectory(), ec);
 }
 
-storage::MigrationReport WorldStorage::migrateLegacyChunks(const std::function<void(float)>& progress) {
+MigrationReport WorldStorage::migrateLegacyChunks(const std::function<void(float)>& progress) {
     if (m_readOnly || !m_regionWrites) {
         return {};
     }
@@ -548,10 +548,10 @@ storage::MigrationReport WorldStorage::migrateLegacyChunks(const std::function<v
 
 template <typename Edit>
 bool WorldStorage::editBundle(core::ChunkCoord coord, Edit&& edit) const {
-    storage::ChunkBundle bundle;
+    ChunkBundle bundle;
     if (m_regions->contains(coord)) {
         auto bytes = m_regions->read(coord);
-        auto decoded = bytes ? storage::decodeBundle(*bytes) : std::nullopt;
+        auto decoded = bytes ? decodeBundle(*bytes) : std::nullopt;
         if (!decoded) {
             (void)m_regions->quarantine(coord); // About to be replaced: keep the bytes
         } else {
@@ -565,7 +565,7 @@ bool WorldStorage::editBundle(core::ChunkCoord coord, Edit&& edit) const {
         }
     }
     edit(bundle);
-    return ensureSaveRoot() && m_regions->write(coord, storage::encodeBundle(bundle)) && m_regions->flush();
+    return ensureSaveRoot() && m_regions->write(coord, encodeBundle(bundle)) && m_regions->flush();
 }
 
 bool WorldStorage::saveDecorationRecord(core::ChunkCoord coord, const worldgen::DecorationRecord& record) const {
@@ -575,7 +575,7 @@ bool WorldStorage::saveDecorationRecord(core::ChunkCoord coord, const worldgen::
     if (!m_regionWrites) {
         return saveLegacyDecoration(coord, record);
     }
-    return editBundle(coord, [&record](storage::ChunkBundle& b) { b.decoration = record; });
+    return editBundle(coord, [&record](ChunkBundle& b) { b.decoration = record; });
 }
 
 std::optional<worldgen::DecorationRecord> WorldStorage::loadDecorationRecord(core::ChunkCoord coord) const {
@@ -587,42 +587,42 @@ std::optional<worldgen::DecorationRecord> WorldStorage::loadDecorationRecord(cor
     return m_legacy->readDecoration(coord);
 }
 
-bool WorldStorage::saveBlockEntities(core::ChunkCoord coord, std::span<const BlockEntityEntry> entries) const {
+bool WorldStorage::saveBlockEntities(core::ChunkCoord coord, std::span<const world::BlockEntityEntry> entries) const {
     if (m_readOnly) {
         return false;
     }
     std::vector<uint8_t> encoded;
     if (!entries.empty()) {
-        encoded = encodeBlockEntities(entries);
+        encoded = world::encodeBlockEntities(entries);
     }
     if (!m_regionWrites) {
         return saveLegacyBlockEntities(coord, encoded);
     }
-    return editBundle(coord, [&encoded](storage::ChunkBundle& b) { b.blockEntities = std::move(encoded); });
+    return editBundle(coord, [&encoded](ChunkBundle& b) { b.blockEntities = std::move(encoded); });
 }
 
-std::vector<BlockEntityEntry> WorldStorage::loadBlockEntities(core::ChunkCoord coord) const {
+std::vector<world::BlockEntityEntry> WorldStorage::loadBlockEntities(core::ChunkCoord coord) const {
     if (m_regions->contains(coord)) {
         if (auto bundle = loadChunkBundle(coord)) {
             return decodeBundleBlockEntities(coord, *bundle);
         }
     }
-    storage::ChunkBundle legacy;
+    ChunkBundle legacy;
     legacy.blockEntities = m_legacy->readBlockEntityBytes(coord);
     return decodeBundleBlockEntities(coord, legacy);
 }
 
-bool WorldStorage::saveChunk(const Chunk& chunk) const {
+bool WorldStorage::saveChunk(const world::Chunk& chunk) const {
     if (m_readOnly) {
         return false;
     }
     if (!m_regionWrites) {
         return saveLegacyChunk(chunk);
     }
-    return editBundle(chunk.getCoord(), [&chunk](storage::ChunkBundle& b) { b.blocks = chunk.serializeRLE(); });
+    return editBundle(chunk.getCoord(), [&chunk](ChunkBundle& b) { b.blocks = chunk.serializeRLE(); });
 }
 
-bool WorldStorage::loadChunk(Chunk& chunk) const {
+bool WorldStorage::loadChunk(world::Chunk& chunk) const {
     const auto bundle = loadChunkBundle(chunk.getCoord());
     if (!bundle || bundle->blocks.empty()) {
         return false;
@@ -634,4 +634,4 @@ bool WorldStorage::loadChunk(Chunk& chunk) const {
     return false;
 }
 
-} // namespace betacraft::world
+} // namespace betacraft::storage
