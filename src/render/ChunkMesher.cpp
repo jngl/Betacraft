@@ -1,12 +1,14 @@
 #include "render/ChunkMesher.hpp"
-#include "render/BlockShapeMesher.hpp"
 #include "render/TextureAtlas.hpp"
+#include "streaming/BlockShapeMesher.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 
 namespace betacraft::render {
+
+using streaming::PackedChunkVertex;
 
 namespace {
 
@@ -198,7 +200,7 @@ void ChunkMeshGL::initSharedEBO(size_t maxQuads) noexcept {
     bc_glGenBuffers(1, &s_sharedEBO);
     bc_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s_sharedEBO);
 
-    const auto eboData = generateSharedEboPattern(maxQuads);
+    const auto eboData = streaming::generateSharedEboPattern(maxQuads);
     bc_glBufferData(
         GL_ELEMENT_ARRAY_BUFFER,
         static_cast<GLsizeiptr>(eboData.size() * sizeof(uint32_t)),
@@ -405,11 +407,12 @@ ChunkMeshData ChunkMesher::buildMesh(
                         const int32_t sx = wx + dx;
                         const int32_t sy = y + dy;
                         const int32_t sz = wz + dz;
-                        return ShapeVoxel{world.getBlock(sx, sy, sz), world.getMetadata(sx, sy, sz),
-                                          world.getSkyLight(sx, sy, sz), world.getBlockLight(sx, sy, sz)};
+                        return streaming::ShapeVoxel{world.getBlock(sx, sy, sz), world.getMetadata(sx, sy, sz),
+                                                     world.getSkyLight(sx, sy, sz), world.getBlockLight(sx, sy, sz)};
                     };
-                    emitDetailedShape(targetBuffer, def, chunk.getMetadata(lx, y, lz), static_cast<uint32_t>(lx),
-                                      localY, static_cast<uint32_t>(lz), secY, sample);
+                    streaming::emitDetailedShape(targetBuffer, def, chunk.getMetadata(lx, y, lz),
+                                                 static_cast<uint32_t>(lx), localY, static_cast<uint32_t>(lz), secY,
+                                                 sample);
                     continue;
                 }
 

@@ -439,9 +439,9 @@ TEST(PackedVertexIntegration, SizeAndAlignmentContract) {
     EXPECT_EQ(alignof(ContractPackedChunkVertex), 8u);
     EXPECT_TRUE(std::is_trivially_copyable_v<ContractPackedChunkVertex>);
 #if BETACRAFT_HAS_PROD_PACKED_CHUNK_VERTEX
-    EXPECT_EQ(sizeof(render::PackedChunkVertex), 8u);
-    EXPECT_EQ(alignof(render::PackedChunkVertex), 8u);
-    EXPECT_TRUE(std::is_trivially_copyable_v<render::PackedChunkVertex>);
+    EXPECT_EQ(sizeof(streaming::PackedChunkVertex), 8u);
+    EXPECT_EQ(alignof(streaming::PackedChunkVertex), 8u);
+    EXPECT_TRUE(std::is_trivially_copyable_v<streaming::PackedChunkVertex>);
 #endif
 }
 

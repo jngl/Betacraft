@@ -451,7 +451,7 @@ TEST(AsyncChunkPipeline, UploaderCanMoveVertexDataOut) {
     AsyncChunkPipeline p(inlineConfig());
     ASSERT_EQ(p.requestSectionMesh({0, 0, 0}, stoneCube(), 1), SubmitResult::Accepted);
     (void)p.runPendingInline(1);
-    std::vector<betacraft::render::PackedChunkVertex> taken;
+    std::vector<betacraft::streaming::PackedChunkVertex> taken;
     (void)p.drainUploads(4ms, [&](ChunkMeshResult& r) { taken = std::move(r.buffers.opaqueVertices); });
     EXPECT_EQ(taken.size(), 24u);
 }

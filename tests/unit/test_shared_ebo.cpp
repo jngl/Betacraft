@@ -1,8 +1,8 @@
-#include "render/PackedChunkVertex.hpp"
+#include "streaming/PackedChunkVertex.hpp"
 #include <gtest/gtest.h>
 #include <vector>
 
-using namespace betacraft::render;
+using namespace betacraft::streaming;
 
 TEST(SharedEboTest, RepeatingPatternFirstQuad) {
     const auto ebo = generateSharedEboPattern(1);

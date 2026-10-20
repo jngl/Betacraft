@@ -91,7 +91,8 @@ Data Flow:
 - `src/physics/`: Player physics, bounding boxes, fixed timestep integration.
 - `src/voxel/`: block and chunk data, depending only on `core`: `Block`, `BlockShapes.hpp`, `BlockEntity.hpp`, `BlockEntityStore`, `PalettedSection`, `Chunk`, `ScheduledTicks`, `SectionCoord.hpp`.
 - `src/world/`: the orchestrator above `worldgen`, `storage`, `fluids`, `redstone` and `gameplay`: `World`, `WorldGen`, `BlockTicks`, `Weather`, `DifferentialLightingEngine`, `ChunkGenPipeline`.
-- `src/render/`: `PackedChunkVertex.hpp/cpp`, `ChunkMesher.hpp/cpp`, `WorldRenderer.hpp/cpp`, `TextRenderer.hpp/cpp`, `GLHeaders.hpp/cpp`.
+- `src/streaming/`: GL-free asynchronous meshing: `PackedChunkVertex.hpp/cpp`, `BlockShapeMesher.hpp`, `SnapshotMesher`, `AsyncChunkPipeline`, `WorldMeshStreamer`.
+- `src/render/`: `ChunkMesher.hpp/cpp`, `WorldRenderer.hpp/cpp`, `TextRenderer.hpp/cpp`, `GLHeaders.hpp/cpp`.
 - `src/audio/`: `MpscRingBuffer.hpp`, `AudioEngine.hpp/cpp`.
 - `src/ui/`: `ScreenState.hpp`, `TitleScreen.hpp/cpp`, `OptionsMenu.hpp/cpp`, `InputManager.hpp/cpp`.
 - `shaders/`: `chunk_vertex.glsl`, `chunk_fragment.glsl`, `msdf_vertex.glsl`, `msdf_fragment.glsl`.

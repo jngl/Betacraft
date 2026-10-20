@@ -2,7 +2,7 @@
 
 #include "core/Types.hpp"
 #include "render/GLHeaders.hpp"
-#include "render/PackedChunkVertex.hpp"
+#include "streaming/PackedChunkVertex.hpp"
 #include "voxel/Chunk.hpp"
 #include "world/World.hpp"
 
@@ -21,8 +21,8 @@ struct ChunkVertex {
 };
 
 struct ChunkMeshData {
-    std::vector<PackedChunkVertex> opaqueVertices;
-    std::vector<PackedChunkVertex> translucentVertices;
+    std::vector<streaming::PackedChunkVertex> opaqueVertices;
+    std::vector<streaming::PackedChunkVertex> translucentVertices;
 };
 
 class ChunkMeshGL : private core::NonCopyable {
@@ -34,7 +34,8 @@ public:
     ChunkMeshGL& operator=(ChunkMeshGL&& other) noexcept;
 
     void upload(const ChunkMeshData& data);
-    void upload(const std::vector<PackedChunkVertex>& opaque, const std::vector<PackedChunkVertex>& translucent);
+    void upload(const std::vector<streaming::PackedChunkVertex>& opaque,
+                const std::vector<streaming::PackedChunkVertex>& translucent);
     void drawOpaque() const noexcept;
     void drawTranslucent() const noexcept;
 

@@ -3,7 +3,7 @@
 #include "gameplay/Harvesting.hpp"
 #include "gameplay/ItemIds.hpp"
 #include "math/AABB.hpp"
-#include "render/BlockShapeMesher.hpp"
+#include "streaming/BlockShapeMesher.hpp"
 #include "voxel/Block.hpp"
 #include "voxel/BlockShapes.hpp"
 
@@ -138,10 +138,10 @@ TEST(RedstoneBlocks, AttachmentAndBoxes) {
 
 TEST(RedstoneBlocks, ShapeMesherBuildsEveryPart) {
     BlockRegistry::initialize();
-    const auto air = [](int32_t, int32_t, int32_t) { return render::ShapeVoxel{}; };
+    const auto air = [](int32_t, int32_t, int32_t) { return streaming::ShapeVoxel{}; };
     const auto quads = [&](BlockId id, uint8_t meta) {
-        std::vector<render::PackedChunkVertex> out;
-        render::emitDetailedShape(out, BlockRegistry::get(id), meta, 1, 1, 1, 0, air);
+        std::vector<streaming::PackedChunkVertex> out;
+        streaming::emitDetailedShape(out, BlockRegistry::get(id), meta, 1, 1, 1, 0, air);
         return out.size() / 4;
     };
     EXPECT_EQ(quads(BlockId::RedstoneWire, 0), 6u);
@@ -153,9 +153,9 @@ TEST(RedstoneBlocks, ShapeMesherBuildsEveryPart) {
     EXPECT_EQ(quads(BlockId::IronDoor, 0), 6u);
     // The bottom of a plate on a stone block is hidden.
     const auto onStone = [](int32_t, int32_t dy, int32_t) {
-        return render::ShapeVoxel{dy < 0 ? BlockId::Stone : BlockId::Air, 0, 15, 0};
+        return streaming::ShapeVoxel{dy < 0 ? BlockId::Stone : BlockId::Air, 0, 15, 0};
     };
-    std::vector<render::PackedChunkVertex> out;
-    render::emitDetailedShape(out, BlockRegistry::get(BlockId::RedstoneWire), 3, 1, 1, 1, 0, onStone);
+    std::vector<streaming::PackedChunkVertex> out;
+    streaming::emitDetailedShape(out, BlockRegistry::get(BlockId::RedstoneWire), 3, 1, 1, 1, 0, onStone);
     EXPECT_EQ(out.size() / 4, 5u);
 }

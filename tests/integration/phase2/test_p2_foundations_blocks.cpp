@@ -180,8 +180,8 @@ TEST_F(P2FoundationsBlocks, SnapshotMesherMatchesLegacyMesherAroundFluids) {
     ASSERT_NE(chunk, nullptr);
     const auto legacy = render::ChunkMesher::buildMesh(w, *chunk, true);
 
-    std::vector<render::PackedChunkVertex> opaque;
-    std::vector<render::PackedChunkVertex> translucent;
+    std::vector<streaming::PackedChunkVertex> opaque;
+    std::vector<streaming::PackedChunkVertex> translucent;
     for (int32_t sy = 0; sy < voxel::SectionCoord::SECTIONS_PER_COLUMN; ++sy) {
         const auto snap = streaming::SectionNeighborhoodSnapshot18::capture(w, voxel::SectionCoord{0, sy, 0});
         const auto m = streaming::SnapshotMesher::build(*snap, sy, streaming::MeshOptions{.smoothLighting = true});

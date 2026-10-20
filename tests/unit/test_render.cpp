@@ -14,6 +14,7 @@
 
 using namespace betacraft;
 using namespace betacraft::render;
+using namespace betacraft::streaming;
 using namespace testing;
 
 TEST(TextureAtlasTest, TileUVAndAtlasGeneration) {

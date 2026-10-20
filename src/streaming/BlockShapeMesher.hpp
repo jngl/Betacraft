@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render/PackedChunkVertex.hpp"
+#include "streaming/PackedChunkVertex.hpp"
 #include "voxel/Block.hpp"
 #include "voxel/BlockShapes.hpp"
 
@@ -13,7 +13,7 @@
 
 // S5.4 geometry of the detailed shapes (voxel::isDetailedShape): ladders, doors, beds, fences,
 // crops, farmland and stairs, built from 1/16-block boxes and planes. Shared by
-// render::ChunkMesher (live World reads) and streaming::SnapshotMesher (18^3 snapshot reads)
+// render::ChunkMesher (live World reads) and SnapshotMesher (18^3 snapshot reads)
 // so the two meshes stay identical by construction: each passes a sampler returning the
 // voxel at an offset from the meshed cell.
 //
@@ -23,7 +23,7 @@
 // above the block is used if brighter. Boundary faces against an opaque cube are culled like
 // cube faces.
 
-namespace betacraft::render {
+namespace betacraft::streaming {
 
 struct ShapeVoxel {
     voxel::BlockId id{voxel::BlockId::Air};
@@ -279,4 +279,4 @@ void emitDetailedShape(std::vector<PackedChunkVertex>& out, const voxel::BlockDe
     }
 }
 
-} // namespace betacraft::render
+} // namespace betacraft::streaming

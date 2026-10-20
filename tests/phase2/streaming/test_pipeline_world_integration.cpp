@@ -17,10 +17,10 @@
 
 using namespace std::chrono_literals;
 using betacraft::core::ChunkCoord;
-using betacraft::render::PackedChunkVertex;
 using betacraft::streaming::AsyncChunkPipeline;
 using betacraft::streaming::ChunkMeshResult;
 using betacraft::streaming::ChunkStage;
+using betacraft::streaming::PackedChunkVertex;
 using betacraft::streaming::PipelineConfig;
 using betacraft::streaming::SubmitResult;
 using betacraft::streaming::test::kGenerousTimeout;
