@@ -3,7 +3,6 @@
 // crafting::RecipeRegistry over a 2x2 grid (player inventory) and a 3x3 grid (workbench),
 // driven by Beta's slot clicks, on an inventory widened to item ids so tools can be held.
 #include "crafting/ItemIds.hpp"
-#include "game/GameSession.hpp"
 #include "game/InventoryCrafting.hpp"
 #include "gameplay/ItemIds.hpp"
 #include "physics/Player.hpp"
@@ -189,13 +188,4 @@ TEST_F(P2GameplayCrafting, ClosingWithAFullInventoryHandsBackTheOverflow) {
     }
     EXPECT_EQ(sand, 64);
     EXPECT_EQ(dirt, 64);
-}
-
-TEST_F(P2GameplayCrafting, TheGameSessionOwnsTheCraftingScreen) {
-    game::GameSession session;
-    ASSERT_TRUE(m_player.addItem(BlockId::OakLog, 1));
-    (void)session.crafting().open(GridSize::Inventory2x2, m_player);
-    ASSERT_TRUE(session.crafting().clickInventorySlot(m_player, findSlot(m_player, toItemId(BlockId::OakLog))));
-    ASSERT_TRUE(session.crafting().clickGridSlot(1));
-    EXPECT_EQ(session.crafting().resultPreview(), InventorySlot(BlockId::OakPlanks, 4));
 }

@@ -1,6 +1,6 @@
 // S2.9: food (Beta 1.7.3 ItemFood / ItemSoup) is eaten at once with a right click through
-// GameSession::useHeldItem, even at full health, and heals through gameplay::heal.
-#include "game/GameSession.hpp"
+// EntitySimulation::useHeldItem, even at full health, and heals through gameplay::heal.
+#include "game/EntitySimulation.hpp"
 #include "gameplay/Food.hpp"
 #include "physics/Player.hpp"
 
@@ -23,7 +23,7 @@ protected:
     }
 
     Player m_player;
-    game::GameSession m_session{7ULL};
+    game::EntitySimulation m_session{7ULL};
 };
 
 } // namespace

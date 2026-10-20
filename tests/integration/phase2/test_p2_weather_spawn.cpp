@@ -12,7 +12,7 @@
 #include "ecs/Registry.hpp"
 #include "ecs/Systems.hpp"
 #include "game/AcousticsController.hpp"
-#include "game/GameSession.hpp"
+#include "game/EntitySimulation.hpp"
 #include "game/MobBehaviour.hpp"
 #include "game/MobSpawner.hpp"
 #include "gameplay/MobDefs.hpp"
@@ -116,7 +116,7 @@ protected:
     glm::vec3 m_feet{8.5f, static_cast<float>(kGroundY + 1), 8.5f};
 };
 
-// GameSession on the same world with a Creative player (mobs ignore it and stay put).
+// EntitySimulation on the same world with a Creative player (mobs ignore it and stay put).
 class P2WeatherSession : public P2WeatherWorld {
 protected:
     void SetUp() override {
@@ -132,10 +132,10 @@ protected:
         return e;
     }
 
-    // Ticks at noon; true when `zombie` caught fire at any point.
+    // Ticks at noon under m_weather; true when `zombie` caught fire at any point.
     bool burnsWithin(ecs::EntityId zombie, int32_t ticks) {
         for (int32_t t = 0; t < ticks; ++t) {
-            (void)m_session.tick(*m_world, m_player, {}, kNoon);
+            (void)m_session.tick(*m_world, m_player, {}, kNoon, m_weather);
             if (game::isBurning(m_session.entities(), zombie)) {
                 return true;
             }
@@ -143,8 +143,9 @@ protected:
         return false;
     }
 
-    game::GameSession m_session{99ULL};
+    game::EntitySimulation m_session{99ULL};
     physics::Player m_player;
+    world::WeatherState m_weather{}; // What the WorldSession would hand to each tick
 };
 
 } // namespace
@@ -187,9 +188,9 @@ TEST_F(P2WeatherSession, RainStopsZombieBurning) {
     ASSERT_TRUE(m_world->getSkyLight(18, kGroundY + 2, 8) == 15);
 
     // Rain: the burning zombie is put out on the next tick, and no zombie catches fire again.
-    m_session.setWeather(fullRain());
-    ASSERT_TRUE(world::isRainingAt(*m_world, m_session.weather(), m_feet + glm::vec3(10.0f, 0.0f, 0.0f)));
-    (void)m_session.tick(*m_world, m_player, {}, kNoon);
+    m_weather = fullRain();
+    ASSERT_TRUE(world::isRainingAt(*m_world, m_weather, m_feet + glm::vec3(10.0f, 0.0f, 0.0f)));
+    (void)m_session.tick(*m_world, m_player, {}, kNoon, m_weather);
     EXPECT_FALSE(game::isBurning(m_session.entities(), sunny));
     const ecs::EntityId wet = spawnZombie(m_feet + glm::vec3(-10.0f, 0.0f, 0.0f));
     EXPECT_FALSE(burnsWithin(wet, 600));
@@ -197,15 +198,15 @@ TEST_F(P2WeatherSession, RainStopsZombieBurning) {
     EXPECT_EQ(m_session.entities().get<ecs::HealthComp>(wet).current, gameplay::mobDef(MobKind::Zombie).maxHealth);
 
     // The rain stops: the sun burns them again.
-    m_session.setWeather(world::WeatherState{});
+    m_weather = world::WeatherState{};
     EXPECT_TRUE(burnsWithin(wet, 600));
 }
 
 TEST_F(P2WeatherSession, SnowDoesNotSaveZombiesFromTheSun) {
     // Beta isWet only counts rain: in a snowy Taiga the sun still sets zombies on fire.
     setBiome(world::BiomeId::Taiga);
-    m_session.setWeather(fullRain());
-    EXPECT_FALSE(world::isRainingAt(*m_world, m_session.weather(), m_feet));
+    m_weather = fullRain();
+    EXPECT_FALSE(world::isRainingAt(*m_world, m_weather, m_feet));
     const ecs::EntityId zombie = spawnZombie(m_feet + glm::vec3(10.0f, 0.0f, 0.0f));
     EXPECT_TRUE(burnsWithin(zombie, 400));
 }

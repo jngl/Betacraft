@@ -1,6 +1,6 @@
 // Sprint 3 integration, environmental damage (S3.1): lava hits for 4 and sets the player on
 // fire for 600 ticks, fire costs 1 health every 20 ticks until water puts it out, a cactus
-// hurts 1 per contact. Every hit goes through GameSession::damagePlayer, so the 10-tick
+// hurts 1 per contact. Every hit goes through EntitySimulation::damagePlayer, so the 10-tick
 // hurt-resistance window paces them; Creative ignores all of it. The fire is saved in
 // level.dat under `player.fire`.
 #include "P2GameplaySupport.hpp"

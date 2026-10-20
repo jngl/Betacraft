@@ -36,6 +36,16 @@ struct BlockPos {
     }
 };
 
+// Centre of the block's cell.
+[[nodiscard]] inline glm::vec3 blockCentre(const BlockPos& pos) noexcept {
+    return {static_cast<float>(pos.x) + 0.5f, static_cast<float>(pos.y) + 0.5f, static_cast<float>(pos.z) + 0.5f};
+}
+
+// Centre of the block's bottom face: the feet of an entity standing in the cell.
+[[nodiscard]] inline glm::vec3 blockBottomCentre(const BlockPos& pos) noexcept {
+    return {static_cast<float>(pos.x) + 0.5f, static_cast<float>(pos.y), static_cast<float>(pos.z) + 0.5f};
+}
+
 enum class FaceDir : uint8_t {
     PosX = 0, // East (+X)
     NegX = 1, // West (-X)

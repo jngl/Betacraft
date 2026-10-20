@@ -148,7 +148,7 @@ public:
     [[nodiscard]] const ScheduledTickQueue& getScheduledTicks() const noexcept { return m_scheduledTicks; }
 
     // S5.3: sand and gravel the scheduled update found over air or liquid: the cell is already
-    // air, whoever runs the game tick spawns the falling entity (GameSession::tickFallingBlocks).
+    // air, whoever runs the game tick spawns the falling entity (EntitySimulation::tickFallingBlocks).
     struct FallingBlockSpawn {
         core::BlockPos pos{};
         BlockId id{BlockId::Air};
@@ -251,7 +251,11 @@ public:
     // below the build limit. Reads loaded chunks only.
     [[nodiscard]] glm::vec3 findStandableAbove(glm::vec3 pos) const noexcept;
 
+    // queueModifiedChunks, then flushStorage (its result is not reported).
     void saveModifiedChunks(const WorldLevelData& levelData);
+    // level.dat, then every modified chunk queued on the I/O worker, without waiting for the
+    // writes: flushStorage() writes them and reports a failure. Nothing when saving is disabled.
+    void queueModifiedChunks(const WorldLevelData& levelData);
     // Read-only session (level.dat too new or unreadable, conventions §1.2): nothing, neither
     // level.dat nor chunks, is written to the save directory.
     void setSaveDisabled(bool disabled);

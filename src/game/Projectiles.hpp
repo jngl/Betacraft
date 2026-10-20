@@ -44,7 +44,7 @@ ecs::EntityId spawnArrow(ecs::Registry& reg, const glm::vec3& pos, const glm::ve
                          int32_t damage = 4);
 
 // An arrow reaching the player's proxy: the callback of tickArrows turns it into
-// GameSession::damagePlayer (DamageCause::Projectile) and says whether the hit landed.
+// EntitySimulation::damagePlayer (DamageCause::Projectile) and says whether the hit landed.
 struct ArrowPlayerHit {
     ecs::EntityId arrow{ecs::NULL_ENTITY};
     int32_t damage{0};

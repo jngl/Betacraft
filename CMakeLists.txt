@@ -78,7 +78,7 @@ set(BETACRAFT_CORE_SOURCES
     src/game/DynamicLightCollector.cpp
     src/game/AcousticsController.cpp
     src/game/InventoryCrafting.cpp
-    src/game/GameSession.cpp
+    src/game/EntitySimulation.cpp
     src/game/StarterKit.cpp
     src/game/PlayerPersistence.cpp
     src/game/MobSpawner.cpp
@@ -86,6 +86,7 @@ set(BETACRAFT_CORE_SOURCES
     src/game/FallingBlocks.cpp
     src/game/ItemUse.cpp
     src/game/Projectiles.cpp
+    src/game/WorldSession.cpp
 )
 
 # Phase 2 modules (docs/IMPROVEMENTS_ROADMAP.md §9.2) are part of the engine core so that

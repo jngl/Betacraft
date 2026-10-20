@@ -48,9 +48,8 @@ TEST(ApplicationE2ETest, RunMultipleFramesAndCleanShutdown) {
     EXPECT_TRUE(std::filesystem::exists(levelDat));
 }
 
-// The in-game half of the frame loop: Application::update's 20 TPS game tick drives
-// GameSession (mining, item entities), World::tick (fluids) and the fluid drops, from real
-// SDL input events.
+// The in-game half of the frame loop: Application::update latches real SDL input and calls
+// WorldSession::tick at 20 TPS. What the tick does (drops, fluids): test_world_session_tick.cpp.
 class ApplicationInGameE2ETest : public ::testing::Test {
 protected:
     void SetUp() override {
@@ -91,10 +90,6 @@ protected:
         if (m_app) m_app->shutdown();
     }
 
-    [[nodiscard]] size_t itemEntities() const {
-        return m_app->getSession().entities().count<ecs::ItemDropComp>();
-    }
-
     static void pushLeftButton(Uint32 type) {
         SDL_Event ev{};
         ev.type = type;
@@ -113,32 +108,32 @@ protected:
     int32_t m_z0{0};
 };
 
-TEST_F(ApplicationInGameE2ETest, ATapOnAFlowerReleasedWithinOneTickBreaksItAndDropsIt) {
+// Hand-off: a click pressed and released between two game ticks is latched by the
+// Application and still reaches WorldSession::tick as attackPressed on the crosshair target.
+TEST_F(ApplicationInGameE2ETest, ATapOnAFlowerReleasedWithinOneTickBreaksIt) {
     world::World& w = *m_app->getWorld();
     const core::BlockPos flower{m_x0 + 2, kFloorY + 1, m_z0};
     ASSERT_TRUE(w.setBlock(flower, world::BlockId::Dandelion));
     // Aim at the flower's box centre from the eye (1.62 above the feet).
     m_app->getPlayer().setRotation(0.0f, glm::degrees(std::atan2(-1.32f, 2.0f)));
     ASSERT_EQ(m_app->runFixedFrames(2, kTick), 0); // The crosshair finds the flower
-    const size_t before = itemEntities();
 
     pushLeftButton(SDL_MOUSEBUTTONDOWN);
     pushLeftButton(SDL_MOUSEBUTTONUP);
     ASSERT_EQ(m_app->runFixedFrames(2, kTick), 0);
 
     EXPECT_EQ(w.getBlock(flower), world::BlockId::Air);
-    EXPECT_EQ(itemEntities(), before + 1);
 }
 
-TEST_F(ApplicationInGameE2ETest, WaterPlacedNextToAFlowerFlowsOverItAndDropsIt) {
+// Hand-off: the frame loop's game ticks run the world phase (fluids and their drops).
+TEST_F(ApplicationInGameE2ETest, WaterPlacedNextToAFlowerFlowsOverIt) {
     world::World& w = *m_app->getWorld();
-    // Away from the player so the drop is not picked up at once, and more than Beta's 4-block
-    // flow search from every platform edge so the source spreads in all four directions.
+    // More than Beta's 4-block flow search from every platform edge so the source spreads in
+    // all four directions.
     const core::BlockPos source{m_x0 + 5, kFloorY + 1, m_z0 + 5};
     const core::BlockPos flower{source.x + 1, source.y, source.z};
     ASSERT_TRUE(w.setBlock(flower, world::BlockId::Rose));
     ASSERT_TRUE(w.setBlock(source, world::BlockId::Water));
-    const size_t before = itemEntities();
 
     // Water spreads every 5 game ticks, but the update waits its turn behind the generated
     // terrain's own fluid work (256 updates per tick), so give it a generous bound.
@@ -147,7 +142,6 @@ TEST_F(ApplicationInGameE2ETest, WaterPlacedNextToAFlowerFlowsOverItAndDropsIt) 
     }
 
     EXPECT_TRUE(world::isWaterBlock(w.getBlock(flower)));
-    EXPECT_EQ(itemEntities(), before + 1);
 }
 
 namespace {
@@ -167,51 +161,35 @@ namespace {
 
 } // namespace
 
-// S1.7 / S1.4: a new Survival world starts empty, and what the player holds, its health and
-// its selection come back after a restart on the same save directory.
+// S1.7 / S1.4 hand-off: entering a new world from the title starts it in the title's mode
+// (Survival) and writes level.dat; shutdown closes the session so the inventory comes back.
+// Details of the saved state: test_world_session_lifecycle.cpp.
 TEST(ApplicationE2ETest, SurvivalWorldSavesInventoryOnShutdown) {
     if (!test::GLTestContext::isAvailable()) {
         GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
     }
     test::TempDir dir;
-    glm::vec3 spawn{};
     {
         game::Application app(sprint1Config(dir));
         ASSERT_TRUE(app.initialize());
+        EXPECT_EQ(app.getScreenState(), ui::ScreenState::TitleScreen);
         ASSERT_EQ(app.runFixedFrames(3, 0.05f), 0);
-        physics::Player& player = app.getPlayer();
-        EXPECT_FALSE(player.isCreative());
-        for (size_t i = 0; i < physics::Player::TOTAL_INVENTORY_SIZE; ++i) {
-            ASSERT_TRUE(player.getInventorySlot(i).isEmpty()) << "Survival starts empty-handed";
-        }
+        EXPECT_EQ(app.getScreenState(), ui::ScreenState::InGame);
+        EXPECT_FALSE(app.getPlayer().isCreative());
         EXPECT_TRUE(std::filesystem::exists(dir.path() / "level.dat")) << "written on entering the new world";
-
-        player.setInventorySlot(2, physics::InventorySlot{gameplay::items::IronPickaxe, 1, 99});
-        player.setInventorySlot(17, {world::BlockId::Cobblestone, 23});
-        player.setSelectedSlot(2);
-        player.setHealth(15);
-        spawn = app.getSpawnPoint();
+        app.getPlayer().setInventorySlot(17, {world::BlockId::Cobblestone, 23});
         app.shutdown();
     }
 
     game::Application app(sprint1Config(dir));
     ASSERT_TRUE(app.initialize());
-    physics::Player& player = app.getPlayer();
-    EXPECT_FALSE(player.isCreative());
-    EXPECT_EQ(player.getInventorySlot(2), (physics::InventorySlot{gameplay::items::IronPickaxe, 1, 99}));
-    EXPECT_EQ(player.getInventorySlot(17), (physics::InventorySlot{world::BlockId::Cobblestone, 23}));
-    EXPECT_EQ(player.countItem(world::BlockId::Cobblestone), 23);
-    EXPECT_EQ(player.getSelectedSlot(), 2);
-    EXPECT_EQ(player.getHealth(), 15);
-    EXPECT_EQ(app.getSpawnPoint(), spawn);
-
-    // Entering the loaded world applies no starter kit on top.
     ASSERT_EQ(app.runFixedFrames(2, 0.05f), 0);
-    EXPECT_EQ(player.countItem(world::BlockId::Cobblestone), 23);
+    EXPECT_EQ(app.getScreenState(), ui::ScreenState::InGame);
+    EXPECT_EQ(app.getPlayer().countItem(world::BlockId::Cobblestone), 23) << "saved, and no kit on top";
     app.shutdown();
 }
 
-// S1.4: the mode of a new world is applied (with its kit) when the game is entered.
+// S1.4 hand-off: the title's mode (EngineConfig::defaultGameMode) starts the new world.
 TEST(ApplicationE2ETest, NewCreativeWorldGetsTheCreativeKit) {
     if (!test::GLTestContext::isAvailable()) {
         GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
@@ -221,14 +199,16 @@ TEST(ApplicationE2ETest, NewCreativeWorldGetsTheCreativeKit) {
     config.defaultGameMode = core::GameMode::Creative;
     game::Application app(config);
     ASSERT_TRUE(app.initialize());
+    ASSERT_TRUE(app.getWorldSession()->awaitingGameMode());
     ASSERT_EQ(app.runFixedFrames(2, 0.05f), 0);
+    EXPECT_EQ(app.getScreenState(), ui::ScreenState::InGame);
+    EXPECT_FALSE(app.getWorldSession()->awaitingGameMode());
     EXPECT_TRUE(app.getPlayer().isCreative());
-    EXPECT_GT(app.getPlayer().countItem(world::BlockId::Cobblestone), 0);
     app.shutdown();
 }
 
-// S1.6: dying opens the death screen with the inventory scattered; Respawn brings the player
-// back to the spawn point with full health.
+// S1.6: dying opens the death screen with the inventory scattered; Respawn goes back in game
+// alive. Where and how the player comes back: test_world_session_respawn (GL-free).
 TEST(ApplicationE2ETest, DeathScreenThenRespawnAtSpawn) {
     if (!test::GLTestContext::isAvailable()) {
         GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
@@ -239,7 +219,7 @@ TEST(ApplicationE2ETest, DeathScreenThenRespawnAtSpawn) {
     ASSERT_EQ(app.runFixedFrames(2, 0.05f), 0);
     physics::Player& player = app.getPlayer();
     player.setInventorySlot(0, {world::BlockId::Torch, 10});
-    const size_t itemsBefore = app.getSession().entities().count<ecs::ItemDropComp>();
+    const size_t itemsBefore = app.getSimulation().entities().count<ecs::ItemDropComp>();
 
     player.setPosition({8.5f, -70.0f, 8.5f});
     for (int i = 0; i < 200 && app.getScreenState() != ui::ScreenState::DeathScreen; ++i) {
@@ -248,20 +228,16 @@ TEST(ApplicationE2ETest, DeathScreenThenRespawnAtSpawn) {
     ASSERT_EQ(app.getScreenState(), ui::ScreenState::DeathScreen);
     EXPECT_TRUE(player.isDead());
     EXPECT_EQ(player.countItem(world::BlockId::Torch), 0);
-    EXPECT_EQ(app.getSession().entities().count<ecs::ItemDropComp>(), itemsBefore + 1);
+    EXPECT_EQ(app.getSimulation().entities().count<ecs::ItemDropComp>(), itemsBefore + 1);
 
     app.respawnPlayer();
     EXPECT_EQ(app.getScreenState(), ui::ScreenState::InGame);
-    EXPECT_EQ(player.getHealth(), 20);
     EXPECT_FALSE(player.isDead());
-    EXPECT_FLOAT_EQ(player.getPosition().x, app.getSpawnPoint().x);
-    EXPECT_FLOAT_EQ(player.getPosition().z, app.getSpawnPoint().z);
-    EXPECT_GE(player.getPosition().y, app.getSpawnPoint().y - 0.01f);
     app.shutdown();
 }
 
-// S1.4: quitting from the title screen of a new world writes no level.dat, so the next
-// launch still offers the mode choice and gives the chosen mode's starter kit.
+// S1.4 hand-off: quitting from the title screen of a new world writes no level.dat, so the
+// next launch still offers the mode choice.
 TEST(ApplicationE2ETest, NewWorldQuitAtTitleKeepsTheModeChoice) {
     if (!test::GLTestContext::isAvailable()) {
         GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
@@ -280,12 +256,11 @@ TEST(ApplicationE2ETest, NewWorldQuitAtTitleKeepsTheModeChoice) {
     ASSERT_TRUE(app.initialize());
     ASSERT_EQ(app.runFixedFrames(2, 0.05f), 0);
     EXPECT_TRUE(app.getPlayer().isCreative()) << "still a new world: the choice applies";
-    EXPECT_GT(app.getPlayer().countItem(world::BlockId::Cobblestone), 0);
     app.shutdown();
 }
 
-// Conventions §1.2: a level.dat from a newer version is refused and never overwritten; the
-// session writes nothing at all into the save directory.
+// Conventions §1.2 hand-off: Application::isSaveDisabled forwards the session's flag, and
+// playing then shutting down leaves a too new level.dat untouched.
 TEST(ApplicationE2ETest, TooNewLevelDatIsNeverOverwritten) {
     if (!test::GLTestContext::isAvailable()) {
         GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
@@ -300,21 +275,13 @@ TEST(ApplicationE2ETest, TooNewLevelDatIsNeverOverwritten) {
     ASSERT_TRUE(app.initialize());
     EXPECT_TRUE(app.isSaveDisabled());
     ASSERT_EQ(app.runFixedFrames(5, 0.05f), 0);
-    app.getPlayer().setInventorySlot(0, {world::BlockId::Dirt, 3});
+    EXPECT_EQ(app.getScreenState(), ui::ScreenState::InGame);
     app.shutdown();
+    EXPECT_FALSE(app.isSaveDisabled()) << "no world open any more";
 
     std::ifstream ifs(dir.path() / "level.dat", std::ios::binary);
     const std::string onDisk((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
     EXPECT_EQ(onDisk, kV3);
-    EXPECT_FALSE(std::filesystem::exists(dir.path() / "level.dat_old"));
-    size_t written = 0;
-    if (std::filesystem::exists(dir.path() / "chunks")) {
-        for (const auto& entry : std::filesystem::directory_iterator(dir.path() / "chunks")) {
-            (void)entry;
-            ++written;
-        }
-    }
-    EXPECT_EQ(written, 0U) << "no chunk written either";
 }
 
 namespace {
@@ -435,8 +402,9 @@ TEST(ApplicationWorldsE2ETest, MenusCreateAndEnterANewWorld) {
     EXPECT_FALSE(worlds[0].needsMigration);
 }
 
-// S7.9 / playtest "monde A, retour au titre, monde B : rien ne reste de A": leaveWorld saves
-// and closes A completely; B starts clean; A comes back as it was left.
+// S7.9 hand-off: leaveWorld closes the session and returns to the title; entering B then A
+// opens each in turn, and the World Select list orders them by last play.
+// What each world keeps: test_world_session_lifecycle.cpp.
 TEST(ApplicationWorldsE2ETest, LeaveWorldThenAnotherWorldKeepsNothingOfTheFirst) {
     if (!test::GLTestContext::isAvailable()) {
         GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
@@ -449,44 +417,28 @@ TEST(ApplicationWorldsE2ETest, LeaveWorldThenAnotherWorldKeepsNothingOfTheFirst)
 
     ASSERT_TRUE(app.enterWorld(a, core::NewWorldParams{"World A", 42, core::GameMode::Creative}));
     ASSERT_EQ(app.runFixedFrames(3, 0.05f), 0);
-    ASSERT_NE(app.getWorld(), nullptr);
+    EXPECT_EQ(app.getScreenState(), ui::ScreenState::InGame);
     EXPECT_EQ(app.getWorld()->getSeed(), 42U);
-    EXPECT_TRUE(app.getPlayer().isCreative());
-    const glm::vec3 spawnA = app.getPlayer().getPosition();
-    const core::BlockPos marker{static_cast<int32_t>(std::floor(spawnA.x)) + 1, 120,
-                                static_cast<int32_t>(std::floor(spawnA.z))};
-    ASSERT_TRUE(app.getWorld()->setBlock(marker, world::BlockId::Glowstone));
     app.getPlayer().setInventorySlot(5, {world::BlockId::Dirt, 7});
-    // Something in the session's registry: a dropped item next to the player.
-    (void)app.getSession().spawnItem(gameplay::ItemStack{static_cast<gameplay::ItemId>(world::BlockId::Sand), 1},
-                                     spawnA + glm::vec3(3.0f, 1.0f, 0.0f));
-    EXPECT_GT(app.getSession().entities().count<ecs::ItemDropComp>(), 0U);
 
     app.leaveWorld();
+    EXPECT_FALSE(app.hasWorld());
     EXPECT_EQ(app.getWorld(), nullptr);
+    EXPECT_EQ(app.getWorldSession(), nullptr);
     EXPECT_EQ(app.getScreenState(), ui::ScreenState::TitleScreen);
-    EXPECT_EQ(app.getSession().entities().count<ecs::ItemDropComp>(), 0U);
     EXPECT_TRUE(std::filesystem::exists(a / "level.dat"));
-    EXPECT_TRUE(std::filesystem::is_directory(a / "region")) << "every queued chunk flushed to the regions";
-    EXPECT_FALSE(std::filesystem::exists(a / "chunks"));
 
     ASSERT_TRUE(app.enterWorld(b, core::NewWorldParams{"World B", 7, core::GameMode::Survival}));
     ASSERT_EQ(app.runFixedFrames(3, 0.05f), 0);
     EXPECT_EQ(app.getWorld()->getSeed(), 7U);
     EXPECT_FALSE(app.getPlayer().isCreative());
     EXPECT_EQ(app.getPlayer().countItem(world::BlockId::Dirt), 0) << "A's inventory stayed in A";
-    EXPECT_EQ(app.getSession().entities().count<ecs::ItemDropComp>(), 0U);
-    EXPECT_NE(app.getWorld()->getBlock(marker), world::BlockId::Glowstone) << "A's blocks are not in B";
 
-    // Back to A: the params of an existing world are ignored, everything is as it was left.
     ASSERT_TRUE(app.enterWorld(a, core::NewWorldParams{"ignored", 999, core::GameMode::Survival}));
-    EXPECT_FALSE(std::filesystem::exists(b / "level.dat.tmp"));
     EXPECT_TRUE(std::filesystem::exists(b / "level.dat")) << "entering A first left B saved";
     ASSERT_EQ(app.runFixedFrames(2, 0.05f), 0);
     EXPECT_EQ(app.getWorld()->getSeed(), 42U);
-    EXPECT_TRUE(app.getPlayer().isCreative());
     EXPECT_EQ(app.getPlayer().getInventorySlot(5), (physics::InventorySlot{world::BlockId::Dirt, 7}));
-    EXPECT_EQ(app.getWorld()->getBlock(marker), world::BlockId::Glowstone);
     app.shutdown();
 
     const std::vector<ui::WorldSummary> worlds = ui::listWorlds(dir.path() / "saves");
@@ -523,8 +475,9 @@ TEST(ApplicationWorldsE2ETest, SameSeedTextGivesSameTerrain) {
     app.shutdown();
 }
 
-// S7.4 / S7.8 / S7.9: a pre-Sprint 7 save is listed as "to migrate", entering it converts it
-// (region/ and chunks.migrated/) with its inventory intact, and it is no longer flagged.
+// S7.4 / S7.8 / S7.9 hand-off: a pre-Sprint 7 save is listed as "to migrate", entering it
+// from the Application converts it, and it is no longer flagged.
+// The migration itself: test_world_session_lifecycle.cpp.
 TEST(ApplicationWorldsE2ETest, LegacySaveFlaggedThenMigratedOnEnter) {
     if (!test::GLTestContext::isAvailable()) {
         GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
@@ -541,15 +494,10 @@ TEST(ApplicationWorldsE2ETest, LegacySaveFlaggedThenMigratedOnEnter) {
     game::Application app(menuConfig(dir));
     ASSERT_TRUE(app.initialize());
     ASSERT_TRUE(app.enterWorld(save));
+    EXPECT_EQ(app.getScreenState(), ui::ScreenState::TitleScreen) << "loaded, waiting to be entered";
     EXPECT_TRUE(std::filesystem::is_directory(save / "region"));
-    EXPECT_TRUE(std::filesystem::is_directory(save / "chunks.migrated"));
-    EXPECT_FALSE(std::filesystem::exists(save / "chunks"));
-    size_t items = 0;
-    for (size_t i = 0; i < physics::Player::TOTAL_INVENTORY_SIZE; ++i) {
-        items += app.getPlayer().getInventorySlot(i).isEmpty() ? 0U : 1U;
-    }
-    EXPECT_GT(items, 0U) << "the saved inventory came back";
     ASSERT_EQ(app.runFixedFrames(2, 0.05f), 0);
+    EXPECT_EQ(app.getScreenState(), ui::ScreenState::InGame);
     app.leaveWorld();
     app.shutdown();
 
