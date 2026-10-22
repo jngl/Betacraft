@@ -3,7 +3,7 @@
 // p2gameplay::GameplayWorld one level up, with the world, the player and the per-world state
 // owned by a real session opened on a temporary folder.
 
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "GlassFloorSupport.hpp"
 #include "P2WorldgenSupport.hpp"

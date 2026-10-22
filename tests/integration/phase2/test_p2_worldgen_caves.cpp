@@ -2,7 +2,7 @@
 // gone, CaveCarver is the only source of cavities, the bedrock guard (Y <= 5) and the 6-block
 // sea-floor aquitard hold on real generated chunks, and the magma band is filled with lava.
 #include "tests/integration/phase2/P2WorldgenSupport.hpp"
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "world/World.hpp"
 #include "world/WorldGen.hpp"

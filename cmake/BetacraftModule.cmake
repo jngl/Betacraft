@@ -12,7 +12,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     )
 endif()
 
-# Header-only helpers shared by every test executable (test_support/TempDir.hpp).
+# Header-only helpers shared by every test executable (test_support/TempDir.hpp). The target has
+# no deps: a helper that includes a module (GLTestContext.hpp needs render) only builds in tests
+# that link it.
 add_library(betacraft_test_support INTERFACE)
 target_include_directories(betacraft_test_support INTERFACE ${PROJECT_SOURCE_DIR}/tests/support)
 

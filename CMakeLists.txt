@@ -36,8 +36,7 @@ set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
 set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-# Extracted modules (modules/<m>, ADR 0001). Each one is its own static library and test
-# executable; betacraft_core below holds what has not been extracted yet.
+# Engine modules (modules/<m>, ADR 0001): each one is its own static library and test executable.
 include(cmake/BetacraftModule.cmake)
 add_subdirectory(modules/core)
 add_subdirectory(modules/math)
@@ -56,100 +55,17 @@ add_subdirectory(modules/ecs)
 add_subdirectory(modules/streaming)
 add_subdirectory(modules/acoustics)
 add_subdirectory(modules/audio)
+add_subdirectory(modules/render)
+add_subdirectory(modules/ui)
+add_subdirectory(modules/game)
 
-set(BETACRAFT_CORE_SOURCES
-    src/render/GLHeaders.cpp
-    src/render/Shader.cpp
-    src/render/TextureAtlas.cpp
-    src/render/ChunkMesher.cpp
-    src/render/SkyRenderer.cpp
-    src/render/WeatherRenderer.cpp
-    src/render/ParticleSystem.cpp
-    src/render/WorldRenderer.cpp
-    src/render/MobModels.cpp
-    src/render/TextRenderer.cpp
-    src/render/ItemAppearance.cpp
-    src/render/DynamicLightUniformBuffer.cpp
-    src/render/BitmapFont.cpp
-    src/ui/CraftingSystem.cpp
-    src/ui/HudRenderer.cpp
-    src/ui/InputManager.cpp
-    src/ui/TitleScreen.cpp
-    src/ui/DeathScreen.cpp
-    src/ui/OptionsMenu.cpp
-    src/ui/TextField.cpp
-    src/ui/WorldSelectScreen.cpp
-    src/ui/CreateWorldScreen.cpp
-    src/game/Application.cpp
-    src/game/DynamicLightCollector.cpp
-    src/game/AcousticsController.cpp
-    src/game/InventoryCrafting.cpp
-    src/game/EntitySimulation.cpp
-    src/game/StarterKit.cpp
-    src/game/PlayerPersistence.cpp
-    src/game/MobSpawner.cpp
-    src/game/MobBehaviour.cpp
-    src/game/FallingBlocks.cpp
-    src/game/ItemUse.cpp
-    src/game/Projectiles.cpp
-    src/game/WorldSession.cpp
-)
-
-add_library(betacraft_core STATIC ${BETACRAFT_CORE_SOURCES})
-
-target_include_directories(betacraft_core PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(betacraft_core PUBLIC
-        -Wall
-        -Wextra
-        -Wpedantic
-        -Wno-missing-field-initializers
-    )
-endif()
-
-target_link_libraries(betacraft_core PUBLIC
-    betacraft::core
-    betacraft::math
-    betacraft::voxel
-    betacraft::gameplay
-    betacraft::fluids
-    betacraft::redstone
-    betacraft::worldgen
-    betacraft::storage
-    betacraft::lighting
-    betacraft::world
-    betacraft::physics
-    betacraft::crafting
-    betacraft::ai
-    betacraft::ecs
-    betacraft::streaming
-    betacraft::acoustics
-    betacraft::audio
-    PkgConfig::SDL2
-    OpenGL::GL
-    Threads::Threads
-)
-
-if(PNG_FOUND)
-    target_compile_definitions(betacraft_core PUBLIC BETACRAFT_HAS_LIBPNG=1)
-    target_link_libraries(betacraft_core PUBLIC PNG::PNG)
-endif()
-
-add_executable(betacraft src/main.cpp)
-target_link_libraries(betacraft PRIVATE betacraft_core)
+# The game executable: app/main.cpp on top of the game module.
+add_executable(betacraft app/main.cpp)
+target_link_libraries(betacraft PRIVATE betacraft::game betacraft_warnings)
 
 set(UNIT_TEST_SOURCES
-    tests/unit/test_ui.cpp
-    tests/unit/test_render.cpp
-    tests/unit/test_mob_models.cpp
     tests/unit/test_adversarial_m2.cpp
-    tests/unit/test_msdf_font.cpp
-    tests/unit/test_input_rebind.cpp
     tests/unit/test_adversarial_tier5.cpp
-    tests/unit/test_weather.cpp
 )
 
 set(INTEGRATION_TEST_SOURCES
@@ -176,21 +92,21 @@ set(MOCK_TEST_SOURCES
 
 # 1. Unit Tests target
 add_executable(betacraft_unit_tests ${UNIT_TEST_SOURCES})
-target_include_directories(betacraft_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(betacraft_unit_tests PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
+target_include_directories(betacraft_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(betacraft_unit_tests PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 add_test(NAME UnitTests COMMAND betacraft_unit_tests)
 
 # 2. Integration Tests target
 add_executable(betacraft_integration_tests ${INTEGRATION_TEST_SOURCES})
-target_include_directories(betacraft_integration_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(betacraft_integration_tests PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
+target_include_directories(betacraft_integration_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(betacraft_integration_tests PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 add_test(NAME IntegrationTests COMMAND betacraft_integration_tests)
 
 # 3. E2E Tests target
 add_executable(betacraft_e2e_tests ${E2E_TEST_SOURCES})
-target_include_directories(betacraft_e2e_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(betacraft_e2e_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(betacraft_e2e_tests PRIVATE BETACRAFT_BIN_PATH="$<TARGET_FILE:betacraft>")
-target_link_libraries(betacraft_e2e_tests PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
+target_link_libraries(betacraft_e2e_tests PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 add_dependencies(betacraft_e2e_tests betacraft)
 add_test(NAME E2ETests COMMAND betacraft_e2e_tests)
 
@@ -201,8 +117,8 @@ endforeach()
 
 # 4. GMock Tests target
 add_executable(betacraft_mock_tests ${MOCK_TEST_SOURCES})
-target_include_directories(betacraft_mock_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(betacraft_mock_tests PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
+target_include_directories(betacraft_mock_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(betacraft_mock_tests PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 add_test(NAME MockTests COMMAND betacraft_mock_tests)
 
 # 5. All-in-one test suite target
@@ -214,32 +130,32 @@ add_executable(betacraft_all_tests
     ${E2E_TEST_SOURCES}
     ${MOCK_TEST_SOURCES}
 )
-target_include_directories(betacraft_all_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(betacraft_all_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(betacraft_all_tests PRIVATE BETACRAFT_BIN_PATH="$<TARGET_FILE:betacraft>"
                            BETACRAFT_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
-target_link_libraries(betacraft_all_tests PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
+target_link_libraries(betacraft_all_tests PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 add_dependencies(betacraft_all_tests betacraft)
 add_test(NAME AllTests COMMAND betacraft_all_tests)
 
 # Legacy tests target
 add_executable(betacraft_legacy_tests tests/test_main.cpp)
-target_link_libraries(betacraft_legacy_tests PRIVATE betacraft_core)
+target_link_libraries(betacraft_legacy_tests PRIVATE betacraft::game betacraft_warnings)
 add_test(NAME BetaCraftLegacyTests COMMAND betacraft_legacy_tests)
 
 # Adversarial M2 stress harness
 add_executable(adversarial_m2_stress tests/adversarial_m2_stress.cpp)
-target_include_directories(adversarial_m2_stress PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(adversarial_m2_stress PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
+target_include_directories(adversarial_m2_stress PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(adversarial_m2_stress PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 
 # Adversarial M3 stress harness
 add_executable(adversarial_m3_stress tests/adversarial_m3_stress.cpp)
-target_include_directories(adversarial_m3_stress PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(adversarial_m3_stress PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
+target_include_directories(adversarial_m3_stress PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(adversarial_m3_stress PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 
 # Adversarial M3 UI & Options stress harness
 add_executable(adversarial_m3_ui_stress tests/adversarial_m3_ui_stress.cpp)
-target_include_directories(adversarial_m3_ui_stress PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(adversarial_m3_ui_stress PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
+target_include_directories(adversarial_m3_ui_stress PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(adversarial_m3_ui_stress PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 
 # Wall-clock budgets are benchmarks: skipped unless BETACRAFT_PERF_TESTS is set, run with
 # `ctest -L benchmark` (CI runs `ctest -LE benchmark`). Module budgets are registered by their

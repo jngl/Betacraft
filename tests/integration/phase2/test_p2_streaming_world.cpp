@@ -2,7 +2,7 @@
 // AsyncChunkPipeline through WorldMeshStreamer (lifecycle reports, dirty-section captures,
 // re-requests, unload cancellation). A GL-free uploader stands in for WorldRenderer and
 // checks that what ends up "on the GPU" is exactly the newest mesh of every section.
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "P2WorldgenSupport.hpp"
 #include "streaming/SectionNeighborhoodSnapshot18.hpp"

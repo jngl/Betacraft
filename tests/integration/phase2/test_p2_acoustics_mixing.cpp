@@ -3,7 +3,7 @@
 // AudioEngine's command queue, and the mixer routes every voice through the AcousticVoiceBank
 // (occlusion LPF + gain, shared FDN aux bus). AudioEngine::renderFrames runs that mixing path
 // without an audio device, so these tests hear exactly what the callback would play.
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "P2WorldgenSupport.hpp"
 #include "audio/AudioEngine.hpp"

@@ -1,6 +1,6 @@
 #include "physics/Player.hpp"
 #include "physics/Raycaster.hpp"
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 #include "ui/CraftingSystem.hpp"
 #include "voxel/Block.hpp"
 #include "world/World.hpp"

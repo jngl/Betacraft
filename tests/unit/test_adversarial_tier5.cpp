@@ -1,6 +1,6 @@
 #include "physics/Player.hpp"
 #include "streaming/PackedChunkVertex.hpp"
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 #include "voxel/Block.hpp"
 #include "voxel/Chunk.hpp"
 #include "voxel/PalettedSection.hpp"

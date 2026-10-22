@@ -1,7 +1,7 @@
 // Sprint 7 integration (S7.3, S7.5): World saves each chunk as one bundle in region files,
 // reloads it from there, and the fluid simulation alone never writes a bundle (bug 8 under
 // the new storage, with the F3 counter that must stay at 0).
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "P2WorldgenSupport.hpp"
 #include "storage/RegionChunkStore.hpp"

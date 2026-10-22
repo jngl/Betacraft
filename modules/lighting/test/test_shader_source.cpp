@@ -61,7 +61,7 @@ TEST(DynLightShaderSource, EmbeddedCopyIsByteIdenticalToShaderFile) {
 }
 
 TEST(DynLightShaderSource, InjectsIntoTheRealInlineChunkFragmentShader) {
-    const std::string fs = inlineShader(readRepoFile("src/render/WorldRenderer.cpp"), "PACKED_CHUNK_FS");
+    const std::string fs = inlineShader(readRepoFile("modules/render/src/WorldRenderer.cpp"), "PACKED_CHUNK_FS");
     ASSERT_FALSE(fs.empty()) << "PACKED_CHUNK_FS not found in WorldRenderer.cpp";
     const std::string out = injectDynamicLights(fs);
     EXPECT_EQ(out.rfind("#version 330 core", 0), 0u); // still the very first directive
@@ -75,7 +75,7 @@ TEST(DynLightShaderSource, InjectsIntoTheRealInlineChunkFragmentShader) {
 
 TEST(DynLightShaderSource, IncludeNamesDoNotCollideWithChunkShaders) {
     // Every global the include adds must be new to both chunk shaders, or the link fails.
-    const std::string cpp = readRepoFile("src/render/WorldRenderer.cpp");
+    const std::string cpp = readRepoFile("modules/render/src/WorldRenderer.cpp");
     const std::string vs = inlineShader(cpp, "PACKED_CHUNK_VS");
     const std::string fs = inlineShader(cpp, "PACKED_CHUNK_FS");
     ASSERT_FALSE(vs.empty());

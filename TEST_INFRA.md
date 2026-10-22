@@ -29,7 +29,7 @@
 | 19 | Dynamic Key Rebinding & `options.txt` Persistence | P4.4 / Baseline | 5 | 5 | ✓ |
 
 ## Test Architecture
-- Test Runner: CTest executing GoogleTest binaries (`tests/unit/`, `tests/integration/`, `tests/e2e/`).
+- Test Runner: CTest executing GoogleTest binaries: one `betacraft_<m>_tests` per module (`modules/<m>/test/`), plus the multi-module suites in `tests/unit/`, `tests/integration/`, `tests/e2e/` and `tests/mock/`.
 - Build Command: `cmake --build build --parallel`
 - Test Execution: `ctest --test-dir build --output-on-failure`
 - Pass/Fail Semantics: 100% CTest pass, zero failed assertions, clean exit code 0.

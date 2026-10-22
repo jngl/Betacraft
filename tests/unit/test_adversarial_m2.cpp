@@ -1,5 +1,5 @@
 #include "streaming/PackedChunkVertex.hpp"
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 #include "voxel/Block.hpp"
 #include "world/DifferentialLightingEngine.hpp"
 #include "world/World.hpp"

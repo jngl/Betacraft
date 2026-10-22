@@ -5,7 +5,7 @@
 // S4.5-S4.9 through game::EntitySimulation: zombies chase and hit the player (5 damage at most
 // every 20 ticks, with knockback) but ignore a Creative player, burn in the sun but not under
 // a roof, passives flee when hit, and death drops and mob sounds come out of the tick.
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "P2WorldgenSupport.hpp"
 #include "core/Config.hpp"

@@ -2,7 +2,7 @@
 // while it rains, precipitation by biome, the level.dat weather.* keys, the darker sky
 // (SkyRenderer::evaluateAtmosphere overload), the lightning helpers, the debug cycle and its
 // unbound GameAction, and the weather shaders on disk matching the embedded copies.
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "gameplay/MobSpawnRules.hpp"
 #include "gameplay/SplitMix64.hpp"
@@ -39,7 +39,7 @@ int32_t ticksUntilFlip(storage::WeatherState& state, gameplay::SplitMix64& rng, 
 }
 
 std::string readRepoFile(const char* rel) {
-    const auto root = std::filesystem::path(__FILE__).parent_path().parent_path().parent_path();
+    const auto root = std::filesystem::path(__FILE__).parent_path().parent_path().parent_path().parent_path();
     std::ifstream in(root / rel, std::ios::binary);
     std::stringstream ss;
     ss << in.rdbuf();
@@ -298,7 +298,7 @@ TEST(WeatherTest, WeatherShadersMatchEmbeddedCopies) {
     ASSERT_FALSE(vert.empty());
     ASSERT_FALSE(frag.empty());
     EXPECT_EQ(std::string(render::WeatherRenderer::vertexShaderSource()), vert)
-        << "shaders/weather.vert changed: update the copy in src/render/WeatherRenderer.cpp";
+        << "shaders/weather.vert changed: update the copy in modules/render/src/WeatherRenderer.cpp";
     EXPECT_EQ(std::string(render::WeatherRenderer::fragmentShaderSource()), frag)
-        << "shaders/weather.frag changed: update the copy in src/render/WeatherRenderer.cpp";
+        << "shaders/weather.frag changed: update the copy in modules/render/src/WeatherRenderer.cpp";
 }

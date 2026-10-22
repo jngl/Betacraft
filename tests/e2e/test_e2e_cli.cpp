@@ -1,4 +1,4 @@
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include <cstdlib>
 #include <fstream>

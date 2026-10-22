@@ -1,7 +1,7 @@
 // Phase 2 integration, P4.2 acoustics in the game loop: Application plays world sounds at their
 // voxel through the AcousticsController. The fizz of a lava/water contact is the one sound that
 // comes from the simulation rather than the player, so it is checked from the real fluid events.
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "P2WorldgenSupport.hpp"
 #include "audio/AudioEngine.hpp"

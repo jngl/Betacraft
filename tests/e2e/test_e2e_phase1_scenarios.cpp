@@ -1,5 +1,5 @@
 #include "tests/phase1_test_contracts.hpp"
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

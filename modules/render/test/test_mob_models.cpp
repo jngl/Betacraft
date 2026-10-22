@@ -3,7 +3,7 @@
 #include "gameplay/MobDefs.hpp"
 #include "render/MobModels.hpp"
 #include "render/TextureAtlas.hpp"
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 #include "voxel/Block.hpp"
 #include "world/World.hpp"
 

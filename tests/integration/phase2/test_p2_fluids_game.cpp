@@ -1,7 +1,7 @@
 // Phase 2 integration, P2.3 fluids on the game side: the player can carry water and lava
 // sources, Application places them with World::setBlock (which wakes the simulator, see
 // test_p2_fluids_world.cpp), and fluid events become sounds at the listener.
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "fluids/FluidSimulator.hpp"
 #include "game/FluidEffects.hpp"
