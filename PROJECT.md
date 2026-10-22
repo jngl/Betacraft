@@ -87,15 +87,11 @@ Data Flow:
 - `class TextRenderer`: MSDF shader and atlas rendering text quads.
 
 ## Code Layout
-- `modules/<m>/{include/<m>,src,test}`: extracted modules, one static library and test executable each (ADR 0001). `modules/core/`: engine configuration, coordinate types, `Logger`, `MpscRingBuffer.hpp`. `modules/math/`: `AABB`, `Frustum`, `PerlinNoise`. `modules/voxel/`: block and chunk data (`Block`, `BlockShapes.hpp`, `BlockBoxes.hpp`, `BlockEntity.hpp`, `BlockEntityStore`, `PalettedSection`, `Chunk`, `ScheduledTicks`, `SectionCoord.hpp`). Above it, `modules/gameplay/`, `fluids/`, `redstone/`, `lighting/`, then `worldgen/` (needs `gameplay`) and `storage/` (needs `worldgen`); each `readme.md` lists its entry points.
-- `src/physics/`: Player physics, bounding boxes, fixed timestep integration.
-- `src/world/`: the orchestrator above `worldgen`, `storage`, `fluids`, `redstone` and `gameplay`: `World`, `WorldGen`, `BlockTicks`, `Weather`, `DifferentialLightingEngine`, `ChunkGenPipeline`.
-- `src/streaming/`: GL-free asynchronous meshing: `PackedChunkVertex.hpp/cpp`, `BlockShapeMesher.hpp`, `SnapshotMesher`, `AsyncChunkPipeline`, `WorldMeshStreamer`.
+- `modules/<m>/{include/<m>,src,test}`: extracted modules, one static library and test executable each (ADR 0001). `modules/core/`: engine configuration, coordinate types, `Logger`, `MpscRingBuffer.hpp`. `modules/math/`: `AABB`, `Frustum`, `PerlinNoise`. `modules/voxel/`: block and chunk data (`Block`, `BlockShapes.hpp`, `BlockBoxes.hpp`, `BlockEntity.hpp`, `BlockEntityStore`, `PalettedSection`, `Chunk`, `ScheduledTicks`, `SectionCoord.hpp`). Above it, `modules/gameplay/`, `fluids/`, `redstone/`, `lighting/`, then `worldgen/` (needs `gameplay`) and `storage/` (needs `worldgen`). `modules/crafting/` needs only `gameplay`. `modules/world/` is the orchestrator above `worldgen`, `storage`, `fluids`, `redstone` and `gameplay` (`World`, `WorldGen`, `BlockTicks`, `Weather`, `DifferentialLightingEngine`, `ChunkGenPipeline`); above it `physics/` (player physics, `Raycaster`), `ai/` (voxel A*), `streaming/` (GL-free asynchronous meshing), `acoustics/`, then `ecs/` (needs `physics` and `ai`) and `audio/` (`AudioEngine`, needs `acoustics`; miniaudio is a private dependency). Each `readme.md` lists its entry points.
 - `src/render/`: `ChunkMesher.hpp/cpp`, `WorldRenderer.hpp/cpp`, `TextRenderer.hpp/cpp`, `GLHeaders.hpp/cpp`.
-- `src/audio/`: `AudioEngine.hpp/cpp`.
 - `src/ui/`: `ScreenState.hpp`, `TitleScreen.hpp/cpp`, `OptionsMenu.hpp/cpp`, `InputManager.hpp/cpp`.
 - `shaders/`: `chunk_vertex.glsl`, `chunk_fragment.glsl`, `msdf_vertex.glsl`, `msdf_fragment.glsl`.
-- `tests/unit/`: Dedicated GoogleTest unit test suites (`test_physics_fixed_step.cpp`, `test_paletted_section.cpp`, `test_packed_chunk_vertex.cpp`, `test_shared_ebo.cpp`, `test_differential_lighting.cpp`, `test_msdf_font.cpp`, `test_input_rebind.cpp`).
+- `tests/unit/`: GoogleTest unit suites that need `render`, `ui` or several modules (`test_msdf_font.cpp`, `test_input_rebind.cpp`, `test_render.cpp`...). Single-module suites are in `modules/<m>/test/`.
 - `tests/e2e/`: Opaque-box acceptance test suites.
 
 ---
@@ -103,7 +99,7 @@ Data Flow:
 # Phase 2: Engine Evolutions & Major Systems (`docs/IMPROVEMENTS_ROADMAP.md` §9.2)
 
 ## Phase 2 Architecture
-Phase 2 adds eight modules under `src/` (`streaming`, `ecs`, `gameplay`, `crafting`, `fluids`, `worldgen`, `lighting`, `acoustics`). `CMakeLists.txt` (`BETACRAFT_PHASE2_DIRS`) compiles them into `betacraft_core`, so `World`, `Application`, the renderers and `AudioEngine` use them directly. Game-side glue lives in `src/game/` (`WorldSession`, `EntitySimulation`, `InventoryCrafting`, `DynamicLightCollector`, `AcousticsController`, `ItemBridge.hpp`, `FluidEffects.hpp`) and `src/render/ItemAppearance.*`.
+Phase 2 adds nine modules (`streaming`, `ecs`, `gameplay`, `crafting`, `fluids`, `worldgen`, `lighting`, `acoustics`, `ai`), now each a static library under `modules/` (ADR 0001) linked by `betacraft_core`. Game-side glue lives in `src/game/` (`WorldSession`, `EntitySimulation`, `InventoryCrafting`, `DynamicLightCollector`, `AcousticsController`, `ItemBridge.hpp`, `FluidEffects.hpp`) and `src/render/ItemAppearance.*`.
 - **Async World Streaming (Sprint 2.1, P1.1)**: `AsyncChunkPipeline` runs section meshing on a `std::jthread` pool (N-1 cores, at least one worker). Each job reads an immutable `SectionNeighborhoodSnapshot18` (18³ voxels) captured on the main thread. Finished meshes go to a `PingPongStaging` double buffer, and the render thread uploads them under a time budget (`drainUploads`, `Config::meshUploadBudgetMs = 4.0`). `WorldMeshStreamer` connects the live `World` to the pipeline. Terrain generation, lighting and decoration still run synchronously on the main thread.
 - **ECS & Survival (Sprint 2.2, P2.1/P2.5/P2.6)**: The sparse-set `ecs::Registry` has views, owning groups and a `CommandBuffer`. `EntitySimulation` (formerly `GameSession`) owns the registry, which holds dropped items and, in tests only, mobs. `gameplay` adds tools with durability, harvest levels, Beta hold-to-mine (`MiningProgress`), melee damage, knockback and health. `crafting` adds 2x2/3x3 grids, shaped/shapeless matching and a Beta recipe book (`makeBetaRecipeBook`).
 - **World Simulation & Geology (Sprint 2.3, P2.3/P3.3/P3.4)**: `FluidSimulator` is a Beta-style cellular automaton for water and lava, owned by `World` behind an `IFluidVoxelAccess` adapter. `World` keeps fluid levels in a per-voxel 4-bit metadata nibble. `CaveCarver` carves 3D Simplex caves with the vertical envelope `A(y)`, aquifers and a lava band at Y <= 10, called from `WorldGen::generateChunk`. `DecorationPipeline` places trees and flora in a second pass once a chunk's 3x3 neighbourhood is resident, and `WorldStorage` persists a per-chunk decoration record.
@@ -150,7 +146,7 @@ Phase 2 Data Flow:
 
 ## Phase 2 Interface Contracts
 
-### Sprint 2.1 ↔ AsyncChunkPipeline (`src/streaming/AsyncChunkPipeline.hpp`)
+### Sprint 2.1 ↔ AsyncChunkPipeline (`streaming/AsyncChunkPipeline.hpp`)
 - `explicit AsyncChunkPipeline(PipelineConfig config = {});` with `PipelineConfig{ workerCount = N-1 (0 = inline), maxQueuedJobs = 4096, meshOptions, mesher, clock, enforceChunkLifecycle = true, authoritativeVersion, viewConeCos = 0.5, outOfViewDistanceScale = 2, nearRadiusBlocks = 32 }`.
 - `SubmitResult requestSectionMesh(SectionCoord, std::shared_ptr<const SectionNeighborhoodSnapshot18>, uint64_t version, TaskPriority = HighNear);` and `requestSectionMeshFromWorld(const world::World&, SectionCoord, uint64_t version, TaskPriority = HighNear);`. `SubmitResult` is one of `Accepted`, `Replaced`, `AcceptedEvictedOther`, `RejectedQueueFull`, `RejectedStale`, `RejectedInvalid`, `RejectedNotReady` or `RejectedShutdown`.
 - `void setViewer(const glm::vec3& pos, const glm::vec3& forward);`, `void noteSectionVersion(SectionCoord, uint64_t);`, `void cancelSection(SectionCoord);`, `void cancelChunk(core::ChunkCoord);`, `std::vector<SectionCoord> takeEvictedSections();`.
@@ -159,11 +155,11 @@ Phase 2 Data Flow:
 - `size_t runPendingInline(size_t);`, `bool waitIdle(std::chrono::nanoseconds);`, `void shutdown();` (idempotent, joins workers, also run by the destructor). `PipelineStats stats() const;`.
 - Threading: submit/cancel/viewer calls are internally synchronised. Workers read only snapshots. The pipeline never reads the live `World` on its own.
 
-### Sprint 2.1 ↔ WorldMeshStreamer (`src/streaming/WorldMeshStreamer.hpp`)
+### Sprint 2.1 ↔ WorldMeshStreamer (`streaming/WorldMeshStreamer.hpp`)
 - `void update(world::World&, const glm::vec3& viewerPos, const glm::vec3& viewerForward);`: main thread, once per frame, after chunk streaming and edits. Clears the dirty bits it submitted.
 - `DrainStats drainUploads(std::chrono::nanoseconds budget, const MeshUploader&);`, `void setSmoothLighting(bool);` (rebuilds the pipeline), `void shutdown();` (must run before the `World` and GL context are destroyed).
 
-### Sprint 2.2 ↔ ECS (`src/ecs/`)
+### Sprint 2.2 ↔ ECS (`modules/ecs/`)
 - `explicit Registry(uint32_t maxEntities = MAX_ENTITIES, uint32_t recycleThreshold = 1024) noexcept;`: `create()` returns `NULL_ENTITY` only at the cap, and `destroy`, `valid`, `alive`, `slotCount` are available.
 - `emplaceOrReplace<T>`, `get<T>`, `tryGet<T>`, `remove<T>`, `has<Ts...>`, `view<Ts...>()`, `group<Ts...>()`: a component type can be owned by only one group (`std::logic_error` otherwise).
 - Structural changes are not allowed inside `View::each` / `Group::each`. Record them in `ecs::CommandBuffer` and call `flush(reg)` afterwards.
@@ -177,7 +173,7 @@ Phase 2 Data Flow:
 - `int32_t weaponDamage(const ItemStack&);`, `MeleeResult performMeleeAttack(const AttackerState&, ItemStack& weapon, TargetState&, ...);`, `std::optional<TargetHit> pickMeleeTarget(eye, look, std::span<const math::AABB>, float maxDistance);`.
 - `gameplay::ItemId` (`uint16_t`): `toItemId(BlockId)`, `canonicalize`, `toVanillaId`, `toolItemId(kind, material)`, `toolInfo`, `maxStackSize`.
 
-### Sprint 2.2 ↔ Crafting (`src/crafting/`)
+### Sprint 2.2 ↔ Crafting (`modules/crafting/`)
 - `CraftingGrid{GridSize::Inventory2x2 | GridSize::Workbench3x3}` with `get/at/set`, `bounds()`, `isEmpty()`.
 - `std::optional<CraftMatch> RecipeRegistry::match(const CraftingGrid&) const noexcept;` and `std::optional<CraftOutcome> RecipeRegistry::craft(CraftingGrid&) const noexcept;` (consumes inputs, returns result plus byproducts).
 - `RecipeRegistry makeBetaRecipeBook(const BetaRecipeOptions& = {});`. `BetaRecipeOptions::vanilla()` gives a strict Beta 1.7.3 book.
@@ -201,7 +197,7 @@ Phase 2 Data Flow:
 - `std::string lighting::injectDynamicLights(std::string_view fragmentShader);`: the GLSL entry point is `computeDynamicLight(v_worldPos, gl_FragCoord.xy)`.
 - `void game::collectDynamicLights(DynamicLightManager&, const physics::Player&, const ecs::Registry*, float alpha);`.
 
-### Sprint 2.4 ↔ Acoustics (`src/acoustics/`, `src/game/AcousticsController.hpp`)
+### Sprint 2.4 ↔ Acoustics (`modules/acoustics/`, `src/game/AcousticsController.hpp`)
 - `OcclusionSample measureOcclusion(const VoxelSolidityQuery&, listener, source);`, `OcclusionTarget occlusionTargetFor(const OcclusionSample&, const OcclusionParams&);`, `float computeVoxelOcclusion(const world::World&, listener, soundPos);` (LPF cutoff in Hz).
 - `OcclusionScheduler` (`CAPACITY = 32`): `addSource(handle, pos)`, `setSourcePosition`, `removeSource`, `update(now, listener, query) -> std::span<const OcclusionUpdate>`.
 - `EnclosureMonitor::update(now, listener, query) -> std::optional<EnvironmentUpdate>`, `reset()`. It detects teleports above 16 blocks.
@@ -209,14 +205,14 @@ Phase 2 Data Flow:
 - `AcousticsController::update(now, listener, query)`, `acousticsAt(source, ...) -> std::optional<audio::VoiceAcoustics>` (`occlusionGain`, `lpfCutoffHz`, `reverbSend`), `reset()`. World-backed queries run on the game thread only.
 
 ## Phase 2 Code Layout
-- `src/streaming/`: `AsyncChunkPipeline`, `ChunkLifecycle.hpp`, `PingPongStaging.hpp`, `UploadBudget.hpp`, `SectionNeighborhoodSnapshot18`, `SnapshotMesher`, `WorldMeshStreamer`.
-- `src/ecs/`: `Entity.hpp`, `SparseSet`, `ComponentPool.hpp`, `Registry`, `View.hpp`, `Group`, `CommandBuffer.hpp`, `Components.hpp`, `Systems`.
+- `modules/streaming/`: `AsyncChunkPipeline`, `ChunkLifecycle.hpp`, `PingPongStaging.hpp`, `UploadBudget.hpp`, `SectionNeighborhoodSnapshot18`, `SnapshotMesher`, `WorldMeshStreamer`.
+- `modules/ecs/`: `Entity.hpp`, `SparseSet`, `ComponentPool.hpp`, `Registry`, `View.hpp`, `Group`, `CommandBuffer.hpp`, `Components.hpp`, `Systems`.
 - `modules/gameplay/`: `ItemIds.hpp`, `ItemStack`, `ToolDefinitions`, `Harvesting`, `Combat`, `MeleeCombat`, `Knockback`, `Health`, `Survival`, `DeathDrops`, `SplitMix64.hpp`.
-- `src/crafting/`: `ItemIds.hpp`, `Ingredient.hpp`, `RecipeTypes.hpp`, `CraftingGrid`, `ShapedRecipe`, `ShapelessRecipe`, `RecipeRegistry`, `BetaRecipes`.
+- `modules/crafting/`: `ItemIds.hpp`, `Ingredient.hpp`, `RecipeTypes.hpp`, `CraftingGrid`, `ShapedRecipe`, `ShapelessRecipe`, `RecipeRegistry`, `BetaRecipes`, `Furnace`, `SmeltingRecipes`.
 - `modules/fluids/`: `FluidState.hpp`, `FluidVoxelAccess.hpp`, `GridFluidVoxelAccess`, `ActiveFluidQueue`, `FluidSimulator`.
 - `modules/worldgen/`: `SimplexNoise`, `SeededRandom.hpp`, `ColumnSampling`, `CaveCarver`, `DecorationFeatures`, `DecorationPipeline`, `FeaturePlanCodec`.
 - `modules/lighting/`: `DynamicLight`, `DynamicLightManager`, `TileLightCuller`, `Std140.hpp`, `DynamicLightUbo`, `DynamicLightFrame`, `DynamicLightsGlsl`, `ShaderInclude` (`DynamicLightUniformBuffer` is in `src/render/`).
-- `src/acoustics/`: `VoxelDda.hpp`, `AcousticOcclusion`, `WorldSolidity`, `OcclusionScheduler`, `OnePoleFilter`, `VoiceAcousticFilter`, `EnclosureDetector`, `EnclosureMonitor`, `FdnReverb`, `AuxReverbBus`, `AcousticVoiceBank`, `AcousticCommand.hpp`.
+- `modules/acoustics/`: `VoxelDda.hpp`, `AcousticOcclusion`, `WorldSolidity`, `OcclusionScheduler`, `OnePoleFilter`, `VoiceAcousticFilter`, `EnclosureDetector`, `EnclosureMonitor`, `FdnReverb`, `AuxReverbBus`, `AcousticVoiceBank`, `AcousticCommand.hpp`.
 - `src/game/`: `WorldSession`, `EntitySimulation`, `InventoryCrafting`, `DynamicLightCollector`, `AcousticsController`, `ItemBridge.hpp`, `FluidEffects.hpp`.
 
 ## Phase 2 Known Deferred Items

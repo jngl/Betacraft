@@ -23,18 +23,6 @@ if(BETACRAFT_WITH_ZSTD)
     pkg_check_modules(ZSTD IMPORTED_TARGET libzstd)
 endif()
 
-# Separate third-party miniaudio compilation unit so our own code can use strict warnings
-add_library(miniaudio_lib STATIC
-    src/audio/miniaudio_impl.cpp
-)
-target_include_directories(miniaudio_lib SYSTEM PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/miniaudio
-)
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(miniaudio_lib PRIVATE -w -O2)
-endif()
-target_link_libraries(miniaudio_lib PUBLIC Threads::Threads ${CMAKE_DL_LIBS} m)
-
 enable_testing()
 
 include(FetchContent)
@@ -60,16 +48,16 @@ add_subdirectory(modules/redstone)
 add_subdirectory(modules/worldgen)
 add_subdirectory(modules/storage)
 add_subdirectory(modules/lighting)
+add_subdirectory(modules/world)
+add_subdirectory(modules/physics)
+add_subdirectory(modules/crafting)
+add_subdirectory(modules/ai)
+add_subdirectory(modules/ecs)
+add_subdirectory(modules/streaming)
+add_subdirectory(modules/acoustics)
+add_subdirectory(modules/audio)
 
 set(BETACRAFT_CORE_SOURCES
-    src/world/DifferentialLightingEngine.cpp
-    src/world/WorldGen.cpp
-    src/world/World.cpp
-    src/world/BlockTicks.cpp
-    src/world/Weather.cpp
-    src/world/ChunkGenPipeline.cpp
-    src/physics/Raycaster.cpp
-    src/physics/Player.cpp
     src/render/GLHeaders.cpp
     src/render/Shader.cpp
     src/render/TextureAtlas.cpp
@@ -83,7 +71,6 @@ set(BETACRAFT_CORE_SOURCES
     src/render/ItemAppearance.cpp
     src/render/DynamicLightUniformBuffer.cpp
     src/render/BitmapFont.cpp
-    src/audio/AudioEngine.cpp
     src/ui/CraftingSystem.cpp
     src/ui/HudRenderer.cpp
     src/ui/InputManager.cpp
@@ -107,14 +94,6 @@ set(BETACRAFT_CORE_SOURCES
     src/game/Projectiles.cpp
     src/game/WorldSession.cpp
 )
-
-# Phase 2 modules (docs/IMPROVEMENTS_ROADMAP.md §9.2) are part of the engine core so that
-# World / Application / renderers / audio can use them.
-set(BETACRAFT_PHASE2_DIRS streaming ecs crafting acoustics ai)
-foreach(dir IN LISTS BETACRAFT_PHASE2_DIRS)
-    file(GLOB p2_core_src CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/${dir}/*.cpp)
-    list(APPEND BETACRAFT_CORE_SOURCES ${p2_core_src})
-endforeach()
 
 add_library(betacraft_core STATIC ${BETACRAFT_CORE_SOURCES})
 
@@ -141,9 +120,16 @@ target_link_libraries(betacraft_core PUBLIC
     betacraft::worldgen
     betacraft::storage
     betacraft::lighting
+    betacraft::world
+    betacraft::physics
+    betacraft::crafting
+    betacraft::ai
+    betacraft::ecs
+    betacraft::streaming
+    betacraft::acoustics
+    betacraft::audio
     PkgConfig::SDL2
     OpenGL::GL
-    miniaudio_lib
     Threads::Threads
 )
 
@@ -156,21 +142,12 @@ add_executable(betacraft src/main.cpp)
 target_link_libraries(betacraft PRIVATE betacraft_core)
 
 set(UNIT_TEST_SOURCES
-    tests/unit/test_physics.cpp
-    tests/unit/test_world_gen.cpp
-    tests/unit/test_world.cpp
-    tests/unit/test_audio.cpp
     tests/unit/test_ui.cpp
     tests/unit/test_render.cpp
     tests/unit/test_mob_models.cpp
-    tests/unit/test_physics_fixed_step.cpp
-    tests/unit/test_packed_chunk_vertex.cpp
-    tests/unit/test_shared_ebo.cpp
-    tests/unit/test_differential_lighting.cpp
     tests/unit/test_adversarial_m2.cpp
     tests/unit/test_msdf_font.cpp
     tests/unit/test_input_rebind.cpp
-    tests/unit/test_adversarial_m3.cpp
     tests/unit/test_adversarial_tier5.cpp
     tests/unit/test_weather.cpp
 )
@@ -264,43 +241,10 @@ add_executable(adversarial_m3_ui_stress tests/adversarial_m3_ui_stress.cpp)
 target_include_directories(adversarial_m3_ui_stress PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(adversarial_m3_ui_stress PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 
-# ---------------------------------------------------------------------------
-# Phase 2 modules (docs/IMPROVEMENTS_ROADMAP.md §9.2). Each module is an isolated
-# static library + GoogleTest executable so that it can be developed test-first.
-# ---------------------------------------------------------------------------
-set(BETACRAFT_PHASE2_MODULES
-    "streaming:streaming"   # P1.1 AsyncChunkPipeline, S7.7 ChunkGenPipeline
-    "ecs:ecs"               # P2.1 Sparse-set ECS
-    "crafting:crafting"     # P2.6 2x2 / 3x3 crafting grids
-    "acoustics:acoustics"   # P4.2 DDA acoustic occlusion + shared FDN reverb bus
-    "ai:ai"                 # S8.1-S8.4 Voxel A* pathfinding and ECS path following
-)
-set(BETACRAFT_PHASE2_LIBS)
-foreach(entry IN LISTS BETACRAFT_PHASE2_MODULES)
-    string(REPLACE ":" ";" parts "${entry}")
-    list(GET parts 0 key)
-    list(GET parts 1 dir)
-    # Sources are compiled into betacraft_core; this target only names the module for its tests.
-    add_library(betacraft_p2_${key} INTERFACE)
-    target_link_libraries(betacraft_p2_${key} INTERFACE betacraft_core)
-    list(APPEND BETACRAFT_PHASE2_LIBS betacraft_p2_${key})
-
-    file(GLOB p2_tests CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tests/phase2/${key}/*.cpp)
-    if(p2_tests)
-        add_executable(betacraft_p2_${key}_tests ${p2_tests})
-        target_include_directories(betacraft_p2_${key}_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
-        target_link_libraries(betacraft_p2_${key}_tests PRIVATE betacraft_p2_${key} betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
-        target_compile_definitions(betacraft_p2_${key}_tests PRIVATE BETACRAFT_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
-        add_test(NAME Phase2_${key} COMMAND betacraft_p2_${key}_tests)
-    endif()
-endforeach()
-
 # Wall-clock budgets are benchmarks: skipped unless BETACRAFT_PERF_TESTS is set, run with
-# `ctest -L benchmark` (CI runs `ctest -LE benchmark`).
-if(TARGET betacraft_p2_acoustics_tests)
-    add_test(NAME Phase2_acoustics_perf COMMAND betacraft_p2_acoustics_tests --gtest_filter=AcousticPipeline.*Budget*)
-    set_tests_properties(Phase2_acoustics_perf PROPERTIES LABELS benchmark ENVIRONMENT BETACRAFT_PERF_TESTS=1)
-endif()
+# `ctest -L benchmark` (CI runs `ctest -LE benchmark`). Module budgets are registered by their
+# module (Phase2_acoustics_perf in modules/acoustics).
+
 # S6.6: one TNT blast under 15 ms in Release.
 add_test(NAME Integration_beta_content_perf COMMAND betacraft_integration_tests --gtest_filter=S6BetaContent.*Budget*)
 set_tests_properties(Integration_beta_content_perf PROPERTIES LABELS benchmark ENVIRONMENT BETACRAFT_PERF_TESTS=1)

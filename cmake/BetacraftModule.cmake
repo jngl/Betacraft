@@ -16,13 +16,15 @@ endif()
 add_library(betacraft_test_support INTERFACE)
 target_include_directories(betacraft_test_support INTERFACE ${PROJECT_SOURCE_DIR}/tests/support)
 
-# betacraft_add_module(<name> [DEPS <target>...] [TEST_NAME <ctest name>])
+# betacraft_add_module(<name> [DEPS <target>...] [TEST_NAME <ctest name>] [STANDALONE_TESTS <file>...])
 # Builds the STATIC library <name> (alias betacraft::<name>) from src/*.cpp, and, when
 # test/*.cpp exist, the GoogleTest executable betacraft_<name>_tests run as ctest Module_<name>
 # (or TEST_NAME, for a module whose suite CI already runs under another name).
-# The test sources are also collected for betacraft_all_tests (BETACRAFT_MODULE_TEST_SOURCES).
+# The test sources are also collected for betacraft_all_tests (BETACRAFT_MODULE_TEST_SOURCES),
+# except STANDALONE_TESTS (paths under test/): those replace a global such as operator new and
+# only hold in a binary of their own.
 function(betacraft_add_module name)
-    cmake_parse_arguments(PARSE_ARGV 1 arg "" "TEST_NAME" "DEPS")
+    cmake_parse_arguments(PARSE_ARGV 1 arg "" "TEST_NAME" "DEPS;STANDALONE_TESTS")
     if(NOT arg_TEST_NAME)
         set(arg_TEST_NAME Module_${name})
     endif()
@@ -42,6 +44,13 @@ function(betacraft_add_module name)
         # Next to the other test executables: ./build/betacraft_<name>_tests.
         set_target_properties(betacraft_${name}_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
         add_test(NAME ${arg_TEST_NAME} COMMAND betacraft_${name}_tests)
-        set_property(GLOBAL APPEND PROPERTY BETACRAFT_MODULE_TEST_SOURCES ${tests})
+        set(shared_tests ${tests})
+        foreach(standalone IN LISTS arg_STANDALONE_TESTS)
+            if(NOT EXISTS ${dir}/test/${standalone})
+                message(FATAL_ERROR "${name}: STANDALONE_TESTS names a missing file test/${standalone}")
+            endif()
+            list(REMOVE_ITEM shared_tests ${dir}/test/${standalone})
+        endforeach()
+        set_property(GLOBAL APPEND PROPERTY BETACRAFT_MODULE_TEST_SOURCES ${shared_tests})
     endif()
 endfunction()

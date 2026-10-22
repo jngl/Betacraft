@@ -58,33 +58,35 @@
 - Beta 1.7.3 parity is pinned by explicit value tests: tool durability, weapon damage, fluid tick rates and decay, recipe shapes, and cave spec constants.
 - Integration tests in `tests/integration/phase2/` drive the real `World`, `WorldSession`, `EntitySimulation`, `WorldMeshStreamer`, `AudioEngine` and renderer-side helpers headlessly.
 
-## Phase 2 Module Suites (`tests/phase2/<key>/`, `modules/<m>/test/`)
-For a module still in `src/`, `CMakeLists.txt` (`BETACRAFT_PHASE2_MODULES`) globs `tests/phase2/<key>/*.cpp` into `betacraft_p2_<key>_tests`, which links `betacraft_p2_<key>`, an INTERFACE target over `betacraft_core`. It registers the executable in CTest as `Phase2_<key>`. An extracted module (`modules/<m>`, ADR 0001) builds `modules/<m>/test/*.cpp` into `betacraft_<m>_tests`, linked against that module only, and keeps its `Phase2_<key>` CTest name (`TEST_NAME` in `modules/<m>/CMakeLists.txt`). Its tests that need other modules (`game`, `render`, `world`...) are in `tests/integration/phase2/test_p2_<key>_*.cpp`.
+## Phase 2 Module Suites (`modules/<m>/test/`)
+Every Phase 2 module is an extracted module (`modules/<m>`, ADR 0001): `modules/<m>/test/*.cpp` build into `betacraft_<m>_tests`, linked against that module and its `DEPS` only, and keep their `Phase2_<key>` CTest name (`TEST_NAME` in `modules/<m>/CMakeLists.txt`). Its tests that need `game`, `render` or `ui` are in `tests/integration/phase2/test_p2_<key>_*.cpp`. Helpers shared by several executables (`StreamingTestHelpers.hpp`, `AcousticsTestUtils.hpp`, `AiTestSupport.hpp`, `TempDir.hpp`) are in `tests/support/test_support/`. A test that replaces a global (`operator new` in `ecs/test/test_exception_safety.cpp` and `audio/test/test_realtime_no_alloc.cpp`) is a module's `STANDALONE_TESTS`: it stays out of `betacraft_all_tests`.
 
 | CTest name | Executable | Module | Roadmap | Sprint | Test files | Test cases |
 |------------|------------|-----------------|---------|--------|:----------:|:----------:|
-| `Phase2_streaming` | `betacraft_p2_streaming_tests` | `streaming` | P1.1 AsyncChunkPipeline | 2.1 | 15 | 176 |
-| `Phase2_ecs` | `betacraft_p2_ecs_tests` | `ecs` | P2.1 Sparse-set ECS | 2.2 | 20 | 224 |
+| `Phase2_streaming` | `betacraft_streaming_tests` | `modules/streaming` | P1.1 AsyncChunkPipeline | 2.1 | 16 | 177 |
+| `Phase2_ecs` | `betacraft_ecs_tests` | `modules/ecs` | P2.1 Sparse-set ECS | 2.2 | 22 | 233 |
 | `Phase2_combat` | `betacraft_gameplay_tests` | `modules/gameplay` | P2.5 Tools, durability, melee | 2.2 | 15 | 230 |
-| `Phase2_crafting` | `betacraft_p2_crafting_tests` | `crafting` | P2.6 2x2 / 3x3 crafting | 2.2 | 9 | 141 |
+| `Phase2_crafting` | `betacraft_crafting_tests` | `modules/crafting` | P2.6 2x2 / 3x3 crafting | 2.2 | 8 | 121 |
 | `Phase2_fluids` | `betacraft_fluids_tests` | `modules/fluids` | P2.3 Cellular fluids | 2.3 | 13 | 131 |
 | `Phase2_worldgen` | `betacraft_worldgen_tests` | `modules/worldgen` | P3.3 caves + P3.4 decoration | 2.3 | 18 | 174 |
 | `Phase2_dynlight` | `betacraft_lighting_tests` | `modules/lighting` | P4.6 Dynamic light UBO | 2.4 | 10 | 158 |
 | `Phase2_storage` | `betacraft_storage_tests` | `modules/storage` | S7.1-S7.6 Region files, migration | S7 | 6 | 37 |
 | `Phase2_redstone` | `betacraft_redstone_tests` | `modules/redstone` | S8.5-S8.8 Redstone | S8 | 4 | 13 |
-| `Phase2_acoustics` | `betacraft_p2_acoustics_tests` | `acoustics` | P4.2 DDA occlusion + reverb bus | 2.4 | 14 | 265 |
+| `Phase2_ai` | `betacraft_ai_tests` | `modules/ai` | S8.1-S8.4 Voxel A* | S8 | 3 | 14 |
+| `Phase2_acoustics` | `betacraft_acoustics_tests` | `modules/acoustics` | P4.2 DDA occlusion + reverb bus | 2.4 | 11 | 241 |
 
 Test-case counts are `TEST`/`TEST_F`/`TEST_P` macros per directory. A parameterised case can expand to more test instances at run time.
 
 Coverage highlights per suite:
-- **streaming**: section coords, 18³ snapshot capture and fast paths, `SnapshotMesher` parity with `ChunkMesher`, ping-pong staging, upload budget, chunk lifecycle, cancellation, eviction, supersession and staleness, view-cone priority, robustness and shutdown, and `World` integration.
-- **ecs**: sparse set, component pool, registry and slot recycling, views, owning groups, command buffer, iteration and exception safety, systems, collision hardening, mob AI and knockback, entity budget, Beta parity, spec-name aliases.
+- **streaming**: section coords, 18³ snapshot capture and fast paths, packed vertices and the shared EBO, ping-pong staging, upload budget, chunk lifecycle, `ChunkGenPipeline`, cancellation, eviction, supersession and staleness, view-cone priority, robustness and shutdown. `SnapshotMesher` parity with `ChunkMesher` and the pipeline against a `World` need `render` and run in `IntegrationTests` (`test_p2_streaming_*.cpp`).
+- **ecs**: sparse set, component pool, registry and slot recycling, views, owning groups, command buffer, iteration and exception safety, systems, collision hardening, mob AI and knockback, A* path planning and following, entity budget, Beta parity, spec-name aliases. The player proxy and projectiles need `game` (`test_p2_ecs_*.cpp`).
+- **ai**: octile heuristic, `canTraverse` for each mob size, A* on a `GridNavQuery`.
 - **combat**: item stacks, tool definitions, harvesting and dig rates, block break and drops, weapon damage, melee, knockback, health, survival, crops, explosions, mob definitions, death drops. Armor, food, item ids, item appearance, item bridge and spawn rules need `game` or `render` and run in `IntegrationTests` (`test_p2_combat_*.cpp`).
-- **crafting**: ingredients, item ids, grid, shaped and shapeless recipes, registry, Beta recipe book (legacy and vanilla), inventory crafting screen, HUD inventory layout.
+- **crafting**: ingredients, item ids, grid, shaped and shapeless recipes, registry, furnace and smelting. The Beta recipe book, inventory crafting and HUD inventory layout need `game` or `ui` (`test_p2_crafting_*.cpp`).
 - **fluids**: `FluidState` encoding, active queue, spread, falling, infinite sources, retraction, settled detection, flow-cost pathfinding, interactions (hardening, fizz, wash-away), tick rates, budgets, determinism, grid adapter.
 - **worldgen**: Simplex noise, seeded random, column sampling and context, cave envelope, carver, chunk carving and sampler, aquifers, fill palette, spec pinning, cave properties, decoration features, pipeline, hooks and shores, feature-plan codec.
 - **dynlight**: attenuation, `DynamicLight`, light manager, tile culling, std140 and UBO packing, frame pipeline, shader source and GLSL contract, GLSL execution through a mini interpreter.
-- **acoustics**: voxel DDA, world solidity, occlusion and its scheduler, one-pole filter, enclosure detector and monitor, FDN reverb, aux bus, voice bank, end-to-end pipeline, no allocation on the real-time path, `AudioEngine` acoustics, `AcousticsController`.
+- **acoustics**: voxel DDA, world solidity, occlusion and its scheduler, one-pole filter, enclosure detector and monitor, FDN reverb, aux bus, voice bank, end-to-end pipeline. No allocation on the real-time path and `AudioEngine` acoustics are in `Module_audio`, `AcousticsController` in `IntegrationTests` (`test_p2_acoustics_controller.cpp`).
 
 ## Phase 2 Integration Suites (`tests/integration/phase2/`)
 `CMakeLists.txt` globs these files into `INTEGRATION_TEST_SOURCES`, so they run inside `betacraft_integration_tests` (CTest `IntegrationTests`) and `betacraft_all_tests` (CTest `AllTests`). All fixtures are prefixed `P2` (156 test cases in 20 files, with shared helpers in `P2GameplaySupport.hpp` and `P2WorldgenSupport.hpp`).
@@ -112,8 +114,11 @@ Coverage highlights per suite:
 ```
 cmake -S . -B build-p2-streaming-tsan -DCMAKE_BUILD_TYPE=Debug \
       -DCMAKE_CXX_FLAGS=-fsanitize=thread -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=thread
-cmake --build build-p2-streaming-tsan --target betacraft_p2_streaming_tests --parallel
+cmake --build build-p2-streaming-tsan --target betacraft_streaming_tests --parallel
 ctest --test-dir build-p2-streaming-tsan -R '^Phase2_streaming$' --output-on-failure
+# The pipeline against a live World checks parity with render::ChunkMesher, so it lives in IntegrationTests:
+cmake --build build-p2-streaming-tsan --target betacraft_integration_tests --parallel
+build-p2-streaming-tsan/betacraft_integration_tests --gtest_filter='PipelineWorldIntegration.*'
 ```
 - The streaming tests synchronise with the pipeline through `waitIdle()`, `pause()`/`resume()` and gated mesher doubles (`PipelineTestDoubles.hpp`), never through sleeps. Inline mode (`workerCount = 0` + `runPendingInline`) is used where ordering must be deterministic.
 - Timing targets (capture, mesh, swap) are not asserted in Debug/TSan builds, and the capture benchmark enforces its 100 µs ceiling only under `NDEBUG`.
