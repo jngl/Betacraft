@@ -10,7 +10,7 @@
 namespace betacraft::gameplay {
 
 // The engine's single item id scheme. The tools/combat code (this module) owns it and the
-// crafting module (src/crafting/ItemIds.hpp) re-exports it, so both always agree:
+// crafting module (crafting/ItemIds.hpp) re-exports it, so both always agree:
 //  * 0..255 : voxel::BlockId values, unchanged. 54 (Chest) and 62 (lit furnace) are real
 //             blocks with Beta's block ids.
 //  * 256..  : vanilla Beta 1.7.3 item numbers, the canonical form of every item (S2.10,
