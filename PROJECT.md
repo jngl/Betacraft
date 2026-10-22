@@ -87,9 +87,8 @@ Data Flow:
 - `class TextRenderer`: MSDF shader and atlas rendering text quads.
 
 ## Code Layout
-- `modules/<m>/{include/<m>,src,test}`: extracted modules, one static library and test executable each (ADR 0001). `modules/core/`: engine configuration, coordinate types, `Logger`, `MpscRingBuffer.hpp`. `modules/math/`: `AABB`, `Frustum`, `PerlinNoise`.
+- `modules/<m>/{include/<m>,src,test}`: extracted modules, one static library and test executable each (ADR 0001). `modules/core/`: engine configuration, coordinate types, `Logger`, `MpscRingBuffer.hpp`. `modules/math/`: `AABB`, `Frustum`, `PerlinNoise`. `modules/voxel/`: block and chunk data (`Block`, `BlockShapes.hpp`, `BlockBoxes.hpp`, `BlockEntity.hpp`, `BlockEntityStore`, `PalettedSection`, `Chunk`, `ScheduledTicks`, `SectionCoord.hpp`). Above it, `modules/gameplay/`, `fluids/`, `redstone/`, `lighting/`, then `worldgen/` (needs `gameplay`) and `storage/` (needs `worldgen`); each `readme.md` lists its entry points.
 - `src/physics/`: Player physics, bounding boxes, fixed timestep integration.
-- `src/voxel/`: block and chunk data, depending only on `core`: `Block`, `BlockShapes.hpp`, `BlockBoxes.hpp`, `BlockEntity.hpp`, `BlockEntityStore`, `PalettedSection`, `Chunk`, `ScheduledTicks`, `SectionCoord.hpp`.
 - `src/world/`: the orchestrator above `worldgen`, `storage`, `fluids`, `redstone` and `gameplay`: `World`, `WorldGen`, `BlockTicks`, `Weather`, `DifferentialLightingEngine`, `ChunkGenPipeline`.
 - `src/streaming/`: GL-free asynchronous meshing: `PackedChunkVertex.hpp/cpp`, `BlockShapeMesher.hpp`, `SnapshotMesher`, `AsyncChunkPipeline`, `WorldMeshStreamer`.
 - `src/render/`: `ChunkMesher.hpp/cpp`, `WorldRenderer.hpp/cpp`, `TextRenderer.hpp/cpp`, `GLHeaders.hpp/cpp`.
@@ -171,7 +170,7 @@ Phase 2 Data Flow:
 - Components: `TransformComp`, `VelocityComp`, `HealthComp`, `AABBColliderComp`, `ItemDropComp`, `MobAIComp`, `PlayerInputComp`, `PlayerTagComp`. Teleports must use `ecs::teleport(TransformComp&, pos)`.
 - Systems: `MovementPhysicsSystem::update(reg, dt)`, `VoxelCollisionSystem::update(reg, world)`, `HealthSystem::applyDamage(reg, e, amount, knockback)` / `update(reg, dt) -> dead list`, `MobAISystem::update(reg, dt)`, `ItemDropSystem`, `EntityRenderInterpolationSystem::collect(reg, alpha, out)`, `PlayerControlSystem::update(reg, dt)`. `EntityFactory::spawnPlayer / spawnItemDrop / spawnMob`. Roadmap-name aliases also exist, for example `CollisionResolutionSystem` and `CombatDamageSystem`.
 
-### Sprint 2.2 ↔ Gameplay (`src/gameplay/`)
+### Sprint 2.2 ↔ Gameplay (`modules/gameplay/`)
 - `BlockHarvestInfo harvestInfo(voxel::BlockId);`, `bool canHarvest(const BlockHarvestInfo&, const ItemStack&);`, `DigResult computeDig(voxel::BlockId, const ItemStack& held, DigConditions);`.
 - `MiningProgress::click(target, dig)` / `advance(target, dig)` / `reset()` / `crackStage()` (-1 or 0..9).
 - `BlockBreakOutcome breakBlockWith(voxel::BlockId, ItemStack& held, uint64_t dropSeed = 0);`: drop, wear and `meltsIntoWater`. A tool breaks when `damage > maxDamage` (maxDamage + 1 uses, as in Beta).
@@ -184,18 +183,18 @@ Phase 2 Data Flow:
 - `RecipeRegistry makeBetaRecipeBook(const BetaRecipeOptions& = {});`. `BetaRecipeOptions::vanilla()` gives a strict Beta 1.7.3 book.
 - `crafting::isPlaceableBlock(ItemId)` decides whether an item can be placed. `maxDurability` mirrors `gameplay::materialStats`.
 
-### Sprint 2.3 ↔ Fluids (`src/fluids/`)
+### Sprint 2.3 ↔ Fluids (`modules/fluids/`)
 - `class IFluidVoxelAccess { isLoaded, getBlock, getFluid, setFluid, setBlock, blocksFlow }`: unloaded cells act as walls. Nibble 0 is never decoded as dry, and the fluid type comes from the block id.
 - `FluidState{ type, level 0..7 (7 = source), fallingFlag }` with `toNibble/fromNibble` and `betaDecay/fromBetaDecay`. `World` stores Beta's native metadata (0 = source, 1..7 flowing, 8 = falling).
 - `explicit FluidSimulator(IFluidVoxelAccess&, FluidConfig = {}) noexcept;` with `FluidTickStats tick();`, `placeSource`, `removeFluid`, `notifyBlockChanged`, `notifyRegionLoaded(min, max, wakeInterior)`, `scheduleUpdate`, `isSettled`, `takeEvents()`.
 - `World` facade: `FluidTickStats World::tick();`, `std::vector<FluidEvent> World::takeFluidEvents();`, `FluidState World::getFluid(BlockPos) const;`. `World` configures `maxUpdatesPerTick = 256` and `randomSeed = world seed`.
 
-### Sprint 2.3 ↔ Worldgen (`src/worldgen/`)
+### Sprint 2.3 ↔ Worldgen (`modules/worldgen/`)
 - `explicit CaveCarver(uint64_t seed);`, `CarveStats carveChunk(voxel::Chunk&, const ColumnSampler&, ...);` (pass 1, after surface and ores), `static ColumnContext scanColumn(const voxel::Chunk&, lx, lz);`, `static constexpr float computeVerticalEnvelope(int32_t wy, const ColumnContext&);`. Constants: `BEDROCK_GUARD_MAX_Y = 5`, `CHEESE_MAX_Y = 50`, `LAVA_MAX_Y = 10`, aquifers Y 11..32, `AQUIFER_THRESHOLD = 0.42`.
 - `DecorationPipeline(uint64_t worldSeed, ChunkAccess&)`: `onTerrainReady(coord)`, `onUndecoratedChunkLoaded(coord, plan)`, `onDecoratedChunkLoaded(coord, plan)`, `onChunkUnloaded(coord, PlanRetention)`, `isDecorated`, `findPlan`. Every returned coord needs a relight and remesh.
 - `WorldStorage::saveDecorationRecord / loadDecorationRecord(core::ChunkCoord)` with `worldgen::DecorationRecord` (`FeaturePlanCodec`).
 
-### Sprint 2.4 ↔ Dynamic Lighting (`src/lighting/`, `src/game/DynamicLightCollector.hpp`)
+### Sprint 2.4 ↔ Dynamic Lighting (`modules/lighting/`, `src/game/DynamicLightCollector.hpp`)
 - `DynamicLightManager::clear()`, `submit(const DynamicLight&)`, `submitHeldItem(eyePos, lookDir, BlockId)`, `submitDroppedItem(pos, BlockId)`. Selection is capped at `kMaxDynamicLights = 16`.
 - `void DynamicLightFrame::build(const DynamicLightManager&, const glm::vec3& cameraPos, const glm::mat4& viewProj, viewportPx);`: `viewportPx` is the drawable (framebuffer) size. Also `uboBytes()`, `blockLightLevelAt(worldPos)`.
 - `DynamicLightUniformBuffer::initialize()`, `static bindProgram(GLuint)` (block `DynamicLightBlock`, binding point 3), `upload(bytes)`, `bindBase()`, `destroy()`.
@@ -212,11 +211,11 @@ Phase 2 Data Flow:
 ## Phase 2 Code Layout
 - `src/streaming/`: `AsyncChunkPipeline`, `ChunkLifecycle.hpp`, `PingPongStaging.hpp`, `UploadBudget.hpp`, `SectionNeighborhoodSnapshot18`, `SnapshotMesher`, `WorldMeshStreamer`.
 - `src/ecs/`: `Entity.hpp`, `SparseSet`, `ComponentPool.hpp`, `Registry`, `View.hpp`, `Group`, `CommandBuffer.hpp`, `Components.hpp`, `Systems`.
-- `src/gameplay/`: `ItemIds.hpp`, `ItemStack`, `ToolDefinitions`, `Harvesting`, `Combat`, `MeleeCombat`, `Knockback`, `Health`, `Survival`, `DeathDrops`, `SplitMix64.hpp`.
+- `modules/gameplay/`: `ItemIds.hpp`, `ItemStack`, `ToolDefinitions`, `Harvesting`, `Combat`, `MeleeCombat`, `Knockback`, `Health`, `Survival`, `DeathDrops`, `SplitMix64.hpp`.
 - `src/crafting/`: `ItemIds.hpp`, `Ingredient.hpp`, `RecipeTypes.hpp`, `CraftingGrid`, `ShapedRecipe`, `ShapelessRecipe`, `RecipeRegistry`, `BetaRecipes`.
-- `src/fluids/`: `FluidState.hpp`, `FluidVoxelAccess.hpp`, `GridFluidVoxelAccess`, `ActiveFluidQueue`, `FluidSimulator`.
-- `src/worldgen/`: `SimplexNoise`, `SeededRandom.hpp`, `ColumnSampling`, `CaveCarver`, `DecorationFeatures`, `DecorationPipeline`, `FeaturePlanCodec`.
-- `src/lighting/`: `DynamicLight`, `DynamicLightManager`, `TileLightCuller`, `Std140.hpp`, `DynamicLightUbo`, `DynamicLightFrame`, `DynamicLightUniformBuffer`, `DynamicLightsGlsl`, `ShaderInclude`.
+- `modules/fluids/`: `FluidState.hpp`, `FluidVoxelAccess.hpp`, `GridFluidVoxelAccess`, `ActiveFluidQueue`, `FluidSimulator`.
+- `modules/worldgen/`: `SimplexNoise`, `SeededRandom.hpp`, `ColumnSampling`, `CaveCarver`, `DecorationFeatures`, `DecorationPipeline`, `FeaturePlanCodec`.
+- `modules/lighting/`: `DynamicLight`, `DynamicLightManager`, `TileLightCuller`, `Std140.hpp`, `DynamicLightUbo`, `DynamicLightFrame`, `DynamicLightsGlsl`, `ShaderInclude` (`DynamicLightUniformBuffer` is in `src/render/`).
 - `src/acoustics/`: `VoxelDda.hpp`, `AcousticOcclusion`, `WorldSolidity`, `OcclusionScheduler`, `OnePoleFilter`, `VoiceAcousticFilter`, `EnclosureDetector`, `EnclosureMonitor`, `FdnReverb`, `AuxReverbBus`, `AcousticVoiceBank`, `AcousticCommand.hpp`.
 - `src/game/`: `WorldSession`, `EntitySimulation`, `InventoryCrafting`, `DynamicLightCollector`, `AcousticsController`, `ItemBridge.hpp`, `FluidEffects.hpp`.
 
@@ -280,4 +279,4 @@ Earlier module notes listed these items as open. They are now done in the code:
 - The player inventory uses 16-bit `gameplay::ItemId` (`physics::InventorySlot`), and `render::ItemAppearance` defines names and icons for items at 256 and above.
 - `BlockWashedAway` events spawn item drops (`EntitySimulation::spawnFluidDrops`), and the fizz sound uses the acoustics path.
 - `Application` reaches the `ecs::Registry` through `WorldSession::simulation()`, so dropped items emit dynamic light (`collectDynamicLights(..., &sim().entities(), ...)`).
-- The stale "Default palette has no lava block yet" comment is no longer in `tests/phase2/worldgen/test_cave_chunk_carving.cpp`.
+- The stale "Default palette has no lava block yet" comment is no longer in `modules/worldgen/test/test_cave_chunk_carving.cpp`.

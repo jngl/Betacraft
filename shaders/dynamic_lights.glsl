@@ -2,8 +2,8 @@
 //
 // Include file (GLSL 3.30 has no #include): splice it right after the `#version` line of the
 // chunk fragment shader, e.g. with lighting::injectShaderInclude(). The block layout is
-// mirrored byte-for-byte by src/lighting/DynamicLightUbo.hpp and enforced by
-// tests/phase2/dynlight/test_glsl_contract.cpp — change both together.
+// mirrored byte-for-byte by lighting/DynamicLightUbo.hpp and enforced by
+// modules/lighting/test/test_glsl_contract.cpp — change both together.
 //
 // Bind with glUniformBlockBinding(program, index("DynamicLightBlock"), 3).
 

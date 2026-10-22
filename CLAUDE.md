@@ -18,22 +18,22 @@ ctest --test-dir build -L benchmark                       # wall-clock budget te
 Run a single test by invoking a GoogleTest binary directly with a filter:
 
 ```bash
-./build/betacraft_unit_tests --gtest_filter='PalettedSection*'
-./build/betacraft_p2_fluids_tests --gtest_filter='*Lava*'
+./build/betacraft_voxel_tests --gtest_filter='PalettedSection*'
+./build/betacraft_fluids_tests --gtest_filter='*Lava*'
 ctest --test-dir build -R Phase2_storage --output-on-failure
 ```
 
-Test executables: one `betacraft_<m>_tests` per extracted module (ctest `Module_<m>`), `betacraft_unit_tests`, `betacraft_integration_tests`, `betacraft_e2e_tests` (spawns the real `betacraft` binary), `betacraft_mock_tests`, `betacraft_all_tests` (everything combined), `betacraft_legacy_tests`, and one `betacraft_p2_<key>_tests` per Phase 2 module. Phase 2 test keys differ from some source dirs: `combat`→`src/gameplay`, `dynlight`→`src/lighting`. Frozen reference saves live in `tests/data/saves/vN/` (`BETACRAFT_TEST_DATA_DIR`).
+Test executables: one `betacraft_<m>_tests` per extracted module (ctest `Module_<m>`, except that modules which were Phase 2 suites keep their `Phase2_<key>` name: `Phase2_combat`→`gameplay`, `Phase2_dynlight`→`lighting`, `Phase2_fluids`, `Phase2_worldgen`, `Phase2_storage`, `Phase2_redstone`), `betacraft_unit_tests`, `betacraft_integration_tests`, `betacraft_e2e_tests` (spawns the real `betacraft` binary), `betacraft_mock_tests`, `betacraft_all_tests` (everything combined), `betacraft_legacy_tests`, and one `betacraft_p2_<key>_tests` per Phase 2 module still in `src/` (`streaming`, `ecs`, `crafting`, `acoustics`, `ai`). Frozen reference saves live in `tests/data/saves/vN/` (`BETACRAFT_TEST_DATA_DIR`).
 
 Optional build switches: `-DBETACRAFT_WITH_ZSTD=OFF` (region files stored uncompressed). Runtime feature flags turn off risky mechanics: `--no-async-gen`, `--no-region-storage`, `--no-pathfinding`, `--no-redstone`, `--no-weather`.
 
 ## What CMake compiles automatically vs. by hand
 
-The engine is being split into one static library per module (`docs/adr/0001-modules-as-static-libraries.md`, issue #24). Extracted so far: `core` and `math`, under `modules/<m>/`. Everything else is still in one static library, `betacraft_core`, which links them; `betacraft` is just `src/main.cpp`.
+The engine is being split into one static library per module (`docs/adr/0001-modules-as-static-libraries.md`, issue #24). Extracted so far, under `modules/<m>/`: `core`, `math`, `voxel`, `gameplay`, `fluids`, `redstone`, `worldgen`, `storage`, `lighting`. Everything else is still in one static library, `betacraft_core`, which links them; `betacraft` is just `src/main.cpp`.
 
-- **Modules:** `modules/<m>/{include/<m>/,src/,test/,CMakeLists.txt,readme.md}`. `include/<m>/` holds the headers other modules use, `src/` the sources and internal headers. `modules/<m>/CMakeLists.txt` is one `betacraft_add_module(<m> DEPS …)` call (`cmake/BetacraftModule.cmake`): it globs `src/*.cpp` and `test/*.cpp`, builds the library `<m>` (alias `betacraft::<m>`) and `betacraft_<m>_tests`, and adds the test sources to `betacraft_all_tests`. A module only sees its own `include/` and those of its `DEPS`, so a missing dependency is a compile error. Add a new module with `add_subdirectory(modules/<m>)` in the root `CMakeLists.txt`.
-- **Globbed (no CMake edit needed):** `src/{streaming,ecs,gameplay,crafting,fluids,worldgen,lighting,acoustics,storage,ai,redstone}/*.cpp` (`BETACRAFT_PHASE2_DIRS`), `tests/phase2/<key>/*.cpp`, `tests/integration/phase2/*.cpp`.
-- **Listed by hand (otherwise never compiled):** any `.cpp` in `src/{voxel,world,physics,render,audio,ui,game}` → `BETACRAFT_CORE_SOURCES`; `tests/unit/*` → `UNIT_TEST_SOURCES`; non-phase2 `tests/integration/*.cpp` → `INTEGRATION_TEST_SOURCES`; `tests/e2e/*` → `E2E_TEST_SOURCES`.
+- **Modules:** `modules/<m>/{include/<m>/,src/,test/,CMakeLists.txt,readme.md}`. `include/<m>/` holds the headers other modules use, `src/` the sources and internal headers. `modules/<m>/CMakeLists.txt` is a `betacraft_add_module(<m> DEPS … [TEST_NAME <ctest name>])` call, plus module-specific settings (e.g. zstd in `storage`) (`cmake/BetacraftModule.cmake`): it globs `src/*.cpp` and `test/*.cpp`, builds the library `<m>` (alias `betacraft::<m>`) and `betacraft_<m>_tests`, and adds the test sources to `betacraft_all_tests`. Module tests use only that module and its `DEPS` (plus `betacraft_test_support`, e.g. `test_support/TempDir.hpp`); a test that also needs `world`, `game` or `render` goes to `tests/integration/phase2/`. A module only sees its own `include/` and those of its `DEPS`, so a missing dependency is a compile error. Add a new module with `add_subdirectory(modules/<m>)` in the root `CMakeLists.txt`.
+- **Globbed (no CMake edit needed):** `src/{streaming,ecs,crafting,acoustics,ai}/*.cpp` (`BETACRAFT_PHASE2_DIRS`), `tests/phase2/<key>/*.cpp`, `tests/integration/phase2/*.cpp`.
+- **Listed by hand (otherwise never compiled):** any `.cpp` in `src/{world,physics,render,audio,ui,game}` → `BETACRAFT_CORE_SOURCES`; `tests/unit/*` → `UNIT_TEST_SOURCES`; non-phase2 `tests/integration/*.cpp` → `INTEGRATION_TEST_SOURCES`; `tests/e2e/*` → `E2E_TEST_SOURCES`.
 - A new Phase 2 module needs both a `BETACRAFT_PHASE2_DIRS` entry and a `BETACRAFT_PHASE2_MODULES` `"key:dir"` entry.
 
 `betacraft_core` and every module (through the `betacraft_warnings` interface target) build with `-Wall -Wextra -Wpedantic` (CI adds `-Werror`, ASan/UBSan, TSan on `Phase2_streaming`/`storage`/`ai`, and a no-zstd job). miniaudio is isolated in its own warning-free TU (`src/audio/miniaudio_impl.cpp`).

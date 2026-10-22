@@ -12,12 +12,20 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     )
 endif()
 
-# betacraft_add_module(<name> [DEPS <target>...])
+# Header-only helpers shared by every test executable (test_support/TempDir.hpp).
+add_library(betacraft_test_support INTERFACE)
+target_include_directories(betacraft_test_support INTERFACE ${PROJECT_SOURCE_DIR}/tests/support)
+
+# betacraft_add_module(<name> [DEPS <target>...] [TEST_NAME <ctest name>])
 # Builds the STATIC library <name> (alias betacraft::<name>) from src/*.cpp, and, when
-# test/*.cpp exist, the GoogleTest executable betacraft_<name>_tests run as ctest Module_<name>.
+# test/*.cpp exist, the GoogleTest executable betacraft_<name>_tests run as ctest Module_<name>
+# (or TEST_NAME, for a module whose suite CI already runs under another name).
 # The test sources are also collected for betacraft_all_tests (BETACRAFT_MODULE_TEST_SOURCES).
 function(betacraft_add_module name)
-    cmake_parse_arguments(PARSE_ARGV 1 arg "" "" "DEPS")
+    cmake_parse_arguments(PARSE_ARGV 1 arg "" "TEST_NAME" "DEPS")
+    if(NOT arg_TEST_NAME)
+        set(arg_TEST_NAME Module_${name})
+    endif()
     set(dir ${CMAKE_CURRENT_SOURCE_DIR})
 
     file(GLOB sources CONFIGURE_DEPENDS ${dir}/src/*.cpp)
@@ -29,11 +37,11 @@ function(betacraft_add_module name)
     file(GLOB tests CONFIGURE_DEPENDS ${dir}/test/*.cpp)
     if(tests)
         add_executable(betacraft_${name}_tests ${tests})
-        target_link_libraries(betacraft_${name}_tests PRIVATE ${name} betacraft_warnings
+        target_link_libraries(betacraft_${name}_tests PRIVATE ${name} betacraft_warnings betacraft_test_support
                               GTest::gtest GTest::gtest_main GTest::gmock)
         # Next to the other test executables: ./build/betacraft_<name>_tests.
         set_target_properties(betacraft_${name}_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-        add_test(NAME Module_${name} COMMAND betacraft_${name}_tests)
+        add_test(NAME ${arg_TEST_NAME} COMMAND betacraft_${name}_tests)
         set_property(GLOBAL APPEND PROPERTY BETACRAFT_MODULE_TEST_SOURCES ${tests})
     endif()
 endfunction()

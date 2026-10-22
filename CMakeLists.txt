@@ -53,13 +53,15 @@ FetchContent_MakeAvailable(googletest)
 include(cmake/BetacraftModule.cmake)
 add_subdirectory(modules/core)
 add_subdirectory(modules/math)
+add_subdirectory(modules/voxel)
+add_subdirectory(modules/gameplay)
+add_subdirectory(modules/fluids)
+add_subdirectory(modules/redstone)
+add_subdirectory(modules/worldgen)
+add_subdirectory(modules/storage)
+add_subdirectory(modules/lighting)
 
 set(BETACRAFT_CORE_SOURCES
-    src/voxel/Block.cpp
-    src/voxel/PalettedSection.cpp
-    src/voxel/Chunk.cpp
-    src/voxel/BlockEntityStore.cpp
-    src/voxel/ScheduledTicks.cpp
     src/world/DifferentialLightingEngine.cpp
     src/world/WorldGen.cpp
     src/world/World.cpp
@@ -108,7 +110,7 @@ set(BETACRAFT_CORE_SOURCES
 
 # Phase 2 modules (docs/IMPROVEMENTS_ROADMAP.md §9.2) are part of the engine core so that
 # World / Application / renderers / audio can use them.
-set(BETACRAFT_PHASE2_DIRS streaming ecs gameplay crafting fluids worldgen lighting acoustics storage ai redstone)
+set(BETACRAFT_PHASE2_DIRS streaming ecs crafting acoustics ai)
 foreach(dir IN LISTS BETACRAFT_PHASE2_DIRS)
     file(GLOB p2_core_src CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/${dir}/*.cpp)
     list(APPEND BETACRAFT_CORE_SOURCES ${p2_core_src})
@@ -132,16 +134,18 @@ endif()
 target_link_libraries(betacraft_core PUBLIC
     betacraft::core
     betacraft::math
+    betacraft::voxel
+    betacraft::gameplay
+    betacraft::fluids
+    betacraft::redstone
+    betacraft::worldgen
+    betacraft::storage
+    betacraft::lighting
     PkgConfig::SDL2
     OpenGL::GL
     miniaudio_lib
     Threads::Threads
 )
-
-if(BETACRAFT_WITH_ZSTD AND ZSTD_FOUND)
-    target_compile_definitions(betacraft_core PUBLIC BETACRAFT_HAS_ZSTD=1)
-    target_link_libraries(betacraft_core PUBLIC PkgConfig::ZSTD)
-endif()
 
 if(PNG_FOUND)
     target_compile_definitions(betacraft_core PUBLIC BETACRAFT_HAS_LIBPNG=1)
@@ -153,17 +157,13 @@ target_link_libraries(betacraft PRIVATE betacraft_core)
 
 set(UNIT_TEST_SOURCES
     tests/unit/test_physics.cpp
-    tests/unit/test_world_block.cpp
-    tests/unit/test_world_chunk.cpp
     tests/unit/test_world_gen.cpp
-    tests/unit/test_world_storage.cpp
     tests/unit/test_world.cpp
     tests/unit/test_audio.cpp
     tests/unit/test_ui.cpp
     tests/unit/test_render.cpp
     tests/unit/test_mob_models.cpp
     tests/unit/test_physics_fixed_step.cpp
-    tests/unit/test_paletted_section.cpp
     tests/unit/test_packed_chunk_vertex.cpp
     tests/unit/test_shared_ebo.cpp
     tests/unit/test_differential_lighting.cpp
@@ -200,20 +200,20 @@ set(MOCK_TEST_SOURCES
 # 1. Unit Tests target
 add_executable(betacraft_unit_tests ${UNIT_TEST_SOURCES})
 target_include_directories(betacraft_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(betacraft_unit_tests PRIVATE betacraft_core GTest::gtest GTest::gtest_main GTest::gmock)
+target_link_libraries(betacraft_unit_tests PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 add_test(NAME UnitTests COMMAND betacraft_unit_tests)
 
 # 2. Integration Tests target
 add_executable(betacraft_integration_tests ${INTEGRATION_TEST_SOURCES})
 target_include_directories(betacraft_integration_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(betacraft_integration_tests PRIVATE betacraft_core GTest::gtest GTest::gtest_main GTest::gmock)
+target_link_libraries(betacraft_integration_tests PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 add_test(NAME IntegrationTests COMMAND betacraft_integration_tests)
 
 # 3. E2E Tests target
 add_executable(betacraft_e2e_tests ${E2E_TEST_SOURCES})
 target_include_directories(betacraft_e2e_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(betacraft_e2e_tests PRIVATE BETACRAFT_BIN_PATH="$<TARGET_FILE:betacraft>")
-target_link_libraries(betacraft_e2e_tests PRIVATE betacraft_core GTest::gtest GTest::gtest_main GTest::gmock)
+target_link_libraries(betacraft_e2e_tests PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 add_dependencies(betacraft_e2e_tests betacraft)
 add_test(NAME E2ETests COMMAND betacraft_e2e_tests)
 
@@ -225,7 +225,7 @@ endforeach()
 # 4. GMock Tests target
 add_executable(betacraft_mock_tests ${MOCK_TEST_SOURCES})
 target_include_directories(betacraft_mock_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(betacraft_mock_tests PRIVATE betacraft_core GTest::gtest GTest::gtest_main GTest::gmock)
+target_link_libraries(betacraft_mock_tests PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 add_test(NAME MockTests COMMAND betacraft_mock_tests)
 
 # 5. All-in-one test suite target
@@ -240,7 +240,7 @@ add_executable(betacraft_all_tests
 target_include_directories(betacraft_all_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(betacraft_all_tests PRIVATE BETACRAFT_BIN_PATH="$<TARGET_FILE:betacraft>"
                            BETACRAFT_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
-target_link_libraries(betacraft_all_tests PRIVATE betacraft_core GTest::gtest GTest::gtest_main GTest::gmock)
+target_link_libraries(betacraft_all_tests PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 add_dependencies(betacraft_all_tests betacraft)
 add_test(NAME AllTests COMMAND betacraft_all_tests)
 
@@ -252,17 +252,17 @@ add_test(NAME BetaCraftLegacyTests COMMAND betacraft_legacy_tests)
 # Adversarial M2 stress harness
 add_executable(adversarial_m2_stress tests/adversarial_m2_stress.cpp)
 target_include_directories(adversarial_m2_stress PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(adversarial_m2_stress PRIVATE betacraft_core GTest::gtest GTest::gtest_main GTest::gmock)
+target_link_libraries(adversarial_m2_stress PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 
 # Adversarial M3 stress harness
 add_executable(adversarial_m3_stress tests/adversarial_m3_stress.cpp)
 target_include_directories(adversarial_m3_stress PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(adversarial_m3_stress PRIVATE betacraft_core GTest::gtest GTest::gtest_main GTest::gmock)
+target_link_libraries(adversarial_m3_stress PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 
 # Adversarial M3 UI & Options stress harness
 add_executable(adversarial_m3_ui_stress tests/adversarial_m3_ui_stress.cpp)
 target_include_directories(adversarial_m3_ui_stress PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(adversarial_m3_ui_stress PRIVATE betacraft_core GTest::gtest GTest::gtest_main GTest::gmock)
+target_link_libraries(adversarial_m3_ui_stress PRIVATE betacraft_core betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 
 # ---------------------------------------------------------------------------
 # Phase 2 modules (docs/IMPROVEMENTS_ROADMAP.md §9.2). Each module is an isolated
@@ -271,15 +271,9 @@ target_link_libraries(adversarial_m3_ui_stress PRIVATE betacraft_core GTest::gte
 set(BETACRAFT_PHASE2_MODULES
     "streaming:streaming"   # P1.1 AsyncChunkPipeline, S7.7 ChunkGenPipeline
     "ecs:ecs"               # P2.1 Sparse-set ECS
-    "combat:gameplay"       # P2.5 Tools, durability, melee combat
     "crafting:crafting"     # P2.6 2x2 / 3x3 crafting grids
-    "fluids:fluids"         # P2.3 Cellular-automaton fluids
-    "worldgen:worldgen"     # P3.3 Simplex caves + P3.4 two-pass decoration
-    "dynlight:lighting"     # P4.6 Held-torch dynamic lighting (UBO)
     "acoustics:acoustics"   # P4.2 DDA acoustic occlusion + shared FDN reverb bus
-    "storage:storage"       # S7.1-S7.6 Region files, chunk bundles, legacy save migration
     "ai:ai"                 # S8.1-S8.4 Voxel A* pathfinding and ECS path following
-    "redstone:redstone"     # S8.5-S8.8 Redstone wire, torches, levers, buttons, plates
 )
 set(BETACRAFT_PHASE2_LIBS)
 foreach(entry IN LISTS BETACRAFT_PHASE2_MODULES)
@@ -295,7 +289,7 @@ foreach(entry IN LISTS BETACRAFT_PHASE2_MODULES)
     if(p2_tests)
         add_executable(betacraft_p2_${key}_tests ${p2_tests})
         target_include_directories(betacraft_p2_${key}_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
-        target_link_libraries(betacraft_p2_${key}_tests PRIVATE betacraft_p2_${key} GTest::gtest GTest::gtest_main GTest::gmock)
+        target_link_libraries(betacraft_p2_${key}_tests PRIVATE betacraft_p2_${key} betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
         target_compile_definitions(betacraft_p2_${key}_tests PRIVATE BETACRAFT_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
         add_test(NAME Phase2_${key} COMMAND betacraft_p2_${key}_tests)
     endif()
