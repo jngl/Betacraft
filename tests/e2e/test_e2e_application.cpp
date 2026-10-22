@@ -2,7 +2,7 @@
 #include "ecs/Components.hpp"
 #include "ui/CreateWorldScreen.hpp"
 #include "ui/WorldSelectScreen.hpp"
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

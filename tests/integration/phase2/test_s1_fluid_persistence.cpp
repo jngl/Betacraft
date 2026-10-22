@@ -2,7 +2,7 @@
 // chunk modified when it or one of its 8 neighbours was touched by the player, so generated
 // water settling in unexplored terrain never writes a .chk (it is simulated again after a
 // reload), while player water flowing over a chunk seam is still saved.
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "P2WorldgenSupport.hpp"
 #include "world/World.hpp"

@@ -2,7 +2,7 @@
 // Shared fixture for the Phase 2 gameplay integration tests (P2.1 ECS entities, P2.5 tools,
 // durability and combat, P2.6 crafting) through the GL-free game::EntitySimulation.
 
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "GlassFloorSupport.hpp"
 #include "P2WorldgenSupport.hpp"

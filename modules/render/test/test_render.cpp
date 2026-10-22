@@ -4,7 +4,7 @@
 #include "render/SkyRenderer.hpp"
 #include "render/TextureAtlas.hpp"
 #include "render/WorldRenderer.hpp"
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 #include "voxel/Block.hpp"
 #include "voxel/Chunk.hpp"
 #include "world/World.hpp"

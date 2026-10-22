@@ -3,7 +3,7 @@
 // skylightSubtracted 10), zombies in the rain neither catch fire nor keep burning (Beta
 // Entity.isWet) while snow does not save them, the rain and snow columns of the renderer stop
 // on roofs and follow the biome, and the rain loop is muffled indoors.
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "P2WorldgenSupport.hpp"
 #include "core/Config.hpp"

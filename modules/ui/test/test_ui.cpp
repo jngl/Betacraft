@@ -2,7 +2,7 @@
 #include "physics/Player.hpp"
 #include "render/BitmapFont.hpp"
 #include "storage/WorldStorage.hpp"
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 #include "ui/CraftingSystem.hpp"
 #include "ui/CreateWorldScreen.hpp"
 #include "ui/DeathScreen.hpp"

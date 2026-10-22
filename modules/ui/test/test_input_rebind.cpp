@@ -7,7 +7,7 @@
 #include "audio/AudioEngine.hpp"
 #include "world/World.hpp"
 #include "core/Types.hpp"
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include <filesystem>
 #include <fstream>

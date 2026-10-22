@@ -2,7 +2,7 @@
 #include "game/PlayerPersistence.hpp"
 #include "gameplay/Armor.hpp"
 #include "physics/Player.hpp"
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 #include "voxel/Block.hpp"
 #include "world/World.hpp"
 

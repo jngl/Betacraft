@@ -7,7 +7,7 @@
 #include "gameplay/ItemIds.hpp"
 #include "gameplay/SplitMix64.hpp"
 #include "physics/Player.hpp"
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 #include "voxel/BlockEntityStore.hpp"
 #include "world/World.hpp"
 

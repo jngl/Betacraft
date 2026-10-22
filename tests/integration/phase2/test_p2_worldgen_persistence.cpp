@@ -3,7 +3,7 @@
 // re-decorates player edits nor re-plans edited terrain; saves predating the record load as
 // decorated (their decoration is baked in).
 #include "tests/integration/phase2/P2WorldgenSupport.hpp"
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "storage/WorldStorage.hpp"
 #include "world/World.hpp"

@@ -2,7 +2,7 @@
 // World-backed IFluidVoxelAccess (block id + Beta metadata nibble), advanced once per
 // 20 TPS game tick by World::tick(). Block edits, chunk loads and saved mid-flow water all
 // feed it; every voxel it writes marks the touched chunks for re-meshing.
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "P2WorldgenSupport.hpp"
 #include "core/Config.hpp"

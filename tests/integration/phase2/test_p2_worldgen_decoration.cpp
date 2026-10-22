@@ -2,7 +2,7 @@
 // produces pass 1 (terrain + caves) only, World runs pass 2 once a chunk's 3x3
 // neighbourhood is resident, relights what it decorated and forgets the state on unload.
 #include "tests/integration/phase2/P2WorldgenSupport.hpp"
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "world/World.hpp"
 #include "worldgen/DecorationFeatures.hpp"

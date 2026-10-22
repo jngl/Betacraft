@@ -1,7 +1,7 @@
 // Phase 2 integration review fixes, streaming side: GPU meshes of columns unloaded on the
 // frame smooth lighting toggles, metadata-only writes (fluid levels) that cannot change any
 // geometry, and the renderer's per-frame visible-column count.
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "P2WorldgenSupport.hpp"
 #include "render/WorldRenderer.hpp"

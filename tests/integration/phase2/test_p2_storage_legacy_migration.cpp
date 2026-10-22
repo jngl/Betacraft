@@ -2,7 +2,7 @@
 // region files, loads exactly like the same save read by the legacy code path: blocks,
 // metadata, decoration (no tree pasted twice, the undecorated chunk keeps its plan), block
 // entities and the player in level.dat.
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "P2WorldgenSupport.hpp"
 #include "storage/SaveMigration.hpp"

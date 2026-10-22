@@ -1,7 +1,7 @@
 // Sprint 7 integration (S7.6, S7.7): World streaming through the I/O worker and the pass-1
 // generation pool ends with the same chunks (blocks, decoration, light) as synchronous
 // loading, and integration stays within its per-frame budget.
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "P2WorldgenSupport.hpp"
 #include "world/World.hpp"

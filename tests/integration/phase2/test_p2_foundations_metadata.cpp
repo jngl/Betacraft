@@ -1,6 +1,6 @@
 // Phase 2 integration, data foundations: the per-voxel 4-bit metadata nibble (fluid level
 // 0..7 + falling flag) through PalettedSection -> Chunk -> World -> WorldStorage.
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "fluids/FluidState.hpp"
 #include "storage/WorldStorage.hpp"

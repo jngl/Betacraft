@@ -88,10 +88,10 @@ Data Flow:
 
 ## Code Layout
 - `modules/<m>/{include/<m>,src,test}`: extracted modules, one static library and test executable each (ADR 0001). `modules/core/`: engine configuration, coordinate types, `Logger`, `MpscRingBuffer.hpp`. `modules/math/`: `AABB`, `Frustum`, `PerlinNoise`. `modules/voxel/`: block and chunk data (`Block`, `BlockShapes.hpp`, `BlockBoxes.hpp`, `BlockEntity.hpp`, `BlockEntityStore`, `PalettedSection`, `Chunk`, `ScheduledTicks`, `SectionCoord.hpp`). Above it, `modules/gameplay/`, `fluids/`, `redstone/`, `lighting/`, then `worldgen/` (needs `gameplay`) and `storage/` (needs `worldgen`). `modules/crafting/` needs only `gameplay`. `modules/world/` is the orchestrator above `worldgen`, `storage`, `fluids`, `redstone` and `gameplay` (`World`, `WorldGen`, `BlockTicks`, `Weather`, `DifferentialLightingEngine`, `ChunkGenPipeline`); above it `physics/` (player physics, `Raycaster`), `ai/` (voxel A*), `streaming/` (GL-free asynchronous meshing), `acoustics/`, then `ecs/` (needs `physics` and `ai`) and `audio/` (`AudioEngine`, needs `acoustics`; miniaudio is a private dependency). Each `readme.md` lists its entry points.
-- `src/render/`: `ChunkMesher.hpp/cpp`, `WorldRenderer.hpp/cpp`, `TextRenderer.hpp/cpp`, `GLHeaders.hpp/cpp`.
-- `src/ui/`: `ScreenState.hpp`, `TitleScreen.hpp/cpp`, `OptionsMenu.hpp/cpp`, `InputManager.hpp/cpp`.
+- `modules/render/`: `ChunkMesher`, `WorldRenderer`, `TextRenderer`, `GLHeaders` (above `streaming` and `lighting`). `modules/ui/`: `ScreenState.hpp`, `TitleScreen`, `OptionsMenu`, `InputManager` (above `render` and `audio`). `modules/game/`: `Application`, `WorldSession` and the glue between modules, at the top.
+- `app/main.cpp`: the `betacraft` executable, linked to `game` only.
 - `shaders/`: `chunk_vertex.glsl`, `chunk_fragment.glsl`, `msdf_vertex.glsl`, `msdf_fragment.glsl`.
-- `tests/unit/`: GoogleTest unit suites that need `render`, `ui` or several modules (`test_msdf_font.cpp`, `test_input_rebind.cpp`, `test_render.cpp`...). Single-module suites are in `modules/<m>/test/`.
+- `tests/unit/`: GoogleTest unit suites that span several modules (`test_adversarial_m2.cpp`, `test_adversarial_tier5.cpp`). Single-module suites are in `modules/<m>/test/` (`test_render.cpp` and `test_msdf_font.cpp` in `render`, `test_ui.cpp` and `test_input_rebind.cpp` in `ui`...).
 - `tests/e2e/`: Opaque-box acceptance test suites.
 
 ---
@@ -99,7 +99,7 @@ Data Flow:
 # Phase 2: Engine Evolutions & Major Systems (`docs/IMPROVEMENTS_ROADMAP.md` §9.2)
 
 ## Phase 2 Architecture
-Phase 2 adds nine modules (`streaming`, `ecs`, `gameplay`, `crafting`, `fluids`, `worldgen`, `lighting`, `acoustics`, `ai`), now each a static library under `modules/` (ADR 0001) linked by `betacraft_core`. Game-side glue lives in `src/game/` (`WorldSession`, `EntitySimulation`, `InventoryCrafting`, `DynamicLightCollector`, `AcousticsController`, `ItemBridge.hpp`, `FluidEffects.hpp`) and `src/render/ItemAppearance.*`.
+Phase 2 adds nine modules (`streaming`, `ecs`, `gameplay`, `crafting`, `fluids`, `worldgen`, `lighting`, `acoustics`, `ai`), now each a static library under `modules/` (ADR 0001) linked by `game`. Game-side glue lives in `modules/game/` (`WorldSession`, `EntitySimulation`, `InventoryCrafting`, `DynamicLightCollector`, `AcousticsController`, `ItemBridge.hpp`, `FluidEffects.hpp`) and `modules/render/` (`ItemAppearance`).
 - **Async World Streaming (Sprint 2.1, P1.1)**: `AsyncChunkPipeline` runs section meshing on a `std::jthread` pool (N-1 cores, at least one worker). Each job reads an immutable `SectionNeighborhoodSnapshot18` (18³ voxels) captured on the main thread. Finished meshes go to a `PingPongStaging` double buffer, and the render thread uploads them under a time budget (`drainUploads`, `Config::meshUploadBudgetMs = 4.0`). `WorldMeshStreamer` connects the live `World` to the pipeline. Terrain generation, lighting and decoration still run synchronously on the main thread.
 - **ECS & Survival (Sprint 2.2, P2.1/P2.5/P2.6)**: The sparse-set `ecs::Registry` has views, owning groups and a `CommandBuffer`. `EntitySimulation` (formerly `GameSession`) owns the registry, which holds dropped items and, in tests only, mobs. `gameplay` adds tools with durability, harvest levels, Beta hold-to-mine (`MiningProgress`), melee damage, knockback and health. `crafting` adds 2x2/3x3 grids, shaped/shapeless matching and a Beta recipe book (`makeBetaRecipeBook`).
 - **World Simulation & Geology (Sprint 2.3, P2.3/P3.3/P3.4)**: `FluidSimulator` is a Beta-style cellular automaton for water and lava, owned by `World` behind an `IFluidVoxelAccess` adapter. `World` keeps fluid levels in a per-voxel 4-bit metadata nibble. `CaveCarver` carves 3D Simplex caves with the vertical envelope `A(y)`, aquifers and a lava band at Y <= 10, called from `WorldGen::generateChunk`. `DecorationPipeline` places trees and flora in a second pass once a chunk's 3x3 neighbourhood is resident, and `WorldStorage` persists a per-chunk decoration record.
@@ -190,14 +190,14 @@ Phase 2 Data Flow:
 - `DecorationPipeline(uint64_t worldSeed, ChunkAccess&)`: `onTerrainReady(coord)`, `onUndecoratedChunkLoaded(coord, plan)`, `onDecoratedChunkLoaded(coord, plan)`, `onChunkUnloaded(coord, PlanRetention)`, `isDecorated`, `findPlan`. Every returned coord needs a relight and remesh.
 - `WorldStorage::saveDecorationRecord / loadDecorationRecord(core::ChunkCoord)` with `worldgen::DecorationRecord` (`FeaturePlanCodec`).
 
-### Sprint 2.4 ↔ Dynamic Lighting (`modules/lighting/`, `src/game/DynamicLightCollector.hpp`)
+### Sprint 2.4 ↔ Dynamic Lighting (`modules/lighting/`, `modules/game/` (`DynamicLightCollector.hpp`))
 - `DynamicLightManager::clear()`, `submit(const DynamicLight&)`, `submitHeldItem(eyePos, lookDir, BlockId)`, `submitDroppedItem(pos, BlockId)`. Selection is capped at `kMaxDynamicLights = 16`.
 - `void DynamicLightFrame::build(const DynamicLightManager&, const glm::vec3& cameraPos, const glm::mat4& viewProj, viewportPx);`: `viewportPx` is the drawable (framebuffer) size. Also `uboBytes()`, `blockLightLevelAt(worldPos)`.
 - `DynamicLightUniformBuffer::initialize()`, `static bindProgram(GLuint)` (block `DynamicLightBlock`, binding point 3), `upload(bytes)`, `bindBase()`, `destroy()`.
 - `std::string lighting::injectDynamicLights(std::string_view fragmentShader);`: the GLSL entry point is `computeDynamicLight(v_worldPos, gl_FragCoord.xy)`.
 - `void game::collectDynamicLights(DynamicLightManager&, const physics::Player&, const ecs::Registry*, float alpha);`.
 
-### Sprint 2.4 ↔ Acoustics (`modules/acoustics/`, `src/game/AcousticsController.hpp`)
+### Sprint 2.4 ↔ Acoustics (`modules/acoustics/`, `modules/game/` (`AcousticsController.hpp`))
 - `OcclusionSample measureOcclusion(const VoxelSolidityQuery&, listener, source);`, `OcclusionTarget occlusionTargetFor(const OcclusionSample&, const OcclusionParams&);`, `float computeVoxelOcclusion(const world::World&, listener, soundPos);` (LPF cutoff in Hz).
 - `OcclusionScheduler` (`CAPACITY = 32`): `addSource(handle, pos)`, `setSourcePosition`, `removeSource`, `update(now, listener, query) -> std::span<const OcclusionUpdate>`.
 - `EnclosureMonitor::update(now, listener, query) -> std::optional<EnvironmentUpdate>`, `reset()`. It detects teleports above 16 blocks.
@@ -211,9 +211,9 @@ Phase 2 Data Flow:
 - `modules/crafting/`: `ItemIds.hpp`, `Ingredient.hpp`, `RecipeTypes.hpp`, `CraftingGrid`, `ShapedRecipe`, `ShapelessRecipe`, `RecipeRegistry`, `BetaRecipes`, `Furnace`, `SmeltingRecipes`.
 - `modules/fluids/`: `FluidState.hpp`, `FluidVoxelAccess.hpp`, `GridFluidVoxelAccess`, `ActiveFluidQueue`, `FluidSimulator`.
 - `modules/worldgen/`: `SimplexNoise`, `SeededRandom.hpp`, `ColumnSampling`, `CaveCarver`, `DecorationFeatures`, `DecorationPipeline`, `FeaturePlanCodec`.
-- `modules/lighting/`: `DynamicLight`, `DynamicLightManager`, `TileLightCuller`, `Std140.hpp`, `DynamicLightUbo`, `DynamicLightFrame`, `DynamicLightsGlsl`, `ShaderInclude` (`DynamicLightUniformBuffer` is in `src/render/`).
+- `modules/lighting/`: `DynamicLight`, `DynamicLightManager`, `TileLightCuller`, `Std140.hpp`, `DynamicLightUbo`, `DynamicLightFrame`, `DynamicLightsGlsl`, `ShaderInclude` (`DynamicLightUniformBuffer` is in `modules/render/`).
 - `modules/acoustics/`: `VoxelDda.hpp`, `AcousticOcclusion`, `WorldSolidity`, `OcclusionScheduler`, `OnePoleFilter`, `VoiceAcousticFilter`, `EnclosureDetector`, `EnclosureMonitor`, `FdnReverb`, `AuxReverbBus`, `AcousticVoiceBank`, `AcousticCommand.hpp`.
-- `src/game/`: `WorldSession`, `EntitySimulation`, `InventoryCrafting`, `DynamicLightCollector`, `AcousticsController`, `ItemBridge.hpp`, `FluidEffects.hpp`.
+- `modules/game/`: `WorldSession`, `EntitySimulation`, `InventoryCrafting`, `DynamicLightCollector`, `AcousticsController`, `ItemBridge.hpp`, `FluidEffects.hpp`.
 
 ## Phase 2 Known Deferred Items
 Gathered from the module integration hooks and the integration steps, then checked against the current code.

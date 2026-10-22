@@ -1,7 +1,7 @@
 // S6.2 arrows (game/Projectiles.hpp, Beta EntityArrow): heading and spread, gravity and drag,
 // sticking in blocks and the 1200-tick lifetime, hits on mobs and on the player's proxy, the
 // shooter's grace ticks and the bounce of an absorbed hit.
-#include "tests/test_helpers.hpp"
+#include "test_support/GLTestContext.hpp"
 
 #include "ecs/Components.hpp"
 #include "ecs/Registry.hpp"
