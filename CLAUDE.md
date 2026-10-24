@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-BetaCraft is a self-contained Minecraft Beta 1.7.3 clone in C++20 / OpenGL 3.3 Core / SDL2 / miniaudio. Requirements and design docs (mostly in French): `ORIGINAL_REQUEST.md`, `PROJECT.md` (architecture, interface contracts, deferred items), `docs/IMPROVEMENTS_ROADMAP.md` (technical proposals P1.x–P4.x), `docs/GAMEPLAY_ROADMAP.md` (sprints S1–S8 and the cross-cutting conventions summarised below). Code comments cite these IDs (`P1.1`, `S7.4`, `§9.2`).
+Betacraft is a game inspired by Minecraft in C++20 / OpenGL 3.3 Core / SDL2 / miniaudio.
 
 ## Build, run, test
 
@@ -25,7 +25,7 @@ ctest --test-dir build -R Phase2_storage --output-on-failure
 
 Test executables: one `betacraft_<m>_tests` per module with tests (ctest `Module_<m>`, except that modules which were Phase 2 suites keep their `Phase2_<key>` name: `Phase2_combat`→`gameplay`, `Phase2_dynlight`→`lighting`, `Phase2_fluids`, `Phase2_worldgen`, `Phase2_storage`, `Phase2_redstone`, `Phase2_streaming`, `Phase2_ecs`, `Phase2_crafting`, `Phase2_acoustics`, `Phase2_ai`), `betacraft_unit_tests`, `betacraft_integration_tests`, `betacraft_e2e_tests` (spawns the real `betacraft` binary), `betacraft_mock_tests`, `betacraft_all_tests` (everything combined, except each module's `STANDALONE_TESTS`), `betacraft_legacy_tests`. Frozen reference saves live in `tests/data/saves/vN/` (`BETACRAFT_TEST_DATA_DIR`).
 
-Optional build switches: `-DBETACRAFT_WITH_ZSTD=OFF` (region files stored uncompressed). Runtime feature flags turn off risky mechanics: `--no-async-gen`, `--no-region-storage`, `--no-pathfinding`, `--no-redstone`, `--no-weather`.
+Optional build switches: `-DBETACRAFT_WITH_ZSTD=OFF` (region files stored uncompressed), `-DBETACRAFT_WITH_PNG=OFF` (`assets/terrain.png` neither exported nor loaded). Runtime feature flags turn off risky mechanics: `--no-async-gen`, `--no-region-storage`, `--no-pathfinding`, `--no-redstone`, `--no-weather`.
 
 ## What CMake compiles automatically vs. by hand
 
@@ -51,7 +51,7 @@ Every module, `betacraft` and the test executables (through the `betacraft_warni
 
 **Audio.** `AudioEngine` takes commands from game threads via a lock-free `MpscRingBuffer` and drains them in the miniaudio callback (no locks or allocations there). Sounds are synthesised procedurally. `game/AcousticsController` runs 10 Hz DDA occlusion and enclosure detection and posts `AcousticCommand`s applied by `acoustics/AcousticVoiceBank` (per-voice low-pass + shared FDN reverb bus).
 
-**Persistence.** `storage/WorldStorage` facade over `storage/` (region files `region/r.X.Z.bcr`, 4 KiB sectors, zstd chunk bundles; legacy `chunks/*.chk|.dec|.be` are migrated to `chunks.migrated/`). `level.dat` is a `key value` text file with header `BETACRAFT_LEVEL_V2`. Textures are generated procedurally by `render/TextureAtlas` at startup and exported to `assets/terrain.png` (a custom `assets/terrain.png` overrides it).
+**Persistence.** `storage/WorldStorage` facade over `storage/` (region files `region/r.X.Z.bcr`, 4 KiB sectors, zstd chunk bundles; legacy `chunks/*.chk|.dec|.be` are migrated to `chunks.migrated/`). `level.dat` is a `key value` text file with header `BETACRAFT_LEVEL_V2`. Textures are generated procedurally by `render/TextureAtlas` at startup and exported to `assets/terrain.png` (a custom `assets/terrain.png` overrides it); both need libpng, otherwise the generated atlas is used as is.
 
 ## Conventions (from `docs/GAMEPLAY_ROADMAP.md`, "Conventions transverses")
 

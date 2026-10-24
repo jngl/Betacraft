@@ -13,7 +13,6 @@ endif()
 find_package(PkgConfig REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
-find_package(PNG QUIET)
 
 pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 # S7.1 region files compress chunk bundles with zstd level 3 when available; without it they
@@ -21,6 +20,12 @@ pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 option(BETACRAFT_WITH_ZSTD "Compress region file chunks with zstd" ON)
 if(BETACRAFT_WITH_ZSTD)
     pkg_check_modules(ZSTD IMPORTED_TARGET libzstd)
+endif()
+# TextureAtlas exports assets/terrain.png and loads a custom one with libpng when available;
+# without it the atlas is still generated procedurally, just never exported nor overridden.
+option(BETACRAFT_WITH_PNG "Export and load assets/terrain.png with libpng" ON)
+if(BETACRAFT_WITH_PNG)
+    find_package(PNG QUIET)
 endif()
 
 enable_testing()
