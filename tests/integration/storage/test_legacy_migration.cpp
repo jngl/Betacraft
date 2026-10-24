@@ -14,7 +14,7 @@
 #include <filesystem>
 
 using namespace betacraft;
-using namespace betacraft::test::p2worldgen;
+using namespace betacraft::test::worldgen_support;
 using voxel::Chunk;
 
 namespace {

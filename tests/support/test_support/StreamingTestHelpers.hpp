@@ -32,7 +32,7 @@ public:
         static std::atomic<uint64_t> s_counter{0};
         const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
         m_path = std::filesystem::temp_directory_path() /
-                 ("betacraft_p2_streaming_" + std::to_string(stamp) + "_" + std::to_string(s_counter.fetch_add(1)));
+                 ("betacraft_streaming_" + std::to_string(stamp) + "_" + std::to_string(s_counter.fetch_add(1)));
         std::filesystem::create_directories(m_path);
     }
     ~ScopedTempDir() {

@@ -1,4 +1,4 @@
-// Phase 2 integration, P3.3 volumetric caves in WorldGen pass 1: the legacy tube caves are
+// Integration, P3.3 volumetric caves in WorldGen pass 1: the legacy tube caves are
 // gone, CaveCarver is the only source of cavities, the bedrock guard (Y <= 5) and the 6-block
 // sea-floor aquitard hold on real generated chunks, and the magma band is filled with lava.
 #include "tests/integration/support/WorldgenSupport.hpp"
@@ -18,7 +18,7 @@
 #include <vector>
 
 using namespace betacraft;
-using namespace betacraft::test::p2worldgen;
+using namespace betacraft::test::worldgen_support;
 using worldgen::CaveCarver;
 using worldgen::CaveFill;
 using worldgen::ColumnContext;

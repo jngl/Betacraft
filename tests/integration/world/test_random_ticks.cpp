@@ -10,7 +10,7 @@
 #include <vector>
 
 using namespace betacraft;
-using namespace betacraft::test::p2gameplay;
+using namespace betacraft::test::gameplay_support;
 
 namespace {
 

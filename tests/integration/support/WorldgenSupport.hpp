@@ -1,5 +1,5 @@
 #pragma once
-// Shared helpers for the Phase 2 worldgen integration tests (P3.3 caves + P3.4 two-pass
+// Shared helpers for the worldgen integration tests (P3.3 caves + P3.4 two-pass
 // decoration through the real World / WorldGen API).
 
 #include "core/Config.hpp"
@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace betacraft::test::p2worldgen {
+namespace betacraft::test::worldgen_support {
 
 using voxel::BlockId;
 using voxel::Chunk;
@@ -63,4 +63,4 @@ inline void loadAll(world::World& w, const std::vector<core::ChunkCoord>& coords
     return -1;
 }
 
-} // namespace betacraft::test::p2worldgen
+} // namespace betacraft::test::worldgen_support

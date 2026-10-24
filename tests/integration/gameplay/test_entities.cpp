@@ -1,4 +1,4 @@
-// Phase 2 integration, P2.1 ECS entities in the game tick: game::EntitySimulation owns an
+// Integration, P2.1 ECS entities in the game tick: game::EntitySimulation owns an
 // ecs::Registry of non-player entities and runs its systems every 20 TPS tick. Dropped items
 // are ItemDropComp entities that fall, rest on the floor and are picked up by the player
 // after Beta's delay; melee swings hit the first entity on the look ray with Beta damage,
@@ -19,7 +19,7 @@
 #include <vector>
 
 using namespace betacraft;
-using namespace betacraft::test::p2gameplay;
+using namespace betacraft::test::gameplay_support;
 using ecs::EntityId;
 using gameplay::HitOutcome;
 using gameplay::toItemId;

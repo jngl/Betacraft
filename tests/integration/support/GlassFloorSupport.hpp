@@ -1,5 +1,5 @@
 #pragma once
-// Helpers shared by the gameplay fixtures one level apart: p2gameplay::GameplayWorld (a World
+// Helpers shared by the gameplay fixtures one level apart: gameplay_support::GameplayWorld (a World
 // and an EntitySimulation) and worldsession::WorldSessionSupport (a real WorldSession). Both
 // stand the player on a glass floor high above the generated terrain of the test seed.
 
@@ -20,7 +20,7 @@ constexpr int32_t kY = 120;
 
 // Loads the 3x3 chunks around the origin and lays the glass floor over x, z in [-6, 14].
 inline void layGlassFloor(world::World& world) {
-    p2worldgen::loadAll(world, p2worldgen::squareRegion({0, 0}, 1));
+    worldgen_support::loadAll(world, worldgen_support::squareRegion({0, 0}, 1));
     for (int32_t z = -6; z <= 14; ++z) {
         for (int32_t x = -6; x <= 14; ++x) {
             (void)world.setBlock(x, kFloorY, z, voxel::BlockId::Glass);

@@ -1,4 +1,4 @@
-// Phase 2 integration, P2.3 fluids in the world tick: World owns a FluidSimulator over a
+// Integration, P2.3 fluids in the world tick: World owns a FluidSimulator over a
 // World-backed IFluidVoxelAccess (block id + Beta metadata nibble), advanced once per
 // 20 TPS game tick by World::tick(). Block edits, chunk loads and saved mid-flow water all
 // feed it; every voxel it writes marks the touched chunks for re-meshing.
@@ -35,8 +35,8 @@ class FluidsWorld : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
-        m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
-        test::p2worldgen::loadAll(*m_world, test::p2worldgen::squareRegion({0, 0}, 1));
+        m_world = std::make_unique<world::World>(test::worldgen_support::kSeed, m_dir.path());
+        test::worldgen_support::loadAll(*m_world, test::worldgen_support::squareRegion({0, 0}, 1));
         // Glass keeps the floor cheap to light; it blocks flow like any solid block. The
         // margins exceed the water reach (7) plus the flow-search depth (4).
         layFloor(*m_world, -12, 31, -4, 20);
@@ -236,7 +236,7 @@ TEST_F(FluidsWorld, FluidTickStatsAreReported) {
 TEST(FluidsStreaming, FlowStoppedAtAnUnloadedChunkResumesWhenItLoads) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir;
-    world::World w(test::p2worldgen::kSeed, dir.path());
+    world::World w(test::worldgen_support::kSeed, dir.path());
     (void)w.ensureChunkLoaded({0, 0});
     for (int32_t z = 0; z < Chunk::DEPTH; ++z)
         for (int32_t x = 0; x < Chunk::WIDTH; ++x) (void)w.setBlock(x, kFloorY, z, BlockId::Glass);
@@ -255,10 +255,10 @@ TEST(FluidsStreaming, FlowStoppedAtAnUnloadedChunkResumesWhenItLoads) {
 TEST(FluidsStreaming, WaterSavedMidFlowResumesAfterReload) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir;
-    const auto region = test::p2worldgen::squareRegion({0, 0}, 1);
+    const auto region = test::worldgen_support::squareRegion({0, 0}, 1);
     {
-        world::World w(test::p2worldgen::kSeed, dir.path());
-        test::p2worldgen::loadAll(w, region);
+        world::World w(test::worldgen_support::kSeed, dir.path());
+        test::worldgen_support::loadAll(w, region);
         for (int32_t z = -4; z <= 20; ++z)
             for (int32_t x = -4; x <= 20; ++x) (void)w.setBlock(x, kFloorY, z, BlockId::Glass);
         ASSERT_TRUE(w.setBlock(8, kY, 8, BlockId::Water));
@@ -267,8 +267,8 @@ TEST(FluidsStreaming, WaterSavedMidFlowResumesAfterReload) {
         ASSERT_TRUE(w.getFluid({11, kY, 8}).isEmpty());
         w.saveModifiedChunks(storage::WorldLevelData{});
     }
-    world::World w(test::p2worldgen::kSeed, dir.path());
-    test::p2worldgen::loadAll(w, region);
+    world::World w(test::worldgen_support::kSeed, dir.path());
+    test::worldgen_support::loadAll(w, region);
     EXPECT_EQ(w.getFluid({10, kY, 8}), FluidState::fromBetaDecay(FluidType::Water, 2)) << "level survives the save";
     EXPECT_GT(w.getFluidSimulator().pendingUpdates(), 0U) << "unsettled water is re-queued on load";
     for (int32_t i = 0; i < kWaterTicks * 6; ++i) (void)w.tick();
@@ -280,8 +280,8 @@ TEST(FluidsStreaming, SettledOceanQueuesNoFluidWorkOnLoad) {
     // move must not flood the queue (and delay the player's own water behind them).
     voxel::BlockRegistry::initialize();
     test::TempDir dir;
-    world::World w(test::p2worldgen::kSeed, dir.path());
-    test::p2worldgen::loadAll(w, test::p2worldgen::squareRegion({-5, 8}, 1));
+    world::World w(test::worldgen_support::kSeed, dir.path());
+    test::worldgen_support::loadAll(w, test::worldgen_support::squareRegion({-5, 8}, 1));
     size_t water = 0;
     for (const auto& [coord, chunk] : w.getChunks()) {
         for (int32_t y = 0; y < Chunk::HEIGHT; ++y)
@@ -298,8 +298,8 @@ TEST(FluidsStreaming, UnsettledGeneratedFluidIsScheduledOnLoad) {
     // fluid that can move (e.g. cave lava or aquifer water open to a carved pocket).
     voxel::BlockRegistry::initialize();
     test::TempDir dir;
-    world::World w(test::p2worldgen::kSeed, dir.path());
-    test::p2worldgen::loadAll(w, test::p2worldgen::squareRegion({0, 0}, 2));
+    world::World w(test::worldgen_support::kSeed, dir.path());
+    test::worldgen_support::loadAll(w, test::worldgen_support::squareRegion({0, 0}, 2));
     const fluids::FluidSimulator& sim = w.getFluidSimulator();
     size_t unsettled = 0;
     for (const auto& [coord, chunk] : w.getChunks()) {

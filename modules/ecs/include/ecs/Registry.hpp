@@ -21,7 +21,7 @@ namespace betacraft::ecs {
 namespace detail {
 
 // Dense, process-wide component type ids. The counter lives in Registry.cpp so every
-// translation unit (and every Phase 2 static library) agrees on the same numbering.
+// translation unit (and every module static library) agrees on the same numbering.
 [[nodiscard]] uint32_t nextComponentTypeId() noexcept;
 
 template<typename T>

@@ -260,7 +260,7 @@ TEST(EcsCollisionSystem, ThousandItemDropsSettleOnFloor) {
 }
 
 TEST(EcsCollisionSystem, WorldOverloadCollidesWithPlacedBlocks) {
-    const auto saveDir = std::filesystem::path(::testing::TempDir()) / "betacraft_p2_ecs_world";
+    const auto saveDir = std::filesystem::path(::testing::TempDir()) / "betacraft_ecs_world";
     world::World world(1234U, saveDir);
     (void)world.ensureChunkLoaded({0, 0});
     // Build a stone platform high above any generated terrain.

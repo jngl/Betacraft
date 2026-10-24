@@ -1,4 +1,4 @@
-// Phase 2 integration review fixes, gameplay side: quick clicks, Beta hardness, drops of
+// Integration review fixes, gameplay side: quick clicks, Beta hardness, drops of
 // vanilla items and of blocks that lose their support, lava versus water for the player,
 // placing fluid into flowing fluid.
 #include "tests/integration/support/GameplaySupport.hpp"
@@ -15,7 +15,7 @@
 #include <utility>
 
 using namespace betacraft;
-using namespace betacraft::test::p2gameplay;
+using namespace betacraft::test::gameplay_support;
 using physics::InventorySlot;
 namespace items = gameplay::items;
 
@@ -194,9 +194,9 @@ TEST_F(GameplayRegressions, MiningTheBlockUnderAStackOfSugarCaneDropsEveryCane) 
 
 TEST(SupportRegressions, ATorchThatLosesItsSupportTakesItsLightWithIt) {
     voxel::BlockRegistry::initialize();
-    test::TempDir dir{"betacraft_p2_fixes_support_"};
-    world::World w(test::p2worldgen::kSeed, dir.path());
-    test::p2worldgen::loadAll(w, test::p2worldgen::squareRegion({0, 0}, 1));
+    test::TempDir dir{"betacraft_fixes_support_"};
+    world::World w(test::worldgen_support::kSeed, dir.path());
+    test::worldgen_support::loadAll(w, test::worldgen_support::squareRegion({0, 0}, 1));
     // High above the terrain: no other block light anywhere near.
     const core::BlockPos base{8, 110, 8};
     ASSERT_TRUE(w.setBlock(base, BlockId::Dirt));

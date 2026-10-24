@@ -1,4 +1,4 @@
-// Phase 2 integration review fixes, streaming side: GPU meshes of columns unloaded on the
+// Integration review fixes, streaming side: GPU meshes of columns unloaded on the
 // frame smooth lighting toggles, metadata-only writes (fluid levels) that cannot change any
 // geometry, and the renderer's per-frame visible-column count.
 #include "test_support/GLTestContext.hpp"
@@ -55,8 +55,8 @@ class StreamingRegressions : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
-        m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
-        test::p2worldgen::loadAll(*m_world, test::p2worldgen::squareRegion({0, 0}, 2));
+        m_world = std::make_unique<world::World>(test::worldgen_support::kSeed, m_dir.path());
+        test::worldgen_support::loadAll(*m_world, test::worldgen_support::squareRegion({0, 0}, 2));
     }
 
     [[nodiscard]] static WorldMeshStreamerConfig inlineMode() {
@@ -76,7 +76,7 @@ protected:
         FAIL() << "streamer did not converge";
     }
 
-    test::TempDir m_dir{"betacraft_p2_fixes_streaming_"};
+    test::TempDir m_dir{"betacraft_fixes_streaming_"};
     std::unique_ptr<world::World> m_world;
     glm::vec3 m_viewer{8.0f, 80.0f, 8.0f};
     glm::vec3 m_forward{0.0f, 0.0f, 1.0f};

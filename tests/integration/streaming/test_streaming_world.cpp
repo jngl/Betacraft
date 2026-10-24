@@ -1,4 +1,4 @@
-// Phase 2 integration, P1.1 asynchronous chunk streaming: the live World feeds the
+// Integration, P1.1 asynchronous chunk streaming: the live World feeds the
 // AsyncChunkPipeline through WorldMeshStreamer (lifecycle reports, dirty-section captures,
 // re-requests, unload cancellation). A GL-free uploader stands in for WorldRenderer and
 // checks that what ends up "on the GPU" is exactly the newest mesh of every section.
@@ -110,9 +110,9 @@ class StreamingWorld : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
-        m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
-        m_region = test::p2worldgen::squareRegion({0, 0}, 2);
-        test::p2worldgen::loadAll(*m_world, m_region);
+        m_world = std::make_unique<world::World>(test::worldgen_support::kSeed, m_dir.path());
+        m_region = test::worldgen_support::squareRegion({0, 0}, 2);
+        test::worldgen_support::loadAll(*m_world, m_region);
     }
 
     [[nodiscard]] static WorldMeshStreamerConfig threaded(size_t workers = 4) {
@@ -172,7 +172,7 @@ protected:
         return out;
     }
 
-    test::TempDir m_dir{"betacraft_p2_streaming_"};
+    test::TempDir m_dir{"betacraft_streaming_"};
     std::unique_ptr<world::World> m_world;
     std::vector<core::ChunkCoord> m_region;
     glm::vec3 m_viewer{8.0f, 80.0f, 8.0f};
@@ -311,7 +311,7 @@ TEST_F(StreamingWorld, ReloadedChunkIsMeshedAgainFromScratch) {
     converge(s, gpu);
     ASSERT_TRUE(gpu.live.empty());
 
-    test::p2worldgen::loadAll(*m_world, m_region);
+    test::worldgen_support::loadAll(*m_world, m_region);
     gpu.resetCounts();
     converge(s, gpu);
     expectGpuMatchesWorld(gpu);
@@ -376,7 +376,7 @@ TEST_F(StreamingWorld, FrontierChunkIsMeshedOnceItsNeighbourhoodLoadsAndDecorate
         EXPECT_FALSE(gpu.live.contains(voxel::SectionCoord{edge.x, sy, edge.z}));
     }
 
-    test::p2worldgen::loadAll(*m_world, {{3, -1}, {3, 0}, {3, 1}});
+    test::worldgen_support::loadAll(*m_world, {{3, -1}, {3, 0}, {3, 1}});
     ASSERT_TRUE(m_world->isChunkDecorated(edge));
     converge(s, gpu);
     EXPECT_EQ(s.pipeline().chunkStage(edge), ChunkStage::Uploaded);

@@ -66,13 +66,13 @@ class WeatherWorld : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
-        m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
+        m_world = std::make_unique<world::World>(test::worldgen_support::kSeed, m_dir.path());
         // Everything is loaded first: decorating a neighbour could put a tree into a chunk
         // already flattened.
-        for (const core::ChunkCoord c : test::p2worldgen::squareRegion({0, 0}, kRadius)) {
+        for (const core::ChunkCoord c : test::worldgen_support::squareRegion({0, 0}, kRadius)) {
             (void)m_world->ensureChunkLoaded(c);
         }
-        for (const core::ChunkCoord c : test::p2worldgen::squareRegion({0, 0}, kRadius)) {
+        for (const core::ChunkCoord c : test::worldgen_support::squareRegion({0, 0}, kRadius)) {
             voxel::Chunk& chunk = m_world->ensureChunkLoaded(c);
             for (int32_t z = 0; z < voxel::Chunk::DEPTH; ++z) {
                 for (int32_t x = 0; x < voxel::Chunk::WIDTH; ++x) {
@@ -93,7 +93,7 @@ protected:
 
     // Every loaded column gets `biome`.
     void setBiome(voxel::BiomeId biome) {
-        for (const core::ChunkCoord c : test::p2worldgen::squareRegion({0, 0}, kRadius)) {
+        for (const core::ChunkCoord c : test::worldgen_support::squareRegion({0, 0}, kRadius)) {
             voxel::Chunk& chunk = m_world->ensureChunkLoaded(c);
             for (int32_t z = 0; z < voxel::Chunk::DEPTH; ++z) {
                 for (int32_t x = 0; x < voxel::Chunk::WIDTH; ++x) {
@@ -111,7 +111,7 @@ protected:
         return n;
     }
 
-    test::TempDir m_dir{"betacraft_p2_weather_"};
+    test::TempDir m_dir{"betacraft_weather_"};
     std::unique_ptr<world::World> m_world;
     glm::vec3 m_feet{8.5f, static_cast<float>(kGroundY + 1), 8.5f};
 };

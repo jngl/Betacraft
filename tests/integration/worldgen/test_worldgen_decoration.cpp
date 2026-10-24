@@ -1,4 +1,4 @@
-// Phase 2 integration, P3.4 two-pass decoration through the real World API: WorldGen
+// Integration, P3.4 two-pass decoration through the real World API: WorldGen
 // produces pass 1 (terrain + caves) only, World runs pass 2 once a chunk's 3x3
 // neighbourhood is resident, relights what it decorated and forgets the state on unload.
 #include "tests/integration/support/WorldgenSupport.hpp"
@@ -17,7 +17,7 @@
 #include <vector>
 
 using namespace betacraft;
-using namespace betacraft::test::p2worldgen;
+using namespace betacraft::test::worldgen_support;
 
 namespace {
 

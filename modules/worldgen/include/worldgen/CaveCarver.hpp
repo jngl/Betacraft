@@ -38,7 +38,7 @@ enum class CaveFill : uint8_t { Air = 0, Water, Lava };
 
 namespace detail {
 // Detecting the enumerator instead of naming it kept this module buildable before Block.hpp
-// gained BlockId::Lava; the default palette now resolves to it (pinned by the Phase 2
+// gained BlockId::Lava; the default palette now resolves to it (pinned by the
 // worldgen integration tests).
 template <typename E>
 inline constexpr bool hasLavaBlock = requires { E::Lava; };

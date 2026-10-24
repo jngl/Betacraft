@@ -260,7 +260,7 @@ TEST_F(WorldSessionLifecycle, CloseReportsChunksThatCouldNotBeWritten) {
 class WorldSessionFixture : public WorldSessionSupport {};
 
 TEST_F(WorldSessionFixture, OpensAStartedWorldWithThePlayerOnTheFloor) {
-    EXPECT_EQ(m_session->world().getSeed(), p2worldgen::kSeed);
+    EXPECT_EQ(m_session->world().getSeed(), worldgen_support::kSeed);
     EXPECT_FALSE(m_session->awaitingGameMode());
     EXPECT_EQ(world().getBlock(2, kFloorY, 2), BlockId::Glass);
     EXPECT_TRUE(player().isOnGround());

@@ -51,8 +51,8 @@ class MobsSession : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
-        m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
-        for (const core::ChunkCoord c : test::p2worldgen::squareRegion({0, 0}, kRadius)) {
+        m_world = std::make_unique<world::World>(test::worldgen_support::kSeed, m_dir.path());
+        for (const core::ChunkCoord c : test::worldgen_support::squareRegion({0, 0}, kRadius)) {
             voxel::Chunk& chunk = m_world->ensureChunkLoaded(c);
             for (int32_t z = 0; z < voxel::Chunk::DEPTH; ++z) {
                 for (int32_t x = 0; x < voxel::Chunk::WIDTH; ++x) {
@@ -89,7 +89,7 @@ protected:
         return n;
     }
 
-    test::TempDir m_dir{"betacraft_p2_mobs_"};
+    test::TempDir m_dir{"betacraft_mobs_"};
     std::unique_ptr<world::World> m_world;
     ecs::Registry m_reg;
     ecs::CommandBuffer m_commands;

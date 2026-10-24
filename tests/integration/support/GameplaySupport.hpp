@@ -1,5 +1,5 @@
 #pragma once
-// Shared fixture for the Phase 2 gameplay integration tests (P2.1 ECS entities, P2.5 tools,
+// Shared fixture for the gameplay integration tests (P2.1 ECS entities, P2.5 tools,
 // durability and combat, P2.6 crafting) through the GL-free game::EntitySimulation.
 
 #include "test_support/GLTestContext.hpp"
@@ -17,7 +17,7 @@
 #include <memory>
 #include <optional>
 
-namespace betacraft::test::p2gameplay {
+namespace betacraft::test::gameplay_support {
 
 using voxel::BlockId;
 
@@ -29,7 +29,7 @@ class GameplayWorld : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
-        m_world = std::make_unique<world::World>(p2worldgen::kSeed, m_dir.path());
+        m_world = std::make_unique<world::World>(worldgen_support::kSeed, m_dir.path());
         glassfloor::layGlassFloor(*m_world);
         glassfloor::resetPlayer(m_player);
         placePlayer({2.5f, static_cast<float>(kY), 2.5f});
@@ -61,10 +61,10 @@ protected:
 
     [[nodiscard]] size_t itemEntityCount() const { return m_session.entities().count<ecs::ItemDropComp>(); }
 
-    TempDir m_dir{"betacraft_p2_gameplay_"};
+    TempDir m_dir{"betacraft_gameplay_"};
     std::unique_ptr<world::World> m_world;
     physics::Player m_player;
     game::EntitySimulation m_session{12345ULL};
 };
 
-} // namespace betacraft::test::p2gameplay
+} // namespace betacraft::test::gameplay_support

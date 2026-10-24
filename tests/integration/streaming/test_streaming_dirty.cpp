@@ -1,4 +1,4 @@
-// Phase 2 integration, P1.1 streaming: mesh staleness is tracked per 16-high section so
+// Integration, P1.1 streaming: mesh staleness is tracked per 16-high section so
 // the AsyncChunkPipeline re-meshes only the sections whose 18^3 neighbourhood an edit
 // touched (its own, plus the ones across every section or column seam it lies on).
 #include "test_support/GLTestContext.hpp"
@@ -27,8 +27,8 @@ class StreamingDirty : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
-        m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
-        test::p2worldgen::loadAll(*m_world, test::p2worldgen::squareRegion({0, 0}, 1));
+        m_world = std::make_unique<world::World>(test::worldgen_support::kSeed, m_dir.path());
+        test::worldgen_support::loadAll(*m_world, test::worldgen_support::squareRegion({0, 0}, 1));
         cleanAll();
     }
 
@@ -46,7 +46,7 @@ protected:
         ASSERT_TRUE(m_world->setBlock(x, y, z, BlockId::Cobblestone));
     }
 
-    test::TempDir m_dir{"betacraft_p2_streaming_dirty_"};
+    test::TempDir m_dir{"betacraft_streaming_dirty_"};
     std::unique_ptr<world::World> m_world;
 };
 
@@ -100,7 +100,7 @@ TEST_F(StreamingDirty, InteriorEditLeavesNeighbourColumnsClean) {
 
 TEST_F(StreamingDirty, LoadingAChunkMarksAllEightNeighbours) {
     // The diagonal ones too: their corner voxels' AO and smooth light read the new column.
-    test::p2worldgen::loadAll(*m_world, {{2, -1}, {2, 0}, {2, 1}});
+    test::worldgen_support::loadAll(*m_world, {{2, -1}, {2, 0}, {2, 1}});
     cleanAll();
     (void)m_world->ensureChunkLoaded({2, 2});
     for (const core::ChunkCoord n : {core::ChunkCoord{1, 1}, core::ChunkCoord{2, 1}}) {

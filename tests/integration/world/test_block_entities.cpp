@@ -15,7 +15,7 @@
 #include <string>
 
 using namespace betacraft;
-using namespace betacraft::test::p2gameplay;
+using namespace betacraft::test::gameplay_support;
 using voxel::ChestData;
 using voxel::FurnaceData;
 using voxel::StoredStack;
@@ -75,8 +75,8 @@ protected:
 
     // A second World on the same save directory (a restart), with the fixture's chunks.
     [[nodiscard]] std::unique_ptr<world::World> reopen() const {
-        auto w = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
-        test::p2worldgen::loadAll(*w, test::p2worldgen::squareRegion({0, 0}, 1));
+        auto w = std::make_unique<world::World>(test::worldgen_support::kSeed, m_dir.path());
+        test::worldgen_support::loadAll(*w, test::worldgen_support::squareRegion({0, 0}, 1));
         return w;
     }
 

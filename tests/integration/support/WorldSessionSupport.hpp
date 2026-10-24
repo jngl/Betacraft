@@ -1,6 +1,6 @@
 #pragma once
 // Shared fixture for the GL-free game::WorldSession tests (spec #9): the counterpart of
-// p2gameplay::GameplayWorld one level up, with the world, the player and the per-world state
+// gameplay_support::GameplayWorld one level up, with the world, the player and the per-world state
 // owned by a real session opened on a temporary folder.
 
 #include "test_support/GLTestContext.hpp"
@@ -32,7 +32,7 @@ using glassfloor::kY;
 [[nodiscard]] inline game::WorldSession::OpenOptions openOptions(const std::filesystem::path& folder) {
     game::WorldSession::OpenOptions options{};
     options.folder = folder;
-    options.seed = p2worldgen::kSeed;
+    options.seed = worldgen_support::kSeed;
     options.features.asyncWorldGen = false;
     return options;
 }

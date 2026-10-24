@@ -13,7 +13,7 @@
 #include <gtest/gtest.h>
 
 using namespace betacraft;
-using namespace betacraft::test::p2gameplay;
+using namespace betacraft::test::gameplay_support;
 
 namespace {
 
@@ -157,8 +157,8 @@ TEST_F(RedstoneWorld, StatePersistsAcrossSaveReload) {
     m_world->saveModifiedChunks(storage::WorldLevelData{});
     m_world.reset();
 
-    m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
-    test::p2worldgen::loadAll(*m_world, test::p2worldgen::squareRegion({0, 0}, 1));
+    m_world = std::make_unique<world::World>(test::worldgen_support::kSeed, m_dir.path());
+    test::worldgen_support::loadAll(*m_world, test::worldgen_support::squareRegion({0, 0}, 1));
     EXPECT_EQ(m_world->getBlock(kLever), BlockId::Lever);
     EXPECT_EQ(m_world->getMetadata(kLever), voxel::kAttachFloor | voxel::kLeverOnBit);
     for (int32_t x = 1; x <= 10; ++x) {
@@ -197,8 +197,8 @@ TEST_F(RedstoneWorld, ChunkReloadReschedulesTorches) {
     m_world->saveModifiedChunks(storage::WorldLevelData{});
     m_world.reset();
 
-    m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
-    test::p2worldgen::loadAll(*m_world, test::p2worldgen::squareRegion({0, 0}, 1));
+    m_world = std::make_unique<world::World>(test::worldgen_support::kSeed, m_dir.path());
+    test::worldgen_support::loadAll(*m_world, test::worldgen_support::squareRegion({0, 0}, 1));
     ASSERT_EQ(m_world->getBlock(torch), BlockId::RedstoneTorchOff) << "saved unlit";
     ASSERT_NE(m_world->getMetadata(button) & voxel::kButtonPressedBit, 0) << "saved pressed";
     worldTicks(4);

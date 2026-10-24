@@ -1,4 +1,4 @@
-// Phase 2 integration, P4.2 acoustics in the game loop: Application plays world sounds at their
+// Integration, P4.2 acoustics in the game loop: Application plays world sounds at their
 // voxel through the AcousticsController. The fizz of a lava/water contact is the one sound that
 // comes from the simulation rather than the player, so it is checked from the real fluid events.
 #include "test_support/GLTestContext.hpp"
@@ -45,8 +45,8 @@ protected:
 
     void SetUp() override {
         voxel::BlockRegistry::initialize();
-        m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
-        test::p2worldgen::loadAll(*m_world, test::p2worldgen::squareRegion({0, 0}, 1));
+        m_world = std::make_unique<world::World>(test::worldgen_support::kSeed, m_dir.path());
+        test::worldgen_support::loadAll(*m_world, test::worldgen_support::squareRegion({0, 0}, 1));
         for (int32_t z = -2; z <= 18; ++z)
             for (int32_t x = -2; x <= 18; ++x) (void)m_world->setBlock(x, kFloorY, z, BlockId::Glass);
         (void)m_world->takeFluidEvents();

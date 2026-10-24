@@ -1,4 +1,4 @@
-// Phase 2 integration, P4.2 acoustics in AudioEngine: the game-thread AcousticsController
+// Integration, P4.2 acoustics in AudioEngine: the game-thread AcousticsController
 // ray-marches the real World (occlusion at start and at 10 Hz, enclosure probes), posts through
 // AudioEngine's command queue, and the mixer routes every voice through the AcousticVoiceBank
 // (occlusion LPF + gain, shared FDN aux bus). AudioEngine::renderFrames runs that mixing path
@@ -61,8 +61,8 @@ class AcousticsMixing : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
-        m_world = std::make_unique<world::World>(test::p2worldgen::kSeed, m_dir.path());
-        test::p2worldgen::loadAll(*m_world, test::p2worldgen::squareRegion({0, 0}, 3));
+        m_world = std::make_unique<world::World>(test::worldgen_support::kSeed, m_dir.path());
+        test::worldgen_support::loadAll(*m_world, test::worldgen_support::squareRegion({0, 0}, 3));
     }
 
     // One voice of `effect` at `source` heard from `listener` through the controller, as Application

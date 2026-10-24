@@ -1,4 +1,4 @@
-// Phase 2 integration, P3.4 decoration state across sessions: a saved chunk remembers
+// Integration, P3.4 decoration state across sessions: a saved chunk remembers
 // whether pass 2 ran and the feature plan it was registered with, so reloading neither
 // re-decorates player edits nor re-plans edited terrain; saves predating the record load as
 // decorated (their decoration is baked in).
@@ -17,7 +17,7 @@
 #include <vector>
 
 using namespace betacraft;
-using namespace betacraft::test::p2worldgen;
+using namespace betacraft::test::worldgen_support;
 
 namespace {
 

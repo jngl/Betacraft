@@ -13,7 +13,7 @@
 #include <string>
 
 using namespace betacraft;
-using namespace betacraft::test::p2gameplay;
+using namespace betacraft::test::gameplay_support;
 using game::DamageCause;
 using game::GameTickEvents;
 

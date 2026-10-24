@@ -1,4 +1,4 @@
-// Phase 2 integration, data foundations: the Beta fluid block ids (water 8/9, lava 10/11)
+// Integration, data foundations: the Beta fluid block ids (water 8/9, lava 10/11)
 // that the fluids, worldgen, combat, crafting and lighting modules reported as missing.
 #include "test_support/GLTestContext.hpp"
 

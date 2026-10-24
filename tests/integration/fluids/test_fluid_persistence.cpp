@@ -41,8 +41,8 @@ namespace {
 TEST(FluidPersistence, GeneratedFluidSettlingMarksNothingModified) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir{"betacraft_s1_fluids_"};
-    world::World w(test::p2worldgen::kSeed, dir.path());
-    test::p2worldgen::loadAll(w, test::p2worldgen::squareRegion({0, 0}, 2));
+    world::World w(test::worldgen_support::kSeed, dir.path());
+    test::worldgen_support::loadAll(w, test::worldgen_support::squareRegion({0, 0}, 2));
     for (const auto& [coord, chunk] : w.getChunks()) {
         ASSERT_FALSE(chunk->isModified()) << coord.x << "," << coord.z;
         ASSERT_FALSE(chunk->isPlayerTouched()) << coord.x << "," << coord.z;
@@ -68,8 +68,8 @@ TEST(FluidPersistence, PlayerWaterFlowingAcrossASeamIsPersisted) {
     constexpr int32_t kFloorY = 119;
     constexpr int32_t kY = 120;
     {
-        world::World w(test::p2worldgen::kSeed, dir.path());
-        test::p2worldgen::loadAll(w, test::p2worldgen::squareRegion({0, 0}, 1));
+        world::World w(test::worldgen_support::kSeed, dir.path());
+        test::worldgen_support::loadAll(w, test::worldgen_support::squareRegion({0, 0}, 1));
         // The floor stays inside chunk (0, 0): only that chunk is player-touched.
         for (int32_t z = 0; z < Chunk::DEPTH; ++z) {
             for (int32_t x = 0; x < Chunk::WIDTH; ++x) {
@@ -92,9 +92,9 @@ TEST(FluidPersistence, PlayerWaterFlowingAcrossASeamIsPersisted) {
 
         w.saveModifiedChunks(storage::WorldLevelData{});
         // Reload the column into a second world on the same save and compare.
-        world::World reloaded(test::p2worldgen::kSeed, dir.path());
+        world::World reloaded(test::worldgen_support::kSeed, dir.path());
         const Chunk& again = reloaded.ensureChunkLoaded({1, 0});
-        EXPECT_EQ(test::p2worldgen::firstBlockDifference(*east, again), -1);
+        EXPECT_EQ(test::worldgen_support::firstBlockDifference(*east, again), -1);
         EXPECT_EQ(countWater(again, 100), countWater(*east, 100));
         EXPECT_TRUE(again.isPlayerTouched()) << "a chunk read from disk was edited";
     }

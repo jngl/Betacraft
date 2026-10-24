@@ -1,4 +1,4 @@
-// Phase 2 integration, P2.5 tools in the game loop: game::EntitySimulation mines with Beta's
+// Integration, P2.5 tools in the game loop: game::EntitySimulation mines with Beta's
 // hold-to-break rules (gameplay::MiningProgress + computeDig on the 20 TPS tick), drops only
 // what the held tool may harvest as ECS item entities, wears the held tool and breaks it
 // after its durability, and exposes the crack stage the renderer draws.
@@ -10,7 +10,7 @@
 #include <gtest/gtest.h>
 
 using namespace betacraft;
-using namespace betacraft::test::p2gameplay;
+using namespace betacraft::test::gameplay_support;
 using gameplay::WearResult;
 using physics::InventorySlot;
 namespace items = gameplay::items;
