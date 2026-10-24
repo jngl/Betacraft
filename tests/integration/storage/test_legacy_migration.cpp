@@ -36,7 +36,7 @@ namespace {
 
 } // namespace
 
-TEST(P2StorageLegacyMigration, MigratedSaveLoadsIdenticalToLegacy) {
+TEST(StorageLegacyMigration, MigratedSaveLoadsIdenticalToLegacy) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s7_migration_");
     const auto legacySave = copyReference(dir, "legacy");
@@ -93,7 +93,7 @@ TEST(P2StorageLegacyMigration, MigratedSaveLoadsIdenticalToLegacy) {
 
 // Without migration (it failed or has not run yet), the facade still reads the legacy files
 // and writes edits to the regions, which take precedence from then on.
-TEST(P2StorageLegacyMigration, UnmigratedSaveReadsThroughFacade) {
+TEST(StorageLegacyMigration, UnmigratedSaveReadsThroughFacade) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s7_migration_");
     const auto save = copyReference(dir, "world");

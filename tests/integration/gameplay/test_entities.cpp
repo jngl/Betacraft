@@ -29,7 +29,7 @@ namespace items = gameplay::items;
 
 namespace {
 
-class P2GameplayEntities : public GameplayWorld {
+class GameplayEntities : public GameplayWorld {
 protected:
     // A mob standing idle on the floor `distance` blocks in front of the player (who looks
     // along +X). The AI is parked in Idle so it does not wander off the look ray.
@@ -51,7 +51,7 @@ protected:
 
 } // namespace
 
-TEST_F(P2GameplayEntities, BrokenBlocksSpawnItemEntitiesThatFallAndRest) {
+TEST_F(GameplayEntities, BrokenBlocksSpawnItemEntitiesThatFallAndRest) {
     const core::BlockPos cell{6, kY + 3, 2}; // Floating, so the drop has to fall 3 blocks
     ASSERT_TRUE(m_world->setBlock(cell, BlockId::Dirt));
     const MineResult r = mine(cell);
@@ -69,7 +69,7 @@ TEST_F(P2GameplayEntities, BrokenBlocksSpawnItemEntitiesThatFallAndRest) {
     EXPECT_EQ(m_player.countItem(BlockId::Dirt), 0); // Out of the player's reach
 }
 
-TEST_F(P2GameplayEntities, ItemsArePickedUpAfterTheBetaDelayWhenThePlayerIsClose) {
+TEST_F(GameplayEntities, ItemsArePickedUpAfterTheBetaDelayWhenThePlayerIsClose) {
     const glm::vec3 feet = m_player.getPosition();
     const EntityId e = m_session.spawnItem(gameplay::makeStack(toItemId(BlockId::Cobblestone), 5), feet);
     ASSERT_NE(e, ecs::NULL_ENTITY);
@@ -88,7 +88,7 @@ TEST_F(P2GameplayEntities, ItemsArePickedUpAfterTheBetaDelayWhenThePlayerIsClose
     EXPECT_EQ(m_player.countItem(BlockId::Cobblestone), 5);
 }
 
-TEST_F(P2GameplayEntities, DistantItemsStayOnTheGround) {
+TEST_F(GameplayEntities, DistantItemsStayOnTheGround) {
     const EntityId e = m_session.spawnItem(gameplay::makeStack(toItemId(BlockId::Sand), 1),
                                            m_player.getPosition() + glm::vec3(4.0f, 0.0f, 0.0f));
     tickIdle(40);
@@ -96,7 +96,7 @@ TEST_F(P2GameplayEntities, DistantItemsStayOnTheGround) {
     EXPECT_EQ(m_player.countItem(BlockId::Sand), 0);
 }
 
-TEST_F(P2GameplayEntities, APartialPickupLeavesTheRestOnTheGround) {
+TEST_F(GameplayEntities, APartialPickupLeavesTheRestOnTheGround) {
     for (size_t i = 1; i < physics::Player::TOTAL_INVENTORY_SIZE; ++i) {
         m_player.setInventorySlot(i, {BlockId::Glass, 64});
     }
@@ -108,7 +108,7 @@ TEST_F(P2GameplayEntities, APartialPickupLeavesTheRestOnTheGround) {
     EXPECT_EQ(m_player.countItem(BlockId::Gravel), 64);
 }
 
-TEST_F(P2GameplayEntities, DroppedToolsKeepTheirWear) {
+TEST_F(GameplayEntities, DroppedToolsKeepTheirWear) {
     gameplay::ItemStack worn = gameplay::makeStack(items::StonePickaxe, 1);
     worn.damage = 40;
     const EntityId e = m_session.spawnItem(worn, m_player.getPosition());
@@ -118,7 +118,7 @@ TEST_F(P2GameplayEntities, DroppedToolsKeepTheirWear) {
     EXPECT_EQ(m_player.getInventorySlot(0), InventorySlot(items::StonePickaxe, 1, 40));
 }
 
-TEST_F(P2GameplayEntities, AFistHitDamagesKnocksBackAndOpensTheHurtWindow) {
+TEST_F(GameplayEntities, AFistHitDamagesKnocksBackAndOpensTheHurtWindow) {
     const EntityId mob = spawnMobAhead(2.0f);
     tickIdle(2);
     ASSERT_EQ(m_session.meleeTarget(m_player, {}), std::optional<EntityId>(mob));
@@ -156,7 +156,7 @@ TEST_F(P2GameplayEntities, AFistHitDamagesKnocksBackAndOpensTheHurtWindow) {
     EXPECT_EQ(health(mob).current, 8);
 }
 
-TEST_F(P2GameplayEntities, SwordHitsDealBetaDamageAndWearTheSword) {
+TEST_F(GameplayEntities, SwordHitsDealBetaDamageAndWearTheSword) {
     hold({items::WoodSword, 1});
     const EntityId mob = spawnMobAhead(2.0f, 20);
     tickIdle(2);
@@ -167,7 +167,7 @@ TEST_F(P2GameplayEntities, SwordHitsDealBetaDamageAndWearTheSword) {
     EXPECT_EQ(m_player.getHeldItem(), InventorySlot(items::WoodSword, 1, 1));
 }
 
-TEST_F(P2GameplayEntities, ASwingAtAnEntityDoesNotMineTheBlockBehindIt) {
+TEST_F(GameplayEntities, ASwingAtAnEntityDoesNotMineTheBlockBehindIt) {
     const core::BlockPos wall{6, kY + 1, 2};
     ASSERT_TRUE(m_world->setBlock(wall, BlockId::Dirt));
     const EntityId mob = spawnMobAhead(2.0f);
@@ -179,7 +179,7 @@ TEST_F(P2GameplayEntities, ASwingAtAnEntityDoesNotMineTheBlockBehindIt) {
     EXPECT_EQ(m_world->getBlock(wall), BlockId::Dirt);
 }
 
-TEST_F(P2GameplayEntities, BlocksInFrontOfAnEntityShieldIt) {
+TEST_F(GameplayEntities, BlocksInFrontOfAnEntityShieldIt) {
     const EntityId mob = spawnMobAhead(3.0f);
     tickIdle(2);
     const core::BlockPos shield{4, kY + 1, 2};
@@ -190,7 +190,7 @@ TEST_F(P2GameplayEntities, BlocksInFrontOfAnEntityShieldIt) {
     EXPECT_EQ(health(mob).current, 10);
 }
 
-TEST_F(P2GameplayEntities, KilledMobsStayAsCorpsesForTheDeathAnimationThenVanish) {
+TEST_F(GameplayEntities, KilledMobsStayAsCorpsesForTheDeathAnimationThenVanish) {
     hold({items::StoneSword, 1});
     const EntityId mob = spawnMobAhead(2.0f, 4);
     tickIdle(2);
@@ -216,7 +216,7 @@ TEST_F(P2GameplayEntities, KilledMobsStayAsCorpsesForTheDeathAnimationThenVanish
     EXPECT_EQ(ticks, gameplay::kDeathAnimationTicks);
 }
 
-TEST_F(P2GameplayEntities, ItemsThePlayerDropsFlyAheadAndAreNotPickedUpAtOnce) {
+TEST_F(GameplayEntities, ItemsThePlayerDropsFlyAheadAndAreNotPickedUpAtOnce) {
     const EntityId e = m_session.dropFromPlayer(m_player, gameplay::makeStack(toItemId(BlockId::Cobblestone), 3));
     ASSERT_NE(e, ecs::NULL_ENTITY);
     EXPECT_GT(velocity(e).linear.x, 0.0f); // Thrown along the look (+X)
@@ -228,7 +228,7 @@ TEST_F(P2GameplayEntities, ItemsThePlayerDropsFlyAheadAndAreNotPickedUpAtOnce) {
     EXPECT_GT(transform(e).pos.x, m_player.getPosition().x + 0.5f);
 }
 
-TEST_F(P2GameplayEntities, FlowersWashedAwayByWaterDropAsItemEntities) {
+TEST_F(GameplayEntities, FlowersWashedAwayByWaterDropAsItemEntities) {
     const core::BlockPos flower{9, kY, 8};
     ASSERT_TRUE(m_world->setBlock(flower, BlockId::Dandelion));
     (void)m_world->takeFluidEvents();
@@ -250,7 +250,7 @@ TEST_F(P2GameplayEntities, FlowersWashedAwayByWaterDropAsItemEntities) {
     EXPECT_TRUE(found);
 }
 
-TEST_F(P2GameplayEntities, FizzEventsAndDroplessWashesSpawnNothing) {
+TEST_F(GameplayEntities, FizzEventsAndDroplessWashesSpawnNothing) {
     const std::vector<fluids::FluidEvent> events{
         {fluids::FluidEventKind::Fizz, {1, kY, 1}, BlockId::Obsidian},
         {fluids::FluidEventKind::BlockWashedAway, {2, kY, 1}, BlockId::TallGrass}, // Seeds 1 time in 8 (S5.7): not on this seeded roll
@@ -260,7 +260,7 @@ TEST_F(P2GameplayEntities, FizzEventsAndDroplessWashesSpawnNothing) {
     EXPECT_EQ(itemEntityCount(), 1U);
 }
 
-TEST_F(P2GameplayEntities, SessionItemsLightTheWorldOnTheGameTickClock) {
+TEST_F(GameplayEntities, SessionItemsLightTheWorldOnTheGameTickClock) {
     lighting::DynamicLightManager lights;
     const EntityId glow = m_session.spawnItem(gameplay::makeStack(toItemId(BlockId::Glowstone), 1), {0.0f, 64.0f, 0.0f});
     (void)m_session.spawnItem(gameplay::makeStack(items::GlowstoneDust, 4), {3.0f, 64.0f, 0.0f}); // Items never glow
@@ -274,7 +274,7 @@ TEST_F(P2GameplayEntities, SessionItemsLightTheWorldOnTheGameTickClock) {
     EXPECT_FLOAT_EQ(lights.lights()[0].position.x, 0.5f);
 }
 
-TEST_F(P2GameplayEntities, EntitiesThatFallOutOfTheWorldAreRemoved) {
+TEST_F(GameplayEntities, EntitiesThatFallOutOfTheWorldAreRemoved) {
     // Over an unloaded chunk the world reads as air, so nothing stops the fall (Beta: killed below y -64).
     const EntityId e = m_session.spawnItem(gameplay::makeStack(toItemId(BlockId::Sand), 1), {5000.5f, -60.0f, 5000.5f});
     ASSERT_NE(e, ecs::NULL_ENTITY);
@@ -284,7 +284,7 @@ TEST_F(P2GameplayEntities, EntitiesThatFallOutOfTheWorldAreRemoved) {
 
 // S3.4: Q throws one item of the held stack, Ctrl+Q the whole stack, wear kept, through
 // dropFromPlayer (thrown along the look, collectable after Beta's 40 ticks only).
-TEST_F(P2GameplayEntities, DropHeldItemThrowsOneOrWholeStack) {
+TEST_F(GameplayEntities, DropHeldItemThrowsOneOrWholeStack) {
     hold({BlockId::Cobblestone, 10});
     const EntityId one = m_session.dropHeldItem(m_player, false);
     ASSERT_NE(one, ecs::NULL_ENTITY);

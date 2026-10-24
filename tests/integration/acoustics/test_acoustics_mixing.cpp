@@ -57,7 +57,7 @@ void fillBox(world::World& w, core::BlockPos lo, core::BlockPos hi, BlockId id, 
             }
 }
 
-class P2AcousticsMixing : public ::testing::Test {
+class AcousticsMixing : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
@@ -85,7 +85,7 @@ protected:
     std::unique_ptr<world::World> m_world;
 };
 
-TEST_F(P2AcousticsMixing, SoundBehindAStoneWallIsAttenuatedInTheMix) {
+TEST_F(AcousticsMixing, SoundBehindAStoneWallIsAttenuatedInTheMix) {
     const glm::vec3 listener{8.5f, kSkyY, 8.5f};
     // A 3-thick stone wall east of the listener; the west side stays open.
     fillBox(*m_world, {11, 112, -2}, {13, 131, 19}, BlockId::Stone, false);
@@ -103,7 +103,7 @@ TEST_F(P2AcousticsMixing, SoundBehindAStoneWallIsAttenuatedInTheMix) {
     EXPECT_GT(occludedRms, 0.05 * openRms); // Muffled, not silenced
 }
 
-TEST_F(P2AcousticsMixing, WallBuiltWhileASoundPlaysMufflesItAtTheNextOcclusionUpdate) {
+TEST_F(AcousticsMixing, WallBuiltWhileASoundPlaysMufflesItAtTheNextOcclusionUpdate) {
     const glm::vec3 listener{8.5f, kSkyY, 8.5f};
     const glm::vec3 east{16.5f, kSkyY, 8.5f};
     const glm::vec3 west{0.5f, kSkyY, 8.5f};
@@ -140,7 +140,7 @@ TEST_F(P2AcousticsMixing, WallBuiltWhileASoundPlaysMufflesItAtTheNextOcclusionUp
     EXPECT_LT(rms(eastOut, from, to), 0.6 * rms(westOut, from, to));
 }
 
-TEST_F(P2AcousticsMixing, EnclosedCaveSendsFarMoreReverbThanOpenAir) {
+TEST_F(AcousticsMixing, EnclosedCaveSendsFarMoreReverbThanOpenAir) {
     // A sealed stone hall (21 x 11 x 21 inside) high in the sky, and an open-air spot more than
     // the 24-block probe range away from it.
     const core::BlockPos lo{-6, 115, -6};
@@ -162,7 +162,7 @@ TEST_F(P2AcousticsMixing, EnclosedCaveSendsFarMoreReverbThanOpenAir) {
     EXPECT_NEAR(rms(cave, 0, frames(0.05)), rms(open, 0, frames(0.05)), 0.25 * rms(open, 0, frames(0.05)));
 }
 
-TEST_F(P2AcousticsMixing, SoundsBeyondTheAudibleRangeAreCulledBeforeTheyReachTheMixer) {
+TEST_F(AcousticsMixing, SoundsBeyondTheAudibleRangeAreCulledBeforeTheyReachTheMixer) {
     audio::AudioEngine engine;
     game::AcousticsController acoustics(engine);
     const glm::vec3 listener{8.5f, kSkyY, 8.5f};

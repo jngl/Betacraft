@@ -17,7 +17,7 @@ using namespace betacraft::test::p2gameplay;
 
 namespace {
 
-class P2RedstoneWorld : public GameplayWorld {
+class RedstoneWorld : public GameplayWorld {
 protected:
     void SetUp() override {
         GameplayWorld::SetUp();
@@ -55,7 +55,7 @@ const core::BlockPos kDoor{11, kY, 0};
 
 } // namespace
 
-TEST_F(P2RedstoneWorld, LeverOpensDoorThroughWire) {
+TEST_F(RedstoneWorld, LeverOpensDoorThroughWire) {
     put(kLever, BlockId::Lever, voxel::kAttachFloor);
     wireLine(1, 10, 0); // 10 wires, the last one points into the door
     ironDoor(kDoor);
@@ -97,7 +97,7 @@ TEST_F(P2RedstoneWorld, LeverOpensDoorThroughWire) {
     EXPECT_FALSE(doorOpen(kDoor));
 }
 
-TEST_F(P2RedstoneWorld, PlateTriggersPiston) {
+TEST_F(RedstoneWorld, PlateTriggersPiston) {
     const core::BlockPos plate{4, kY, 2};
     const core::BlockPos piston{5, kY, 2};
     put(plate, BlockId::StonePressurePlate);
@@ -147,7 +147,7 @@ TEST_F(P2RedstoneWorld, PlateTriggersPiston) {
     EXPECT_NE(m_world->getMetadata(woodPlate) & voxel::kPlatePressedBit, 0);
 }
 
-TEST_F(P2RedstoneWorld, StatePersistsAcrossSaveReload) {
+TEST_F(RedstoneWorld, StatePersistsAcrossSaveReload) {
     put(kLever, BlockId::Lever, voxel::kAttachFloor);
     wireLine(1, 10, 0);
     ironDoor(kDoor);
@@ -174,7 +174,7 @@ TEST_F(P2RedstoneWorld, StatePersistsAcrossSaveReload) {
     EXPECT_EQ(m_world->getMetadata({1, kY, 0}), 0);
 }
 
-TEST_F(P2RedstoneWorld, ChunkReloadReschedulesTorches) {
+TEST_F(RedstoneWorld, ChunkReloadReschedulesTorches) {
     // A torch on block A, a lever on A's side; a button on another block.
     const core::BlockPos a{2, kY, 6};
     const core::BlockPos torch{2, kY + 1, 6};
@@ -207,7 +207,7 @@ TEST_F(P2RedstoneWorld, ChunkReloadReschedulesTorches) {
     EXPECT_EQ(m_world->getMetadata(button) & voxel::kButtonPressedBit, 0) << "the button came back up";
 }
 
-TEST_F(P2RedstoneWorld, RightClickPartsAndPlacement) {
+TEST_F(RedstoneWorld, RightClickPartsAndPlacement) {
     // Placement rules: a lever on a wall, a button needs a wall, wire and plates need a floor.
     put({8, kY, 4}, BlockId::Stone);
     physics::RaycastHit side{};
@@ -265,7 +265,7 @@ TEST_F(P2RedstoneWorld, RightClickPartsAndPlacement) {
     EXPECT_FALSE(m_world->toggleLever({8, kY, 8}));
 }
 
-TEST_F(P2RedstoneWorld, FifteenWiresButtonTorchAndClockOnTheWorld) {
+TEST_F(RedstoneWorld, FifteenWiresButtonTorchAndClockOnTheWorld) {
     // DoD: a lever opens a door through 15 wires (the last one carries power 1).
     put({-4, kY, 2}, BlockId::Lever, voxel::kAttachFloor);
     wireLine(-3, 11, 2);

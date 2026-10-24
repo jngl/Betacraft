@@ -23,7 +23,7 @@ namespace {
     return m;
 }
 
-class P2StreamingDirty : public ::testing::Test {
+class StreamingDirty : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
@@ -52,7 +52,7 @@ protected:
 
 } // namespace
 
-TEST(P2StreamingChunkDirty, BlockWriteMarksItsSectionAndTheOneAcrossAVerticalSeam) {
+TEST(StreamingChunkDirty, BlockWriteMarksItsSectionAndTheOneAcrossAVerticalSeam) {
     voxel::BlockRegistry::initialize();
     Chunk c({0, 0});
     EXPECT_EQ(c.dirtySectionMask(), Chunk::ALL_SECTIONS_MASK) << "a new chunk has never been meshed";
@@ -78,7 +78,7 @@ TEST(P2StreamingChunkDirty, BlockWriteMarksItsSectionAndTheOneAcrossAVerticalSea
     EXPECT_EQ(c.dirtySectionMask(), 0);
 }
 
-TEST_F(P2StreamingDirty, ColumnSeamEditMarksOnlyTheSectionsOfTheColumnsThatSeeIt) {
+TEST_F(StreamingDirty, ColumnSeamEditMarksOnlyTheSectionsOfTheColumnsThatSeeIt) {
     // x = 0 is the seam with column (-1, 0); z = 5 is no seam.
     swapOpaqueBlock(0, 64, 5);
     EXPECT_EQ(mask({0, 0}), bits({3, 4}));
@@ -88,7 +88,7 @@ TEST_F(P2StreamingDirty, ColumnSeamEditMarksOnlyTheSectionsOfTheColumnsThatSeeIt
     EXPECT_EQ(mask({1, 0}), 0);
 }
 
-TEST_F(P2StreamingDirty, InteriorEditLeavesNeighbourColumnsClean) {
+TEST_F(StreamingDirty, InteriorEditLeavesNeighbourColumnsClean) {
     swapOpaqueBlock(7, 40, 7);
     EXPECT_EQ(mask({0, 0}), bits({2}));
     for (const auto& [coord, chunk] : m_world->getChunks()) {
@@ -98,7 +98,7 @@ TEST_F(P2StreamingDirty, InteriorEditLeavesNeighbourColumnsClean) {
     }
 }
 
-TEST_F(P2StreamingDirty, LoadingAChunkMarksAllEightNeighbours) {
+TEST_F(StreamingDirty, LoadingAChunkMarksAllEightNeighbours) {
     // The diagonal ones too: their corner voxels' AO and smooth light read the new column.
     test::p2worldgen::loadAll(*m_world, {{2, -1}, {2, 0}, {2, 1}});
     cleanAll();

@@ -21,7 +21,7 @@ using namespace betacraft::test::p2worldgen;
 
 namespace {
 
-class P2WorldgenDecoration : public ::testing::Test {
+class WorldgenDecoration : public ::testing::Test {
 protected:
     void SetUp() override { voxel::BlockRegistry::initialize(); }
 };
@@ -71,7 +71,7 @@ struct BorderTrunk {
 
 } // namespace
 
-TEST_F(P2WorldgenDecoration, LoneChunkStaysUndecoratedUntilItsNeighbourhoodIsResident) {
+TEST_F(WorldgenDecoration, LoneChunkStaysUndecoratedUntilItsNeighbourhoodIsResident) {
     test::TempDir dir;
     world::World w(kSeed, dir.path());
 
@@ -92,7 +92,7 @@ TEST_F(P2WorldgenDecoration, LoneChunkStaysUndecoratedUntilItsNeighbourhoodIsRes
     for (const core::ChunkCoord c : ring) EXPECT_FALSE(w.isChunkDecorated(c)) << c.x << "," << c.z;
 }
 
-TEST_F(P2WorldgenDecoration, TreesSpillAcrossChunkBordersIdenticallyForAnyLoadOrder) {
+TEST_F(WorldgenDecoration, TreesSpillAcrossChunkBordersIdenticallyForAnyLoadOrder) {
     const std::vector<core::ChunkCoord> region = squareRegion({0, 0}, 2);
     const std::vector<core::ChunkCoord> inner = squareRegion({0, 0}, 1);
 
@@ -133,7 +133,7 @@ TEST_F(P2WorldgenDecoration, TreesSpillAcrossChunkBordersIdenticallyForAnyLoadOr
     EXPECT_GT(crossing, 0) << "no tree crosses a chunk border in the decorated 3x3";
 }
 
-TEST_F(P2WorldgenDecoration, PlannedTreesAreRasterizedWholeInDecoratedChunks) {
+TEST_F(WorldgenDecoration, PlannedTreesAreRasterizedWholeInDecoratedChunks) {
     test::TempDir dir;
     world::World w(kSeed, dir.path());
     const std::vector<core::ChunkCoord> region = squareRegion({0, 0}, 2);
@@ -160,7 +160,7 @@ TEST_F(P2WorldgenDecoration, PlannedTreesAreRasterizedWholeInDecoratedChunks) {
     EXPECT_GT(checked, 0);
 }
 
-TEST_F(P2WorldgenDecoration, DecoratedChunksAreRelit) {
+TEST_F(WorldgenDecoration, DecoratedChunksAreRelit) {
     test::TempDir dir;
     world::World w(kSeed, dir.path());
     loadAll(w, squareRegion({0, 0}, 2));
@@ -188,7 +188,7 @@ TEST_F(P2WorldgenDecoration, DecoratedChunksAreRelit) {
     EXPECT_GT(logs, 0);
 }
 
-TEST_F(P2WorldgenDecoration, UnloadingForgetsDecorationStateAndRegeneratesIdentically) {
+TEST_F(WorldgenDecoration, UnloadingForgetsDecorationStateAndRegeneratesIdentically) {
     const std::vector<core::ChunkCoord> region = squareRegion({0, 0}, 2);
     test::TempDir dir, refDir;
     world::World w(kSeed, dir.path());
@@ -214,7 +214,7 @@ TEST_F(P2WorldgenDecoration, UnloadingForgetsDecorationStateAndRegeneratesIdenti
     }
 }
 
-TEST_F(P2WorldgenDecoration, SpawnIsSearchedOnDecoratedGround) {
+TEST_F(WorldgenDecoration, SpawnIsSearchedOnDecoratedGround) {
     test::TempDir dir;
     world::World w(kSeed, dir.path());
     const glm::vec3 spawn = w.findSafeSpawnPosition();
@@ -224,7 +224,7 @@ TEST_F(P2WorldgenDecoration, SpawnIsSearchedOnDecoratedGround) {
     EXPECT_TRUE(w.isChunkDecorated({core::floorDiv(wx, Chunk::WIDTH), core::floorDiv(wz, Chunk::DEPTH)}));
 }
 
-TEST_F(P2WorldgenDecoration, CompletingANeighbourhoodRemeshesTheDecoratedChunkAndItsNeighbours) {
+TEST_F(WorldgenDecoration, CompletingANeighbourhoodRemeshesTheDecoratedChunkAndItsNeighbours) {
     test::TempDir dir;
     world::World w(kSeed, dir.path());
     std::vector<core::ChunkCoord> area = squareRegion({0, 0}, 1);

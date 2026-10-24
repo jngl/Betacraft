@@ -21,7 +21,7 @@ using namespace betacraft::test::p2worldgen;
 
 namespace {
 
-class P2WorldgenPersistence : public ::testing::Test {
+class WorldgenPersistence : public ::testing::Test {
 protected:
     void SetUp() override { voxel::BlockRegistry::initialize(); }
 };
@@ -53,7 +53,7 @@ struct EdgeTree {
 
 } // namespace
 
-TEST_F(P2WorldgenPersistence, DecoratedChunkIsNotRedecoratedAfterReload) {
+TEST_F(WorldgenPersistence, DecoratedChunkIsNotRedecoratedAfterReload) {
     test::TempDir dir;
     const core::ChunkCoord center{0, 0};
     std::optional<core::BlockPos> chopped;
@@ -78,7 +78,7 @@ TEST_F(P2WorldgenPersistence, DecoratedChunkIsNotRedecoratedAfterReload) {
     EXPECT_EQ(w.getBlock(*chopped), BlockId::Air) << "pass 2 ran twice on a saved chunk";
 }
 
-TEST_F(P2WorldgenPersistence, EditedUndecoratedChunkKeepsItsSavedPlanAcrossSessions) {
+TEST_F(WorldgenPersistence, EditedUndecoratedChunkKeepsItsSavedPlanAcrossSessions) {
     const EdgeTree edge = findWestEdgeTree();
     const core::BlockPos soil = edge.tree.origin.offset(0, -1, 0);
     test::TempDir dir;
@@ -115,7 +115,7 @@ TEST_F(P2WorldgenPersistence, EditedUndecoratedChunkKeepsItsSavedPlanAcrossSessi
     EXPECT_EQ(w.getBlock(soil), BlockId::Air) << "terrain edits are kept";
 }
 
-TEST_F(P2WorldgenPersistence, SaveWithoutDecorationRecordLoadsAsDecoratedAndUntouched) {
+TEST_F(WorldgenPersistence, SaveWithoutDecorationRecordLoadsAsDecoratedAndUntouched) {
     test::TempDir dir;
     const core::ChunkCoord legacy{0, 0};
     Chunk original(legacy);
@@ -136,7 +136,7 @@ TEST_F(P2WorldgenPersistence, SaveWithoutDecorationRecordLoadsAsDecoratedAndUnto
     EXPECT_EQ(firstBlockDifference(*w.getChunk(legacy), original), -1);
 }
 
-TEST_F(P2WorldgenPersistence, ModifiedChunkEvictedByStreamingKeepsItsRecord) {
+TEST_F(WorldgenPersistence, ModifiedChunkEvictedByStreamingKeepsItsRecord) {
     test::TempDir dir;
     const core::ChunkCoord center{0, 0};
     world::World w(kSeed, dir.path());

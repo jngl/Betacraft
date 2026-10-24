@@ -51,7 +51,7 @@ struct FakeGpu {
     }
 };
 
-class P2FixesStreaming : public ::testing::Test {
+class StreamingRegressions : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
@@ -84,7 +84,7 @@ protected:
 
 } // namespace
 
-TEST_F(P2FixesStreaming, TogglingSmoothLightingOnTheUnloadFrameStillDeletesTheUnloadedMeshes) {
+TEST_F(StreamingRegressions, TogglingSmoothLightingOnTheUnloadFrameStillDeletesTheUnloadedMeshes) {
     WorldMeshStreamer s(inlineMode());
     FakeGpu gpu;
     converge(s, gpu);
@@ -105,7 +105,7 @@ TEST_F(P2FixesStreaming, TogglingSmoothLightingOnTheUnloadFrameStillDeletesTheUn
     EXPECT_EQ(s.trackedChunks(), 0U);
 }
 
-TEST_F(P2FixesStreaming, TogglingSmoothLightingStillRemeshesTheResidentChunks) {
+TEST_F(StreamingRegressions, TogglingSmoothLightingStillRemeshesTheResidentChunks) {
     WorldMeshStreamer s(inlineMode());
     FakeGpu gpu;
     converge(s, gpu);
@@ -120,7 +120,7 @@ TEST_F(P2FixesStreaming, TogglingSmoothLightingStillRemeshesTheResidentChunks) {
     }
 }
 
-TEST_F(P2FixesStreaming, FluidLevelChangesDoNotQueueRemeshes) {
+TEST_F(StreamingRegressions, FluidLevelChangesDoNotQueueRemeshes) {
     // A flowing-water cell high in the air; once it exists, only its level changes.
     ASSERT_TRUE(m_world->setBlockWithMetadata(0, 100, 5, BlockId::Water, 1));
     for (const auto& [coord, chunk] : m_world->getChunks()) chunk->setMeshDirty(false);
@@ -133,7 +133,7 @@ TEST_F(P2FixesStreaming, FluidLevelChangesDoNotQueueRemeshes) {
     EXPECT_TRUE(m_world->getChunk({0, 0})->isModified()) << "the level still has to be saved";
 }
 
-TEST(P2FixesStreamingChunk, MetadataWriteMarksTheChunkModifiedButNotDirty) {
+TEST(StreamingChunkRegressions, MetadataWriteMarksTheChunkModifiedButNotDirty) {
     voxel::BlockRegistry::initialize();
     voxel::Chunk c({0, 0});
     c.setBlock(3, 70, 3, BlockId::Water, false);
@@ -145,7 +145,7 @@ TEST(P2FixesStreamingChunk, MetadataWriteMarksTheChunkModifiedButNotDirty) {
     EXPECT_TRUE(c.isModified());
 }
 
-TEST(P2FixesRenderStats, DistinctVisibleColumnsAreCountedInAReusedBuffer) {
+TEST(RenderStatsRegressions, DistinctVisibleColumnsAreCountedInAReusedBuffer) {
     std::vector<core::ChunkCoord> columns{{0, 0}, {0, 0}, {1, 0}, {0, 0}, {-1, 2}, {1, 0}};
     EXPECT_EQ(render::countDistinctColumns(columns), 3U);
     const size_t capacity = columns.capacity();

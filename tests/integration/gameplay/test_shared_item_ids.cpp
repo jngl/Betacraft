@@ -36,14 +36,14 @@ static_assert(crafting::maxDurability(gameplay::items::DiamondSword) ==
 
 } // namespace
 
-TEST(P2FoundationsItems, BothModulesUseTheSameIdTypeAndEnums) {
+TEST(SharedItemScheme, BothModulesUseTheSameIdTypeAndEnums) {
     static_assert(std::is_same_v<crafting::ItemId, gameplay::ItemId>);
     static_assert(std::is_same_v<crafting::ToolMaterial, gameplay::ToolMaterial>);
     static_assert(std::is_same_v<crafting::ToolKind, gameplay::ToolKind>);
     EXPECT_EQ(crafting::kAir, gameplay::kNoItem);
 }
 
-TEST(P2FoundationsItems, SharedItemConstantsCoverToolsAndMaterials) {
+TEST(SharedItemScheme, SharedItemConstantsCoverToolsAndMaterials) {
     namespace items = gameplay::items;
     // S2.10: Beta numbers; the legacy BlockIds fold onto them.
     EXPECT_EQ(items::Stick, gameplay::canonicalize(gameplay::toItemId(BlockId::Stick)));
@@ -59,7 +59,7 @@ TEST(P2FoundationsItems, SharedItemConstantsCoverToolsAndMaterials) {
     EXPECT_EQ(crafting::items::IronIngot, items::IronIngot);
 }
 
-TEST(P2FoundationsItems, ToolIdsResolveIdenticallyInBothModules) {
+TEST(SharedItemScheme, ToolIdsResolveIdenticallyInBothModules) {
     for (const gameplay::ToolKind k : kKinds) {
         for (const gameplay::ToolMaterial m : kMaterials) {
             const gameplay::ItemId id = crafting::toolItemId(k, m);
@@ -78,7 +78,7 @@ TEST(P2FoundationsItems, ToolIdsResolveIdenticallyInBothModules) {
 // loop comparing the two modules would compare a function with itself. Both names are
 // checked against Beta 1.7.3 values instead, which still catches a split that diverges.
 
-TEST(P2FoundationsItems, VanillaAliasesFoldToTheEngineIds) {
+TEST(SharedItemScheme, VanillaAliasesFoldToTheEngineIds) {
     namespace items = gameplay::items;
     // Vanilla item numbers of the items that already had a BlockId-range engine id.
     const std::pair<gameplay::ItemId, gameplay::ItemId> aliases[] = {
@@ -107,7 +107,7 @@ TEST(P2FoundationsItems, VanillaAliasesFoldToTheEngineIds) {
     EXPECT_FALSE(gameplay::isTool(gameplay::toItemId(BlockId::Cobblestone)));
 }
 
-TEST(P2FoundationsItems, StackLimitsFollowBeta) {
+TEST(SharedItemScheme, StackLimitsFollowBeta) {
     namespace items = gameplay::items;
     const std::pair<gameplay::ItemId, int32_t> limits[] = {
         {items::Egg, 16},         {items::Snowball, 16},      {items::Cookie, 8},
@@ -124,7 +124,7 @@ TEST(P2FoundationsItems, StackLimitsFollowBeta) {
     }
 }
 
-TEST(P2FoundationsItems, CraftedToolCarriesCombatDurability) {
+TEST(SharedItemScheme, CraftedToolCarriesCombatDurability) {
     // Crafting a wooden pickaxe yields an item whose damage budget is exactly the one the
     // combat module wears down.
     const crafting::RecipeRegistry book = crafting::makeBetaRecipeBook();
@@ -144,7 +144,7 @@ TEST(P2FoundationsItems, CraftedToolCarriesCombatDurability) {
     EXPECT_EQ(held.maxDamage, gameplay::materialStats(gameplay::ToolMaterial::Wood).maxUses);
 }
 
-TEST(P2FoundationsItems, GlowstoneDustDropIsAKnownCraftingItem) {
+TEST(SharedItemScheme, GlowstoneDustDropIsAKnownCraftingItem) {
     gameplay::ItemStack hand{};
     const gameplay::BlockBreakOutcome out = gameplay::breakBlockWith(BlockId::Glowstone, hand, 1234);
     ASSERT_TRUE(out.drop.has_value());

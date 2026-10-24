@@ -18,7 +18,7 @@ using fluids::FluidEvent;
 using fluids::FluidEventKind;
 using voxel::BlockId;
 
-TEST(P2FluidsInput, StarterInventoryCarriesPlaceableWaterAndLavaSources) {
+TEST(FluidsInput, StarterInventoryCarriesPlaceableWaterAndLavaSources) {
     voxel::BlockRegistry::initialize();
     // Only the Creative kit carries fluid sources (S1.2); Survival starts empty-handed.
     physics::Player survival;
@@ -35,7 +35,7 @@ TEST(P2FluidsInput, StarterInventoryCarriesPlaceableWaterAndLavaSources) {
     EXPECT_TRUE(voxel::BlockRegistry::get(BlockId::Water).replaceable) << "placing a block into water removes it";
 }
 
-TEST(P2FluidsGame, NoFizzEventsMeansSilence) {
+TEST(FluidsGame, NoFizzEventsMeansSilence) {
     const glm::vec3 listener{0.5f, 64.5f, 0.5f};
     EXPECT_EQ(game::loudestFizz({}, listener), 0.0f);
     // A washed-away block would spawn an item entity, not a sound.
@@ -43,7 +43,7 @@ TEST(P2FluidsGame, NoFizzEventsMeansSilence) {
     EXPECT_EQ(game::loudestFizz(washed, listener), 0.0f);
 }
 
-TEST(P2FluidsGame, FizzFadesLinearlyOverSixteenBlocks) {
+TEST(FluidsGame, FizzFadesLinearlyOverSixteenBlocks) {
     const glm::vec3 listener{0.5f, 64.5f, 0.5f};
     const auto at = [](int32_t x) { return std::vector<FluidEvent>{{FluidEventKind::Fizz, {x, 64, 0}, BlockId::Obsidian}}; };
     EXPECT_FLOAT_EQ(game::loudestFizz(at(0), listener), 1.0f);
@@ -52,7 +52,7 @@ TEST(P2FluidsGame, FizzFadesLinearlyOverSixteenBlocks) {
     EXPECT_EQ(game::loudestFizz(at(-400), listener), 0.0f);
 }
 
-TEST(P2FluidsGame, ManyFizzesInOneTickPlayTheNearestOnce) {
+TEST(FluidsGame, ManyFizzesInOneTickPlayTheNearestOnce) {
     // A freshly loaded cave can harden hundreds of lava cells in one tick.
     const glm::vec3 listener{0.5f, 64.5f, 0.5f};
     std::vector<FluidEvent> events;

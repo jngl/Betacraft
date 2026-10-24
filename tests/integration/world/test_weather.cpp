@@ -62,7 +62,7 @@ constexpr float kNoon = 0.25f;
     return w;
 }
 
-class P2WeatherWorld : public ::testing::Test {
+class WeatherWorld : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
@@ -117,10 +117,10 @@ protected:
 };
 
 // EntitySimulation on the same world with a Creative player (mobs ignore it and stay put).
-class P2WeatherSession : public P2WeatherWorld {
+class WeatherSession : public WeatherWorld {
 protected:
     void SetUp() override {
-        P2WeatherWorld::SetUp();
+        WeatherWorld::SetUp();
         m_session.setNaturalSpawning(false);
         m_player.setPosition(m_feet);
         m_player.setGameMode(core::GameMode::Creative);
@@ -150,7 +150,7 @@ protected:
 
 } // namespace
 
-TEST_F(P2WeatherWorld, ThunderAllowsDaytimeHostiles) {
+TEST_F(WeatherWorld, ThunderAllowsDaytimeHostiles) {
     const auto runSpawner = [&](const storage::WeatherState& weather, int32_t ticks) {
         ecs::Registry reg;
         ecs::CommandBuffer commands;
@@ -181,7 +181,7 @@ TEST_F(P2WeatherWorld, ThunderAllowsDaytimeHostiles) {
     EXPECT_LE(stormHostiles, gameplay::mobCap(MobCategory::Hostile, (2 * kRadius + 1) * (2 * kRadius + 1)));
 }
 
-TEST_F(P2WeatherSession, RainStopsZombieBurning) {
+TEST_F(WeatherSession, RainStopsZombieBurning) {
     // Control: clear noon, the zombie in the open catches fire.
     const ecs::EntityId sunny = spawnZombie(m_feet + glm::vec3(10.0f, 0.0f, 0.0f));
     ASSERT_TRUE(burnsWithin(sunny, 400));
@@ -202,7 +202,7 @@ TEST_F(P2WeatherSession, RainStopsZombieBurning) {
     EXPECT_TRUE(burnsWithin(wet, 600));
 }
 
-TEST_F(P2WeatherSession, SnowDoesNotSaveZombiesFromTheSun) {
+TEST_F(WeatherSession, SnowDoesNotSaveZombiesFromTheSun) {
     // Beta isWet only counts rain: in a snowy Taiga the sun still sets zombies on fire.
     setBiome(voxel::BiomeId::Taiga);
     m_weather = fullRain();
@@ -211,7 +211,7 @@ TEST_F(P2WeatherSession, SnowDoesNotSaveZombiesFromTheSun) {
     EXPECT_TRUE(burnsWithin(zombie, 400));
 }
 
-TEST_F(P2WeatherWorld, PrecipitationColumnsFollowBiomeAndRoofs) {
+TEST_F(WeatherWorld, PrecipitationColumnsFollowBiomeAndRoofs) {
     const glm::vec3 eye = m_feet + glm::vec3(0.0f, core::EngineConfig::PLAYER_EYE_HEIGHT, 0.0f);
     const auto build = [&](float rain) {
         std::vector<render::WeatherVertex> verts;
@@ -266,7 +266,7 @@ TEST_F(P2WeatherWorld, PrecipitationColumnsFollowBiomeAndRoofs) {
     EXPECT_TRUE(build(1.0f).empty());
 }
 
-TEST_F(P2WeatherWorld, RainIsMuffledIndoors) {
+TEST_F(WeatherWorld, RainIsMuffledIndoors) {
     const glm::vec3 eye = m_feet + glm::vec3(0.0f, core::EngineConfig::PLAYER_EYE_HEIGHT, 0.0f);
     const game::RainAudibility open = game::measureRainAudibility(*m_world, eye);
     EXPECT_NEAR(open.gain, 1.0f, 1e-4f);

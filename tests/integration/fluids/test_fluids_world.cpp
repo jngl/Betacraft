@@ -31,7 +31,7 @@ constexpr int32_t kY = 120;
 constexpr int32_t kWaterTicks = 5;
 constexpr int32_t kLavaTicks = 30;
 
-class P2FluidsWorld : public ::testing::Test {
+class FluidsWorld : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
@@ -91,14 +91,14 @@ protected:
 
 } // namespace
 
-TEST_F(P2FluidsWorld, GameTickRateIsTwentyPerSecond) {
+TEST_F(FluidsWorld, GameTickRateIsTwentyPerSecond) {
     static_assert(core::EngineConfig::GAME_TICKS_PER_SECOND == 20);
     const uint64_t before = m_world->getFluidSimulator().currentTick();
     tickN(3);
     EXPECT_EQ(m_world->getFluidSimulator().currentTick(), before + 3);
 }
 
-TEST_F(P2FluidsWorld, FluidStateComesFromBlockIdAndBetaMetadata) {
+TEST_F(FluidsWorld, FluidStateComesFromBlockIdAndBetaMetadata) {
     ASSERT_TRUE(m_world->setBlockWithMetadata(3, kY, 3, BlockId::StillWater, 3));
     EXPECT_EQ(m_world->getFluid({3, kY, 3}), FluidState::fromBetaDecay(FluidType::Water, 3));
     ASSERT_TRUE(m_world->setBlockWithMetadata(3, kY, 3, BlockId::Lava, 8));
@@ -110,7 +110,7 @@ TEST_F(P2FluidsWorld, FluidStateComesFromBlockIdAndBetaMetadata) {
 }
 
 // Application::handleRightClickAction places the held block through World::setBlock.
-TEST_F(P2FluidsWorld, PlacedWaterSourceSpreadsOneRingPerWaterTick) {
+TEST_F(FluidsWorld, PlacedWaterSourceSpreadsOneRingPerWaterTick) {
     ASSERT_TRUE(m_world->setBlock(8, kY, 8, BlockId::Water));
     EXPECT_TRUE(fluidAt(8, 8).isSource());
 
@@ -132,7 +132,7 @@ TEST_F(P2FluidsWorld, PlacedWaterSourceSpreadsOneRingPerWaterTick) {
     EXPECT_EQ(m_world->getFluidSimulator().pendingUpdates(), 0U) << "the diamond is stable";
 }
 
-TEST_F(P2FluidsWorld, FlowingWaterFallsOffTheFloorEdge) {
+TEST_F(FluidsWorld, FlowingWaterFallsOffTheFloorEdge) {
     // The floor ends at z = 20; z = 21 lies in loaded chunk (0,1) with open air below.
     ASSERT_TRUE(m_world->setBlock(8, kY, 18, BlockId::Water));
     tickN(kWaterTicks * 4);
@@ -141,7 +141,7 @@ TEST_F(P2FluidsWorld, FlowingWaterFallsOffTheFloorEdge) {
     EXPECT_TRUE(fluidAt(7, 18).isEmpty()) << "Beta flows only towards the nearest drop";
 }
 
-TEST_F(P2FluidsWorld, ReplacingTheSourceRetractsTheFlow) {
+TEST_F(FluidsWorld, ReplacingTheSourceRetractsTheFlow) {
     ASSERT_TRUE(m_world->setBlock(8, kY, 8, BlockId::Water));
     tickN(kWaterTicks * 9);
     ASSERT_GT(countFluidOnFloor(FluidType::Water), 100U);
@@ -154,7 +154,7 @@ TEST_F(P2FluidsWorld, ReplacingTheSourceRetractsTheFlow) {
     EXPECT_EQ(m_world->getMetadata(9, kY, 8), 0);
 }
 
-TEST_F(P2FluidsWorld, BreakingAWallLetsWaterThrough) {
+TEST_F(FluidsWorld, BreakingAWallLetsWaterThrough) {
     // A glass wall around the source; mining one side opens the flow.
     ASSERT_TRUE(m_world->setBlock(8, kY, 8, BlockId::Water));
     for (const auto [dx, dz] : {std::pair{1, 0}, std::pair{-1, 0}, std::pair{0, 1}, std::pair{0, -1}}) {
@@ -169,7 +169,7 @@ TEST_F(P2FluidsWorld, BreakingAWallLetsWaterThrough) {
     EXPECT_EQ(fluidAt(9, 8), FluidState::fromBetaDecay(FluidType::Water, 1));
 }
 
-TEST_F(P2FluidsWorld, LavaPlacedNextToWaterSourceTurnsToObsidianAndFizzes) {
+TEST_F(FluidsWorld, LavaPlacedNextToWaterSourceTurnsToObsidianAndFizzes) {
     ASSERT_TRUE(m_world->setBlock(8, kY, 8, BlockId::Lava));
     ASSERT_TRUE(m_world->setBlock(9, kY, 8, BlockId::Water));
     EXPECT_EQ(m_world->getBlock(8, kY, 8), BlockId::Obsidian) << "Beta hardens on the neighbour change";
@@ -178,7 +178,7 @@ TEST_F(P2FluidsWorld, LavaPlacedNextToWaterSourceTurnsToObsidianAndFizzes) {
     EXPECT_TRUE(m_world->takeFluidEvents().empty()) << "events are drained";
 }
 
-TEST_F(P2FluidsWorld, WaterReachingFlowingLavaTurnsItToCobblestone) {
+TEST_F(FluidsWorld, WaterReachingFlowingLavaTurnsItToCobblestone) {
     ASSERT_TRUE(m_world->setBlock(2, kY, 8, BlockId::Lava));
     tickN(kLavaTicks);
     ASSERT_EQ(fluidAt(3, 8), FluidState::fromBetaDecay(FluidType::Lava, 2));
@@ -190,7 +190,7 @@ TEST_F(P2FluidsWorld, WaterReachingFlowingLavaTurnsItToCobblestone) {
     EXPECT_TRUE(hasEvent(m_world->takeFluidEvents(), FluidEventKind::Fizz, {3, kY, 8}, BlockId::Cobblestone));
 }
 
-TEST_F(P2FluidsWorld, LavaFlowsThreeCellsOnTheOverworld) {
+TEST_F(FluidsWorld, LavaFlowsThreeCellsOnTheOverworld) {
     ASSERT_TRUE(m_world->setBlock(8, kY, 8, BlockId::Lava));
     tickN(kLavaTicks * 5);
     EXPECT_EQ(fluidAt(11, 8), FluidState::fromBetaDecay(FluidType::Lava, 6));
@@ -198,7 +198,7 @@ TEST_F(P2FluidsWorld, LavaFlowsThreeCellsOnTheOverworld) {
     EXPECT_EQ(m_world->getBlockLight(11, kY, 8), 15) << "flowing lava emits light";
 }
 
-TEST_F(P2FluidsWorld, WaterWashesAwayAFlowerAndReportsIt) {
+TEST_F(FluidsWorld, WaterWashesAwayAFlowerAndReportsIt) {
     ASSERT_TRUE(m_world->setBlock(10, kY, 8, BlockId::Dandelion));
     ASSERT_TRUE(m_world->setBlock(8, kY, 8, BlockId::Water));
     tickN(kWaterTicks * 2);
@@ -206,7 +206,7 @@ TEST_F(P2FluidsWorld, WaterWashesAwayAFlowerAndReportsIt) {
     EXPECT_TRUE(hasEvent(m_world->takeFluidEvents(), FluidEventKind::BlockWashedAway, {10, kY, 8}, BlockId::Dandelion));
 }
 
-TEST_F(P2FluidsWorld, FlowWritesMarkOnlyTheTouchedChunksForRemesh) {
+TEST_F(FluidsWorld, FlowWritesMarkOnlyTheTouchedChunksForRemesh) {
     // Source at local x 4 of chunk (1,0); the flow reaches chunk (0,0) after 5 rings.
     ASSERT_TRUE(m_world->setBlock(20, kY, 8, BlockId::Water));
     clearMeshFlags();
@@ -223,7 +223,7 @@ TEST_F(P2FluidsWorld, FlowWritesMarkOnlyTheTouchedChunksForRemesh) {
     EXPECT_FALSE(meshDirty({-1, 0}));
 }
 
-TEST_F(P2FluidsWorld, FluidTickStatsAreReported) {
+TEST_F(FluidsWorld, FluidTickStatsAreReported) {
     ASSERT_TRUE(m_world->setBlock(8, kY, 8, BlockId::Water));
     tickN(kWaterTicks - 1);
     const fluids::FluidTickStats stats = m_world->tick();
@@ -233,7 +233,7 @@ TEST_F(P2FluidsWorld, FluidTickStatsAreReported) {
 
 // --- Chunk streaming ---------------------------------------------------------------
 
-TEST(P2FluidsStreaming, FlowStoppedAtAnUnloadedChunkResumesWhenItLoads) {
+TEST(FluidsStreaming, FlowStoppedAtAnUnloadedChunkResumesWhenItLoads) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir;
     world::World w(test::p2worldgen::kSeed, dir.path());
@@ -252,7 +252,7 @@ TEST(P2FluidsStreaming, FlowStoppedAtAnUnloadedChunkResumesWhenItLoads) {
     EXPECT_EQ(w.getFluid({16, kY, 8}).type, FluidType::Water) << "border fluid woke on load";
 }
 
-TEST(P2FluidsStreaming, WaterSavedMidFlowResumesAfterReload) {
+TEST(FluidsStreaming, WaterSavedMidFlowResumesAfterReload) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir;
     const auto region = test::p2worldgen::squareRegion({0, 0}, 1);
@@ -275,7 +275,7 @@ TEST(P2FluidsStreaming, WaterSavedMidFlowResumesAfterReload) {
     EXPECT_EQ(w.getFluid({15, kY, 8}), FluidState::fromBetaDecay(FluidType::Water, 7));
 }
 
-TEST(P2FluidsStreaming, SettledOceanQueuesNoFluidWorkOnLoad) {
+TEST(FluidsStreaming, SettledOceanQueuesNoFluidWorkOnLoad) {
     // The open sea around chunk (-5,8): thousands of generated water sources that can't
     // move must not flood the queue (and delay the player's own water behind them).
     voxel::BlockRegistry::initialize();
@@ -293,7 +293,7 @@ TEST(P2FluidsStreaming, SettledOceanQueuesNoFluidWorkOnLoad) {
     EXPECT_LT(w.getFluidSimulator().pendingUpdates(), water / 100U);
 }
 
-TEST(P2FluidsStreaming, UnsettledGeneratedFluidIsScheduledOnLoad) {
+TEST(FluidsStreaming, UnsettledGeneratedFluidIsScheduledOnLoad) {
     // Worldgen writes fluid without the simulator; the load scan must queue any generated
     // fluid that can move (e.g. cave lava or aquifer water open to a carved pocket).
     voxel::BlockRegistry::initialize();
@@ -322,7 +322,7 @@ TEST(P2FluidsStreaming, UnsettledGeneratedFluidIsScheduledOnLoad) {
     EXPECT_EQ(w.getFluidSimulator().pendingUpdates(), 0U) << "after " << ticks << " ticks";
 }
 
-TEST(P2FluidsStreaming, FluidSeedFollowsTheWorldSeed) {
+TEST(FluidsStreaming, FluidSeedFollowsTheWorldSeed) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir;
     world::World w(1234ULL, dir.path());

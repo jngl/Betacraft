@@ -17,7 +17,7 @@ using game::DamageCause;
 
 namespace {
 
-class S5FallingBlocks : public GameplayWorld {
+class FallingSand : public GameplayWorld {
 protected:
     // One full game tick as Application runs it: the session, then the world.
     void gameTick() {
@@ -55,7 +55,7 @@ protected:
 
 // --- S5.2 ScheduledTickQueue ---------------------------------------------------------------
 
-TEST(S5ScheduledTicks, DrainsInDueOrderThenSchedulingOrder) {
+TEST(ScheduledBlockTicks, DrainsInDueOrderThenSchedulingOrder) {
     voxel::ScheduledTickQueue q;
     EXPECT_TRUE(q.schedule({0, 1, 0}, BlockId::Sand, 5));
     EXPECT_TRUE(q.schedule({1, 1, 0}, BlockId::Sand, 3));
@@ -72,7 +72,7 @@ TEST(S5ScheduledTicks, DrainsInDueOrderThenSchedulingOrder) {
     EXPECT_EQ(q.size(), 1U);
 }
 
-TEST(S5ScheduledTicks, OnePendingEntryPerPosition) {
+TEST(ScheduledBlockTicks, OnePendingEntryPerPosition) {
     voxel::ScheduledTickQueue q;
     EXPECT_TRUE(q.schedule({4, 5, 6}, BlockId::Sand, 10));
     EXPECT_FALSE(q.schedule({4, 5, 6}, BlockId::Gravel, 2)) << "duplicates are ignored";
@@ -85,7 +85,7 @@ TEST(S5ScheduledTicks, OnePendingEntryPerPosition) {
     EXPECT_TRUE(q.schedule({4, 5, 6}, BlockId::Sand, 11)) << "free again once drained";
 }
 
-TEST(S5ScheduledTicks, DrainRespectsTheCap) {
+TEST(ScheduledBlockTicks, DrainRespectsTheCap) {
     voxel::ScheduledTickQueue q;
     for (int32_t i = 0; i < 10; ++i) ASSERT_TRUE(q.schedule({i, 0, 0}, BlockId::Sand, 1));
     std::vector<voxel::ScheduledTickQueue::Entry> out;
@@ -94,7 +94,7 @@ TEST(S5ScheduledTicks, DrainRespectsTheCap) {
     EXPECT_EQ(out.back().pos.x, 3);
 }
 
-TEST_F(S5FallingBlocks, WorldTickRunsAtMost512DueUpdates) {
+TEST_F(FallingSand, WorldTickRunsAtMost512DueUpdates) {
     // Gravel high above the floor, held up by glass, all scheduled for the same tick.
     for (int32_t z = 0; z < 12; ++z) {
         for (int32_t x = 0; x < 12; ++x) {
@@ -120,7 +120,7 @@ TEST_F(S5FallingBlocks, WorldTickRunsAtMost512DueUpdates) {
     EXPECT_TRUE(m_world->getScheduledTicks().empty());
 }
 
-TEST_F(S5FallingBlocks, SandFallsThreeTicksAfterItsSupportGoes) {
+TEST_F(FallingSand, SandFallsThreeTicksAfterItsSupportGoes) {
     ASSERT_TRUE(m_world->setBlock(6, kY + 2, 6, BlockId::Stone));
     ASSERT_TRUE(m_world->setBlock(6, kY + 3, 6, BlockId::Sand));
     settle();
@@ -138,7 +138,7 @@ TEST_F(S5FallingBlocks, SandFallsThreeTicksAfterItsSupportGoes) {
     EXPECT_EQ(spawns[0].id, BlockId::Sand);
 }
 
-TEST_F(S5FallingBlocks, ColumnOfThreeSandGivesThreeEntitiesThenThreeStackedBlocks) {
+TEST_F(FallingSand, ColumnOfThreeSandGivesThreeEntitiesThenThreeStackedBlocks) {
     ASSERT_TRUE(m_world->setBlock(6, kY, 6, BlockId::Stone));
     for (int32_t y = kY + 1; y <= kY + 3; ++y) ASSERT_TRUE(m_world->setBlock(6, y, 6, BlockId::Sand));
     (void)settle();
@@ -152,14 +152,14 @@ TEST_F(S5FallingBlocks, ColumnOfThreeSandGivesThreeEntitiesThenThreeStackedBlock
     EXPECT_EQ(droppedCount(BlockId::Sand), 0);
 }
 
-TEST_F(S5FallingBlocks, GravelFallsThroughWater) {
+TEST_F(FallingSand, GravelFallsThroughWater) {
     for (int32_t y = kY; y <= kY + 1; ++y) ASSERT_TRUE(m_world->setBlockWithMetadata(10, y, 10, BlockId::Water, 0));
     ASSERT_TRUE(m_world->setBlock(10, kY + 2, 10, BlockId::Gravel));
     EXPECT_EQ(settle(), 1);
     EXPECT_EQ(m_world->getBlock(10, kY, 10), BlockId::Gravel) << "it replaces the water at the bottom";
 }
 
-TEST_F(S5FallingBlocks, SandLandingOnATorchDropsAsAnItem) {
+TEST_F(FallingSand, SandLandingOnATorchDropsAsAnItem) {
     ASSERT_TRUE(m_world->setBlock(6, kY, 6, BlockId::Torch));
     ASSERT_TRUE(m_world->setBlock(6, kY + 4, 6, BlockId::Sand)); // Placed in mid-air: it falls
     EXPECT_EQ(settle(), 1);
@@ -168,7 +168,7 @@ TEST_F(S5FallingBlocks, SandLandingOnATorchDropsAsAnItem) {
     EXPECT_EQ(droppedCount(BlockId::Sand), 1);
 }
 
-TEST_F(S5FallingBlocks, SandOnATorchFallsWhenTheTorchBreaksWithItsFloor) {
+TEST_F(FallingSand, SandOnATorchFallsWhenTheTorchBreaksWithItsFloor) {
     // Stone, torch, sand: removing the stone breaks the torch (column support check), which
     // must wake the sand resting on it.
     ASSERT_TRUE(m_world->setBlock(6, kY, 6, BlockId::Stone));
@@ -182,7 +182,7 @@ TEST_F(S5FallingBlocks, SandOnATorchFallsWhenTheTorchBreaksWithItsFloor) {
     EXPECT_EQ(m_world->getBlock(6, kY, 6), BlockId::Sand);
 }
 
-TEST_F(S5FallingBlocks, FloatingGeneratedSandFallsOnlyAfterANeighbourChanges) {
+TEST_F(FallingSand, FloatingGeneratedSandFallsOnlyAfterANeighbourChanges) {
     // Worldgen writes straight into the chunk: no scheduled update.
     voxel::Chunk* chunk = m_world->getChunkMutable({0, 0});
     ASSERT_NE(chunk, nullptr);
@@ -201,7 +201,7 @@ TEST_F(S5FallingBlocks, FloatingGeneratedSandFallsOnlyAfterANeighbourChanges) {
     EXPECT_EQ(m_world->getBlock(6, kY, 6), BlockId::Sand);
 }
 
-TEST_F(S5FallingBlocks, PlacedSandFallsLikeBeta) {
+TEST_F(FallingSand, PlacedSandFallsLikeBeta) {
     hold({gameplay::toItemId(BlockId::Sand), 4, 0});
     physics::RaycastHit target = targetAt({8, kY + 3, 2}, BlockId::Stone);
     ASSERT_TRUE(m_world->setBlock(8, kY + 3, 2, BlockId::Stone));
@@ -210,7 +210,7 @@ TEST_F(S5FallingBlocks, PlacedSandFallsLikeBeta) {
     EXPECT_EQ(m_world->getBlock(7, kY, 2), BlockId::Sand);
 }
 
-TEST_F(S5FallingBlocks, FallingBlockGivesUpAfterSixHundredTicks) {
+TEST_F(FallingSand, FallingBlockGivesUpAfterSixHundredTicks) {
     ecs::TransformComp t{};
     t.pos = {0.5f, 200.0f, 0.5f};
     ecs::VelocityComp v{};
@@ -221,7 +221,7 @@ TEST_F(S5FallingBlocks, FallingBlockGivesUpAfterSixHundredTicks) {
     EXPECT_EQ(game::fallingBlockCell({3.5f, 70.0f, -1.5f}), (core::BlockPos{3, 70, -2}));
 }
 
-TEST_F(S5FallingBlocks, SuffocationHurtsOneEveryTickThroughTheResistanceWindow) {
+TEST_F(FallingSand, SuffocationHurtsOneEveryTickThroughTheResistanceWindow) {
     const glm::vec3 eye = m_player.getEyePosition();
     const core::BlockPos eyeCell{static_cast<int32_t>(std::floor(eye.x)), static_cast<int32_t>(std::floor(eye.y)),
                                  static_cast<int32_t>(std::floor(eye.z))};
@@ -241,7 +241,7 @@ TEST_F(S5FallingBlocks, SuffocationHurtsOneEveryTickThroughTheResistanceWindow) 
     EXPECT_EQ(m_player.getHealth(), 16);
 }
 
-TEST_F(S5FallingBlocks, NoSuffocationInCreative) {
+TEST_F(FallingSand, NoSuffocationInCreative) {
     m_player.setGameMode(core::GameMode::Creative);
     const glm::vec3 eye = m_player.getEyePosition();
     ASSERT_TRUE(m_world->setBlock(static_cast<int32_t>(std::floor(eye.x)), static_cast<int32_t>(std::floor(eye.y)),

@@ -51,7 +51,7 @@ void streamUntilSettled(world::World& w, const glm::vec3& centre, int32_t radius
 
 } // namespace
 
-TEST(P2StreamingAsyncWorld, AsyncAndSyncWorldsConverge) {
+TEST(StreamingAsyncWorld, AsyncAndSyncWorldsConverge) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s7_async_");
     // A save holding player edits in a few chunks, so both paths read some chunks from disk
@@ -89,7 +89,7 @@ TEST(P2StreamingAsyncWorld, AsyncAndSyncWorldsConverge) {
     EXPECT_EQ(asyncWorld.getStorageStats().bundlesWritten, 0U) << "streaming in writes nothing";
 }
 
-TEST(P2StreamingAsyncWorld, IntegrationRespectsBudget) {
+TEST(StreamingAsyncWorld, IntegrationRespectsBudget) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s7_budget_");
     world::World w(kSeed, dir.path());
@@ -126,7 +126,7 @@ TEST(P2StreamingAsyncWorld, IntegrationRespectsBudget) {
     EXPECT_GE(stats.maxIntegration, stats.lastIntegration);
 }
 
-TEST(P2StreamingAsyncWorld, UnloadedEditReloadsFromSaveQueue) {
+TEST(StreamingAsyncWorld, UnloadedEditReloadsFromSaveQueue) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s7_requeue_");
     world::World w(kSeed, dir.path());
@@ -150,7 +150,7 @@ TEST(P2StreamingAsyncWorld, UnloadedEditReloadsFromSaveQueue) {
 // after it finished but before it was collected, must not answer the chunk's next request:
 // the chunk was edited, unloaded and requested again in between, and the late answer holds
 // the older contents.
-TEST(P2StreamingAsyncWorld, LateAnswerToACancelledLoadIsDiscarded) {
+TEST(StreamingAsyncWorld, LateAnswerToACancelledLoadIsDiscarded) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s8_stale_load_");
     world::World w(kSeed, dir.path());

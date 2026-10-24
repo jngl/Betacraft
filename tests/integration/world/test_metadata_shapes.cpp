@@ -53,7 +53,7 @@ bool sameWords(const std::vector<streaming::PackedChunkVertex>& a, const std::ve
     return true;
 }
 
-class S5MetadataShapes : public GameplayWorld {
+class MetadataShapes : public GameplayWorld {
 protected:
     // Walks along +X (yaw 0) for `seconds`, optionally holding jump; returns the furthest x.
     float walkPlusX(float seconds, bool jump) {
@@ -74,7 +74,7 @@ protected:
 
 // --- Boxes --------------------------------------------------------------------------------
 
-TEST(S5ShapeBoxes, NewShapesAppendedAtTheEndOfRenderShape) {
+TEST(MetadataShapeBoxes, NewShapesAppendedAtTheEndOfRenderShape) {
     EXPECT_EQ(static_cast<int>(voxel::RenderShape::Liquid), 6);
     EXPECT_EQ(static_cast<int>(voxel::RenderShape::Ladder), 7);
     EXPECT_EQ(static_cast<int>(voxel::RenderShape::Stairs), 13);
@@ -83,7 +83,7 @@ TEST(S5ShapeBoxes, NewShapesAppendedAtTheEndOfRenderShape) {
     EXPECT_FALSE(voxel::shapeDependsOnMetadata(voxel::RenderShape::Liquid));
 }
 
-TEST(S5ShapeBoxes, LadderIsTwoSixteenthsAgainstItsWall) {
+TEST(MetadataShapeBoxes, LadderIsTwoSixteenthsAgainstItsWall) {
     voxel::BlockRegistry::initialize();
     constexpr float t = 2.0f / 16.0f;
     expectBox(voxel::blockAABB(0, 0, 0, BlockId::Ladder, 2), {0, 0, 1 - t}, {1, 1, 1}, "meta 2 (+Z wall)");
@@ -95,7 +95,7 @@ TEST(S5ShapeBoxes, LadderIsTwoSixteenthsAgainstItsWall) {
     EXPECT_EQ(voxel::ladderMetaForClickedFace(core::FaceDir::PosY), std::nullopt);
 }
 
-TEST(S5ShapeBoxes, DoorIsThreeSixteenthsByOrientationAndState) {
+TEST(MetadataShapeBoxes, DoorIsThreeSixteenthsByOrientationAndState) {
     voxel::BlockRegistry::initialize();
     constexpr float t = 3.0f / 16.0f;
     // Beta BlockDoor.getState: closed = orientation - 1, open = orientation (mod 4).
@@ -118,7 +118,7 @@ TEST(S5ShapeBoxes, DoorIsThreeSixteenthsByOrientationAndState) {
               {1, 1, t}, "open upper half");
 }
 
-TEST(S5ShapeBoxes, BedFenceFarmlandCropsAndStairs) {
+TEST(MetadataShapeBoxes, BedFenceFarmlandCropsAndStairs) {
     voxel::BlockRegistry::initialize();
     expectBox(voxel::blockAABB(3, 4, 5, BlockId::Bed, 0), {3, 4, 5}, {4, 4 + 9.0f / 16.0f, 6}, "bed");
     expectBox(voxel::blockAABB(3, 4, 5, BlockId::Bed, voxel::kBedHeadBit | 2), {3, 4, 5}, {4, 4 + 9.0f / 16.0f, 6},
@@ -160,7 +160,7 @@ TEST(S5ShapeBoxes, BedFenceFarmlandCropsAndStairs) {
     EXPECT_EQ(voxel::stairsMetaForLook(0.1f, -1.0f), 3);
 }
 
-TEST(S5ShapeBoxes, OldSignatureReadsMetadataZero) {
+TEST(MetadataShapeBoxes, OldSignatureReadsMetadataZero) {
     voxel::BlockRegistry::initialize();
     expectBox(voxel::blockAABB(1, 2, 3, BlockId::WoodDoor), voxel::blockAABB(1, 2, 3, BlockId::WoodDoor, 0).min,
               voxel::blockAABB(1, 2, 3, BlockId::WoodDoor, 0).max, "door");
@@ -169,7 +169,7 @@ TEST(S5ShapeBoxes, OldSignatureReadsMetadataZero) {
 
 // --- Player against the shapes ------------------------------------------------------------
 
-TEST_F(S5MetadataShapes, OpenDoorLetsThePlayerThroughClosedDoorBlocks) {
+TEST_F(MetadataShapes, OpenDoorLetsThePlayerThroughClosedDoorBlocks) {
     // Orientation 0: closed spans the cell along Z at its -X side, open lies along X.
     ASSERT_TRUE(m_world->setBlockWithMetadata(5, kY, 2, BlockId::WoodDoor, 0));
     ASSERT_TRUE(m_world->setBlockWithMetadata(5, kY + 1, 2, BlockId::WoodDoor, voxel::kDoorUpperBit));
@@ -182,7 +182,7 @@ TEST_F(S5MetadataShapes, OpenDoorLetsThePlayerThroughClosedDoorBlocks) {
     EXPECT_GT(openReach, 6.5f) << "an open door lets the player through";
 }
 
-TEST_F(S5MetadataShapes, FenceCannotBeJumped) {
+TEST_F(MetadataShapes, FenceCannotBeJumped) {
     for (int32_t z = -4; z <= 9; ++z) {
         ASSERT_TRUE(m_world->setBlock(5, kY, z, BlockId::Fence));
     }
@@ -197,7 +197,7 @@ TEST_F(S5MetadataShapes, FenceCannotBeJumped) {
     EXPECT_GT(walkPlusX(4.0f, true), 5.5f);
 }
 
-TEST_F(S5MetadataShapes, StairsAreWalkedUpHalfABlockAtATime) {
+TEST_F(MetadataShapes, StairsAreWalkedUpHalfABlockAtATime) {
     // Ascending stairs towards +X: meta 0 puts the high half on the +X side.
     ASSERT_TRUE(m_world->setBlockWithMetadata(5, kY, 2, BlockId::WoodStairs, 0));
     const std::vector<AABB> boxes = collisionBoxes(BlockId::WoodStairs, 0);
@@ -207,7 +207,7 @@ TEST_F(S5MetadataShapes, StairsAreWalkedUpHalfABlockAtATime) {
     EXPECT_NEAR(m_player.getPosition().y, static_cast<float>(kY) + 0.5f, 0.02f);
 }
 
-TEST_F(S5MetadataShapes, PlacedStairsFaceAwayFromThePlayer) {
+TEST_F(MetadataShapes, PlacedStairsFaceAwayFromThePlayer) {
     ASSERT_TRUE(m_world->setBlock(6, kY, 2, BlockId::Stone));
     hold({gameplay::toItemId(BlockId::CobbleStairs), 2});
     // Looking along +X: the high step on the +X side (meta 0), so the player walks up it.
@@ -220,7 +220,7 @@ TEST_F(S5MetadataShapes, PlacedStairsFaceAwayFromThePlayer) {
     EXPECT_EQ(m_world->getMetadata(5, kY, 4), 2);
 }
 
-TEST_F(S5MetadataShapes, PlacementOverlapUsesTheShapedBox) {
+TEST_F(MetadataShapes, PlacementOverlapUsesTheShapedBox) {
     // The player stands in cell (2, kY, 2); a ladder plate on its +X side does not touch the
     // player box, a full fence would.
     ASSERT_TRUE(m_world->setBlock(3, kY, 2, BlockId::Stone));
@@ -232,7 +232,7 @@ TEST_F(S5MetadataShapes, PlacementOverlapUsesTheShapedBox) {
     EXPECT_FALSE(game::placeHeldBlock(*m_world, m_player, targetAt({3, kY, 2}, BlockId::Stone)).has_value());
 }
 
-TEST_F(S5MetadataShapes, RaycastPicksFenceAsCubeAndCropsAsSlab) {
+TEST_F(MetadataShapes, RaycastPicksFenceAsCubeAndCropsAsSlab) {
     ASSERT_TRUE(m_world->setBlock(6, kY, 2, BlockId::Fence));
     const physics::RaycastHit fence =
         physics::Raycaster::cast(*m_world, {6.5f, kY + 3.0f, 2.5f}, {0.0f, -1.0f, 0.0f}, 6.0f);
@@ -252,7 +252,7 @@ TEST_F(S5MetadataShapes, RaycastPicksFenceAsCubeAndCropsAsSlab) {
 
 // --- Snapshot and re-meshing --------------------------------------------------------------
 
-TEST_F(S5MetadataShapes, SnapshotCarriesMetadata) {
+TEST_F(MetadataShapes, SnapshotCarriesMetadata) {
     ASSERT_TRUE(m_world->setBlockWithMetadata(3, kY, 4, BlockId::WoodDoor, 0x6));
     ASSERT_TRUE(m_world->setBlockWithMetadata(16, kY, 4, BlockId::Ladder, 5)); // neighbour column
     ASSERT_TRUE(m_world->setBlockWithMetadata(3, kY - 8 - 1, 4, BlockId::Crops, 7)); // section below
@@ -281,7 +281,7 @@ TEST_F(S5MetadataShapes, SnapshotCarriesMetadata) {
     EXPECT_EQ(generic->getMetadata(2, 3, 5), 0);
 }
 
-TEST_F(S5MetadataShapes, DoorMetadataEditRemeshesTheSectionButFluidLevelsDoNot) {
+TEST_F(MetadataShapes, DoorMetadataEditRemeshesTheSectionButFluidLevelsDoNot) {
     voxel::Chunk* chunk = m_world->getChunkMutable({0, 0});
     ASSERT_NE(chunk, nullptr);
     const size_t sy = static_cast<size_t>(kY / 16);
@@ -312,7 +312,7 @@ TEST_F(S5MetadataShapes, DoorMetadataEditRemeshesTheSectionButFluidLevelsDoNot) 
 
 // --- Geometry -----------------------------------------------------------------------------
 
-TEST(S5ShapeMesher, ClosedDoorVerticesStayInsideItsSlab) {
+TEST(ShapeMesher, ClosedDoorVerticesStayInsideItsSlab) {
     voxel::BlockRegistry::initialize();
     const auto snap = streaming::SectionNeighborhoodSnapshot18::captureFrom(
         [](int32_t x, int32_t y, int32_t z) -> std::optional<streaming::VoxelSample> {
@@ -334,7 +334,7 @@ TEST(S5ShapeMesher, ClosedDoorVerticesStayInsideItsSlab) {
     }
 }
 
-TEST(S5ShapeMesher, FenceJoinsNeighbouringFencesOnly) {
+TEST(ShapeMesher, FenceJoinsNeighbouringFencesOnly) {
     voxel::BlockRegistry::initialize();
     const auto meshWith = [](BlockId east) {
         const auto snap = streaming::SectionNeighborhoodSnapshot18::captureFrom(
@@ -355,7 +355,7 @@ TEST(S5ShapeMesher, FenceJoinsNeighbouringFencesOnly) {
     EXPECT_EQ(meshWith(BlockId::Stone), 6U + 6U) << "the post and the stone cube: fences join fences only";
 }
 
-TEST_F(S5MetadataShapes, BothMeshersProduceTheSameShapeGeometry) {
+TEST_F(MetadataShapes, BothMeshersProduceTheSameShapeGeometry) {
     // Every shape in several states, some on the column seam (x = 0 and 15) and on the
     // section seam (y = 111 / 112), with neighbours that join and cull.
     struct Placed {

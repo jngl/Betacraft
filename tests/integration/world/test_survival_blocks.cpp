@@ -20,7 +20,7 @@ using namespace betacraft::test::p2gameplay;
 
 namespace {
 
-class S5Ladder : public GameplayWorld {
+class LadderBlock : public GameplayWorld {
 protected:
     static constexpr int32_t kWallX = 6;
     static constexpr int32_t kLadderX = 5;
@@ -52,7 +52,7 @@ protected:
 
 } // namespace
 
-TEST_F(S5Ladder, PlacedOnTheClickedWallSide) {
+TEST_F(LadderBlock, PlacedOnTheClickedWallSide) {
     ASSERT_TRUE(m_world->setBlock(kWallX, kY, kZ, BlockId::Stone));
     hold({gameplay::toItemId(BlockId::Ladder), 4});
     // Clicking the -X face of the wall puts the ladder at x = 5 hanging on +X: Beta meta 4.
@@ -81,7 +81,7 @@ TEST_F(S5Ladder, PlacedOnTheClickedWallSide) {
     EXPECT_EQ(m_player.getHeldItem().count, 2);
 }
 
-TEST_F(S5Ladder, DescentIsCappedAndCostsNoFallDamage) {
+TEST_F(LadderBlock, DescentIsCappedAndCostsNoFallDamage) {
     buildLadder();
     m_player.setPosition({kLadderX + 0.5f, static_cast<float>(kTop) + 0.5f, kZ + 0.5f});
     float slowest = 0.0f;
@@ -98,7 +98,7 @@ TEST_F(S5Ladder, DescentIsCappedAndCostsNoFallDamage) {
     EXPECT_LT(m_player.takePendingFall(), 0.1f) << "a 6-block ladder ride lands without a fall";
 }
 
-TEST_F(S5Ladder, SneakingHoldsOn) {
+TEST_F(LadderBlock, SneakingHoldsOn) {
     buildLadder();
     m_player.setPosition({kLadderX + 0.5f, static_cast<float>(kY) + 4.0f, kZ + 0.5f});
     physics::PlayerInput sneak{};
@@ -110,7 +110,7 @@ TEST_F(S5Ladder, SneakingHoldsOn) {
     EXPECT_FALSE(m_player.isOnGround());
 }
 
-TEST_F(S5Ladder, PushingAgainstTheWallClimbs) {
+TEST_F(LadderBlock, PushingAgainstTheWallClimbs) {
     buildLadder();
     placePlayer({kLadderX + 0.5f, static_cast<float>(kY), kZ + 0.5f});
     physics::PlayerInput push{};
@@ -121,7 +121,7 @@ TEST_F(S5Ladder, PushingAgainstTheWallClimbs) {
     EXPECT_LT(m_player.getPosition().x, static_cast<float>(kWallX) - 0.125f - 0.29f) << "the plate is solid";
 }
 
-TEST_F(S5Ladder, BreaksAndDropsWhenItsWallGoes) {
+TEST_F(LadderBlock, BreaksAndDropsWhenItsWallGoes) {
     buildLadder();
     m_player.setPosition({kLadderX + 0.5f, static_cast<float>(kY) + 5.0f, kZ + 0.5f});
     step({}, 5);
@@ -178,7 +178,7 @@ physics::RaycastHit topOf(const core::BlockPos& pos, BlockId id) {
     return hit;
 }
 
-class S5Door : public GameplayWorld {
+class DoorBlock : public GameplayWorld {
 protected:
     static constexpr int32_t kX = 5;
     static constexpr int32_t kZ = 2;
@@ -193,7 +193,7 @@ protected:
 
 } // namespace
 
-TEST_F(S5Door, PlacedAsTwoHalvesFacingTheLook) {
+TEST_F(DoorBlock, PlacedAsTwoHalvesFacingTheLook) {
     const std::optional<game::ItemUseResult> used = placeDoor();
     ASSERT_TRUE(used.has_value());
     EXPECT_EQ(used->kind, game::ItemUseKind::DoorPlaced);
@@ -208,7 +208,7 @@ TEST_F(S5Door, PlacedAsTwoHalvesFacingTheLook) {
     EXPECT_EQ(game::doorFacingForLook(0.3f, -1.0f), 3);
 }
 
-TEST_F(S5Door, HingeMovesToTheWallSide) {
+TEST_F(DoorBlock, HingeMovesToTheWallSide) {
     // Orientation 0 runs along Z: a wall on the +Z side puts the hinge there (Beta: turned
     // orientation 3 plus the open bit, which still draws closed).
     ASSERT_TRUE(m_world->setBlock(kX, kY, kZ + 1, BlockId::Stone));
@@ -219,7 +219,7 @@ TEST_F(S5Door, HingeMovesToTheWallSide) {
     EXPECT_EQ(voxel::doorState(m_world->getMetadata(kX, kY, kZ)), voxel::doorState(0)) << "same closed box";
 }
 
-TEST_F(S5Door, NeedsTwoFreeCellsOverANormalCube) {
+TEST_F(DoorBlock, NeedsTwoFreeCellsOverANormalCube) {
     hold({items::WoodenDoor, 1});
     // The glass floor is not a normal cube.
     EXPECT_FALSE(game::useHeldItemOnBlock(*m_world, m_player, topOf({kX, kFloorY, kZ}, BlockId::Glass)));
@@ -234,7 +234,7 @@ TEST_F(S5Door, NeedsTwoFreeCellsOverANormalCube) {
     EXPECT_EQ(m_world->getBlock(kX, kY, kZ), BlockId::Air);
 }
 
-TEST_F(S5Door, ClickFlipsBothHalves) {
+TEST_F(DoorBlock, ClickFlipsBothHalves) {
     ASSERT_TRUE(placeDoor().has_value());
     EXPECT_EQ(game::toggleDoor(*m_world, {kX, kY + 1, kZ}), std::optional<bool>{true}) << "clicked on the upper half";
     EXPECT_EQ(m_world->getMetadata(kX, kY, kZ), voxel::kDoorOpenBit);
@@ -245,7 +245,7 @@ TEST_F(S5Door, ClickFlipsBothHalves) {
     EXPECT_FALSE(game::toggleDoor(*m_world, {kX, kFloorY, kZ}).has_value()) << "not a door";
 }
 
-TEST_F(S5Door, BreakingEitherHalfDropsOneDoor) {
+TEST_F(DoorBlock, BreakingEitherHalfDropsOneDoor) {
     ASSERT_TRUE(placeDoor().has_value());
     const MineResult r = mine({kX, kY + 1, kZ}); // The upper half, by hand
     ASSERT_TRUE(r.broken.has_value());
@@ -264,7 +264,7 @@ TEST_F(S5Door, BreakingEitherHalfDropsOneDoor) {
     EXPECT_EQ(droppedItems(m_session, items::WoodenDoor), 2);
 }
 
-TEST_F(S5Door, ACreativePistonBreaksTheDoorWithOneDropAndKeepsStairsOrientation) {
+TEST_F(DoorBlock, ACreativePistonBreaksTheDoorWithOneDropAndKeepsStairsOrientation) {
     // Beta getMobilityFlag() == 1: a pushed door breaks with its drop instead of moving, so
     // no lone half is left behind.
     ASSERT_TRUE(placeDoor().has_value());
@@ -287,7 +287,7 @@ TEST_F(S5Door, ACreativePistonBreaksTheDoorWithOneDropAndKeepsStairsOrientation)
 
 namespace {
 
-class S5Farming : public GameplayWorld {
+class Farming : public GameplayWorld {
 protected:
     static constexpr int32_t kX = 5;
     static constexpr int32_t kZ = 2;
@@ -307,7 +307,7 @@ protected:
 
 } // namespace
 
-TEST_F(S5Farming, HoeTillsGrassAndDirtUnderAir) {
+TEST_F(Farming, HoeTillsGrassAndDirtUnderAir) {
     ASSERT_TRUE(m_world->setBlock(kX, kY, kZ, BlockId::Grass));
     hold({items::WoodHoe, 1});
     const std::optional<game::ItemUseResult> tilled =
@@ -334,7 +334,7 @@ TEST_F(S5Farming, HoeTillsGrassAndDirtUnderAir) {
     EXPECT_FALSE(game::useHeldItemOnBlock(*m_world, m_player, topOf({kX, kY, kZ + 4}, BlockId::Stone)));
 }
 
-TEST_F(S5Farming, SeedsGoOnFarmlandOnly) {
+TEST_F(Farming, SeedsGoOnFarmlandOnly) {
     ASSERT_TRUE(m_world->setBlock(kX, kY, kZ, BlockId::Farmland));
     ASSERT_TRUE(m_world->setBlock(kX, kY, kZ + 2, BlockId::Dirt));
     hold({items::Seeds, 3});
@@ -351,7 +351,7 @@ TEST_F(S5Farming, SeedsGoOnFarmlandOnly) {
     EXPECT_EQ(m_player.getHeldItem().count, 2);
 }
 
-TEST_F(S5Farming, FarmlandStaysWetByWaterAndDriesBackToDirtElsewhere) {
+TEST_F(Farming, FarmlandStaysWetByWaterAndDriesBackToDirtElsewhere) {
     // Wet farmland 4 cells from water, dry farmland far from it.
     ASSERT_TRUE(m_world->setBlock(kX, kY, kZ, BlockId::Farmland));
     ASSERT_TRUE(m_world->setBlock(kX + 4, kY, kZ, BlockId::Water));
@@ -377,7 +377,7 @@ TEST_F(S5Farming, FarmlandStaysWetByWaterAndDriesBackToDirtElsewhere) {
     EXPECT_EQ(m_world->getMetadata(sown), 0);
 }
 
-TEST_F(S5Farming, CropsGrowToRipeAndPopOffInTheDark) {
+TEST_F(Farming, CropsGrowToRipeAndPopOffInTheDark) {
     // A wet 3x3 of farmland with one crop in the middle: rate 10, a stage 1 tick in 10.
     for (int32_t dz = -1; dz <= 1; ++dz) {
         for (int32_t dx = -1; dx <= 1; ++dx) {
@@ -414,7 +414,7 @@ TEST_F(S5Farming, CropsGrowToRipeAndPopOffInTheDark) {
     EXPECT_EQ(droppedItems(m_session, items::Wheat), 1) << "a ripe crop gives its wheat";
 }
 
-TEST_F(S5Farming, RipeHarvestThenBread) {
+TEST_F(Farming, RipeHarvestThenBread) {
     ASSERT_TRUE(m_world->setBlock(kX, kY, kZ, BlockId::Farmland));
     ASSERT_TRUE(m_world->setBlockWithMetadata(kX, kY + 1, kZ, BlockId::Crops, 7));
     const MineResult r = mine({kX, kY + 1, kZ});
@@ -437,7 +437,7 @@ TEST_F(S5Farming, RipeHarvestThenBread) {
     EXPECT_EQ(m_session.useHeldItem(m_player), std::optional<int32_t>{5});
 }
 
-TEST_F(S5Farming, TramplingTurnsFarmlandBackToDirt) {
+TEST_F(Farming, TramplingTurnsFarmlandBackToDirt) {
     ASSERT_TRUE(m_world->setBlock(kX, kY, kZ, BlockId::Farmland));
     ASSERT_TRUE(m_world->setBlockWithMetadata(kX, kY + 1, kZ, BlockId::Crops, 4));
     // A short hop never tramples (rand < fall - 0.5 is impossible below 0.5).
@@ -471,7 +471,7 @@ TEST_F(S5Farming, TramplingTurnsFarmlandBackToDirt) {
     EXPECT_EQ(droppedItems(m_session, items::Wheat), 1);
 }
 
-TEST_F(S5Farming, TallGrassGivesSeedsSometimes) {
+TEST_F(Farming, TallGrassGivesSeedsSometimes) {
     int32_t broken = 0;
     for (int32_t i = 0; i < 64; ++i) {
         ASSERT_TRUE(m_world->setBlock(kX, kY, kZ, BlockId::TallGrass));
@@ -487,7 +487,7 @@ TEST_F(S5Farming, TallGrassGivesSeedsSometimes) {
 
 namespace {
 
-class S5Bed : public GameplayWorld {
+class BedBlock : public GameplayWorld {
 protected:
     static constexpr int32_t kX = 5;
     static constexpr int32_t kZ = 2;
@@ -518,7 +518,7 @@ protected:
 
 } // namespace
 
-TEST_F(S5Bed, PlacedAlongTheLook) {
+TEST_F(BedBlock, PlacedAlongTheLook) {
     placeBed();
     EXPECT_EQ(m_world->getBlock(m_foot), BlockId::Bed);
     EXPECT_EQ(m_world->getBlock(m_head), BlockId::Bed);
@@ -538,7 +538,7 @@ TEST_F(S5Bed, PlacedAlongTheLook) {
     EXPECT_EQ(game::bedFacingForLook(0.0f, -1.0f), 2);
 }
 
-TEST_F(S5Bed, DoorAndBedRecipes) {
+TEST_F(BedBlock, DoorAndBedRecipes) {
     const crafting::RecipeRegistry book = crafting::makeBetaRecipeBook();
     crafting::CraftingGrid door{crafting::GridSize::Workbench3x3};
     for (int y = 0; y < 3; ++y) {

@@ -19,7 +19,7 @@ using game::GameTickEvents;
 
 namespace {
 
-class S3Environment : public GameplayWorld {
+class EnvironmentDamage : public GameplayWorld {
 protected:
     // Sets the block at the player's feet and refreshes the physics flags.
     void setFeetBlock(BlockId id) {
@@ -54,7 +54,7 @@ protected:
 
 } // namespace
 
-TEST_F(S3Environment, LavaHitsFourThenRespectsInvulnerability) {
+TEST_F(EnvironmentDamage, LavaHitsFourThenRespectsInvulnerability) {
     setFeetBlock(BlockId::Lava);
     ASSERT_TRUE(m_player.isInLava());
 
@@ -86,7 +86,7 @@ TEST_F(S3Environment, LavaHitsFourThenRespectsInvulnerability) {
     EXPECT_EQ(ticks, gameplay::kHurtResistanceTicks + 1) << "8 health = two more windows";
 }
 
-TEST_F(S3Environment, BurningContinuesAfterLeavingLavaUntilWater) {
+TEST_F(EnvironmentDamage, BurningContinuesAfterLeavingLavaUntilWater) {
     setFeetBlock(BlockId::Lava);
     (void)tickIdle(); // 4 from lava, on fire
     ASSERT_EQ(m_player.getHealth(), 16);
@@ -116,7 +116,7 @@ TEST_F(S3Environment, BurningContinuesAfterLeavingLavaUntilWater) {
     EXPECT_EQ(m_player.getHealth(), 12);
 }
 
-TEST_F(S3Environment, CactusContactHurtsOncePerWindow) {
+TEST_F(EnvironmentDamage, CactusContactHurtsOncePerWindow) {
     standAgainstCactus();
     const GameTickEvents first = tickIdle();
     ASSERT_EQ(first.playerHurt.size(), 1U);
@@ -136,7 +136,7 @@ TEST_F(S3Environment, CactusContactHurtsOncePerWindow) {
     EXPECT_EQ(tickAndSumDamage(40), 0);
 }
 
-TEST_F(S3Environment, CreativeIsImmuneToLavaAndCactus) {
+TEST_F(EnvironmentDamage, CreativeIsImmuneToLavaAndCactus) {
     m_player.setGameMode(core::GameMode::Creative);
     standAgainstCactus();
     ASSERT_TRUE(m_world->setBlock(2, kY, 2, BlockId::Lava));
@@ -153,7 +153,7 @@ TEST_F(S3Environment, CreativeIsImmuneToLavaAndCactus) {
     EXPECT_EQ(m_player.hurtTime(), 0);
 }
 
-TEST_F(S3Environment, FireTicksSurviveSaveReload) {
+TEST_F(EnvironmentDamage, FireTicksSurviveSaveReload) {
     setFeetBlock(BlockId::Lava);
     (void)tickIdle();
     setFeetBlock(BlockId::Air);

@@ -23,7 +23,7 @@ using voxel::BlockId;
 
 namespace {
 
-TEST(P2AcousticsGame, LoudestFizzSoundComesFromTheNearestContact) {
+TEST(AcousticsGame, LoudestFizzSoundComesFromTheNearestContact) {
     const glm::vec3 listener{0.5f, 64.5f, 0.5f};
     std::vector<FluidEvent> events{{FluidEventKind::BlockWashedAway, {1, 64, 0}, BlockId::Torch}};
     EXPECT_FALSE(game::loudestFizzSound(events, listener).has_value());
@@ -38,7 +38,7 @@ TEST(P2AcousticsGame, LoudestFizzSoundComesFromTheNearestContact) {
     EXPECT_FLOAT_EQ(fizz->gain, game::loudestFizz(events, listener)); // One fall-off for both
 }
 
-class P2AcousticsGameWorld : public ::testing::Test {
+class AcousticsGameWorld : public ::testing::Test {
 protected:
     static constexpr int32_t kFloorY = 119;
     static constexpr int32_t kY = 120;
@@ -82,7 +82,7 @@ protected:
     std::unique_ptr<world::World> m_world;
 };
 
-TEST_F(P2AcousticsGameWorld, FizzBehindAWallIsMuffledComparedWithAnOpenOne) {
+TEST_F(AcousticsGameWorld, FizzBehindAWallIsMuffledComparedWithAnOpenOne) {
     const glm::vec3 listener{8.5f, kY + 1.6f, 8.5f};
     // Two contacts at the same distance, one behind a 3-thick stone wall.
     for (int32_t y = kY; y <= kY + 6; ++y)

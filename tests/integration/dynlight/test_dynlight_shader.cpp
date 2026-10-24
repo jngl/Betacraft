@@ -81,7 +81,7 @@ const std::string kBlockMarker = std::string("layout(std140) uniform ") + lighti
 
 } // namespace
 
-TEST(P2DynLightShader, ChunkFragmentShaderDeclaresTheDynamicLightBlockOnce) {
+TEST(DynLightShader, ChunkFragmentShaderDeclaresTheDynamicLightBlockOnce) {
     const std::string fs = render::WorldRenderer::chunkFragmentShaderSource();
     const std::string_view include = lighting::dynamicLightsGlslSource();
 
@@ -100,7 +100,7 @@ TEST(P2DynLightShader, ChunkFragmentShaderDeclaresTheDynamicLightBlockOnce) {
     EXPECT_LT(fs.find(kBlockMarker), fs.find("void main()"));
 }
 
-TEST(P2DynLightShader, ChunkShadersFeedTheFragmentWorldPositionToTheDynamicLightTerm) {
+TEST(DynLightShader, ChunkShadersFeedTheFragmentWorldPositionToTheDynamicLightTerm) {
     const std::string vs(render::WorldRenderer::chunkVertexShaderSource());
     const std::string fs = render::WorldRenderer::chunkFragmentShaderSource();
 
@@ -118,7 +118,7 @@ TEST(P2DynLightShader, ChunkShadersFeedTheFragmentWorldPositionToTheDynamicLight
     EXPECT_LT(call, fog);
 }
 
-TEST(P2DynLightShader, ChunkProgramCompilesAndBindsTheBlockWhenGlIsAvailable) {
+TEST(DynLightShader, ChunkProgramCompilesAndBindsTheBlockWhenGlIsAvailable) {
     if (!test::GLTestContext::isAvailable()) {
         GTEST_SKIP() << "OpenGL 3.3 Core context not available in this test environment.";
     }
@@ -208,7 +208,7 @@ private:
 
 } // namespace
 
-TEST(P2DynLightShader, HeldTorchBrightensAnUnlitWallAtNightOnTheGpu) {
+TEST(DynLightShader, HeldTorchBrightensAnUnlitWallAtNightOnTheGpu) {
     if (!test::GLTestContext::isAvailable()) {
         GTEST_SKIP() << "OpenGL 3.3 Core context not available in this test environment.";
     }

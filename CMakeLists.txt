@@ -157,5 +157,5 @@ target_link_libraries(adversarial_m3_ui_stress PRIVATE betacraft::game betacraft
 # module (Module_acoustics_perf in modules/acoustics).
 
 # S6.6: one TNT blast under 15 ms in Release.
-add_test(NAME Integration_beta_content_perf COMMAND betacraft_integration_tests --gtest_filter=S6BetaContent.*Budget*)
+add_test(NAME Integration_beta_content_perf COMMAND betacraft_integration_tests --gtest_filter=BetaContent.*Budget*)
 set_tests_properties(Integration_beta_content_perf PROPERTIES LABELS benchmark ENVIRONMENT BETACRAFT_PERF_TESTS=1)

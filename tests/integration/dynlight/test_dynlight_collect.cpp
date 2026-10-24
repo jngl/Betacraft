@@ -17,7 +17,7 @@ using voxel::BlockId;
 
 namespace {
 
-class P2DynLightCollect : public ::testing::Test {
+class DynLightCollect : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
@@ -40,7 +40,7 @@ protected:
 
 } // namespace
 
-TEST_F(P2DynLightCollect, HeldTorchInTheSelectedSlotLightsTheHand) {
+TEST_F(DynLightCollect, HeldTorchInTheSelectedSlotLightsTheHand) {
     hold(BlockId::Torch, 64);
     game::collectDynamicLights(manager, player);
 
@@ -52,14 +52,14 @@ TEST_F(P2DynLightCollect, HeldTorchInTheSelectedSlotLightsTheHand) {
     EXPECT_EQ(l.position, DynamicLightManager::heldLightPosition(player.getEyePosition(), player.getLookDirection()));
 }
 
-TEST_F(P2DynLightCollect, HeldGlowstoneLightsAtFullLevel) {
+TEST_F(DynLightCollect, HeldGlowstoneLightsAtFullLevel) {
     hold(BlockId::Glowstone, 32);
     game::collectDynamicLights(manager, player);
     ASSERT_EQ(manager.size(), 1u);
     EXPECT_FLOAT_EQ(manager.lights()[0].radius, 15.0f);
 }
 
-TEST_F(P2DynLightCollect, OnlyTheSelectedHotbarSlotCounts) {
+TEST_F(DynLightCollect, OnlyTheSelectedHotbarSlotCounts) {
     player.setInventorySlot(0, {BlockId::Torch, 64});
     player.setInventorySlot(1, {BlockId::Stone, 64});
     player.setInventorySlot(physics::Player::HOTBAR_SIZE, {BlockId::Glowstone, 64}); // main inventory
@@ -73,7 +73,7 @@ TEST_F(P2DynLightCollect, OnlyTheSelectedHotbarSlotCounts) {
     EXPECT_FLOAT_EQ(manager.lights()[0].radius, 14.0f);
 }
 
-TEST_F(P2DynLightCollect, EmptyHandsAndNonEmittersSubmitNothing) {
+TEST_F(DynLightCollect, EmptyHandsAndNonEmittersSubmitNothing) {
     game::collectDynamicLights(manager, player);
     EXPECT_EQ(manager.size(), 0u);
 
@@ -88,7 +88,7 @@ TEST_F(P2DynLightCollect, EmptyHandsAndNonEmittersSubmitNothing) {
     }
 }
 
-TEST_F(P2DynLightCollect, EachFrameReplacesThePreviousFramesLights) {
+TEST_F(DynLightCollect, EachFrameReplacesThePreviousFramesLights) {
     hold(BlockId::Torch, 64);
     game::collectDynamicLights(manager, player);
     game::collectDynamicLights(manager, player);
@@ -99,7 +99,7 @@ TEST_F(P2DynLightCollect, EachFrameReplacesThePreviousFramesLights) {
     EXPECT_EQ(manager.size(), 0u) << "putting the torch away must switch the light off";
 }
 
-TEST_F(P2DynLightCollect, GlowingDroppedItemsLightTheWorld) {
+TEST_F(DynLightCollect, GlowingDroppedItemsLightTheWorld) {
     ecs::Registry reg;
     const glm::vec3 dropPos{10.0f, 64.0f, 2.0f};
     (void)ecs::EntityFactory::spawnItemDrop(reg, dropPos, BlockId::Glowstone, 3);
@@ -120,7 +120,7 @@ TEST_F(P2DynLightCollect, GlowingDroppedItemsLightTheWorld) {
     EXPECT_FLOAT_EQ(glow.position.z, dropPos.z);
 }
 
-TEST_F(P2DynLightCollect, DroppedItemsFollowTheirRenderInterpolatedPosition) {
+TEST_F(DynLightCollect, DroppedItemsFollowTheirRenderInterpolatedPosition) {
     ecs::Registry reg;
     const ecs::EntityId e = ecs::EntityFactory::spawnItemDrop(reg, {0.0f, 64.0f, 0.0f}, BlockId::Glowstone, 1);
     auto& t = reg.get<ecs::TransformComp>(e);
@@ -133,7 +133,7 @@ TEST_F(P2DynLightCollect, DroppedItemsFollowTheirRenderInterpolatedPosition) {
     EXPECT_FLOAT_EQ(manager.lights()[0].position.x, 0.5f);
 }
 
-TEST_F(P2DynLightCollect, HeldLightAndDropsAreCollectedTogether) {
+TEST_F(DynLightCollect, HeldLightAndDropsAreCollectedTogether) {
     ecs::Registry reg;
     (void)ecs::EntityFactory::spawnItemDrop(reg, {6.0f, 69.0f, -3.0f}, BlockId::Glowstone, 1);
     hold(BlockId::Torch, 1);

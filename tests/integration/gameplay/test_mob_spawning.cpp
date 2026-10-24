@@ -47,7 +47,7 @@ constexpr int32_t kRadius = 4;     // 9 x 9 loaded chunks around the origin chun
 constexpr float kMidnight = 0.75f;
 constexpr float kNoon = 0.25f;
 
-class P2MobsSession : public ::testing::Test {
+class MobsSession : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
@@ -100,7 +100,7 @@ protected:
 
 } // namespace
 
-TEST_F(P2MobsSession, ZombiesSpawnAtMidnightFarFromThePlayerAndUnderTheCap) {
+TEST_F(MobsSession, ZombiesSpawnAtMidnightFarFromThePlayerAndUnderTheCap) {
     const int32_t cap = gameplay::mobCap(MobCategory::Hostile, (2 * kRadius + 1) * (2 * kRadius + 1));
     int32_t maxHostiles = 0;
     int32_t ticksToFirst = -1;
@@ -132,7 +132,7 @@ TEST_F(P2MobsSession, ZombiesSpawnAtMidnightFarFromThePlayerAndUnderTheCap) {
     EXPECT_EQ(m_spawner.stats().eligibleChunks, static_cast<size_t>((2 * kRadius + 1) * (2 * kRadius + 1)));
 }
 
-TEST_F(P2MobsSession, ThePopulationNeverExceedsTheCap) {
+TEST_F(MobsSession, ThePopulationNeverExceedsTheCap) {
     const int32_t hostileCap = gameplay::mobCap(MobCategory::Hostile, 81);
     const int32_t passiveCap = gameplay::mobCap(MobCategory::Passive, 81);
     run(6000, kMidnight, [&] {
@@ -144,7 +144,7 @@ TEST_F(P2MobsSession, ThePopulationNeverExceedsTheCap) {
     });
 }
 
-TEST_F(P2MobsSession, PassivesButNoHostilesAtNoon) {
+TEST_F(MobsSession, PassivesButNoHostilesAtNoon) {
     run(2000, kNoon, [&] {
         ASSERT_EQ(count(MobCategory::Hostile), 0);
     });
@@ -156,7 +156,7 @@ TEST_F(P2MobsSession, PassivesButNoHostilesAtNoon) {
     });
 }
 
-TEST_F(P2MobsSession, ZombiesSpawnInADarkCaveAtNoon) {
+TEST_F(MobsSession, ZombiesSpawnInADarkCaveAtNoon) {
     // DoD: "la nuit, ou dans une grotte sombre". A sealed cave (cells y 30..32) under the
     // 7 x 7 central chunks gets hostiles at noon, while the sunlit surface gets none.
     constexpr int32_t kCaveFloorY = 30;
@@ -189,7 +189,7 @@ TEST_F(P2MobsSession, ZombiesSpawnInADarkCaveAtNoon) {
     EXPECT_LE(count(MobCategory::Hostile), gameplay::mobCap(MobCategory::Hostile, 81));
 }
 
-TEST_F(P2MobsSession, BothPassiveKindsAppear) {
+TEST_F(MobsSession, BothPassiveKindsAppear) {
     int32_t pigs = 0;
     int32_t sheep = 0;
     for (int round = 0; round < 20 && (pigs == 0 || sheep == 0); ++round) {
@@ -207,7 +207,7 @@ TEST_F(P2MobsSession, BothPassiveKindsAppear) {
 
 // S6.1: natural spawning draws every kind of the category, the four hostiles at night and
 // the pig, sheep and cow by day (MobDef::spawnWeight).
-TEST_F(P2MobsSession, EveryNaturalKindAppears) {
+TEST_F(MobsSession, EveryNaturalKindAppears) {
     std::array<int32_t, static_cast<size_t>(MobKind::Count)> seen{};
     const auto allSeen = [&](MobCategory category) {
         for (size_t k = 0; k < seen.size(); ++k) {
@@ -228,7 +228,7 @@ TEST_F(P2MobsSession, EveryNaturalKindAppears) {
     }
 }
 
-TEST_F(P2MobsSession, MobsInUnloadedChunksAreDestroyed) {
+TEST_F(MobsSession, MobsInUnloadedChunksAreDestroyed) {
     const ecs::EntityId lost = ecs::EntityFactory::spawnMob(m_reg, {1000.5f, 70.0f, 1000.5f}, MobKind::Zombie);
     const ecs::EntityId kept = ecs::EntityFactory::spawnMob(m_reg, {20.5f, 64.0f, 8.5f}, MobKind::Pig);
     ASSERT_EQ(m_world->getChunk({62, 62}), nullptr);
@@ -243,7 +243,7 @@ TEST_F(P2MobsSession, MobsInUnloadedChunksAreDestroyed) {
     EXPECT_FALSE(m_reg.valid(kept));
 }
 
-TEST_F(P2MobsSession, FarMobsDespawnAndAgeEveryTwentyTicks) {
+TEST_F(MobsSession, FarMobsDespawnAndAgeEveryTwentyTicks) {
     // Beyond 128 blocks (in a loaded chunk) a mob despawns at the next check; a near one ages.
     m_feet = {-60.5f, static_cast<float>(kGroundY + 1), -60.5f};
     const ecs::EntityId far = ecs::EntityFactory::spawnMob(m_reg, {70.5f, 64.0f, 70.5f}, MobKind::Sheep);
@@ -265,10 +265,10 @@ namespace {
 
 // The same flat world driven by a EntitySimulation (natural spawning off unless a test turns it
 // on) and a player standing at m_feet.
-class P2MobsEntitySimulation : public P2MobsSession {
+class MobsEntitySimulation : public MobsSession {
 protected:
     void SetUp() override {
-        P2MobsSession::SetUp();
+        MobsSession::SetUp();
         m_session.setNaturalSpawning(false);
         m_player.setPosition(m_feet);
     }
@@ -313,7 +313,7 @@ protected:
 
 } // namespace
 
-TEST_F(P2MobsEntitySimulation, TheProxyFollowsThePlayer) {
+TEST_F(MobsEntitySimulation, TheProxyFollowsThePlayer) {
     (void)tick(kNoon);
     const ecs::EntityId proxy = m_session.playerProxy();
     ASSERT_TRUE(reg().valid(proxy));
@@ -329,7 +329,7 @@ TEST_F(P2MobsEntitySimulation, TheProxyFollowsThePlayer) {
     EXPECT_TRUE(reg().has<ecs::PlayerTagComp>(m_session.playerProxy()));
 }
 
-TEST_F(P2MobsEntitySimulation, AZombieHitsForFiveAtMostEveryTwentyTicksWithKnockbackAndCanKill) {
+TEST_F(MobsEntitySimulation, AZombieHitsForFiveAtMostEveryTwentyTicksWithKnockbackAndCanKill) {
     const ecs::EntityId zombie = spawn(MobKind::Zombie, m_feet + glm::vec3(3.0f, 0.0f, 0.0f));
     std::vector<int32_t> hitTicks;
     bool died = false;
@@ -364,7 +364,7 @@ TEST_F(P2MobsEntitySimulation, AZombieHitsForFiveAtMostEveryTwentyTicksWithKnock
     EXPECT_EQ(hitTicks.size(), 4U);
 }
 
-TEST_F(P2MobsEntitySimulation, CreativePlayersTakeNoDamageAndAreIgnored) {
+TEST_F(MobsEntitySimulation, CreativePlayersTakeNoDamageAndAreIgnored) {
     m_player.setGameMode(core::GameMode::Creative);
     const ecs::EntityId zombie = spawn(MobKind::Zombie, m_feet + glm::vec3(1.2f, 0.0f, 0.0f));
     (void)tick(kMidnight); // creates the proxy
@@ -379,7 +379,7 @@ TEST_F(P2MobsEntitySimulation, CreativePlayersTakeNoDamageAndAreIgnored) {
     EXPECT_EQ(m_player.health().current, m_player.health().max);
 }
 
-TEST_F(P2MobsEntitySimulation, ZombiesBurnInTheSunButNotUnderARoof) {
+TEST_F(MobsEntitySimulation, ZombiesBurnInTheSunButNotUnderARoof) {
     // Creative: neither zombie cares about the player, so they stay where they burn.
     m_player.setGameMode(core::GameMode::Creative);
     const glm::vec3 hutFeet(-11.5f, static_cast<float>(kGroundY + 1), 8.5f);
@@ -416,7 +416,7 @@ TEST_F(P2MobsEntitySimulation, ZombiesBurnInTheSunButNotUnderARoof) {
     EXPECT_FALSE(game::isBurning(reg(), night));
 }
 
-TEST_F(P2MobsEntitySimulation, WaterPutsTheFireOut) {
+TEST_F(MobsEntitySimulation, WaterPutsTheFireOut) {
     m_player.setGameMode(core::GameMode::Creative);
     const glm::vec3 feet = m_feet + glm::vec3(6.0f, 0.0f, 0.0f);
     const ecs::EntityId zombie = spawn(MobKind::Zombie, feet);
@@ -427,7 +427,7 @@ TEST_F(P2MobsEntitySimulation, WaterPutsTheFireOut) {
     EXPECT_FALSE(game::isBurning(reg(), zombie));
 }
 
-TEST_F(P2MobsEntitySimulation, DropsComeAfterTheDeathAnimation) {
+TEST_F(MobsEntitySimulation, DropsComeAfterTheDeathAnimation) {
     const ecs::EntityId sheep = spawn(MobKind::Sheep, m_feet + glm::vec3(5.0f, 0.0f, 0.0f));
     ASSERT_TRUE(ecs::HealthSystem::applyDamage(reg(), sheep, 100));
     const gameplay::ItemId wool = gameplay::toItemId(BlockId::Wool);
@@ -445,7 +445,7 @@ TEST_F(P2MobsEntitySimulation, DropsComeAfterTheDeathAnimation) {
     EXPECT_EQ(deaths, 1);
 }
 
-TEST_F(P2MobsEntitySimulation, ABurningPigDropsCookedPorkchop) {
+TEST_F(MobsEntitySimulation, ABurningPigDropsCookedPorkchop) {
     const auto killPigs = [&](bool burning) {
         for (int32_t i = 0; i < 12; ++i) {
             const ecs::EntityId pig = spawn(MobKind::Pig, m_feet + glm::vec3(4.0f + static_cast<float>(i), 0.0f, 3.0f));
@@ -465,7 +465,7 @@ TEST_F(P2MobsEntitySimulation, ABurningPigDropsCookedPorkchop) {
     EXPECT_GT(items(gameplay::items::CookedPorkchop), 0);
 }
 
-TEST_F(P2MobsEntitySimulation, AHitPigFleesFromThePlayer) {
+TEST_F(MobsEntitySimulation, AHitPigFleesFromThePlayer) {
     const ecs::EntityId pig = spawn(MobKind::Pig, m_feet + glm::vec3(2.0f, 0.0f, 0.0f));
     reg().get<ecs::MobAIComp>(pig).stateTimer = 1.0e6f;
     m_player.setRotation(0.0f, -30.0f); // along +X, down at the pig's body
@@ -483,7 +483,7 @@ TEST_F(P2MobsEntitySimulation, AHitPigFleesFromThePlayer) {
     EXPECT_GT(glm::length(reg().get<ecs::TransformComp>(pig).pos - m_feet), start + 1.0f);
 }
 
-TEST_F(P2MobsEntitySimulation, AmbientSoundsOnlyFromMobsWithinSixteenBlocks) {
+TEST_F(MobsEntitySimulation, AmbientSoundsOnlyFromMobsWithinSixteenBlocks) {
     m_player.setGameMode(core::GameMode::Creative);
     // Idle for good, so nobody wanders into or out of range.
     for (const auto& [kind, offset] : {std::pair{MobKind::Sheep, glm::vec3(4.0f, 0.0f, 0.0f)},
@@ -508,7 +508,7 @@ TEST_F(P2MobsEntitySimulation, AmbientSoundsOnlyFromMobsWithinSixteenBlocks) {
     EXPECT_LT(sheep, 60);
 }
 
-TEST_F(P2MobsEntitySimulation, TheSessionSpawnsMobsAtMidnight) {
+TEST_F(MobsEntitySimulation, TheSessionSpawnsMobsAtMidnight) {
     m_session.setNaturalSpawning(true);
     m_player.setGameMode(core::GameMode::Creative);
     for (int32_t t = 0; t < 2000 && m_session.spawner().stats().hostile == 0; ++t) (void)tick(kMidnight);

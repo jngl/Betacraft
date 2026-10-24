@@ -14,7 +14,7 @@ using namespace betacraft::test::p2gameplay;
 
 namespace {
 
-class S5RandomTicks : public GameplayWorld {
+class RandomTicks : public GameplayWorld {
 protected:
     void SetUp() override {
         GameplayWorld::SetUp();
@@ -65,7 +65,7 @@ protected:
 
 } // namespace
 
-TEST_F(S5RandomTicks, LitSaplingGrowsIntoATreeWithinTwentyThousandTicks) {
+TEST_F(RandomTicks, LitSaplingGrowsIntoATreeWithinTwentyThousandTicks) {
     for (const int32_t z : kGrid) {
         for (const int32_t x : kGrid) plantSapling(x, z);
     }
@@ -94,7 +94,7 @@ TEST_F(S5RandomTicks, LitSaplingGrowsIntoATreeWithinTwentyThousandTicks) {
     EXPECT_EQ(m_world->getMetadata(kGrid[0] + 1, kY + 4, kGrid[0]), 0);
 }
 
-TEST_F(S5RandomTicks, SaplingInTheDarkNeverGrows) {
+TEST_F(RandomTicks, SaplingInTheDarkNeverGrows) {
     plantSapling(4, 4);
     encase(4, 4);
     ASSERT_LT(m_world->getEffectiveLight({4, kY + 1, 4}), 9);
@@ -103,7 +103,7 @@ TEST_F(S5RandomTicks, SaplingInTheDarkNeverGrows) {
     EXPECT_EQ(m_world->getMetadata(4, kY, 4), 0) << "not even the first growth step";
 }
 
-TEST_F(S5RandomTicks, SaplingDoesNotGrowAtNight) {
+TEST_F(RandomTicks, SaplingDoesNotGrowAtNight) {
     plantSapling(4, 4);
     // Beta skylightSubtracted at midnight is 11: sky 15 reads 4, below the sapling's 9.
     tickRandom(60000, 11);
@@ -111,7 +111,7 @@ TEST_F(S5RandomTicks, SaplingDoesNotGrowAtNight) {
     EXPECT_EQ(m_world->getMetadata(4, kY, 4), 0);
 }
 
-TEST_F(S5RandomTicks, GrassSpreadsOverLitDirtButNeverCoveredDirt) {
+TEST_F(RandomTicks, GrassSpreadsOverLitDirtButNeverCoveredDirt) {
     // A 5x5 dirt patch in the floor around one grass block; one dirt cell is roofed with stone.
     for (int32_t z = 6; z <= 10; ++z) {
         for (int32_t x = 6; x <= 10; ++x) {
@@ -133,7 +133,7 @@ TEST_F(S5RandomTicks, GrassSpreadsOverLitDirtButNeverCoveredDirt) {
     EXPECT_EQ(m_world->getBlock(9, kFloorY, 8), BlockId::Dirt) << "a dirt cell under stone never turns";
 }
 
-TEST_F(S5RandomTicks, GrassInTheDarkUnderABlockRevertsToDirt) {
+TEST_F(RandomTicks, GrassInTheDarkUnderABlockRevertsToDirt) {
     ASSERT_TRUE(m_world->setBlock(4, kFloorY, 4, BlockId::Grass));
     ASSERT_TRUE(m_world->setBlock(4, kY, 4, BlockId::Stone));
     // Seal the sides of the grass so no light reaches the cell above it from anywhere.
@@ -147,7 +147,7 @@ TEST_F(S5RandomTicks, GrassInTheDarkUnderABlockRevertsToDirt) {
     EXPECT_GT(t, 0);
 }
 
-TEST_F(S5RandomTicks, LeavesWithoutTrunkAllDecayExceptPlayerPlacedOnes) {
+TEST_F(RandomTicks, LeavesWithoutTrunkAllDecayExceptPlayerPlacedOnes) {
     // A hand-built oak: 4 logs and a 5x5 crown, generated-style leaves at metadata 0.
     constexpr int32_t x0 = 8;
     constexpr int32_t z0 = 8;
@@ -191,7 +191,7 @@ TEST_F(S5RandomTicks, LeavesWithoutTrunkAllDecayExceptPlayerPlacedOnes) {
     EXPECT_EQ(decayed, leaves.size());
 }
 
-TEST_F(S5RandomTicks, LeavesStillReachingALogThroughLeavesSurvive) {
+TEST_F(RandomTicks, LeavesStillReachingALogThroughLeavesSurvive) {
     // Two logs under a shared row of leaves: cutting one leaves the other holding the leaves
     // within 4 steps of it, and only those (Beta's reach through leaves).
     for (int32_t y = kY; y < kY + 3; ++y) {
@@ -210,7 +210,7 @@ TEST_F(S5RandomTicks, LeavesStillReachingALogThroughLeavesSurvive) {
     }
 }
 
-TEST_F(S5RandomTicks, SugarCaneAndCactusStopAtThreeBlocks) {
+TEST_F(RandomTicks, SugarCaneAndCactusStopAtThreeBlocks) {
     ASSERT_TRUE(m_world->setBlock(4, kFloorY, 4, BlockId::Sand));
     ASSERT_TRUE(m_world->setBlockWithMetadata(4, kY, 4, BlockId::SugarCane, 0));
     ASSERT_TRUE(m_world->setBlock(12, kFloorY, 12, BlockId::Sand));
@@ -224,7 +224,7 @@ TEST_F(S5RandomTicks, SugarCaneAndCactusStopAtThreeBlocks) {
     EXPECT_EQ(m_world->getBlock(12, kY + 3, 12), BlockId::Air) << "cactus caps at 3 blocks";
 }
 
-TEST_F(S5RandomTicks, GeneratedLeavesDoNotDecay) {
+TEST_F(RandomTicks, GeneratedLeavesDoNotDecay) {
     // Floating leaves at metadata 0, as worldgen writes them, never check for a log.
     for (int32_t x = 4; x <= 6; ++x) {
         ASSERT_TRUE(m_world->setBlockWithMetadata(x, kY + 2, 4, BlockId::Leaves, 0));
@@ -247,7 +247,7 @@ TEST_F(S5RandomTicks, GeneratedLeavesDoNotDecay) {
     EXPECT_EQ(generatedLeaves(), before);
 }
 
-TEST_F(S5RandomTicks, OnlyNearbyDecoratedChunksAreTicked) {
+TEST_F(RandomTicks, OnlyNearbyDecoratedChunksAreTicked) {
     // Chunk (1, 0) is loaded but undecorated (its east neighbours are missing): nothing grows there.
     ASSERT_FALSE(m_world->isChunkDecorated({1, 0}));
     ASSERT_TRUE(m_world->setBlock(20, kFloorY, 4, BlockId::Sand));

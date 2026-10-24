@@ -20,7 +20,7 @@ using voxel::PalettedSection;
 
 namespace {
 
-class P2FoundationsMetadata : public ::testing::Test {
+class MetadataNibble : public ::testing::Test {
 protected:
     void SetUp() override { voxel::BlockRegistry::initialize(); }
 };
@@ -31,12 +31,12 @@ constexpr int32_t kPocketY = 120;
 
 // --- PalettedSection -------------------------------------------------------------
 
-TEST_F(P2FoundationsMetadata, SectionStaysCacheLineSized) {
+TEST_F(MetadataNibble, SectionStaysCacheLineSized) {
     static_assert(sizeof(PalettedSection) <= 64);
     EXPECT_LE(sizeof(PalettedSection), 64u);
 }
 
-TEST_F(P2FoundationsMetadata, SectionAllocatesMetadataLazily) {
+TEST_F(MetadataNibble, SectionAllocatesMetadataLazily) {
     PalettedSection sec(BlockId::Water, 15, 0);
     EXPECT_FALSE(sec.hasMetadata());
     EXPECT_EQ(sec.getMetadata(3, 4, 5), 0);
@@ -54,7 +54,7 @@ TEST_F(P2FoundationsMetadata, SectionAllocatesMetadataLazily) {
     EXPECT_EQ(sec.getMemoryFootprintBytes(), before + PalettedSection::VOLUME / 2);
 }
 
-TEST_F(P2FoundationsMetadata, SectionMetadataIsANibbleIndependentOfLight) {
+TEST_F(MetadataNibble, SectionMetadataIsANibbleIndependentOfLight) {
     PalettedSection sec(BlockId::Air, 15, 0);
     sec.setSkyLight(1, 1, 1, 7);
     sec.setBlockLight(1, 1, 1, 9);
@@ -71,7 +71,7 @@ TEST_F(P2FoundationsMetadata, SectionMetadataIsANibbleIndependentOfLight) {
     EXPECT_EQ(sec.getMetadata(15, 0, 0), 0);
 }
 
-TEST_F(P2FoundationsMetadata, ChangingTheBlockResetsItsMetadata) {
+TEST_F(MetadataNibble, ChangingTheBlockResetsItsMetadata) {
     // Beta Chunk.setBlockID clears the metadata nibble of the cell it rewrites.
     PalettedSection sec(BlockId::Air, 15, 0);
     sec.setBlock(2, 2, 2, BlockId::Water);
@@ -82,7 +82,7 @@ TEST_F(P2FoundationsMetadata, ChangingTheBlockResetsItsMetadata) {
     EXPECT_EQ(sec.getMetadata(2, 2, 2), 0);
 }
 
-TEST_F(P2FoundationsMetadata, SectionCopiesDeepCopyMetadata) {
+TEST_F(MetadataNibble, SectionCopiesDeepCopyMetadata) {
     PalettedSection a(BlockId::Water, 15, 0);
     a.setMetadata(7, 7, 7, 9);
     PalettedSection b = a;
@@ -96,7 +96,7 @@ TEST_F(P2FoundationsMetadata, SectionCopiesDeepCopyMetadata) {
     EXPECT_EQ(d.getMetadata(7, 7, 7), 9);
 }
 
-TEST_F(P2FoundationsMetadata, SectionBlocksSurviveEveryPaletteWidthAfterTheLayoutChange) {
+TEST_F(MetadataNibble, SectionBlocksSurviveEveryPaletteWidthAfterTheLayoutChange) {
     // The packed block storage moved to an exact-size buffer to make room for the metadata
     // pointer; walk 4 -> 8 -> 16 bit promotions and copies to pin it.
     PalettedSection sec(BlockId::Air, 15, 0);
@@ -127,7 +127,7 @@ TEST_F(P2FoundationsMetadata, SectionBlocksSurviveEveryPaletteWidthAfterTheLayou
 
 // --- Chunk / World -----------------------------------------------------------------
 
-TEST_F(P2FoundationsMetadata, ChunkMetadataMarksTheChunkModifiedButNotDirty) {
+TEST_F(MetadataNibble, ChunkMetadataMarksTheChunkModifiedButNotDirty) {
     // No mesher reads metadata yet (liquids are full cubes): a level change is saved but
     // must not queue a re-mesh that could only produce identical geometry.
     Chunk c({0, 0});
@@ -149,7 +149,7 @@ TEST_F(P2FoundationsMetadata, ChunkMetadataMarksTheChunkModifiedButNotDirty) {
     EXPECT_EQ(c.getMetadata(3, Chunk::HEIGHT, 3), 0);
 }
 
-TEST_F(P2FoundationsMetadata, WorldStoresFluidStateNibbles) {
+TEST_F(MetadataNibble, WorldStoresFluidStateNibbles) {
     test::TempDir dir;
     world::World w(173173ULL, dir.path());
     w.ensureChunkLoaded({0, 0});
@@ -182,7 +182,7 @@ TEST_F(P2FoundationsMetadata, WorldStoresFluidStateNibbles) {
     EXPECT_FALSE(w.setMetadata(0, Chunk::HEIGHT, 0, 3));
 }
 
-TEST_F(P2FoundationsMetadata, GeneratedAndLegacyWaterDecodesAsSourceUnderTheWorldConvention) {
+TEST_F(MetadataNibble, GeneratedAndLegacyWaterDecodesAsSourceUnderTheWorldConvention) {
     // Worldgen and pre-existing saves never wrote metadata, so every water cell reads 0. The
     // Beta-native encoding maps 0 to a source block; FluidState's own toNibble() layout would
     // turn every ocean into the thinnest flowing water, which is why World stores Beta decay.
@@ -204,7 +204,7 @@ TEST_F(P2FoundationsMetadata, GeneratedAndLegacyWaterDecodesAsSourceUnderTheWorl
     EXPECT_FALSE(fluids::FluidState::fromNibble(fluids::FluidType::Water, 0).isSource());
 }
 
-TEST_F(P2FoundationsMetadata, WorldMetadataOnABorderLeavesTheNeighbourMeshClean) {
+TEST_F(MetadataNibble, WorldMetadataOnABorderLeavesTheNeighbourMeshClean) {
     test::TempDir dir;
     world::World w(173173ULL, dir.path());
     voxel::Chunk& east = w.ensureChunkLoaded({0, 0});
@@ -220,7 +220,7 @@ TEST_F(P2FoundationsMetadata, WorldMetadataOnABorderLeavesTheNeighbourMeshClean)
 
 // --- Persistence ---------------------------------------------------------------------
 
-TEST_F(P2FoundationsMetadata, ChunkWithoutMetadataStillSerializesAsVersion1) {
+TEST_F(MetadataNibble, ChunkWithoutMetadataStillSerializesAsVersion1) {
     Chunk c({2, 3});
     c.setBlock(1, 1, 1, BlockId::Water);
     const std::vector<uint8_t> bytes = c.serializeRLE();
@@ -228,7 +228,7 @@ TEST_F(P2FoundationsMetadata, ChunkWithoutMetadataStillSerializesAsVersion1) {
     EXPECT_EQ(bytes[4], 1) << "saves without fluid levels keep the original format";
 }
 
-TEST_F(P2FoundationsMetadata, ChunkMetadataRoundTripsThroughRle) {
+TEST_F(MetadataNibble, ChunkMetadataRoundTripsThroughRle) {
     Chunk c({2, 3});
     for (int x = 0; x < 16; ++x) {
         c.setBlock(x, 64, 0, BlockId::Water);
@@ -252,7 +252,7 @@ TEST_F(P2FoundationsMetadata, ChunkMetadataRoundTripsThroughRle) {
     EXPECT_FALSE(restored.getSection(0).hasMetadata()) << "zero metadata must not allocate on load";
 }
 
-TEST_F(P2FoundationsMetadata, LegacyVersion1SavesLoadWithZeroMetadata) {
+TEST_F(MetadataNibble, LegacyVersion1SavesLoadWithZeroMetadata) {
     // A version-1 stream as written before the nibble existed: all air except a water run.
     std::vector<uint8_t> v1{'B', 'C', '1', '7', 1};
     const auto run = [&v1](BlockId id, uint16_t n) {
@@ -272,7 +272,7 @@ TEST_F(P2FoundationsMetadata, LegacyVersion1SavesLoadWithZeroMetadata) {
     }
 }
 
-TEST_F(P2FoundationsMetadata, MalformedMetadataStreamsAreRejected) {
+TEST_F(MetadataNibble, MalformedMetadataStreamsAreRejected) {
     Chunk src({0, 0});
     src.setBlock(0, 0, 0, BlockId::Water);
     src.setMetadata(0, 0, 0, 3);
@@ -294,7 +294,7 @@ TEST_F(P2FoundationsMetadata, MalformedMetadataStreamsAreRejected) {
     EXPECT_FALSE(c.deserializeRLE(missing));
 }
 
-TEST_F(P2FoundationsMetadata, FluidLevelsSurviveWorldSaveAndReload) {
+TEST_F(MetadataNibble, FluidLevelsSurviveWorldSaveAndReload) {
     test::TempDir dir;
     const auto nibble = static_cast<uint8_t>(fluids::FluidState::flowing(fluids::FluidType::Water, 5).betaDecay());
     {
@@ -311,7 +311,7 @@ TEST_F(P2FoundationsMetadata, FluidLevelsSurviveWorldSaveAndReload) {
     }
 }
 
-TEST_F(P2FoundationsMetadata, OnlyAMetadataEditStillGetsSaved) {
+TEST_F(MetadataNibble, OnlyAMetadataEditStillGetsSaved) {
     test::TempDir dir;
     {
         world::World w(173173ULL, dir.path());

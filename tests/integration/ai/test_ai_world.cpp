@@ -18,7 +18,7 @@ namespace {
 
 const glm::vec3 kPlayerFeet{10.5f, static_cast<float>(kY + 1), 2.5f};
 
-class P2AiWorld : public GameplayWorld {
+class AiWorld : public GameplayWorld {
 protected:
     void SetUp() override {
         GameplayWorld::SetUp();
@@ -61,7 +61,7 @@ protected:
 
 } // namespace
 
-TEST_F(P2AiWorld, WorldNavQueryReadsBlocks) {
+TEST_F(AiWorld, WorldNavQueryReadsBlocks) {
     const ai::WorldNavQuery query(*m_world);
     EXPECT_TRUE(query.isLoaded({7, kY, 0}));
     EXPECT_FALSE(query.isLoaded({7, -1, 0}));
@@ -88,7 +88,7 @@ TEST_F(P2AiWorld, WorldNavQueryReadsBlocks) {
     }
 }
 
-TEST_F(P2AiWorld, ZombieGoesAroundWallAndUpStep) {
+TEST_F(AiWorld, ZombieGoesAroundWallAndUpStep) {
     ASSERT_TRUE(m_session.pathfinding());
     const int32_t ticks = chaseTicks(200);
     EXPECT_GE(ticks, 0) << "the zombie never reached the player";
@@ -96,13 +96,13 @@ TEST_F(P2AiWorld, ZombieGoesAroundWallAndUpStep) {
     RecordProperty("ticks", ticks);
 }
 
-TEST_F(P2AiWorld, StraightLineStaysStuck) {
+TEST_F(AiWorld, StraightLineStaysStuck) {
     m_session.setPathfinding(false);
     EXPECT_EQ(chaseTicks(200), -1);
     EXPECT_EQ(m_session.entities().count<ecs::MobPathComp>(), 0U);
 }
 
-TEST_F(P2AiWorld, ZombieStopsAtTheEdgeOfALavaMoat) {
+TEST_F(AiWorld, ZombieStopsAtTheEdgeOfALavaMoat) {
     // The player stands on an island ringed by a lava moat 2 wide (sunk in the floor): the
     // zombie cannot reach them and must stay on the near bank instead of walking in.
     fill({7, kY, -1}, {7, kY + 2, 4}, BlockId::Air);

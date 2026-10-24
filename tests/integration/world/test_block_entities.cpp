@@ -40,7 +40,7 @@ constexpr core::BlockPos kChestPos{9, kY, 6};
     return c;
 }
 
-class S2BlockEntities : public GameplayWorld {
+class BlockEntities : public GameplayWorld {
 protected:
     FurnaceData& placeFurnace(const FurnaceData& data) {
         EXPECT_TRUE(m_world->setBlock(kFurnacePos, BlockId::Furnace));
@@ -92,7 +92,7 @@ protected:
 
 } // namespace
 
-TEST_F(S2BlockEntities, FurnaceProgressSurvivesUnloadReload) {
+TEST_F(BlockEntities, FurnaceProgressSurvivesUnloadReload) {
     (void)placeFurnace(kOresAndCoal);
     for (int i = 0; i < 250; ++i) {
         m_session.tickBlockEntities(*m_world);
@@ -114,7 +114,7 @@ TEST_F(S2BlockEntities, FurnaceProgressSurvivesUnloadReload) {
     EXPECT_EQ(std::get<FurnaceData>(*after), before);
 }
 
-TEST_F(S2BlockEntities, ChestContentsSurviveSaveModifiedChunks) {
+TEST_F(BlockEntities, ChestContentsSurviveSaveModifiedChunks) {
     placeChest(fullChest());
     m_world->saveModifiedChunks(storage::WorldLevelData{});
     ASSERT_EQ(storedEntities().size(), 1U);
@@ -126,7 +126,7 @@ TEST_F(S2BlockEntities, ChestContentsSurviveSaveModifiedChunks) {
     EXPECT_EQ(std::get<ChestData>(*e), fullChest());
 }
 
-TEST_F(S2BlockEntities, BreakingAChestDropsAllStacks) {
+TEST_F(BlockEntities, BreakingAChestDropsAllStacks) {
     placeChest(fullChest());
     const MineResult r = mine(kChestPos);
     ASSERT_TRUE(r.broken.has_value());
@@ -146,7 +146,7 @@ TEST_F(S2BlockEntities, BreakingAChestDropsAllStacks) {
     EXPECT_TRUE(bundle->blockEntities.empty()) << "no record at all, as there was no .be file";
 }
 
-TEST_F(S2BlockEntities, FurnaceLitSwapKeepsInventory) {
+TEST_F(BlockEntities, FurnaceLitSwapKeepsInventory) {
     (void)placeFurnace(kOresAndCoal);
     (void)tickIdle();
     ASSERT_EQ(m_world->getBlock(kFurnacePos), BlockId::LitFurnace);
@@ -168,7 +168,7 @@ TEST_F(S2BlockEntities, FurnaceLitSwapKeepsInventory) {
     EXPECT_EQ(itemEntityCount(), 0U);
 }
 
-TEST_F(S2BlockEntities, PistonRefusesToPushAChest) {
+TEST_F(BlockEntities, PistonRefusesToPushAChest) {
     const core::BlockPos piston{kChestPos.x - 1, kY, kChestPos.z};
     placeChest(fullChest());
     ASSERT_TRUE(m_world->setBlock(piston, BlockId::Piston));
@@ -185,7 +185,7 @@ TEST_F(S2BlockEntities, PistonRefusesToPushAChest) {
     EXPECT_EQ(m_world->getBlock(stone), BlockId::Stone);
 }
 
-TEST_F(S2BlockEntities, CorruptBeFileStillLoadsTheChunk) {
+TEST_F(BlockEntities, CorruptBeFileStillLoadsTheChunk) {
     placeChest(fullChest());
     m_world->saveModifiedChunks(storage::WorldLevelData{});
     const std::string garbage = "BCBE\x01garbage";
@@ -197,7 +197,7 @@ TEST_F(S2BlockEntities, CorruptBeFileStillLoadsTheChunk) {
     EXPECT_EQ(w->blockEntities().find(kChestPos), nullptr);
 }
 
-TEST_F(S2BlockEntities, EntityWithoutMatchingBlockIsDiscarded) {
+TEST_F(BlockEntities, EntityWithoutMatchingBlockIsDiscarded) {
     placeChest(fullChest());
     ASSERT_TRUE(m_world->setBlock(kFurnacePos, BlockId::Stone));
     m_world->saveModifiedChunks(storage::WorldLevelData{});
@@ -210,7 +210,7 @@ TEST_F(S2BlockEntities, EntityWithoutMatchingBlockIsDiscarded) {
     EXPECT_EQ(w->blockEntities().size(), 1U);
 }
 
-TEST_F(S2BlockEntities, NoBeFileForOldSaves) {
+TEST_F(BlockEntities, NoBeFileForOldSaves) {
     // A save with plain blocks only writes no block entity record, and loads without one.
     ASSERT_TRUE(m_world->setBlock(kFurnacePos, BlockId::Stone));
     m_world->saveModifiedChunks(storage::WorldLevelData{});
@@ -226,7 +226,7 @@ TEST_F(S2BlockEntities, NoBeFileForOldSaves) {
 
 // S2.10: a record written with the legacy ids 100..105 (items_scheme 1 era) loads its stacks
 // as Beta numbers; the codec itself stays byte-exact.
-TEST_F(S2BlockEntities, LegacyItemIdsInBeFileFoldOnLoad) {
+TEST_F(BlockEntities, LegacyItemIdsInBeFileFoldOnLoad) {
     ChestData legacy{};
     legacy.slots[0] = stack(items::legacy::Stick, 16);
     legacy.slots[1] = stack(items::legacy::Coal, 9);

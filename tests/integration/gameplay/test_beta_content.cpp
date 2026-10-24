@@ -33,7 +33,7 @@ namespace {
 // The player stands at (2.5, kY, 2.5) looking along +X; the eyes are in cell row kY + 1.
 constexpr int32_t kEyeY = kY + 1;
 
-class S6BetaContent : public GameplayWorld {
+class BetaContent : public GameplayWorld {
 protected:
     // One full game tick as Application runs it: the session, then the world.
     game::GameTickEvents gameTick() {
@@ -95,7 +95,7 @@ protected:
 
 // --- S6.4 buckets --------------------------------------------------------------------------
 
-TEST_F(S6BetaContent, LiquidSourceRaycastModeHitsSourcesOnly) {
+TEST_F(BetaContent, LiquidSourceRaycastModeHitsSourcesOnly) {
     ASSERT_TRUE(m_world->setBlockWithMetadata(5, kEyeY, 2, BlockId::Water, 0));
     ASSERT_TRUE(m_world->setBlock(8, kEyeY, 2, BlockId::Stone));
     const glm::vec3 eye = m_player.getEyePosition();
@@ -117,7 +117,7 @@ TEST_F(S6BetaContent, LiquidSourceRaycastModeHitsSourcesOnly) {
               solid.blockPos);
 }
 
-TEST_F(S6BetaContent, EmptyBucketTakesWaterAndLavaSources) {
+TEST_F(BetaContent, EmptyBucketTakesWaterAndLavaSources) {
     hold({items::Bucket, 1, 0});
     ASSERT_TRUE(m_world->setBlockWithMetadata(4, kEyeY, 2, BlockId::StillWater, 0));
     const std::optional<game::ItemUseResult> water = game::useHeldBucket(*m_world, m_player);
@@ -139,7 +139,7 @@ TEST_F(S6BetaContent, EmptyBucketTakesWaterAndLavaSources) {
     EXPECT_EQ(m_player.getHeldItem().id, items::LavaBucket);
 }
 
-TEST_F(S6BetaContent, EmptyBucketIgnoresFlowingLiquidAndBlocks) {
+TEST_F(BetaContent, EmptyBucketIgnoresFlowingLiquidAndBlocks) {
     hold({items::Bucket, 1, 0});
     ASSERT_TRUE(m_world->setBlockWithMetadata(4, kEyeY, 2, BlockId::Water, 2));
     EXPECT_FALSE(game::useHeldBucket(*m_world, m_player).has_value());
@@ -153,7 +153,7 @@ TEST_F(S6BetaContent, EmptyBucketIgnoresFlowingLiquidAndBlocks) {
     EXPECT_FALSE(game::useHeldBucket(*m_world, m_player).has_value());
 }
 
-TEST_F(S6BetaContent, FullBucketPoursASourceThatFlows) {
+TEST_F(BetaContent, FullBucketPoursASourceThatFlows) {
     hold({items::WaterBucket, 1, 0});
     ASSERT_TRUE(m_world->setBlock(5, kEyeY, 2, BlockId::Stone));
     const std::optional<game::ItemUseResult> poured = game::useHeldBucket(*m_world, m_player);
@@ -169,7 +169,7 @@ TEST_F(S6BetaContent, FullBucketPoursASourceThatFlows) {
     EXPECT_TRUE(voxel::isWaterBlock(m_world->getBlock(4, kEyeY, 2)));
 }
 
-TEST_F(S6BetaContent, FullBucketSeesThroughLiquidsAndNeedsAReplaceableCell) {
+TEST_F(BetaContent, FullBucketSeesThroughLiquidsAndNeedsAReplaceableCell) {
     hold({items::LavaBucket, 1, 0});
     // Water in front of the wall: the full bucket's ray ignores it and pours into it.
     ASSERT_TRUE(m_world->setBlock(6, kEyeY, 2, BlockId::Stone));
@@ -189,7 +189,7 @@ TEST_F(S6BetaContent, FullBucketSeesThroughLiquidsAndNeedsAReplaceableCell) {
     EXPECT_FALSE(game::useHeldBucket(*m_world, m_player).has_value());
 }
 
-TEST_F(S6BetaContent, BucketRecipeAndStackOfOne) {
+TEST_F(BetaContent, BucketRecipeAndStackOfOne) {
     const crafting::RecipeRegistry book = crafting::makeBetaRecipeBook();
     crafting::CraftingGrid grid{crafting::GridSize::Workbench3x3};
     ASSERT_TRUE(grid.set(0, 0, crafting::SlotStack{items::IronIngot, 1, 0}));
@@ -206,7 +206,7 @@ TEST_F(S6BetaContent, BucketRecipeAndStackOfOne) {
 
 // --- S6.6 explosions and TNT ---------------------------------------------------------------
 
-TEST_F(S6BetaContent, FlintAndSteelRecipeAndTntRecipe) {
+TEST_F(BetaContent, FlintAndSteelRecipeAndTntRecipe) {
     const crafting::RecipeRegistry book = crafting::makeBetaRecipeBook();
     crafting::CraftingGrid small{crafting::GridSize::Inventory2x2};
     ASSERT_TRUE(small.set(1, 1, crafting::SlotStack{items::IronIngot, 1, 0}));
@@ -224,7 +224,7 @@ TEST_F(S6BetaContent, FlintAndSteelRecipeAndTntRecipe) {
     EXPECT_EQ(tnt->result.id, gameplay::toItemId(BlockId::TNT));
 }
 
-TEST_F(S6BetaContent, BreakingTntInSurvivalLightsAFourSecondFuse) {
+TEST_F(BetaContent, BreakingTntInSurvivalLightsAFourSecondFuse) {
     ASSERT_TRUE(m_world->setBlock(9, kY, 9, BlockId::TNT));
     placePlayer({-4.5f, static_cast<float>(kY), -4.5f});
     const MineResult r = mine({9, kY, 9});
@@ -250,7 +250,7 @@ TEST_F(S6BetaContent, BreakingTntInSurvivalLightsAFourSecondFuse) {
     EXPECT_EQ(explosions, 1U);
 }
 
-TEST_F(S6BetaContent, CreativeBreaksTntWithoutLightingIt) {
+TEST_F(BetaContent, CreativeBreaksTntWithoutLightingIt) {
     m_player.setGameMode(core::GameMode::Creative);
     ASSERT_TRUE(m_world->setBlock(4, kY, 2, BlockId::TNT));
     const MineResult r = mine({4, kY, 2});
@@ -258,7 +258,7 @@ TEST_F(S6BetaContent, CreativeBreaksTntWithoutLightingIt) {
     EXPECT_EQ(primedCount(), 0U);
 }
 
-TEST_F(S6BetaContent, FlintAndSteelLightsTntAndWears) {
+TEST_F(BetaContent, FlintAndSteelLightsTntAndWears) {
     ASSERT_TRUE(m_world->setBlock(4, kY, 2, BlockId::TNT));
     hold({items::FlintAndSteel, 1, 0});
     // Not TNT: nothing.
@@ -280,7 +280,7 @@ TEST_F(S6BetaContent, FlintAndSteelLightsTntAndWears) {
     EXPECT_FALSE(m_session.igniteTnt(*m_world, m_player, targetAt({6, kY, 2}, BlockId::TNT)).has_value());
 }
 
-TEST_F(S6BetaContent, FlintAndSteelKeepsItsWearWhenUsedForOtherThings) {
+TEST_F(BetaContent, FlintAndSteelKeepsItsWearWhenUsedForOtherThings) {
     // Digging or hitting with it does not wear it (it is no tool), nor does it repair it.
     hold({items::FlintAndSteel, 1, 10});
     ASSERT_TRUE(m_world->setBlock(4, kY, 2, BlockId::Dirt));
@@ -293,7 +293,7 @@ TEST_F(S6BetaContent, FlintAndSteelKeepsItsWearWhenUsedForOtherThings) {
     EXPECT_EQ(m_session.entities().get<ecs::ItemDropComp>(thrown).damage, 10);
 }
 
-TEST_F(S6BetaContent, ExplosionCarvesACraterAndDropsSomeBlocks) {
+TEST_F(BetaContent, ExplosionCarvesACraterAndDropsSomeBlocks) {
     // A 9 x 9 x 9 dirt cube centred on (10, kY - 2, 10), an obsidian pillar through it.
     const core::BlockPos lo{6, kY - 6, 6};
     const core::BlockPos hi{14, kY + 2, 14};
@@ -316,7 +316,7 @@ TEST_F(S6BetaContent, ExplosionCarvesACraterAndDropsSomeBlocks) {
     EXPECT_TRUE(events.playerHurt.empty()) << "the player is far away";
 }
 
-TEST_F(S6BetaContent, ExplosionDropsADoorAtMostOnce) {
+TEST_F(BetaContent, ExplosionDropsADoorAtMostOnce) {
     // Explode next to a door many times: never two door items.
     int32_t droppedOnce = 0;
     for (int trial = 0; trial < 30; ++trial) {
@@ -341,7 +341,7 @@ TEST_F(S6BetaContent, ExplosionDropsADoorAtMostOnce) {
     EXPECT_GT(droppedOnce, 0);
 }
 
-TEST_F(S6BetaContent, ExplosionHurtsAndPushesThePlayerAndMobsAndDestroysItems) {
+TEST_F(BetaContent, ExplosionHurtsAndPushesThePlayerAndMobsAndDestroysItems) {
     const glm::vec3 feet = m_player.getPosition();
     const glm::vec3 centre = feet + glm::vec3(-5.0f, 0.5f, 0.0f);
     const ecs::EntityId zombie =
@@ -368,7 +368,7 @@ TEST_F(S6BetaContent, ExplosionHurtsAndPushesThePlayerAndMobsAndDestroysItems) {
     EXPECT_TRUE(m_session.entities().valid(farItem));
 }
 
-TEST_F(S6BetaContent, CreativePlayerIsNotHurtByExplosions) {
+TEST_F(BetaContent, CreativePlayerIsNotHurtByExplosions) {
     m_player.setGameMode(core::GameMode::Creative);
     game::GameTickEvents events{};
     m_session.explode(*m_world, m_player, m_player.getPosition() + glm::vec3(1.0f, 0.5f, 0.0f), game::kTntPower,
@@ -377,7 +377,7 @@ TEST_F(S6BetaContent, CreativePlayerIsNotHurtByExplosions) {
     EXPECT_EQ(m_player.getHealth(), m_player.health().max);
 }
 
-TEST_F(S6BetaContent, TntCaughtInABlastGetsAShortFuse) {
+TEST_F(BetaContent, TntCaughtInABlastGetsAShortFuse) {
     ASSERT_TRUE(m_world->setBlock(9, kY, 9, BlockId::TNT));
     ASSERT_TRUE(m_world->setBlock(9, kY, 11, BlockId::TNT));
     placePlayer({-4.5f, static_cast<float>(kY), -4.5f});
@@ -393,7 +393,7 @@ TEST_F(S6BetaContent, TntCaughtInABlastGetsAShortFuse) {
     });
 }
 
-TEST_F(S6BetaContent, ALineOfTenTntGoesOffInAChain) {
+TEST_F(BetaContent, ALineOfTenTntGoesOffInAChain) {
     for (int32_t x = 0; x < 10; ++x) {
         ASSERT_TRUE(m_world->setBlock(x, kY, 10, BlockId::TNT));
     }
@@ -412,7 +412,7 @@ TEST_F(S6BetaContent, ALineOfTenTntGoesOffInAChain) {
     EXPECT_LT(ticks, 400);
 }
 
-TEST_F(S6BetaContent, AtMostFourExplosionsRunPerTick) {
+TEST_F(BetaContent, AtMostFourExplosionsRunPerTick) {
     placePlayer({-4.5f, static_cast<float>(kY), -4.5f});
     for (int i = 0; i < 6; ++i) {
         m_session.queueExplosion({8.5f + static_cast<float>(i) * 2.0f, kY + 30.5f, 8.5f}, 1.0f);
@@ -426,7 +426,7 @@ TEST_F(S6BetaContent, AtMostFourExplosionsRunPerTick) {
 
 // Wall-clock budget (roadmap S6 risks): one TNT blast in solid ground under 15 ms in Release.
 // ctest label "benchmark" (Integration_beta_content_perf) sets BETACRAFT_PERF_TESTS.
-TEST_F(S6BetaContent, ExplosionBudget) {
+TEST_F(BetaContent, ExplosionBudget) {
     if (std::getenv("BETACRAFT_PERF_TESTS") == nullptr) {
         GTEST_SKIP() << "set BETACRAFT_PERF_TESTS=1 (ctest -L benchmark) to run the timing budget";
     }
@@ -445,7 +445,7 @@ TEST_F(S6BetaContent, ExplosionBudget) {
 
 // --- S6.2 arrows and S6.3 mobs ----------------------------------------------------------------
 
-TEST_F(S6BetaContent, SkeletonStopsAndShootsEveryThirtyTicks) {
+TEST_F(BetaContent, SkeletonStopsAndShootsEveryThirtyTicks) {
     const ecs::EntityId skeleton = spawnHunting(gameplay::MobKind::Skeleton, {8.5f, static_cast<float>(kY), 2.5f});
     ecs::Registry& reg = m_session.entities();
     std::vector<int32_t> shotTicks;
@@ -471,7 +471,7 @@ TEST_F(S6BetaContent, SkeletonStopsAndShootsEveryThirtyTicks) {
     EXPECT_LT(m_player.getHealth(), m_player.health().max);
 }
 
-TEST_F(S6BetaContent, SkeletonWalksCloserBeyondTenBlocksAndHoldsFireBehindAWall) {
+TEST_F(BetaContent, SkeletonWalksCloserBeyondTenBlocksAndHoldsFireBehindAWall) {
     const ecs::EntityId skeleton = spawnHunting(gameplay::MobKind::Skeleton, {14.0f, static_cast<float>(kY), 2.5f});
     ecs::Registry& reg = m_session.entities();
     for (int32_t t = 0; t < 5; ++t) (void)nightTick();
@@ -486,7 +486,7 @@ TEST_F(S6BetaContent, SkeletonWalksCloserBeyondTenBlocksAndHoldsFireBehindAWall)
     reg.view<ecs::ArrowComp>().each([&](ecs::EntityId, const ecs::ArrowComp& arrow) { EXPECT_NE(arrow.shooter, walled); });
 }
 
-TEST_F(S6BetaContent, ArrowsStickInTheGroundAndAreNotPickedUp) {
+TEST_F(BetaContent, ArrowsStickInTheGroundAndAreNotPickedUp) {
     m_session.setNaturalSpawning(false);
     (void)tickIdle();
     // Shot down into the floor right next to the player.
@@ -501,7 +501,7 @@ TEST_F(S6BetaContent, ArrowsStickInTheGroundAndAreNotPickedUp) {
     EXPECT_EQ(m_player.getInventorySlot(0).count, 0);
 }
 
-TEST_F(S6BetaContent, SpiderLeapsAtThePlayer) {
+TEST_F(BetaContent, SpiderLeapsAtThePlayer) {
     const ecs::EntityId spider = spawnHunting(gameplay::MobKind::Spider, {6.5f, static_cast<float>(kY), 2.5f});
     ecs::Registry& reg = m_session.entities();
     float highest = 0.0f;
@@ -526,7 +526,7 @@ TEST_F(S6BetaContent, SpiderLeapsAtThePlayer) {
     EXPECT_GT(highest, 0.7f);
 }
 
-TEST_F(S6BetaContent, SpiderClimbsAWall) {
+TEST_F(BetaContent, SpiderClimbsAWall) {
     fill({5, kY, -2}, {5, kY + 3, 7}, BlockId::Stone);
     placePlayer({2.5f, static_cast<float>(kY), 2.5f});
     const ecs::EntityId spider = spawnHunting(gameplay::MobKind::Spider, {7.5f, static_cast<float>(kY), 2.5f});
@@ -542,7 +542,7 @@ TEST_F(S6BetaContent, SpiderClimbsAWall) {
     EXPECT_GT(highest, 2.5f); // Above a 4 block wall's half, no zombie could do that
 }
 
-TEST_F(S6BetaContent, SpidersAreNeutralInDaylight) {
+TEST_F(BetaContent, SpidersAreNeutralInDaylight) {
     const ecs::EntityId spider = spawnHunting(gameplay::MobKind::Spider, {6.5f, static_cast<float>(kY), 2.5f});
     ecs::Registry& reg = m_session.entities();
     // At noon it forgets the player (1 tick in 100) and never looks for it again.
@@ -565,7 +565,7 @@ TEST_F(S6BetaContent, SpidersAreNeutralInDaylight) {
     EXPECT_TRUE(hunting);
 }
 
-TEST_F(S6BetaContent, CreeperExplodesAfterAThirtyTickFuseLeavingACrater) {
+TEST_F(BetaContent, CreeperExplodesAfterAThirtyTickFuseLeavingACrater) {
     const ecs::EntityId creeper = spawnHunting(gameplay::MobKind::Creeper, {4.5f, static_cast<float>(kY), 2.5f});
     ecs::Registry& reg = m_session.entities();
     int32_t litTicks = 0;
@@ -596,7 +596,7 @@ TEST_F(S6BetaContent, CreeperExplodesAfterAThirtyTickFuseLeavingACrater) {
     EXPECT_EQ(hurts.back().cause, DamageCause::Explosion);
 }
 
-TEST_F(S6BetaContent, CreeperFuseGoesOutWhenThePlayerRunsAway) {
+TEST_F(BetaContent, CreeperFuseGoesOutWhenThePlayerRunsAway) {
     const ecs::EntityId creeper = spawnHunting(gameplay::MobKind::Creeper, {4.5f, static_cast<float>(kY), 2.5f});
     ecs::Registry& reg = m_session.entities();
     for (int32_t t = 0; t < 10; ++t) (void)nightTick();
@@ -610,7 +610,7 @@ TEST_F(S6BetaContent, CreeperFuseGoesOutWhenThePlayerRunsAway) {
     EXPECT_TRUE(reg.valid(creeper));
 }
 
-TEST_F(S6BetaContent, CreeperFuseStartsUnderThreeBlocksOnly) {
+TEST_F(BetaContent, CreeperFuseStartsUnderThreeBlocksOnly) {
     const ecs::EntityId creeper = spawnHunting(gameplay::MobKind::Creeper, {7.0f, static_cast<float>(kY), 2.5f});
     ecs::Registry& reg = m_session.entities();
     // Pinned 4.5 blocks away it chases but never lights.
@@ -621,7 +621,7 @@ TEST_F(S6BetaContent, CreeperFuseStartsUnderThreeBlocksOnly) {
     }
 }
 
-TEST_F(S6BetaContent, EmptyBucketOnACowGivesMilk) {
+TEST_F(BetaContent, EmptyBucketOnACowGivesMilk) {
     m_session.setNaturalSpawning(false);
     const ecs::EntityId cow =
         ecs::EntityFactory::spawnMob(m_session.entities(), {4.0f, static_cast<float>(kY), 2.5f}, gameplay::MobKind::Cow);
@@ -646,7 +646,7 @@ TEST_F(S6BetaContent, EmptyBucketOnACowGivesMilk) {
     EXPECT_EQ(m_player.getHeldItem().id, items::Bucket);
 }
 
-TEST_F(S6BetaContent, CowsArePassiveAndDropLeather) {
+TEST_F(BetaContent, CowsArePassiveAndDropLeather) {
     const gameplay::MobDef& cow = gameplay::mobDef(gameplay::MobKind::Cow);
     EXPECT_EQ(cow.category, gameplay::MobCategory::Passive);
     m_session.setNaturalSpawning(false);
@@ -671,7 +671,7 @@ void wearFullSet(physics::Player& player, gameplay::ArmorMaterial material) {
 
 } // namespace
 
-TEST_F(S6BetaContent, FullArmorReducesHitsAndWearsEveryPiece) {
+TEST_F(BetaContent, FullArmorReducesHitsAndWearsEveryPiece) {
     wearFullSet(m_player, gameplay::ArmorMaterial::Diamond);
     ASSERT_EQ(m_player.armorValue(), 20);
     game::GameTickEvents events{};
@@ -688,7 +688,7 @@ TEST_F(S6BetaContent, FullArmorReducesHitsAndWearsEveryPiece) {
     }
 }
 
-TEST_F(S6BetaContent, ArmorBreaksAndTheProtectionGoesWithIt) {
+TEST_F(BetaContent, ArmorBreaksAndTheProtectionGoesWithIt) {
     const gameplay::ItemId cap = gameplay::armorItemId(gameplay::ArmorMaterial::Leather, gameplay::ArmorSlot::Helmet);
     m_player.setArmorSlot(0, {cap, 1, gameplay::armorInfo(cap)->maxDamage}); // One use left
     game::GameTickEvents events{};
@@ -698,7 +698,7 @@ TEST_F(S6BetaContent, ArmorBreaksAndTheProtectionGoesWithIt) {
     EXPECT_EQ(m_player.getHealth(), 20 - 3) << "it still took its share of that hit: 4 x 24 / 25";
 }
 
-TEST_F(S6BetaContent, TheVoidIgnoresArmorButFallsDoNot) {
+TEST_F(BetaContent, TheVoidIgnoresArmorButFallsDoNot) {
     wearFullSet(m_player, gameplay::ArmorMaterial::Iron);
     game::GameTickEvents events{};
     (void)m_session.damagePlayer(m_player, {.amount = 10, .cause = DamageCause::Void, .bypassArmor = true}, events);
@@ -720,7 +720,7 @@ TEST_F(S6BetaContent, TheVoidIgnoresArmorButFallsDoNot) {
     EXPECT_EQ(ev.playerHurt[0].amount, gameplay::kVoidDamage);
 }
 
-TEST_F(S6BetaContent, ArmorSoftensExplosions) {
+TEST_F(BetaContent, ArmorSoftensExplosions) {
     wearFullSet(m_player, gameplay::ArmorMaterial::Diamond);
     const glm::vec3 feet = m_player.getPosition();
     const glm::vec3 centre = feet + glm::vec3(-3.0f, 0.5f, 0.0f);
@@ -735,7 +735,7 @@ TEST_F(S6BetaContent, ArmorSoftensExplosions) {
     EXPECT_EQ(m_player.getArmorSlot(0).damage, raw);
 }
 
-TEST_F(S6BetaContent, ArmorIsDroppedOnDeath) {
+TEST_F(BetaContent, ArmorIsDroppedOnDeath) {
     m_session.setNaturalSpawning(false);
     wearFullSet(m_player, gameplay::ArmorMaterial::Gold);
     m_player.setInventorySlot(4, {items::Stick, 3});
@@ -744,7 +744,7 @@ TEST_F(S6BetaContent, ArmorIsDroppedOnDeath) {
     EXPECT_EQ(droppedCount(gameplay::armorItemId(gameplay::ArmorMaterial::Gold, gameplay::ArmorSlot::Boots)), 1);
 }
 
-TEST_F(S6BetaContent, ArmorRecipes) {
+TEST_F(BetaContent, ArmorRecipes) {
     const crafting::RecipeRegistry book = crafting::makeBetaRecipeBook(crafting::BetaRecipeOptions::vanilla());
     crafting::CraftingGrid grid{crafting::GridSize::Workbench3x3};
     const auto put = [&](std::initializer_list<std::pair<int, int>> cells, gameplay::ItemId id) {
@@ -772,7 +772,7 @@ TEST_F(S6BetaContent, ArmorRecipes) {
 
 // --- S6.10 dungeons ------------------------------------------------------------------------
 
-TEST_F(S6BetaContent, DungeonChestDrawsTheSameLootOnFirstAccess) {
+TEST_F(BetaContent, DungeonChestDrawsTheSameLootOnFirstAccess) {
     m_session.setNaturalSpawning(false);
     const core::BlockPos pos{6, kY, 6};
     ASSERT_TRUE(m_world->setBlockWithMetadata(pos.x, pos.y, pos.z, BlockId::Chest, worldgen::kChestLootPendingMeta));
@@ -799,7 +799,7 @@ TEST_F(S6BetaContent, DungeonChestDrawsTheSameLootOnFirstAccess) {
     EXPECT_EQ(m_world->blockEntities().find(plain), nullptr);
 }
 
-TEST_F(S6BetaContent, BreakingAnUnopenedDungeonChestSpillsItsLoot) {
+TEST_F(BetaContent, BreakingAnUnopenedDungeonChestSpillsItsLoot) {
     m_session.setNaturalSpawning(false);
     const core::BlockPos pos{4, kY, 2};
     ASSERT_TRUE(m_world->setBlockWithMetadata(pos.x, pos.y, pos.z, BlockId::Chest, worldgen::kChestLootPendingMeta));
@@ -824,7 +824,7 @@ TEST_F(S6BetaContent, BreakingAnUnopenedDungeonChestSpillsItsLoot) {
     EXPECT_EQ(dropped + picked, total);
 }
 
-TEST_F(S6BetaContent, DungeonSpawnerFillsADarkRoomUpToSixMobs) {
+TEST_F(BetaContent, DungeonSpawnerFillsADarkRoomUpToSixMobs) {
     // A closed stone room next to the player, a spawner in the middle.
     const core::BlockPos lo{7, kY, 7};
     const core::BlockPos hi{15, kY + 6, 15};
@@ -876,7 +876,7 @@ TEST_F(S6BetaContent, DungeonSpawnerFillsADarkRoomUpToSixMobs) {
     EXPECT_FALSE(spawners.spawnerDelays().contains(spawner));
 }
 
-TEST_F(S6BetaContent, SpawnerKindsFollowBeta) {
+TEST_F(BetaContent, SpawnerKindsFollowBeta) {
     std::map<gameplay::MobKind, int32_t> kinds;
     for (int32_t i = 0; i < 4000; ++i) ++kinds[game::MobSpawner::spawnerKind({i * 13 - 900, 10 + i % 50, 77 - i * 5})];
     EXPECT_EQ(kinds.size(), 3U);
@@ -886,7 +886,7 @@ TEST_F(S6BetaContent, SpawnerKindsFollowBeta) {
     EXPECT_EQ(game::MobSpawner::spawnerKind({3, 4, 5}), game::MobSpawner::spawnerKind({3, 4, 5}));
 }
 
-TEST_F(S6BetaContent, MobSpawnerBlockIsBetas) {
+TEST_F(BetaContent, MobSpawnerBlockIsBetas) {
     const voxel::BlockDef& def = voxel::BlockRegistry::get(BlockId::MobSpawner);
     EXPECT_EQ(static_cast<int>(BlockId::MobSpawner), 52);
     EXPECT_FLOAT_EQ(def.hardness, 5.0f);

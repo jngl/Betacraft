@@ -19,11 +19,11 @@ namespace {
 
 const core::BlockPos kRock{5, kY, 2};
 
-class P2GameplayMining : public GameplayWorld {};
+class GameplayMining : public GameplayWorld {};
 
 } // namespace
 
-TEST_F(P2GameplayMining, StoneByHandIsSlowAndDropsNothing) {
+TEST_F(GameplayMining, StoneByHandIsSlowAndDropsNothing) {
     ASSERT_TRUE(m_world->setBlock(kRock, BlockId::Stone));
     const MineResult r = mine(kRock);
 
@@ -37,7 +37,7 @@ TEST_F(P2GameplayMining, StoneByHandIsSlowAndDropsNothing) {
     EXPECT_TRUE(m_player.getHeldItem().isEmpty());
 }
 
-TEST_F(P2GameplayMining, StoneWithAWoodenPickaxeIsFasterDropsCobbleAndWearsTheTool) {
+TEST_F(GameplayMining, StoneWithAWoodenPickaxeIsFasterDropsCobbleAndWearsTheTool) {
     ASSERT_TRUE(m_world->setBlock(kRock, BlockId::Stone));
     hold({items::WoodPickaxe, 1});
     const MineResult r = mine(kRock);
@@ -57,7 +57,7 @@ TEST_F(P2GameplayMining, StoneWithAWoodenPickaxeIsFasterDropsCobbleAndWearsTheTo
     EXPECT_NEAR(t.pos.z, 2.5f, 0.5f);
 }
 
-TEST_F(P2GameplayMining, OreDropsOnlyWithASufficientHarvestLevel) {
+TEST_F(GameplayMining, OreDropsOnlyWithASufficientHarvestLevel) {
     ASSERT_TRUE(m_world->setBlock(kRock, BlockId::IronOre));
     hold({items::WoodPickaxe, 1});
     const MineResult wood = mine(kRock);
@@ -76,7 +76,7 @@ TEST_F(P2GameplayMining, OreDropsOnlyWithASufficientHarvestLevel) {
     EXPECT_LT(stone.ticks, wood.ticks);
 }
 
-TEST_F(P2GameplayMining, AWoodenPickaxeBreaksAfterItsDurability) {
+TEST_F(GameplayMining, AWoodenPickaxeBreaksAfterItsDurability) {
     hold({items::WoodPickaxe, 1});
     const int32_t uses = gameplay::materialStats(gameplay::ToolMaterial::Wood).maxUses + 1; // Beta: 60 blocks
     for (int32_t i = 1; i <= uses; ++i) {
@@ -99,7 +99,7 @@ TEST_F(P2GameplayMining, AWoodenPickaxeBreaksAfterItsDurability) {
     EXPECT_FALSE(bare.broken->dropped);
 }
 
-TEST_F(P2GameplayMining, CrackStageFollowsTheDigAndClearsOnRelease) {
+TEST_F(GameplayMining, CrackStageFollowsTheDigAndClearsOnRelease) {
     ASSERT_TRUE(m_world->setBlock(kRock, BlockId::Stone));
     EXPECT_EQ(m_session.crackStage(), -1);
     const physics::RaycastHit target = targetAt(kRock, BlockId::Stone);
@@ -123,7 +123,7 @@ TEST_F(P2GameplayMining, CrackStageFollowsTheDigAndClearsOnRelease) {
     EXPECT_EQ(m_world->getBlock(kRock), BlockId::Stone);
 }
 
-TEST_F(P2GameplayMining, InstantBlocksBreakOnTheClickTick) {
+TEST_F(GameplayMining, InstantBlocksBreakOnTheClickTick) {
     // Beta flowers, torches, saplings and reeds have hardness 0: broken by the click itself.
     ASSERT_TRUE(m_world->setBlock(kRock, BlockId::Dandelion));
     ASSERT_TRUE(gameplay::computeDig(BlockId::Dandelion, {}).instant);
@@ -134,7 +134,7 @@ TEST_F(P2GameplayMining, InstantBlocksBreakOnTheClickTick) {
     EXPECT_EQ(m_session.entities().get<ecs::ItemDropComp>(r.broken->drop).id, BlockId::Dandelion);
 }
 
-TEST_F(P2GameplayMining, BedrockNeverBreaks) {
+TEST_F(GameplayMining, BedrockNeverBreaks) {
     ASSERT_TRUE(m_world->setBlock(kRock, BlockId::Bedrock));
     hold({items::DiamondPickaxe, 1});
     const MineResult r = mine(kRock, 400);

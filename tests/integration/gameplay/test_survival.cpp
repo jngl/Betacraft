@@ -18,7 +18,7 @@ using game::PlayerDamage;
 
 namespace {
 
-class S1Survival : public GameplayWorld {
+class SurvivalRules : public GameplayWorld {
 protected:
     // Drops the player from `height` blocks above the floor and lets physics land it.
     void fallFrom(float height) {
@@ -68,7 +68,7 @@ protected:
 
 } // namespace
 
-TEST_F(S1Survival, TenBlockFallCostsSevenHalfHearts) {
+TEST_F(SurvivalRules, TenBlockFallCostsSevenHalfHearts) {
     fallFrom(10.0f);
     EXPECT_EQ(m_player.getHealth(), 20) << "physics only records the fall";
     const GameTickEvents ev = tickIdle();
@@ -80,7 +80,7 @@ TEST_F(S1Survival, TenBlockFallCostsSevenHalfHearts) {
     EXPECT_TRUE(tickIdle().playerHurt.empty()) << "a landing hurts once";
 }
 
-TEST_F(S1Survival, ThreeBlockFallIsSafe) {
+TEST_F(SurvivalRules, ThreeBlockFallIsSafe) {
     fallFrom(3.0f);
     EXPECT_TRUE(tickIdle().playerHurt.empty());
     EXPECT_EQ(m_player.getHealth(), 20);
@@ -89,7 +89,7 @@ TEST_F(S1Survival, ThreeBlockFallIsSafe) {
     EXPECT_EQ(gameplay::fallDamage(3.2f), 1);
 }
 
-TEST_F(S1Survival, CreativeIgnoresFallAndDrowning) {
+TEST_F(SurvivalRules, CreativeIgnoresFallAndDrowning) {
     m_player.setGameMode(core::GameMode::Creative);
     fallFrom(10.0f);
     EXPECT_TRUE(tickIdle().playerHurt.empty());
@@ -108,7 +108,7 @@ TEST_F(S1Survival, CreativeIgnoresFallAndDrowning) {
     EXPECT_TRUE(ev.playerHurt.empty());
 }
 
-TEST_F(S1Survival, DrowningStartsAfter300TicksThenTwoEvery20) {
+TEST_F(SurvivalRules, DrowningStartsAfter300TicksThenTwoEvery20) {
     submerge();
     // 300 ticks of air, then Beta waits until air reaches -20 before the first hit.
     for (int t = 1; t < 320; ++t) {
@@ -134,7 +134,7 @@ TEST_F(S1Survival, DrowningStartsAfter300TicksThenTwoEvery20) {
     EXPECT_FLOAT_EQ(m_player.getAirRatio(), 1.0f);
 }
 
-TEST_F(S1Survival, VoidKillsInSurvival) {
+TEST_F(SurvivalRules, VoidKillsInSurvival) {
     m_player.setPosition({2.5f, -70.0f, 2.5f});
     int32_t deaths = 0;
     int32_t ticks = 0;
@@ -165,7 +165,7 @@ TEST_F(S1Survival, VoidKillsInSurvival) {
     EXPECT_GT(creative.getPosition().y, 0.0f);
 }
 
-TEST_F(S1Survival, NoNaturalRegeneration) {
+TEST_F(SurvivalRules, NoNaturalRegeneration) {
     GameTickEvents ev{};
     (void)m_session.damagePlayer(m_player, {.amount = 7, .cause = DamageCause::Fall}, ev);
     ASSERT_EQ(m_player.getHealth(), 13);
@@ -176,7 +176,7 @@ TEST_F(S1Survival, NoNaturalRegeneration) {
     EXPECT_EQ(m_player.getHealth(), 13);
 }
 
-TEST_F(S1Survival, DamagePlayerRespectsInvulnerabilityWindow) {
+TEST_F(SurvivalRules, DamagePlayerRespectsInvulnerabilityWindow) {
     GameTickEvents ev{};
     gameplay::HitResult hit = m_session.damagePlayer(m_player, {.amount = 4, .cause = DamageCause::Fall}, ev);
     EXPECT_EQ(hit.outcome, gameplay::HitOutcome::Full);
@@ -213,7 +213,7 @@ TEST_F(S1Survival, DamagePlayerRespectsInvulnerabilityWindow) {
     EXPECT_FALSE(after.playerDied);
 }
 
-TEST_F(S1Survival, DeathFiresOnceAndScattersEveryStack) {
+TEST_F(SurvivalRules, DeathFiresOnceAndScattersEveryStack) {
     m_player.setInventorySlot(0, physics::InventorySlot{gameplay::items::StonePickaxe, 1, 40});
     m_player.setInventorySlot(4, {BlockId::Cobblestone, 64});
     m_player.setInventorySlot(9, {BlockId::Torch, 17});

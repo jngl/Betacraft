@@ -23,7 +23,7 @@ namespace {
 
 const core::BlockPos kRock{5, kY, 2};
 
-class P2FixesGameplay : public GameplayWorld {
+class GameplayRegressions : public GameplayWorld {
 protected:
     [[nodiscard]] std::map<gameplay::ItemId, int32_t> droppedItems() {
         std::map<gameplay::ItemId, int32_t> out;
@@ -53,7 +53,7 @@ protected:
 
 // --- Quick clicks ---------------------------------------------------------------------
 
-TEST_F(P2FixesGameplay, ClickReleasedBeforeTheGameTickStillBreaksAnInstantBlock) {
+TEST_F(GameplayRegressions, ClickReleasedBeforeTheGameTickStillBreaksAnInstantBlock) {
     // Press and release inside one 50 ms tick: the tick sees attackPressed without attackHeld.
     ASSERT_TRUE(m_world->setBlock(kRock, BlockId::Dandelion));
     const game::GameTickEvents ev = m_session.tick(
@@ -63,7 +63,7 @@ TEST_F(P2FixesGameplay, ClickReleasedBeforeTheGameTickStillBreaksAnInstantBlock)
     EXPECT_EQ(droppedItems()[gameplay::toItemId(BlockId::Dandelion)], 1);
 }
 
-TEST_F(P2FixesGameplay, ClickReleasedBeforeTheGameTickDoesNotStartMiningASlowBlock) {
+TEST_F(GameplayRegressions, ClickReleasedBeforeTheGameTickDoesNotStartMiningASlowBlock) {
     ASSERT_TRUE(m_world->setBlock(kRock, BlockId::Stone));
     const game::GameTickEvents ev = m_session.tick(
         *m_world, m_player, {.attackPressed = true, .attackHeld = false, .target = targetAt(kRock, BlockId::Stone)});
@@ -76,7 +76,7 @@ TEST_F(P2FixesGameplay, ClickReleasedBeforeTheGameTickDoesNotStartMiningASlowBlo
 
 // --- Beta 1.7.3 hardness ---------------------------------------------------------------
 
-TEST(P2FixesHardness, BlockHardnessIsBetaBlockStrength) {
+TEST(HardnessRegressions, BlockHardnessIsBetaBlockStrength) {
     voxel::BlockRegistry::initialize();
     // Block.setHardness values from Beta 1.7.3 Block.java.
     const std::pair<BlockId, float> beta[] = {
@@ -100,7 +100,7 @@ TEST(P2FixesHardness, BlockHardnessIsBetaBlockStrength) {
     }
 }
 
-TEST_F(P2FixesGameplay, TorchesSaplingsAndSugarCaneBreakOnTheClickWithoutAHitDelay) {
+TEST_F(GameplayRegressions, TorchesSaplingsAndSugarCaneBreakOnTheClickWithoutAHitDelay) {
     for (const BlockId id : {BlockId::Torch, BlockId::Sapling, BlockId::SugarCane, BlockId::TNT}) {
         EXPECT_TRUE(gameplay::computeDig(id, {}).instant) << voxel::BlockRegistry::get(id).name;
     }
@@ -120,7 +120,7 @@ TEST_F(P2FixesGameplay, TorchesSaplingsAndSugarCaneBreakOnTheClickWithoutAHitDel
     EXPECT_TRUE(b.blockBroken.has_value());
 }
 
-TEST(P2FixesHardness, DigTicksFollowBetaHardness) {
+TEST(HardnessRegressions, DigTicksFollowBetaHardness) {
     voxel::BlockRegistry::initialize();
     using gameplay::ToolKind;
     using gameplay::ToolMaterial;
@@ -134,7 +134,7 @@ TEST(P2FixesHardness, DigTicksFollowBetaHardness) {
 
 // --- Vanilla drops and their recipes -----------------------------------------------------
 
-TEST_F(P2FixesGameplay, DiamondRedstoneAndSnowOresDropTheirBetaItems) {
+TEST_F(GameplayRegressions, DiamondRedstoneAndSnowOresDropTheirBetaItems) {
     using gameplay::ToolKind;
     using gameplay::ToolMaterial;
     for (uint64_t seed = 0; seed < 32; ++seed) {
@@ -158,7 +158,7 @@ TEST_F(P2FixesGameplay, DiamondRedstoneAndSnowOresDropTheirBetaItems) {
     }
 }
 
-TEST(P2FixesRecipes, GlowstoneDustAndSnowballsCraftBackIntoTheirBlocks) {
+TEST(RecipeRegressions, GlowstoneDustAndSnowballsCraftBackIntoTheirBlocks) {
     voxel::BlockRegistry::initialize();
     const crafting::RecipeResult glowstone = craft2x2(items::GlowstoneDust);
     EXPECT_EQ(glowstone.id, gameplay::toItemId(BlockId::Glowstone));
@@ -170,7 +170,7 @@ TEST(P2FixesRecipes, GlowstoneDustAndSnowballsCraftBackIntoTheirBlocks) {
 
 // --- Blocks that lose their support ------------------------------------------------------
 
-TEST_F(P2FixesGameplay, MiningTheBlockUnderAFlowerDropsTheFlowerToo) {
+TEST_F(GameplayRegressions, MiningTheBlockUnderAFlowerDropsTheFlowerToo) {
     ASSERT_TRUE(m_world->setBlock(kRock, BlockId::Dirt));
     const core::BlockPos above{kRock.x, kRock.y + 1, kRock.z};
     ASSERT_TRUE(m_world->setBlock(above, BlockId::Rose));
@@ -183,7 +183,7 @@ TEST_F(P2FixesGameplay, MiningTheBlockUnderAFlowerDropsTheFlowerToo) {
     EXPECT_EQ(drops.at(gameplay::toItemId(BlockId::Rose)), 1);
 }
 
-TEST_F(P2FixesGameplay, MiningTheBlockUnderAStackOfSugarCaneDropsEveryCane) {
+TEST_F(GameplayRegressions, MiningTheBlockUnderAStackOfSugarCaneDropsEveryCane) {
     ASSERT_TRUE(m_world->setBlock(kRock, BlockId::Sand));
     for (int32_t i = 1; i <= 3; ++i) {
         ASSERT_TRUE(m_world->setBlock(kRock.x, kRock.y + i, kRock.z, BlockId::SugarCane));
@@ -192,7 +192,7 @@ TEST_F(P2FixesGameplay, MiningTheBlockUnderAStackOfSugarCaneDropsEveryCane) {
     EXPECT_EQ(droppedItems()[gameplay::toItemId(BlockId::SugarCane)], 3);
 }
 
-TEST(P2FixesSupport, ATorchThatLosesItsSupportTakesItsLightWithIt) {
+TEST(SupportRegressions, ATorchThatLosesItsSupportTakesItsLightWithIt) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir{"betacraft_p2_fixes_support_"};
     world::World w(test::p2worldgen::kSeed, dir.path());
@@ -219,7 +219,7 @@ TEST(P2FixesSupport, ATorchThatLosesItsSupportTakesItsLightWithIt) {
 
 // --- Lava is not water ---------------------------------------------------------------------
 
-TEST_F(P2FixesGameplay, LavaNeitherDrownsNorCountsAsWaterForTheHead) {
+TEST_F(GameplayRegressions, LavaNeitherDrownsNorCountsAsWaterForTheHead) {
     for (int32_t y = kY; y <= kY + 2; ++y) {
         ASSERT_TRUE(m_world->setBlock(2, y, 2, BlockId::Lava));
     }
@@ -237,7 +237,7 @@ TEST_F(P2FixesGameplay, LavaNeitherDrownsNorCountsAsWaterForTheHead) {
     EXPECT_TRUE(m_player.isHeadUnderWater());
 }
 
-TEST_F(P2FixesGameplay, FallingIntoLavaDoesNotSplash) {
+TEST_F(GameplayRegressions, FallingIntoLavaDoesNotSplash) {
     for (int32_t y = kY; y <= kY + 1; ++y) {
         for (int32_t z = 1; z <= 3; ++z) {
             for (int32_t x = 1; x <= 3; ++x) {
@@ -255,7 +255,7 @@ TEST_F(P2FixesGameplay, FallingIntoLavaDoesNotSplash) {
 
 // --- Placing a fluid into flowing fluid ----------------------------------------------------
 
-TEST_F(P2FixesGameplay, PlacingWaterIntoFlowingWaterMakesASource) {
+TEST_F(GameplayRegressions, PlacingWaterIntoFlowingWaterMakesASource) {
     const core::BlockPos cell{4, kY, 2};
     ASSERT_TRUE(m_world->setBlockWithMetadata(cell.x, cell.y, cell.z, BlockId::Water, 3));
     hold({BlockId::Water, 2});
@@ -270,7 +270,7 @@ TEST_F(P2FixesGameplay, PlacingWaterIntoFlowingWaterMakesASource) {
     EXPECT_EQ(m_player.getHeldItem(), InventorySlot(BlockId::Water, 1));
 }
 
-TEST_F(P2FixesGameplay, PlacingABlockFollowsTheReplaceableAndOverlapRules) {
+TEST_F(GameplayRegressions, PlacingABlockFollowsTheReplaceableAndOverlapRules) {
     hold({BlockId::Stone, 3});
     const core::BlockPos cell{4, kY, 2};
     physics::RaycastHit target = targetAt({cell.x + 1, cell.y, cell.z}, BlockId::Glass);

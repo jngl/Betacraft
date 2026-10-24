@@ -38,7 +38,7 @@ namespace {
 
 } // namespace
 
-TEST(S1FluidPersistence, GeneratedFluidSettlingMarksNothingModified) {
+TEST(FluidPersistence, GeneratedFluidSettlingMarksNothingModified) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir{"betacraft_s1_fluids_"};
     world::World w(test::p2worldgen::kSeed, dir.path());
@@ -62,7 +62,7 @@ TEST(S1FluidPersistence, GeneratedFluidSettlingMarksNothingModified) {
     EXPECT_FALSE(std::filesystem::exists(dir.path() / "region")) << "nor any region bundle (S7.3)";
 }
 
-TEST(S1FluidPersistence, PlayerWaterFlowingAcrossASeamIsPersisted) {
+TEST(FluidPersistence, PlayerWaterFlowingAcrossASeamIsPersisted) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir{"betacraft_s1_fluids_"};
     constexpr int32_t kFloorY = 119;

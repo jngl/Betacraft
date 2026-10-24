@@ -106,7 +106,7 @@ struct FakeGpu {
     return !snapshotOf(w, c)->isInteriorEmpty();
 }
 
-class P2StreamingWorld : public ::testing::Test {
+class StreamingWorld : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
@@ -181,7 +181,7 @@ protected:
 
 } // namespace
 
-TEST_F(P2StreamingWorld, NonEmptySectionsOfDecoratedChunksEachGetExactlyTheirNewestMesh) {
+TEST_F(StreamingWorld, NonEmptySectionsOfDecoratedChunksEachGetExactlyTheirNewestMesh) {
     WorldMeshStreamer s(threaded());
     FakeGpu gpu;
     converge(s, gpu);
@@ -200,7 +200,7 @@ TEST_F(P2StreamingWorld, NonEmptySectionsOfDecoratedChunksEachGetExactlyTheirNew
     EXPECT_EQ(s.trackedChunks(), m_region.size());
 }
 
-TEST_F(P2StreamingWorld, OpaqueSwapAtAChunkCornerRemeshesExactlyTheSectionsThatSeeTheVoxel) {
+TEST_F(StreamingWorld, OpaqueSwapAtAChunkCornerRemeshesExactlyTheSectionsThatSeeTheVoxel) {
     WorldMeshStreamer s(threaded());
     FakeGpu gpu;
     (void)m_world->setBlock(15, 31, 15, BlockId::Stone);
@@ -221,7 +221,7 @@ TEST_F(P2StreamingWorld, OpaqueSwapAtAChunkCornerRemeshesExactlyTheSectionsThatS
     expectGpuMatchesWorld(gpu);
 }
 
-TEST_F(P2StreamingWorld, BlockEditRemeshesNeighbourSectionsAndConvergesToTheNewWorld) {
+TEST_F(StreamingWorld, BlockEditRemeshesNeighbourSectionsAndConvergesToTheNewWorld) {
     WorldMeshStreamer s(threaded());
     FakeGpu gpu;
     converge(s, gpu);
@@ -244,7 +244,7 @@ TEST_F(P2StreamingWorld, BlockEditRemeshesNeighbourSectionsAndConvergesToTheNewW
     expectGpuMatchesWorld(gpu);
 }
 
-TEST_F(P2StreamingWorld, SectionThatEmptiesOutHasItsMeshDeleted) {
+TEST_F(StreamingWorld, SectionThatEmptiesOutHasItsMeshDeleted) {
     WorldMeshStreamer s(threaded());
     FakeGpu gpu;
     converge(s, gpu);
@@ -265,7 +265,7 @@ TEST_F(P2StreamingWorld, SectionThatEmptiesOutHasItsMeshDeleted) {
     expectGpuMatchesWorld(gpu);
 }
 
-TEST_F(P2StreamingWorld, UnloadCancelsQueuedWorkAndDeletesTheColumnsMeshes) {
+TEST_F(StreamingWorld, UnloadCancelsQueuedWorkAndDeletesTheColumnsMeshes) {
     WorldMeshStreamer s(inlineMode());
     FakeGpu gpu;
     converge(s, gpu, /*inlineWorkers=*/true);
@@ -303,7 +303,7 @@ TEST_F(P2StreamingWorld, UnloadCancelsQueuedWorkAndDeletesTheColumnsMeshes) {
     EXPECT_FALSE(s.hasPendingWork());
 }
 
-TEST_F(P2StreamingWorld, ReloadedChunkIsMeshedAgainFromScratch) {
+TEST_F(StreamingWorld, ReloadedChunkIsMeshedAgainFromScratch) {
     WorldMeshStreamer s(threaded());
     FakeGpu gpu;
     converge(s, gpu);
@@ -320,7 +320,7 @@ TEST_F(P2StreamingWorld, ReloadedChunkIsMeshedAgainFromScratch) {
     }
 }
 
-TEST_F(P2StreamingWorld, ChunkReplacedBetweenTwoUpdatesRestartsItsLifecycle) {
+TEST_F(StreamingWorld, ChunkReplacedBetweenTwoUpdatesRestartsItsLifecycle) {
     WorldMeshStreamer s(threaded());
     FakeGpu gpu;
     converge(s, gpu);
@@ -337,7 +337,7 @@ TEST_F(P2StreamingWorld, ChunkReplacedBetweenTwoUpdatesRestartsItsLifecycle) {
     EXPECT_TRUE(gpu.live.empty());
 }
 
-TEST_F(P2StreamingWorld, EvictedAndRefusedSectionsAreRequestedAgainUntilEverythingIsMeshed) {
+TEST_F(StreamingWorld, EvictedAndRefusedSectionsAreRequestedAgainUntilEverythingIsMeshed) {
     // A tiny queue and no worker threads: the first update overflows it (far sections are
     // refused or evicted by nearer ones), and nothing runs until the test says so.
     WorldMeshStreamer s(inlineMode(/*maxQueued=*/6));
@@ -354,7 +354,7 @@ TEST_F(P2StreamingWorld, EvictedAndRefusedSectionsAreRequestedAgainUntilEverythi
     expectGpuMatchesWorld(gpu);
 }
 
-TEST_F(P2StreamingWorld, PerUpdateRequestCapDefersTheRestToLaterUpdates) {
+TEST_F(StreamingWorld, PerUpdateRequestCapDefersTheRestToLaterUpdates) {
     WorldMeshStreamerConfig cfg = threaded();
     cfg.maxRequestsPerUpdate = 3;
     WorldMeshStreamer s(cfg);
@@ -366,7 +366,7 @@ TEST_F(P2StreamingWorld, PerUpdateRequestCapDefersTheRestToLaterUpdates) {
     expectGpuMatchesWorld(gpu);
 }
 
-TEST_F(P2StreamingWorld, FrontierChunkIsMeshedOnceItsNeighbourhoodLoadsAndDecoratesIt) {
+TEST_F(StreamingWorld, FrontierChunkIsMeshedOnceItsNeighbourhoodLoadsAndDecoratesIt) {
     WorldMeshStreamer s(threaded());
     FakeGpu gpu;
     converge(s, gpu);
@@ -383,7 +383,7 @@ TEST_F(P2StreamingWorld, FrontierChunkIsMeshedOnceItsNeighbourhoodLoadsAndDecora
     expectGpuMatchesWorld(gpu);
 }
 
-TEST_F(P2StreamingWorld, TogglingSmoothLightingRemeshesEveryDecoratedChunk) {
+TEST_F(StreamingWorld, TogglingSmoothLightingRemeshesEveryDecoratedChunk) {
     WorldMeshStreamer s(threaded());
     FakeGpu gpu;
     converge(s, gpu);
@@ -398,7 +398,7 @@ TEST_F(P2StreamingWorld, TogglingSmoothLightingRemeshesEveryDecoratedChunk) {
 
 // Also the ThreadSanitizer target: the main thread edits the World (relighting, seams,
 // neighbours) while four workers mesh snapshots and the drain uploads every few edits.
-TEST_F(P2StreamingWorld, MainThreadEditsWhileWorkersMeshConvergeToTheFinalWorld) {
+TEST_F(StreamingWorld, MainThreadEditsWhileWorkersMeshConvergeToTheFinalWorld) {
     WorldMeshStreamer s(threaded(4));
     FakeGpu gpu;
     std::mt19937 rng(20261017u);

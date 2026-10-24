@@ -31,7 +31,7 @@ constexpr int32_t kSea = core::EngineConfig::SEA_LEVEL;
 constexpr core::ChunkCoord kLandCenter{0, 0};
 constexpr core::ChunkCoord kSeaCenter{-5, 8};
 
-class P2WorldgenCaves : public ::testing::Test {
+class WorldgenCaves : public ::testing::Test {
 protected:
     void SetUp() override { voxel::BlockRegistry::initialize(); }
 };
@@ -60,7 +60,7 @@ struct Violations {
 
 } // namespace
 
-TEST_F(P2WorldgenCaves, BedrockGuardHoldsOnGeneratedChunks) {
+TEST_F(WorldgenCaves, BedrockGuardHoldsOnGeneratedChunks) {
     test::TempDir dir;
     world::World w(kSeed, dir.path());
     const std::vector<core::ChunkCoord> region = squareRegion(kLandCenter, 2);
@@ -85,7 +85,7 @@ TEST_F(P2WorldgenCaves, BedrockGuardHoldsOnGeneratedChunks) {
     EXPECT_EQ(v.count, 0) << "first: " << v.first;
 }
 
-TEST_F(P2WorldgenCaves, SeaFloorKeepsASixBlockAquitardOnGeneratedChunks) {
+TEST_F(WorldgenCaves, SeaFloorKeepsASixBlockAquitardOnGeneratedChunks) {
     test::TempDir dir;
     world::World w(kSeed, dir.path());
     const std::vector<core::ChunkCoord> region = squareRegion(kSeaCenter, 2);
@@ -133,7 +133,7 @@ TEST_F(P2WorldgenCaves, SeaFloorKeepsASixBlockAquitardOnGeneratedChunks) {
 
 // Every cavity of a pass-1 chunk is exactly CaveCarver's: the legacy tube caves are gone and
 // the carver runs on the final pass-1 blocks with WorldGen's own column function.
-TEST_F(P2WorldgenCaves, CaveCarverIsTheOnlySourceOfCavities) {
+TEST_F(WorldgenCaves, CaveCarverIsTheOnlySourceOfCavities) {
     world::WorldGen gen(kSeed);
     const CaveCarver& carver = gen.caveCarver();
     auto fn = [&gen](int32_t wx, int32_t wz) noexcept { return gen.columnContext(wx, wz); };
@@ -173,7 +173,7 @@ TEST_F(P2WorldgenCaves, CaveCarverIsTheOnlySourceOfCavities) {
     EXPECT_GT(lava, 0);
 }
 
-TEST_F(P2WorldgenCaves, MagmaBandIsFilledWithLavaAndNothingAboveIt) {
+TEST_F(WorldgenCaves, MagmaBandIsFilledWithLavaAndNothingAboveIt) {
     ASSERT_TRUE(worldgen::CaveFillPalette{}.providesLava());
     test::TempDir dir;
     world::World w(kSeed, dir.path());

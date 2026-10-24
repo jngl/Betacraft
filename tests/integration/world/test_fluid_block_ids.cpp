@@ -26,7 +26,7 @@ namespace {
 constexpr std::array<BlockId, 4> kFluidBlocks{BlockId::Water, BlockId::StillWater, BlockId::Lava,
                                               BlockId::StillLava};
 
-class P2FoundationsBlocks : public ::testing::Test {
+class FluidBlockIds : public ::testing::Test {
 protected:
     void SetUp() override { BlockRegistry::initialize(); }
 };
@@ -40,14 +40,14 @@ size_t opaqueCount(const world::World& w, const voxel::Chunk& c) {
 
 } // namespace
 
-TEST_F(P2FoundationsBlocks, FluidBlocksUseBetaIds) {
+TEST_F(FluidBlockIds, FluidBlocksUseBetaIds) {
     EXPECT_EQ(static_cast<int>(BlockId::Water), 8);
     EXPECT_EQ(static_cast<int>(BlockId::StillWater), 9);
     EXPECT_EQ(static_cast<int>(BlockId::Lava), 10);
     EXPECT_EQ(static_cast<int>(BlockId::StillLava), 11);
 }
 
-TEST_F(P2FoundationsBlocks, EveryFluidBlockIsARegisteredLiquid) {
+TEST_F(FluidBlockIds, EveryFluidBlockIsARegisteredLiquid) {
     for (const BlockId id : kFluidBlocks) {
         const voxel::BlockDef& def = BlockRegistry::get(id);
         EXPECT_EQ(def.id, id);
@@ -64,7 +64,7 @@ TEST_F(P2FoundationsBlocks, EveryFluidBlockIsARegisteredLiquid) {
     EXPECT_FALSE(BlockRegistry::isLiquid(BlockId::Obsidian));
 }
 
-TEST_F(P2FoundationsBlocks, WaterAndLavaPredicatesSplitTheFluidIds) {
+TEST_F(FluidBlockIds, WaterAndLavaPredicatesSplitTheFluidIds) {
     EXPECT_TRUE(voxel::isWaterBlock(BlockId::Water));
     EXPECT_TRUE(voxel::isWaterBlock(BlockId::StillWater));
     EXPECT_FALSE(voxel::isWaterBlock(BlockId::Lava));
@@ -77,7 +77,7 @@ TEST_F(P2FoundationsBlocks, WaterAndLavaPredicatesSplitTheFluidIds) {
     EXPECT_FALSE(voxel::isSameLiquid(BlockId::Stone, BlockId::Stone));
 }
 
-TEST_F(P2FoundationsBlocks, LavaGlowsAtFullBrightnessAndBlocksSkyLight) {
+TEST_F(FluidBlockIds, LavaGlowsAtFullBrightnessAndBlocksSkyLight) {
     for (const BlockId id : {BlockId::Lava, BlockId::StillLava}) {
         const voxel::BlockDef& def = BlockRegistry::get(id);
         EXPECT_EQ(def.lightEmission, 15) << def.name;   // Beta setLightValue(1.0F)
@@ -92,7 +92,7 @@ TEST_F(P2FoundationsBlocks, LavaGlowsAtFullBrightnessAndBlocksSkyLight) {
     EXPECT_EQ(sw.faceTiles, w.faceTiles);
 }
 
-TEST_F(P2FoundationsBlocks, PlacedLavaLightsItsSurroundingsInTheWorld) {
+TEST_F(FluidBlockIds, PlacedLavaLightsItsSurroundingsInTheWorld) {
     test::TempDir dir;
     world::World w(173173ULL, dir.path());
     w.ensureChunkLoaded({0, 0});
@@ -105,7 +105,7 @@ TEST_F(P2FoundationsBlocks, PlacedLavaLightsItsSurroundingsInTheWorld) {
     EXPECT_EQ(w.getBlockLight(10, kPocketY, 8), 13);
 }
 
-TEST_F(P2FoundationsBlocks, SafeSpawnNeverStandsInLava) {
+TEST_F(FluidBlockIds, SafeSpawnNeverStandsInLava) {
     test::TempDir dir;
     world::World w(173173ULL, dir.path());
     const glm::vec3 first = w.findSafeSpawnPosition();
@@ -117,13 +117,13 @@ TEST_F(P2FoundationsBlocks, SafeSpawnNeverStandsInLava) {
     EXPECT_NE(second, first) << "spawn picked a cell filled with lava";
 }
 
-TEST_F(P2FoundationsBlocks, CaveCarverPaletteNowProvidesLava) {
+TEST_F(FluidBlockIds, CaveCarverPaletteNowProvidesLava) {
     constexpr worldgen::CaveFillPalette palette{};
     EXPECT_TRUE(palette.providesLava());
     EXPECT_TRUE(voxel::isLavaBlock(palette.lava));
 }
 
-TEST_F(P2FoundationsBlocks, CraftingAndCombatAgreeOnFluidBlocks) {
+TEST_F(FluidBlockIds, CraftingAndCombatAgreeOnFluidBlocks) {
     for (const BlockId id : kFluidBlocks) {
         const auto asBlock = crafting::toBlockId(crafting::toItemId(id));
         ASSERT_TRUE(asBlock.has_value()) << static_cast<int>(id);
@@ -132,14 +132,14 @@ TEST_F(P2FoundationsBlocks, CraftingAndCombatAgreeOnFluidBlocks) {
     }
 }
 
-TEST_F(P2FoundationsBlocks, LavaIsNotADynamicLightItem) {
+TEST_F(FluidBlockIds, LavaIsNotADynamicLightItem) {
     // Beta has no lava item (only the bucket), so a held/dropped lava id must not glow even
     // though the placed block emits 15.
     EXPECT_EQ(lighting::emissionOf(BlockId::Lava), 0);
     EXPECT_EQ(lighting::emissionOf(BlockId::StillLava), 0);
 }
 
-TEST_F(P2FoundationsBlocks, MesherCullsFacesBetweenCellsOfTheSameLiquid) {
+TEST_F(FluidBlockIds, MesherCullsFacesBetweenCellsOfTheSameLiquid) {
     test::TempDir dir;
     world::World w(173173ULL, dir.path());
     const voxel::Chunk& chunk = w.ensureChunkLoaded({0, 0});
@@ -161,7 +161,7 @@ TEST_F(P2FoundationsBlocks, MesherCullsFacesBetweenCellsOfTheSameLiquid) {
               10u * 4u);
 }
 
-TEST_F(P2FoundationsBlocks, SnapshotMesherMatchesLegacyMesherAroundFluids) {
+TEST_F(FluidBlockIds, SnapshotMesherMatchesLegacyMesherAroundFluids) {
     test::TempDir dir;
     world::World w(173173ULL, dir.path());
     for (int cz = -1; cz <= 1; ++cz) {

@@ -25,7 +25,7 @@ using gameplay::toItemId;
 constexpr core::BlockPos kMineCell{4, kY, 2};
 constexpr glm::vec3 kHome{2.5f, static_cast<float>(kY), 2.5f};
 
-class S2Progression : public WorldSessionSupport {
+class Progression : public WorldSessionSupport {
 protected:
     void SetUp() override {
         WorldSessionSupport::SetUp();
@@ -108,7 +108,7 @@ protected:
 
 } // namespace
 
-TEST_F(S2Progression, FromALogToADiamond) {
+TEST_F(Progression, FromALogToADiamond) {
     // Wood by hand, then planks and sticks in the 2x2 inventory grid.
     for (int i = 0; i < 3; ++i) mineAndCollect(BlockId::OakLog);
     ASSERT_EQ(player().countItem(BlockId::OakLog), 3);

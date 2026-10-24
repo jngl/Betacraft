@@ -64,7 +64,7 @@ void placeOne(InventoryCrafting& ui, Player& p, gameplay::ItemId id, size_t inde
     ASSERT_TRUE(ui.carried().isEmpty());
 }
 
-class P2GameplayCrafting : public ::testing::Test {
+class GameplayCrafting : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
@@ -77,7 +77,7 @@ protected:
 
 } // namespace
 
-TEST_F(P2GameplayCrafting, WoodenPickaxeFromLogsThroughTheInventoryAndWorkbenchGrids) {
+TEST_F(GameplayCrafting, WoodenPickaxeFromLogsThroughTheInventoryAndWorkbenchGrids) {
     ASSERT_TRUE(m_player.addItem(BlockId::OakLog, 3));
     (void)m_ui.open(GridSize::Inventory2x2, m_player);
     ASSERT_EQ(m_ui.gridSize(), GridSize::Inventory2x2);
@@ -132,7 +132,7 @@ TEST_F(P2GameplayCrafting, WoodenPickaxeFromLogsThroughTheInventoryAndWorkbenchG
     EXPECT_TRUE(m_ui.close(m_player).empty());
 }
 
-TEST_F(P2GameplayCrafting, ToolsAboveTheBlockRangeCanBeCraftedAndHeld) {
+TEST_F(GameplayCrafting, ToolsAboveTheBlockRangeCanBeCraftedAndHeld) {
     // A wooden sword (vanilla 268) has no BlockId: the widened inventory holds it.
     ASSERT_TRUE(m_player.addItem(BlockId::OakPlanks, 2));
     ASSERT_TRUE(m_player.addItem(items::Stick, 1));
@@ -152,7 +152,7 @@ TEST_F(P2GameplayCrafting, ToolsAboveTheBlockRangeCanBeCraftedAndHeld) {
     EXPECT_EQ(m_player.countItem(items::WoodSword), 2);
 }
 
-TEST_F(P2GameplayCrafting, ClosingTheScreenReturnsTheGridAndCursorToTheInventory) {
+TEST_F(GameplayCrafting, ClosingTheScreenReturnsTheGridAndCursorToTheInventory) {
     ASSERT_TRUE(m_player.addItem(BlockId::Cobblestone, 10));
     (void)m_ui.open(GridSize::Workbench3x3, m_player);
     placeOne(m_ui, m_player, toItemId(BlockId::Cobblestone), 4);
@@ -167,7 +167,7 @@ TEST_F(P2GameplayCrafting, ClosingTheScreenReturnsTheGridAndCursorToTheInventory
     EXPECT_TRUE(m_ui.grid().isEmpty());
 }
 
-TEST_F(P2GameplayCrafting, ClosingWithAFullInventoryHandsBackTheOverflow) {
+TEST_F(GameplayCrafting, ClosingWithAFullInventoryHandsBackTheOverflow) {
     for (size_t i = 0; i < Player::TOTAL_INVENTORY_SIZE; ++i) {
         m_player.setInventorySlot(i, {BlockId::Dirt, 64});
     }

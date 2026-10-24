@@ -39,7 +39,7 @@ namespace {
 
 } // namespace
 
-TEST(P2StorageRegionWorld, EditSaveReloadThroughRegions) {
+TEST(StorageRegionWorld, EditSaveReloadThroughRegions) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s7_region_");
     const core::BlockPos glass{-3, 120, 5};     // Chunk (-1, 0), region (-1, 0)
@@ -97,7 +97,7 @@ TEST(P2StorageRegionWorld, EditSaveReloadThroughRegions) {
     EXPECT_EQ(again.getBlock(far), BlockId::Obsidian);
 }
 
-TEST(P2StorageRegionWorld, UntouchedFluidChunksNotWritten) {
+TEST(StorageRegionWorld, UntouchedFluidChunksNotWritten) {
     voxel::BlockRegistry::initialize();
     test::TempDir dir("betacraft_s7_region_");
     world::World w(kSeed, dir.path());

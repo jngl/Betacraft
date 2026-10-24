@@ -23,7 +23,7 @@ using voxel::BlockId;
 
 namespace {
 
-class P2DynLightFrame : public ::testing::Test {
+class DynLightFrameIntegration : public ::testing::Test {
 protected:
     void SetUp() override {
         voxel::BlockRegistry::initialize();
@@ -68,7 +68,7 @@ protected:
 
 } // namespace
 
-TEST_F(P2DynLightFrame, HeldTorchLightsWhatThePlayerLooksAt) {
+TEST_F(DynLightFrameIntegration, HeldTorchLightsWhatThePlayerLooksAt) {
     hold(BlockId::Torch);
     const glm::ivec2 fb{1280, 720};
     build(fb);
@@ -88,14 +88,14 @@ TEST_F(P2DynLightFrame, HeldTorchLightsWhatThePlayerLooksAt) {
     EXPECT_EQ(frame.shade(farWall, fragCoordOf(farWall, fb)), glm::vec3(0.0f)) << "beyond the torch's 14 blocks";
 }
 
-TEST_F(P2DynLightFrame, NoGlowingItemUploadsAnEmptyBlock) {
+TEST_F(DynLightFrameIntegration, NoGlowingItemUploadsAnEmptyBlock) {
     hold(BlockId::Cobblestone);
     build({1280, 720});
     EXPECT_EQ(frame.selection().count, 0u);
     EXPECT_EQ(uboLightCount(), 0);
 }
 
-TEST_F(P2DynLightFrame, TilesAreSizedInFramebufferPixels) {
+TEST_F(DynLightFrameIntegration, TilesAreSizedInFramebufferPixels) {
     // HiDPI: a 1280x720 window with a 2560x1440 drawable. gl_FragCoord counts drawable
     // pixels, so the grid must be built from the framebuffer size handed to glViewport.
     hold(BlockId::Torch);
@@ -111,7 +111,7 @@ TEST_F(P2DynLightFrame, TilesAreSizedInFramebufferPixels) {
     EXPECT_NE(frame.grid().mask(lighting::kTileCols - 1, lighting::kTileRows - 1), 0u);
 }
 
-TEST_F(P2DynLightFrame, DroppedGlowstoneBehindTheCameraIsCulled) {
+TEST_F(DynLightFrameIntegration, DroppedGlowstoneBehindTheCameraIsCulled) {
     ecs::Registry reg;
     const glm::vec3 behind = player.getEyePosition() - player.getLookDirection() * 30.0f;
     (void)ecs::EntityFactory::spawnItemDrop(reg, behind, BlockId::Glowstone, 1);
@@ -125,7 +125,7 @@ TEST_F(P2DynLightFrame, DroppedGlowstoneBehindTheCameraIsCulled) {
     EXPECT_LT(glm::distance(frame.selection().lights[0].position, ahead), 0.5f);
 }
 
-TEST_F(P2DynLightFrame, HandIsShadedByTheTorchItHolds) {
+TEST_F(DynLightFrameIntegration, HandIsShadedByTheTorchItHolds) {
     hold(BlockId::Torch);
     build({1280, 720});
     EXPECT_EQ(WorldRenderer::handBlockLight(0, frame, player), 14);
@@ -137,7 +137,7 @@ TEST_F(P2DynLightFrame, HandIsShadedByTheTorchItHolds) {
     EXPECT_EQ(WorldRenderer::handBlockLight(7, frame, player), 7);
 }
 
-TEST_F(P2DynLightFrame, EmptyHandIsLitByNearbyDroppedGlowstone) {
+TEST_F(DynLightFrameIntegration, EmptyHandIsLitByNearbyDroppedGlowstone) {
     ecs::Registry reg;
     const glm::vec3 hand =
         DynamicLightManager::heldLightPosition(player.getEyePosition(), player.getLookDirection());
