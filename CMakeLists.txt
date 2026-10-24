@@ -73,17 +73,7 @@ set(UNIT_TEST_SOURCES
     tests/unit/test_adversarial_tier5.cpp
 )
 
-set(INTEGRATION_TEST_SOURCES
-    tests/integration/test_integration_player_world.cpp
-    tests/integration/test_integration_mining_crafting.cpp
-    tests/integration/test_integration_piston.cpp
-    tests/integration/test_integration_persistence.cpp
-    tests/integration/test_integration_lighting_mesher.cpp
-    tests/integration/test_integration_phase1.cpp
-)
-
-file(GLOB PHASE2_INTEGRATION_TEST_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tests/integration/phase2/*.cpp)
-list(APPEND INTEGRATION_TEST_SOURCES ${PHASE2_INTEGRATION_TEST_SOURCES})
+file(GLOB_RECURSE INTEGRATION_TEST_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tests/integration/*.cpp)
 
 set(E2E_TEST_SOURCES
     tests/e2e/test_e2e_application.cpp
