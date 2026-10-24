@@ -30,7 +30,7 @@
 | 19 | Dynamic Key Rebinding & `options.txt` Persistence | P4.4 / Baseline | 5 | 5 | ✓ |
 
 ## Test Architecture
-- Test Runner: CTest executing GoogleTest binaries: one `betacraft_<m>_tests` per module (`modules/<m>/test/`), plus the multi-module suites in `tests/unit/`, `tests/integration/`, `tests/e2e/` and `tests/mock/`.
+- Test Runner: CTest executing GoogleTest binaries: one `betacraft_<m>_tests` per module (`modules/<m>/test/`), plus the multi-module suites in `tests/integration/`, `tests/e2e/` and `tests/mock/`.
 - Build Command: `cmake --build build --parallel`
 - Test Execution: `ctest --test-dir build --output-on-failure`
 - Pass/Fail Semantics: 100% CTest pass, zero failed assertions, clean exit code 0.
@@ -98,13 +98,17 @@ Coverage highlights per suite:
 | `ai/` | `AiWorld` | Zombie pathfinding around walls on a real `World`, `--no-pathfinding` fallback |
 | `crafting/` | `BetaRecipeBook`, `BetaRecipes`, `InventoryCraftingTest`, `ContainerScreenTest`, `HudInventoryLayout`, `GameplayCrafting` | Beta recipe book, inventory/furnace/chest screens, HUD inventory layout, crafting in the game |
 | `dynlight/` | `DynLightCollect`, `DynLightFrameIntegration`, `DynLightShader` | `collectDynamicLights` from player and ECS item drops, frame build, injected chunk shader source |
+| `lighting/` | `AdversarialDifferentialLighting`, `AdversarialMultiChunkLighting`, `AdversarialChunkLighting` | Analytical BFS bound N(15) = 4,991 on every edit, toggled and overlapping torches, chunk corners, partially loaded neighbourhoods, world limits |
 | `ecs/` | `PlayerProxy`, `ProjectilesTest`, `ArrowHeading` | Player proxy targeted by mobs, arrows |
 | `fluids/` | `FluidsWorld`, `FluidsStreaming`, `FluidsGame`, `FluidsInput`, `FluidPersistence` | `World`-backed fluid simulation, chunk-load scheduling, game-tick events (drops, fizz), placing sources, saving simulated water |
 | `gameplay/` | `GameplayMining`, `GameplayEntities`, `SurvivalRules`, `EnvironmentDamage`, `BetaContent`, `MobsSession`, `Armor`, `Food`, `*Regressions`, … | `EntitySimulation` mining with wear, item entities and pickup, melee, survival and environmental damage, mob spawning, armor, food, item ids, TNT and buckets |
+| `physics/` | `AdversarialPhysics`, `AdversarialPlayerCollision` | Determinism across frame rates and jitter, interpolation, lag spikes, walls, inner corners, sneak ledges, the void safety net |
 | `redstone/` | `RedstoneWorld` | Redstone on a real `World`: levers, doors, plates, pistons, save and reload |
 | `session/` | `WorldSession*`, `Progression` | `WorldSession` lifecycle, tick order, crafting, respawn, sleep, a scripted Survival progression |
 | `storage/` | `ChunkBundleCodec`, `StorageRegionWorld`, `StorageLegacyMigration` | Chunk bundles, region files under `World`, migration of the frozen `tests/data/saves/v1` |
-| `streaming/` | `StreamingWorld`, `StreamingDirty`, `StreamingAsyncWorld`, `PipelineWorldIntegration`, `SnapshotMesher*`, `*Regressions` | `WorldMeshStreamer` against a live `World`: dirty marking, lifecycle reporting, unload deletions, async generation, mesher parity, render stats |
+| `streaming/` | `StreamingWorld`, `StreamingDirty`, `StreamingAsyncWorld`, `PipelineWorldIntegration`, `SnapshotMesher*`, `*Regressions`, `AdversarialPackedChunkVertex`, `AdversarialSharedEBO`, `AdversarialChunkMesher` | `WorldMeshStreamer` against a live `World`: dirty marking, lifecycle reporting, unload deletions, async generation, mesher parity, render stats; packed vertex bit fields, the shared EBO past 65,536 quads, concurrent meshing |
+| `ui/` | `AdversarialOptions`, `AdversarialKeyBindings`, `AdversarialMsdfText`, `AdversarialGuiScale`, `AdversarialOptionsMenu` | Corrupted, empty, overflowing and read-only `options.txt`, duplicate and cancelled bindings, MSDF text at every byte and extreme scales, GUI scale limits, options menu navigation |
+| `voxel/` | `AdversarialPalettedSection`, `AdversarialChunkSections` | Palette promotion at its exact limits, nibble crosstalk, random writes against an oracle, lazy light arrays, RLE round trips and malformed buffers |
 | `world/` | `FluidBlockIds`, `MetadataNibble`, `MetadataShapes`, `RandomTicks`, `FallingSand`, `BedBlock`, `DoorBlock`, `LadderBlock`, `Farming`, `BlockEntities`, `Weather*` | Block ids and metadata, metadata shapes, random and scheduled ticks, falling blocks, survival blocks, block entities, weather |
 | `worldgen/` | `WorldgenCaves`, `WorldgenDecoration`, `WorldgenPersistence` | `CaveCarver` in `WorldGen`, cross-border two-pass decoration, decoration-record save/load |
 

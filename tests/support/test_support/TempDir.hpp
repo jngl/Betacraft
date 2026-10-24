@@ -14,7 +14,7 @@ class TempDir {
 public:
     TempDir(std::string_view prefix = "betacraft_test_") {
         const auto tempRoot = std::filesystem::temp_directory_path();
-        // Clock plus a random tag: UnitTests and AllTests run the same tests in parallel
+        // Clock plus a random tag: AllTests and the other test executables run the same tests in parallel
         // processes, which must never share a directory.
         const auto uniqueName = std::string(prefix) + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) +
                                 "_" + std::to_string(std::random_device{}());

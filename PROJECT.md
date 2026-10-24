@@ -91,7 +91,7 @@ Data Flow:
 - `modules/render/`: `ChunkMesher`, `WorldRenderer`, `TextRenderer`, `GLHeaders` (above `streaming` and `lighting`). `modules/ui/`: `ScreenState.hpp`, `TitleScreen`, `OptionsMenu`, `InputManager` (above `render` and `audio`). `modules/game/`: `Application`, `WorldSession` and the glue between modules, at the top.
 - `app/main.cpp`: the `betacraft` executable, linked to `game` only.
 - `shaders/`: `chunk_vertex.glsl`, `chunk_fragment.glsl`, `msdf_vertex.glsl`, `msdf_fragment.glsl`.
-- `tests/unit/`: GoogleTest unit suites that span several modules (`test_adversarial_m2.cpp`, `test_adversarial_tier5.cpp`). Single-module suites are in `modules/<m>/test/` (`test_render.cpp` and `test_msdf_font.cpp` in `render`, `test_ui.cpp` and `test_input_rebind.cpp` in `ui`...).
+- `tests/integration/<domain>/`: GoogleTest suites that span several modules, including the adversarial edge cases (`test_*_adversarial.cpp`). Single-module suites are in `modules/<m>/test/` (`test_render.cpp` and `test_msdf_font.cpp` in `render`, `test_ui.cpp` and `test_input_rebind.cpp` in `ui`...).
 - `tests/e2e/`: Opaque-box acceptance test suites.
 
 ---

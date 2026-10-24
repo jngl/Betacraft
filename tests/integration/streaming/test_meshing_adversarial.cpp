@@ -1,14 +1,19 @@
+// Adversarial checks on chunk meshing data: PackedChunkVertex bit fields under walking ones,
+// alternating patterns, overflowing fields and 100k random round trips, planar UVs at negative
+// and large coordinates, the shared EBO up to and past 65,536 quads, and ChunkMesher on four
+// threads at once.
+#include "render/ChunkMesher.hpp"
 #include "streaming/PackedChunkVertex.hpp"
-#include "test_support/GLTestContext.hpp"
+#include "test_support/TempDir.hpp"
 #include "voxel/Block.hpp"
-#include "world/DifferentialLightingEngine.hpp"
 #include "world/World.hpp"
 
 #include <gtest/gtest.h>
+
+#include <atomic>
 #include <random>
+#include <thread>
 #include <vector>
-#include <array>
-#include <cmath>
 
 using namespace betacraft;
 using namespace betacraft::streaming;
@@ -280,6 +285,44 @@ TEST(AdversarialPackedChunkVertex, PlanarUVProjectionBoundaryStress) {
     EXPECT_NEAR(uvEast.y, 0.9f, 1e-3f);
 }
 
+TEST(AdversarialPackedChunkVertex, PlanarUVIsInUnitRangeForEveryNormal) {
+    // Planar UV projection must always lie in [0.0, 1.0) regardless of negative coords
+    const glm::vec3 testCoords[] = {
+        {-15.75f, 64.25f, -3.5f},
+        {-0.001f, -0.999f, -100.33f},
+        {0.0f, 0.0f, 0.0f},
+        {16.0f, 128.0f, 16.0f},
+        {1234.56f, 789.12f, -567.89f}
+    };
+
+    for (const auto& pos : testCoords) {
+        for (uint32_t norm = 0; norm < 6; ++norm) {
+            const glm::vec2 uv = PackedChunkVertex::computePlanarUV(pos, norm);
+            EXPECT_GE(uv.x, 0.0f);
+            EXPECT_LT(uv.x, 1.0f);
+            EXPECT_GE(uv.y, 0.0f);
+            EXPECT_LT(uv.y, 1.0f);
+        }
+    }
+}
+
+TEST(AdversarialPackedChunkVertex, PlanarUVIsTheFractionalPartOfNegativeCoordinates) {
+    // Normal 0 (+Y): (x, z)
+    const glm::vec2 uvTop = PackedChunkVertex::computePlanarUV({-10.25f, 64.0f, -5.75f}, 0);
+    EXPECT_NEAR(uvTop.x, 0.75f, 1e-4f);
+    EXPECT_NEAR(uvTop.y, 0.25f, 1e-4f);
+
+    // Normal 4 (+X): (z, y)
+    const glm::vec2 uvEast = PackedChunkVertex::computePlanarUV({100.0f, 70.33f, 50.80f}, 4);
+    EXPECT_NEAR(uvEast.x, 0.80f, 1e-4f);
+    EXPECT_NEAR(uvEast.y, 0.33f, 1e-4f);
+
+    // Normal 2 (+Z): (x, y)
+    const glm::vec2 uvSouth = PackedChunkVertex::computePlanarUV({-0.1f, -0.4f, 10.0f}, 2);
+    EXPECT_NEAR(uvSouth.x, 0.9f, 1e-4f);
+    EXPECT_NEAR(uvSouth.y, 0.6f, 1e-4f);
+}
+
 // ============================================================================
 // SUITE 2: Shared EBO Buffer Stress up to 65,536 Quads
 // ============================================================================
@@ -369,340 +412,36 @@ TEST(AdversarialSharedEBO, ScalabilityBeyond65536Quads) {
 }
 
 // ============================================================================
-// SUITE 3: DifferentialLightingEngine Worst-Case & Stress
+// SUITE 3: ChunkMesher on several threads
 // ============================================================================
 
-TEST(AdversarialDifferentialLighting, AnalyticalVolumeFormulasExhaustive) {
-    for (size_t r = 0; r <= 20; ++r) {
-        size_t shellSum = 1;
-        for (size_t i = 1; i <= r; ++i) {
-            shellSum += DifferentialLightingEngine::analyticalManhattanShell(i);
-        }
-        EXPECT_EQ(DifferentialLightingEngine::analyticalManhattanVolume(r), shellSum);
-    }
-
-    // Exact theoretical values
-    EXPECT_EQ(DifferentialLightingEngine::analyticalManhattanVolume(14), 4089u);
-    EXPECT_EQ(DifferentialLightingEngine::analyticalManhattanVolume(15), 4991u);
-
-    // Discrete 3D lattice BFS verification
-    for (int r = 0; r <= 15; ++r) {
-        const size_t discrete = DifferentialLightingEngine::computeDiscreteManhattanVolumeBFS(r);
-        const size_t analytical = DifferentialLightingEngine::analyticalManhattanVolume(r);
-        EXPECT_EQ(discrete, analytical) << "Failed at radius " << r;
-    }
-}
-
-TEST(AdversarialDifferentialLighting, OpenAirTorchPlacementVisitBudgetUnder4991) {
+TEST(AdversarialChunkMesher, ConcurrentMeshingOfLoadedChunks) {
     BlockRegistry::initialize();
     test::TempDir tempDir;
-    World world(42ULL, tempDir.path());
-
-    // Load 3x3 chunk area (from (1,1) to (3,3)) to provide wide open air
-    for (int cz = 1; cz <= 3; ++cz) {
-        for (int cx = 1; cx <= 3; ++cx) {
+    World world(173ULL, tempDir.path());
+    for (int cz = -1; cz <= 1; ++cz) {
+        for (int cx = -1; cx <= 1; ++cx) {
             world.ensureChunkLoaded({cx, cz});
         }
     }
 
-    // Clear open sphere of radius 16 around center (32, 64, 32)
-    const glm::ivec3 center(32, 64, 32);
-    for (int dy = -16; dy <= 16; ++dy) {
-        for (int dz = -16; dz <= 16; ++dz) {
-            for (int dx = -16; dx <= 16; ++dx) {
-                world.setBlock(center.x + dx, center.y + dy, center.z + dz, BlockId::Air);
-                world.setBlockLight(center.x + dx, center.y + dy, center.z + dz, 0);
+    // Four threads mesh four chunks of a world nobody writes to; every mesh must come out whole.
+    std::atomic<int> emptyMeshes{0};
+    std::vector<std::thread> workers;
+    for (int t = 0; t < 4; ++t) {
+        workers.emplace_back([&world, &emptyMeshes, t]() {
+            const Chunk* chunk = world.getChunk({t % 2, t / 2});
+            ASSERT_NE(chunk, nullptr);
+            for (int i = 0; i < 5; ++i) {
+                const auto mesh = render::ChunkMesher::buildMesh(world, *chunk, i % 2 == 0);
+                if (mesh.opaqueVertices.empty()) {
+                    ++emptyMeshes;
+                }
             }
-        }
+        });
     }
-
-    EXPECT_EQ(world.getBlockLight(center.x, center.y, center.z), 0u);
-
-    // Place Torch (emission 14)
-    world.setBlock(center.x, center.y, center.z, BlockId::Torch);
-
-    // Verify visit count is bounded by analytical volume N(15) = 4991 (and <= 4089 for radius 14)
-    const size_t placementVisits = world.getLightingEngine().getLastVoxelInspectionCount();
-    EXPECT_LE(placementVisits, 4991u);
-    EXPECT_LE(placementVisits, 4089u);
-    EXPECT_GT(placementVisits, 0u);
-
-    // Verify Manhattan light attenuation along all 6 cardinal axes
-    EXPECT_EQ(world.getBlockLight(center.x, center.y, center.z), 14u);
-    for (int d = 1; d <= 13; ++d) {
-        const uint8_t expected = static_cast<uint8_t>(14 - d);
-        EXPECT_EQ(world.getBlockLight(center.x + d, center.y, center.z), expected);
-        EXPECT_EQ(world.getBlockLight(center.x - d, center.y, center.z), expected);
-        EXPECT_EQ(world.getBlockLight(center.x, center.y + d, center.z), expected);
-        EXPECT_EQ(world.getBlockLight(center.x, center.y - d, center.z), expected);
-        EXPECT_EQ(world.getBlockLight(center.x, center.y, center.z + d), expected);
-        EXPECT_EQ(world.getBlockLight(center.x, center.y, center.z - d), expected);
+    for (auto& w : workers) {
+        w.join();
     }
-    // At distance 14, light should be 0
-    EXPECT_EQ(world.getBlockLight(center.x + 14, center.y, center.z), 0u);
-    EXPECT_EQ(world.getBlockLight(center.x, center.y + 14, center.z), 0u);
-    EXPECT_EQ(world.getBlockLight(center.x, center.y, center.z + 14), 0u);
-}
-
-TEST(AdversarialDifferentialLighting, OpenAirTorchRemovalVisitBudgetUnder4991) {
-    BlockRegistry::initialize();
-    test::TempDir tempDir;
-    World world(42ULL, tempDir.path());
-
-    for (int cz = 1; cz <= 3; ++cz) {
-        for (int cx = 1; cx <= 3; ++cx) {
-            world.ensureChunkLoaded({cx, cz});
-        }
-    }
-
-    const glm::ivec3 center(32, 64, 32);
-    for (int dy = -16; dy <= 16; ++dy) {
-        for (int dz = -16; dz <= 16; ++dz) {
-            for (int dx = -16; dx <= 16; ++dx) {
-                world.setBlock(center.x + dx, center.y + dy, center.z + dz, BlockId::Air);
-                world.setBlockLight(center.x + dx, center.y + dy, center.z + dz, 0);
-            }
-        }
-    }
-
-    world.setBlock(center.x, center.y, center.z, BlockId::Torch);
-    EXPECT_EQ(world.getBlockLight(center.x, center.y, center.z), 14u);
-
-    // Remove Torch
-    world.setBlock(center.x, center.y, center.z, BlockId::Air);
-
-    // Verify removal visit count strictly bounded by 4991
-    const size_t removalVisits = world.getLightingEngine().getLastVoxelInspectionCount();
-    EXPECT_LE(removalVisits, 4991u);
-    EXPECT_LE(removalVisits, 4089u);
-    EXPECT_GT(removalVisits, 0u);
-
-    // Verify complete extinction everywhere
-    for (int d = 0; d <= 14; ++d) {
-        EXPECT_EQ(world.getBlockLight(center.x + d, center.y, center.z), 0u);
-        EXPECT_EQ(world.getBlockLight(center.x - d, center.y, center.z), 0u);
-        EXPECT_EQ(world.getBlockLight(center.x, center.y + d, center.z), 0u);
-        EXPECT_EQ(world.getBlockLight(center.x, center.y - d, center.z), 0u);
-        EXPECT_EQ(world.getBlockLight(center.x, center.y, center.z + d), 0u);
-        EXPECT_EQ(world.getBlockLight(center.x, center.y, center.z - d), 0u);
-    }
-}
-
-TEST(AdversarialDifferentialLighting, OpenAirMaxEmission15WorstCaseExactBound) {
-    BlockRegistry::initialize();
-    test::TempDir tempDir;
-    World world(42ULL, tempDir.path());
-
-    for (int cz = 1; cz <= 3; ++cz) {
-        for (int cx = 1; cx <= 3; ++cx) {
-            world.ensureChunkLoaded({cx, cz});
-        }
-    }
-
-    const glm::ivec3 center(32, 64, 32);
-    for (int dy = -16; dy <= 16; ++dy) {
-        for (int dz = -16; dz <= 16; ++dz) {
-            for (int dx = -16; dx <= 16; ++dx) {
-                world.setBlock(center.x + dx, center.y + dy, center.z + dz, BlockId::Air);
-                world.setBlockLight(center.x + dx, center.y + dy, center.z + dz, 0);
-            }
-        }
-    }
-
-    // Set emission 15 (theoretical max light level)
-    world.getLightingEngine().updateLightSource(center.x, center.y, center.z, 15);
-    const size_t addVisits = world.getLightingEngine().getLastVoxelInspectionCount();
-    // In voxel engine, light level 1 propagates to distance 14 (light 0 is darkness, not propagated).
-    // Radius 14 visits exactly N(14) = 4,089 voxels, which strictly satisfies <= 4,991.
-    EXPECT_LE(addVisits, 4991u);
-    EXPECT_EQ(addVisits, 4089u);
-
-    // Reset emission 0
-    world.getLightingEngine().updateLightSource(center.x, center.y, center.z, 0);
-    const size_t remVisits = world.getLightingEngine().getLastVoxelInspectionCount();
-    EXPECT_LE(remVisits, 4991u);
-    EXPECT_EQ(remVisits, 4089u);
-
-    EXPECT_EQ(world.getBlockLight(center.x, center.y, center.z), 0u);
-}
-
-TEST(AdversarialDifferentialLighting, DualTorchesIndependentReinjectionStress) {
-    BlockRegistry::initialize();
-    test::TempDir tempDir;
-    World world(42ULL, tempDir.path());
-
-    for (int cz = 1; cz <= 3; ++cz) {
-        for (int cx = 1; cx <= 3; ++cx) {
-            world.ensureChunkLoaded({cx, cz});
-        }
-    }
-
-    // Clear open space
-    for (int dy = -16; dy <= 16; ++dy) {
-        for (int dz = -16; dz <= 16; ++dz) {
-            for (int dx = 0; dx <= 64; ++dx) {
-                world.setBlock(dx, 64 + dy, 32 + dz, BlockId::Air);
-                world.setBlockLight(dx, 64 + dy, 32 + dz, 0);
-            }
-        }
-    }
-
-    // Place Torch A at (24, 64, 32) and Torch B at (40, 64, 32) (dist = 16)
-    world.setBlock(24, 64, 32, BlockId::Torch);
-    world.setBlock(40, 64, 32, BlockId::Torch);
-
-    EXPECT_EQ(world.getBlockLight(24, 64, 32), 14u);
-    EXPECT_EQ(world.getBlockLight(40, 64, 32), 14u);
-
-    // Midpoint (32, 64, 32) is dist 8 from both: 14 - 8 = 6
-    EXPECT_EQ(world.getBlockLight(32, 64, 32), 6u);
-
-    // Remove Torch A
-    world.setBlock(24, 64, 32, BlockId::Air);
-
-    // Torch B must remain unaffected at 14
-    EXPECT_EQ(world.getBlockLight(40, 64, 32), 14u);
-
-    // Midpoint still receives 6 from Torch B
-    EXPECT_EQ(world.getBlockLight(32, 64, 32), 6u);
-
-    // At x=27 (dist 13 from Torch B): 14 - 13 = 1
-    EXPECT_EQ(world.getBlockLight(27, 64, 32), 1u);
-
-    // At x=26 (dist 14 from Torch B): 0
-    EXPECT_EQ(world.getBlockLight(26, 64, 32), 0u);
-
-    // At x=24 (where Torch A was): 0
-    EXPECT_EQ(world.getBlockLight(24, 64, 32), 0u);
-
-    // Now remove Torch B: entire world returns to 0
-    world.setBlock(40, 64, 32, BlockId::Air);
-    EXPECT_EQ(world.getBlockLight(40, 64, 32), 0u);
-    EXPECT_EQ(world.getBlockLight(32, 64, 32), 0u);
-}
-
-TEST(AdversarialDifferentialLighting, AdjacentTorchesReinjectionStress) {
-    BlockRegistry::initialize();
-    test::TempDir tempDir;
-    World world(42ULL, tempDir.path());
-
-    for (int cz = 1; cz <= 3; ++cz) {
-        for (int cx = 1; cx <= 3; ++cx) {
-            world.ensureChunkLoaded({cx, cz});
-        }
-    }
-
-    for (int dy = -16; dy <= 16; ++dy) {
-        for (int dz = -16; dz <= 16; ++dz) {
-            for (int dx = 0; dx <= 64; ++dx) {
-                world.setBlock(dx, 64 + dy, 32 + dz, BlockId::Air);
-                world.setBlockLight(dx, 64 + dy, 32 + dz, 0);
-            }
-        }
-    }
-
-    // Place torches adjacent at dist 4: (30, 64, 32) and (34, 64, 32)
-    world.setBlock(30, 64, 32, BlockId::Torch);
-    world.setBlock(34, 64, 32, BlockId::Torch);
-
-    EXPECT_EQ(world.getBlockLight(30, 64, 32), 14u);
-    EXPECT_EQ(world.getBlockLight(34, 64, 32), 14u);
-    // Midpoint (32, 64, 32) dist 2 from both: 14 - 2 = 12
-    EXPECT_EQ(world.getBlockLight(32, 64, 32), 12u);
-
-    // Remove Torch A at (30, 64, 32)
-    world.setBlock(30, 64, 32, BlockId::Air);
-
-    // (30, 64, 32) is dist 4 from Torch B: 14 - 4 = 10
-    EXPECT_EQ(world.getBlockLight(30, 64, 32), 10u);
-    EXPECT_EQ(world.getBlockLight(34, 64, 32), 14u);
-
-    // Remove Torch B
-    world.setBlock(34, 64, 32, BlockId::Air);
-    EXPECT_EQ(world.getBlockLight(30, 64, 32), 0u);
-    EXPECT_EQ(world.getBlockLight(34, 64, 32), 0u);
-}
-
-TEST(AdversarialDifferentialLighting, RapidTorchTogglingStress1000Cycles) {
-    BlockRegistry::initialize();
-    test::TempDir tempDir;
-    World world(42ULL, tempDir.path());
-
-    for (int cz = 1; cz <= 3; ++cz) {
-        for (int cx = 1; cx <= 3; ++cx) {
-            world.ensureChunkLoaded({cx, cz});
-        }
-    }
-
-    const glm::ivec3 pos(32, 64, 32);
-    for (int dy = -16; dy <= 16; ++dy) {
-        for (int dz = -16; dz <= 16; ++dz) {
-            for (int dx = -16; dx <= 16; ++dx) {
-                world.setBlock(pos.x + dx, pos.y + dy, pos.z + dz, BlockId::Air);
-                world.setBlockLight(pos.x + dx, pos.y + dy, pos.z + dz, 0);
-            }
-        }
-    }
-
-    // Toggle torch 1,000 times (500 on, 500 off)
-    for (int cycle = 0; cycle < 500; ++cycle) {
-        // Place torch
-        world.setBlock(pos.x, pos.y, pos.z, BlockId::Torch);
-        const size_t onVisits = world.getLightingEngine().getLastVoxelInspectionCount();
-        ASSERT_LE(onVisits, 4991u);
-        ASSERT_EQ(world.getBlockLight(pos.x, pos.y, pos.z), 14u);
-
-        // Remove torch
-        world.setBlock(pos.x, pos.y, pos.z, BlockId::Air);
-        const size_t offVisits = world.getLightingEngine().getLastVoxelInspectionCount();
-        ASSERT_LE(offVisits, 4991u);
-        ASSERT_EQ(world.getBlockLight(pos.x, pos.y, pos.z), 0u);
-    }
-
-    // Verify completely clean state
-    EXPECT_EQ(world.getBlockLight(pos.x, pos.y, pos.z), 0u);
-    EXPECT_EQ(world.getBlockLight(pos.x + 1, pos.y, pos.z), 0u);
-}
-
-TEST(AdversarialDifferentialLighting, ChunkBoundaryCrossBorderLighting) {
-    BlockRegistry::initialize();
-    test::TempDir tempDir;
-    World world(42ULL, tempDir.path());
-
-    // Load chunks (0,0), (1,0), (0,1), (1,1)
-    world.ensureChunkLoaded({0, 0});
-    world.ensureChunkLoaded({1, 0});
-    world.ensureChunkLoaded({0, 1});
-    world.ensureChunkLoaded({1, 1});
-
-    // Clear boundary region around (15, 64, 15)
-    for (int dy = -16; dy <= 16; ++dy) {
-        for (int z = 0; z < 32; ++z) {
-            for (int x = 0; x < 32; ++x) {
-                world.setBlock(x, 64 + dy, z, BlockId::Air);
-                world.setBlockLight(x, 64 + dy, z, 0);
-            }
-        }
-    }
-
-    // Place torch at chunk border: (15, 64, 15)
-    world.setBlock(15, 64, 15, BlockId::Torch);
-    EXPECT_LE(world.getLightingEngine().getLastVoxelInspectionCount(), 4991u);
-
-    // Check light in chunk (0,0)
-    EXPECT_EQ(world.getBlockLight(15, 64, 15), 14u);
-    // Check light crossed into chunk (1,0) at x=16
-    EXPECT_EQ(world.getBlockLight(16, 64, 15), 13u);
-    // Check light crossed into chunk (0,1) at z=16
-    EXPECT_EQ(world.getBlockLight(15, 64, 16), 13u);
-    // Check light crossed into chunk (1,1) at (16, 64, 16)
-    EXPECT_EQ(world.getBlockLight(16, 64, 16), 12u);
-
-    // Remove torch: clean removal across borders
-    world.setBlock(15, 64, 15, BlockId::Air);
-    EXPECT_LE(world.getLightingEngine().getLastVoxelInspectionCount(), 4991u);
-    EXPECT_EQ(world.getBlockLight(15, 64, 15), 0u);
-    EXPECT_EQ(world.getBlockLight(16, 64, 15), 0u);
-    EXPECT_EQ(world.getBlockLight(15, 64, 16), 0u);
-    EXPECT_EQ(world.getBlockLight(16, 64, 16), 0u);
+    EXPECT_EQ(emptyMeshes.load(), 0);
 }

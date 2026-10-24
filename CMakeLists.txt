@@ -68,11 +68,6 @@ add_subdirectory(modules/game)
 add_executable(betacraft app/main.cpp)
 target_link_libraries(betacraft PRIVATE betacraft::game betacraft_warnings)
 
-set(UNIT_TEST_SOURCES
-    tests/unit/test_adversarial_m2.cpp
-    tests/unit/test_adversarial_tier5.cpp
-)
-
 file(GLOB_RECURSE INTEGRATION_TEST_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tests/integration/*.cpp)
 
 set(E2E_TEST_SOURCES
@@ -85,19 +80,13 @@ set(MOCK_TEST_SOURCES
     tests/mock/test_mock_observers.cpp
 )
 
-# 1. Unit Tests target
-add_executable(betacraft_unit_tests ${UNIT_TEST_SOURCES})
-target_include_directories(betacraft_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(betacraft_unit_tests PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
-add_test(NAME UnitTests COMMAND betacraft_unit_tests)
-
-# 2. Integration Tests target
+# 1. Integration Tests target
 add_executable(betacraft_integration_tests ${INTEGRATION_TEST_SOURCES})
 target_include_directories(betacraft_integration_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(betacraft_integration_tests PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 add_test(NAME IntegrationTests COMMAND betacraft_integration_tests)
 
-# 3. E2E Tests target
+# 2. E2E Tests target
 add_executable(betacraft_e2e_tests ${E2E_TEST_SOURCES})
 target_include_directories(betacraft_e2e_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(betacraft_e2e_tests PRIVATE BETACRAFT_BIN_PATH="$<TARGET_FILE:betacraft>")
@@ -110,17 +99,16 @@ foreach(t betacraft_integration_tests betacraft_e2e_tests)
     target_compile_definitions(${t} PRIVATE BETACRAFT_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
 endforeach()
 
-# 4. GMock Tests target
+# 3. GMock Tests target
 add_executable(betacraft_mock_tests ${MOCK_TEST_SOURCES})
 target_include_directories(betacraft_mock_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(betacraft_mock_tests PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 add_test(NAME MockTests COMMAND betacraft_mock_tests)
 
-# 5. All-in-one test suite target
+# 4. All-in-one test suite target
 get_property(MODULE_TEST_SOURCES GLOBAL PROPERTY BETACRAFT_MODULE_TEST_SOURCES)
 add_executable(betacraft_all_tests
     ${MODULE_TEST_SOURCES}
-    ${UNIT_TEST_SOURCES}
     ${INTEGRATION_TEST_SOURCES}
     ${E2E_TEST_SOURCES}
     ${MOCK_TEST_SOURCES}
@@ -136,21 +124,6 @@ add_test(NAME AllTests COMMAND betacraft_all_tests)
 add_executable(betacraft_legacy_tests tests/test_main.cpp)
 target_link_libraries(betacraft_legacy_tests PRIVATE betacraft::game betacraft_warnings)
 add_test(NAME BetaCraftLegacyTests COMMAND betacraft_legacy_tests)
-
-# Adversarial M2 stress harness
-add_executable(adversarial_m2_stress tests/adversarial_m2_stress.cpp)
-target_include_directories(adversarial_m2_stress PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(adversarial_m2_stress PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
-
-# Adversarial M3 stress harness
-add_executable(adversarial_m3_stress tests/adversarial_m3_stress.cpp)
-target_include_directories(adversarial_m3_stress PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(adversarial_m3_stress PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
-
-# Adversarial M3 UI & Options stress harness
-add_executable(adversarial_m3_ui_stress tests/adversarial_m3_ui_stress.cpp)
-target_include_directories(adversarial_m3_ui_stress PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(adversarial_m3_ui_stress PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
 
 # Wall-clock budgets are benchmarks: skipped unless BETACRAFT_PERF_TESTS is set, run with
 # `ctest -L benchmark` (CI runs `ctest -LE benchmark`). Module budgets are registered by their

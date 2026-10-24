@@ -14,13 +14,13 @@
 using namespace betacraft::audio;
 using namespace betacraft::core;
 
-struct M3StressPayload {
+struct StressPayload {
     uint32_t producerId{0};
     uint32_t seqNumber{0};
     uint64_t checksum{0};
 
-    static M3StressPayload make(uint32_t p, uint32_t s) {
-        return M3StressPayload{p, s, (static_cast<uint64_t>(p) << 32) | (s ^ 0x5A5A5A5Au)};
+    static StressPayload make(uint32_t p, uint32_t s) {
+        return StressPayload{p, s, (static_cast<uint64_t>(p) << 32) | (s ^ 0x5A5A5A5Au)};
     }
 
     [[nodiscard]] bool isValid() const {
@@ -32,12 +32,12 @@ struct M3StressPayload {
 // SUITE 1: High Concurrency Multi-Producer Stress (8+ Threads, 16k+ Items)
 // ============================================================================
 
-TEST(AdversarialM3RingBuffer, HighConcurrencyMultiProducer8Threads) {
+TEST(AdversarialRingBuffer, HighConcurrencyMultiProducer8Threads) {
     constexpr size_t numProducers = 8;
     constexpr size_t itemsPerProducer = 2000; // 16,000 items total
     constexpr size_t totalItems = numProducers * itemsPerProducer;
 
-    MpscRingBuffer<M3StressPayload, 512> ring;
+    MpscRingBuffer<StressPayload, 512> ring;
     EXPECT_EQ(ring.capacity(), 512u);
     EXPECT_TRUE(ring.empty());
 
@@ -51,7 +51,7 @@ TEST(AdversarialM3RingBuffer, HighConcurrencyMultiProducer8Threads) {
                 std::this_thread::yield();
             }
             for (size_t i = 0; i < itemsPerProducer; ++i) {
-                M3StressPayload item = M3StressPayload::make(static_cast<uint32_t>(p), static_cast<uint32_t>(i));
+                StressPayload item = StressPayload::make(static_cast<uint32_t>(p), static_cast<uint32_t>(i));
                 while (!ring.push(item)) {
                     std::this_thread::yield();
                 }
@@ -68,7 +68,7 @@ TEST(AdversarialM3RingBuffer, HighConcurrencyMultiProducer8Threads) {
     startFlag.store(true, std::memory_order_release);
 
     while (totalPopped < totalItems) {
-        M3StressPayload out{};
+        StressPayload out{};
         if (ring.pop(out)) {
             ASSERT_TRUE(out.isValid());
             ASSERT_LT(out.producerId, numProducers);
@@ -95,12 +95,12 @@ TEST(AdversarialM3RingBuffer, HighConcurrencyMultiProducer8Threads) {
     EXPECT_TRUE(ring.empty());
 }
 
-TEST(AdversarialM3RingBuffer, HighConcurrencyMultiProducer12Threads) {
+TEST(AdversarialRingBuffer, HighConcurrencyMultiProducer12Threads) {
     constexpr size_t numProducers = 12;
     constexpr size_t itemsPerProducer = 1500; // 18,000 items total
     constexpr size_t totalItems = numProducers * itemsPerProducer;
 
-    MpscRingBuffer<M3StressPayload, 512> ring;
+    MpscRingBuffer<StressPayload, 512> ring;
     std::atomic<bool> startFlag{false};
     std::vector<std::thread> producers;
     producers.reserve(numProducers);
@@ -111,7 +111,7 @@ TEST(AdversarialM3RingBuffer, HighConcurrencyMultiProducer12Threads) {
                 std::this_thread::yield();
             }
             for (size_t i = 0; i < itemsPerProducer; ++i) {
-                M3StressPayload item = M3StressPayload::make(static_cast<uint32_t>(p), static_cast<uint32_t>(i));
+                StressPayload item = StressPayload::make(static_cast<uint32_t>(p), static_cast<uint32_t>(i));
                 while (!ring.push(item)) {
                     std::this_thread::yield();
                 }
@@ -127,7 +127,7 @@ TEST(AdversarialM3RingBuffer, HighConcurrencyMultiProducer12Threads) {
     startFlag.store(true, std::memory_order_release);
 
     while (totalPopped < totalItems) {
-        M3StressPayload out{};
+        StressPayload out{};
         if (ring.pop(out)) {
             ASSERT_TRUE(out.isValid());
             ASSERT_LT(out.producerId, numProducers);
@@ -155,7 +155,7 @@ TEST(AdversarialM3RingBuffer, HighConcurrencyMultiProducer12Threads) {
 // SUITE 2: Queue Overflow & Tail Invariant
 // ============================================================================
 
-TEST(AdversarialM3RingBuffer, QueueOverflowGracefulRejectionNoTailAdvancement) {
+TEST(AdversarialRingBuffer, QueueOverflowGracefulRejectionNoTailAdvancement) {
     MpscRingBuffer<int, 512> ring;
 
     // Fill to capacity
@@ -198,7 +198,7 @@ TEST(AdversarialM3RingBuffer, QueueOverflowGracefulRejectionNoTailAdvancement) {
     EXPECT_EQ(emptyVal, -1);
 }
 
-TEST(AdversarialM3RingBuffer, ConcurrentOverflowRejectionIntegrity) {
+TEST(AdversarialRingBuffer, ConcurrentOverflowRejectionIntegrity) {
     MpscRingBuffer<int, 512> ring;
     for (int i = 0; i < 512; ++i) {
         ASSERT_TRUE(ring.push(i));
@@ -244,7 +244,7 @@ TEST(AdversarialM3RingBuffer, ConcurrentOverflowRejectionIntegrity) {
 // SUITE 3: Empty Pop and Wraparound Integrity
 // ============================================================================
 
-TEST(AdversarialM3RingBuffer, EmptyPopStressIntegrity) {
+TEST(AdversarialRingBuffer, EmptyPopStressIntegrity) {
     MpscRingBuffer<int, 512> ring;
     EXPECT_TRUE(ring.empty());
 
@@ -264,7 +264,7 @@ TEST(AdversarialM3RingBuffer, EmptyPopStressIntegrity) {
     EXPECT_TRUE(ring.empty());
 }
 
-TEST(AdversarialM3RingBuffer, HighFrequencyCirculatingWraparound) {
+TEST(AdversarialRingBuffer, HighFrequencyCirculatingWraparound) {
     MpscRingBuffer<int, 16> ring;
     constexpr int iterations = 100000;
 
@@ -278,7 +278,7 @@ TEST(AdversarialM3RingBuffer, HighFrequencyCirculatingWraparound) {
     EXPECT_TRUE(ring.empty());
 }
 
-TEST(AdversarialM3RingBuffer, AlignmentAndNoexceptGuarantees) {
+TEST(AdversarialRingBuffer, AlignmentAndNoexceptGuarantees) {
     EXPECT_EQ(alignof(MpscRingBuffer<AudioCommand, 512>), 64u);
     EXPECT_EQ(alignof(MpscRingBuffer<int, 512>), 64u);
 
@@ -294,7 +294,7 @@ TEST(AdversarialM3RingBuffer, AlignmentAndNoexceptGuarantees) {
 // SUITE 4: AudioEngine Zero Allocations & Contention
 // ============================================================================
 
-TEST(AdversarialM3AudioEngine, ZeroAllocationsAndCommandDrain) {
+TEST(AdversarialAudioEngine, ZeroAllocationsAndCommandDrain) {
     AudioEngine engine;
     ASSERT_TRUE(engine.initialize());
 
@@ -308,7 +308,7 @@ TEST(AdversarialM3AudioEngine, ZeroAllocationsAndCommandDrain) {
     engine.shutdown();
 }
 
-TEST(AdversarialM3AudioEngine, MultiThreadBurstContention8Threads) {
+TEST(AdversarialAudioEngine, MultiThreadBurstContention8Threads) {
     AudioEngine engine;
     ASSERT_TRUE(engine.initialize());
 
