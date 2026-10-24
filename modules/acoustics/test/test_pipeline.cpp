@@ -191,7 +191,7 @@ TEST(AcousticPipeline, DdaRayMeetsTheSpecBudgetInOptimisedBuilds) {
     GTEST_SKIP() << "timing budget only meaningful with optimisations (NDEBUG builds)";
 #else
     // A wall-clock budget is a benchmark, not a correctness check: it only runs under the
-    // ctest label "benchmark" (Phase2_acoustics_perf), which sets BETACRAFT_PERF_TESTS.
+    // ctest label "benchmark" (Module_acoustics_perf), which sets BETACRAFT_PERF_TESTS.
     if (std::getenv("BETACRAFT_PERF_TESTS") == nullptr) {
         GTEST_SKIP() << "set BETACRAFT_PERF_TESTS=1 (ctest -L benchmark) to run the timing budget";
     }

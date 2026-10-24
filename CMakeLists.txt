@@ -164,7 +164,7 @@ target_link_libraries(adversarial_m3_ui_stress PRIVATE betacraft::game betacraft
 
 # Wall-clock budgets are benchmarks: skipped unless BETACRAFT_PERF_TESTS is set, run with
 # `ctest -L benchmark` (CI runs `ctest -LE benchmark`). Module budgets are registered by their
-# module (Phase2_acoustics_perf in modules/acoustics).
+# module (Module_acoustics_perf in modules/acoustics).
 
 # S6.6: one TNT blast under 15 ms in Release.
 add_test(NAME Integration_beta_content_perf COMMAND betacraft_integration_tests --gtest_filter=S6BetaContent.*Budget*)

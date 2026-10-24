@@ -1,4 +1,4 @@
-betacraft_add_module(storage DEPS betacraft::core betacraft::voxel betacraft::worldgen TEST_NAME Phase2_storage)
+betacraft_add_module(storage DEPS betacraft::core betacraft::voxel betacraft::worldgen)
 
 # S7.1: zstd-compressed region chunks when libzstd is found (RegionFile::kZstdAvailable).
 if(BETACRAFT_WITH_ZSTD AND ZSTD_FOUND)
