@@ -1,4 +1,4 @@
-#include "tests/phase1_test_contracts.hpp"
+#include "test_support/SpecContracts.hpp"
 #include "test_support/GLTestContext.hpp"
 
 #include <gtest/gtest.h>

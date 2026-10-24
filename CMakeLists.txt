@@ -78,7 +78,7 @@ file(GLOB_RECURSE INTEGRATION_TEST_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOU
 set(E2E_TEST_SOURCES
     tests/e2e/test_e2e_application.cpp
     tests/e2e/test_e2e_cli.cpp
-    tests/e2e/test_e2e_phase1_scenarios.cpp
+    tests/e2e/test_e2e_spec_scenarios.cpp
 )
 
 set(MOCK_TEST_SOURCES

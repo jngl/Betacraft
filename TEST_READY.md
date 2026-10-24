@@ -27,10 +27,10 @@ All tests are designed according to **Progressive Testability**:
 
 | File Path | Target Binary | Scope | Description |
 |---|---|---|---|
-| `tests/phase1_test_contracts.hpp` | Header | Tiers 1–4 Contracts | Specification contracts, bitfield encoders/decoders, lockless MPSC ring buffer model, Manhattan sphere discrete BFS metrics, options parser |
-| `tests/integration/test_integration_phase1.cpp` | `betacraft_integration_tests`, `betacraft_all_tests` | Tiers 1, 2, 3 | 42 unit/integration test cases covering Features 1–19, edge boundaries, and pairwise combinatorial interactions |
-| `tests/e2e/test_e2e_phase1_scenarios.cpp` | `betacraft_e2e_tests`, `betacraft_all_tests` | Tier 4 | 5 complex real-world application scenarios testing end-to-end workflows |
-| `CMakeLists.txt` | Build System | Registration | Registered in `INTEGRATION_TEST_SOURCES` and `E2E_TEST_SOURCES` |
+| `tests/support/test_support/SpecContracts.hpp` | Header | Tiers 1–4 Contracts | Specification contracts, bitfield encoders/decoders, lockless MPSC ring buffer model, Manhattan sphere discrete BFS metrics, options parser |
+| `tests/integration/test_integration_spec_contracts.cpp` | `betacraft_integration_tests`, `betacraft_all_tests` | Tiers 1, 2, 3 | 42 unit/integration test cases covering Features 1–19, edge boundaries, and pairwise combinatorial interactions |
+| `tests/e2e/test_e2e_spec_scenarios.cpp` | `betacraft_e2e_tests`, `betacraft_all_tests` | Tier 4 | 5 complex real-world application scenarios testing end-to-end workflows |
+| `CMakeLists.txt` | Build System | Registration | Globbed into `INTEGRATION_TEST_SOURCES`, listed in `E2E_TEST_SOURCES` |
 
 ---
 

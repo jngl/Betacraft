@@ -1,6 +1,7 @@
-# E2E Test Infra: BetaCraft 1.7.3 Modernization (Phase 1)
+# E2E Test Infra: BetaCraft 1.7.3 Modernization Spec Contracts
 
 ## Test Philosophy
+- The contracts live in `tests/support/test_support/SpecContracts.hpp` (Tiers 1-3 in `tests/integration/test_integration_spec_contracts.cpp`, Tier 4 scenarios in `tests/e2e/test_e2e_spec_scenarios.cpp`).
 - Opaque-box, requirement-driven. Derived from `ORIGINAL_REQUEST.md` and `docs/IMPROVEMENTS_ROADMAP.md`.
 - No dependency on private implementation details; tests verify behavior via public APIs, deterministic inputs/outputs, and invariant assertions.
 - Methodology: Category-Partition + Boundary Value Analysis (BVA) + Pairwise Combinatorial Testing + Workload / Scenario Testing.
