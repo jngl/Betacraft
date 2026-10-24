@@ -134,7 +134,7 @@ Phase 2 Data Flow:
 | 37 | DynamicLightUBO | `DynamicLight`, `DynamicLightManager` (held item, dropped items, selection by distance/frustum), `TileLightCuller` (16x9 tiles), std140 `DynamicLightUbo` packing, `DynamicLightUniformBuffer`, GLSL `computeDynamicLight` injected into the chunk shader, first-person hand light | Sprint 2.4 | P4.6, Fiche 5 | DONE |
 | 38 | VoxelAcousticOcclusion | `VoxelDda` ray-march, `measureOcclusion` / `occlusionTargetFor` / `computeVoxelOcclusion` (LPF cutoff in Hz), 10 Hz `OcclusionScheduler` (32 sources, interpolated targets), `VoiceAcousticFilter` (one-pole LPF + gain) | Sprint 2.4 | P4.2, Fiche 5 | DONE |
 | 39 | SharedReverbBus | `EnclosureDetector`/`EnclosureMonitor` (teleport-aware), `FdnReverb` on one `AuxReverbBus` shared by all voices, `AcousticVoiceBank` in the `AudioEngine` callback, `AcousticsController` in `Application` | Sprint 2.4 | P4.2, Fiche 5 | DONE |
-| 40 | Phase2TestSuites | Per-module GoogleTest executables `Phase2_<key>` and `tests/integration/phase2/` (see `TEST_INFRA.md`) | Sprint 2.x | Dual Track requirement | DONE |
+| 40 | ModuleTestSuites | Per-module GoogleTest executables `Module_<m>` and `tests/integration/<domain>/` (see `TEST_INFRA.md`) | Sprint 2.x | Dual Track requirement | DONE |
 
 ## Phase 2 Milestones
 | # | Name | Scope | Dependencies | Status |
