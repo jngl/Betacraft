@@ -68,7 +68,7 @@ std::set<ItemId> everyKnownId() {
 
 } // namespace
 
-TEST(CreativePaletteCatalogue, CategoriesInTabOrderWithNamesAndIcons) {
+TEST(CreativePaletteCatalogue, InCategoryOrderWithNamesAndIcons) {
     ASSERT_EQ(kPaletteCategories.size(), 8U);
     const std::pair<std::string_view, ItemId> expected[] = {
         {"BUILDING", toItemId(BlockId::Bricks)},  {"DECORATION", toItemId(BlockId::Dandelion)},

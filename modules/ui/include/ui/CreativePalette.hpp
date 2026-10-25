@@ -8,6 +8,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <optional>
 #include <span>
 #include <string_view>
@@ -21,7 +22,7 @@ namespace betacraft::ui {
 // by their items, not their blocks. Technical states (piston head, lit furnace, still
 // liquids, unlit redstone torch, crops, farmland) are left out.
 
-// In tab order; the first one is where the palette opens. Grows only at the end.
+// In category order; the first one is where the palette opens. Grows only at the end.
 enum class PaletteCategory : uint8_t { Building, Decoration, Nature, Redstone, Tools, Combat, Food, Materials };
 
 inline constexpr std::array<PaletteCategory, 8> kPaletteCategories{
@@ -53,7 +54,7 @@ inline constexpr ItemId kDecoration[] = {
 };
 
 inline constexpr ItemId kNature[] = {
-    asItem(BlockId::Grass),     asItem(BlockId::Dirt),      asItem(BlockId::SnowGrass),   asItem(BlockId::Sand),
+    asItem(BlockId::Dirt),      asItem(BlockId::Grass),     asItem(BlockId::SnowGrass),   asItem(BlockId::Sand),
     asItem(BlockId::Gravel),    asItem(BlockId::Clay),      asItem(BlockId::SnowBlock),   asItem(BlockId::Ice),
     asItem(BlockId::OakLog),    asItem(BlockId::BirchLog),  asItem(BlockId::PineLog),     asItem(BlockId::Leaves),
     asItem(BlockId::Sapling),   asItem(BlockId::CoalOre),   asItem(BlockId::IronOre),     asItem(BlockId::GoldOre),
@@ -81,15 +82,17 @@ inline constexpr ItemId kTools[] = {
 };
 
 // Swords, bow and arrows, then the 20 armour pieces (298..317, by material), throwables.
+inline constexpr ItemId kCombatWeapons[] = {
+    items::WoodSword, items::StoneSword, items::IronSword, items::GoldSword, items::DiamondSword,
+    items::Bow,       items::Arrow,
+};
+inline constexpr size_t kArmorPieceCount = gameplay::kLastArmorItem - gameplay::kFirstArmorItem + 1;
+inline constexpr ItemId kCombatThrowables[] = {items::Snowball, items::Egg};
 inline constexpr auto kCombat = [] {
-    std::array<ItemId, 9 + 20> a{
-        items::WoodSword, items::StoneSword, items::IronSword, items::GoldSword, items::DiamondSword,
-        items::Bow,       items::Arrow,
-    };
-    size_t n = 7;
-    for (ItemId id = gameplay::kFirstArmorItem; id <= gameplay::kLastArmorItem; ++id) a[n++] = id;
-    a[n++] = items::Snowball;
-    a[n++] = items::Egg;
+    std::array<ItemId, std::size(kCombatWeapons) + kArmorPieceCount + std::size(kCombatThrowables)> a{};
+    auto out = std::copy(std::begin(kCombatWeapons), std::end(kCombatWeapons), a.begin());
+    for (ItemId id = gameplay::kFirstArmorItem; id <= gameplay::kLastArmorItem; ++id) *out++ = id;
+    std::copy(std::begin(kCombatThrowables), std::end(kCombatThrowables), out);
     return a;
 }();
 
@@ -104,21 +107,43 @@ inline constexpr ItemId kMaterials[] = {
     items::Wheat,  items::Paper,         items::Book,      items::GlowstoneDust, items::Bone, items::Sugar,
 };
 
+// What each palette category shows: its title, the item drawn on its tab, its entries.
+struct PaletteCategoryInfo {
+    std::string_view name;
+    ItemId icon{gameplay::kNoItem};
+    std::span<const ItemId> entries;
+};
+
+// Indexed by PaletteCategory, in category order.
+inline constexpr std::array<PaletteCategoryInfo, kPaletteCategories.size()> kPaletteCategoryTable{{
+    {"BUILDING", asItem(BlockId::Bricks), kBuilding},
+    {"DECORATION", asItem(BlockId::Dandelion), kDecoration},
+    {"NATURE", asItem(BlockId::Rose), kNature},
+    {"REDSTONE", items::Redstone, kRedstone},
+    {"TOOLS", items::IronPickaxe, kTools},
+    {"COMBAT", items::IronSword, kCombat},
+    {"FOOD", items::Bread, kFood},
+    {"MATERIALS", items::IronIngot, kMaterials},
+}};
+
+static_assert([] {
+    for (size_t i = 0; i < kPaletteCategories.size(); ++i) {
+        if (static_cast<size_t>(kPaletteCategories[i]) != i) return false;
+    }
+    return true;
+}(), "kPaletteCategories lists PaletteCategory in enum order, so it indexes kPaletteCategoryTable");
+
+[[nodiscard]] constexpr const PaletteCategoryInfo* categoryInfo(PaletteCategory category) noexcept {
+    const auto index = static_cast<size_t>(category);
+    return index < kPaletteCategoryTable.size() ? &kPaletteCategoryTable[index] : nullptr;
+}
+
 } // namespace detail
 
 // The entries of `category`, in display order.
 [[nodiscard]] constexpr std::span<const gameplay::ItemId> paletteEntries(PaletteCategory category) noexcept {
-    switch (category) {
-        case PaletteCategory::Building: return detail::kBuilding;
-        case PaletteCategory::Decoration: return detail::kDecoration;
-        case PaletteCategory::Nature: return detail::kNature;
-        case PaletteCategory::Redstone: return detail::kRedstone;
-        case PaletteCategory::Tools: return detail::kTools;
-        case PaletteCategory::Combat: return detail::kCombat;
-        case PaletteCategory::Food: return detail::kFood;
-        case PaletteCategory::Materials: return detail::kMaterials;
-    }
-    return {};
+    const auto* info = detail::categoryInfo(category);
+    return info ? info->entries : std::span<const gameplay::ItemId>{};
 }
 
 namespace detail {
@@ -137,40 +162,21 @@ inline constexpr auto kAllPaletteEntries = [] {
 }();
 } // namespace detail
 
-// Every entry of the whole palette: each category's entries, in tab order.
+// Every entry of the whole palette: each category's entries, in category order.
 [[nodiscard]] constexpr std::span<const gameplay::ItemId> allPaletteEntries() noexcept {
     return detail::kAllPaletteEntries;
 }
 
 // The palette title while `category` is shown ("BUILDING", "NATURE"...).
 [[nodiscard]] constexpr std::string_view paletteCategoryName(PaletteCategory category) noexcept {
-    switch (category) {
-        case PaletteCategory::Building: return "BUILDING";
-        case PaletteCategory::Decoration: return "DECORATION";
-        case PaletteCategory::Nature: return "NATURE";
-        case PaletteCategory::Redstone: return "REDSTONE";
-        case PaletteCategory::Tools: return "TOOLS";
-        case PaletteCategory::Combat: return "COMBAT";
-        case PaletteCategory::Food: return "FOOD";
-        case PaletteCategory::Materials: return "MATERIALS";
-    }
-    return {};
+    const auto* info = detail::categoryInfo(category);
+    return info ? info->name : std::string_view{};
 }
 
 // The representative item drawn on the category's tab.
 [[nodiscard]] constexpr gameplay::ItemId paletteCategoryIcon(PaletteCategory category) noexcept {
-    namespace items = gameplay::items;
-    switch (category) {
-        case PaletteCategory::Building: return gameplay::toItemId(voxel::BlockId::Bricks);
-        case PaletteCategory::Decoration: return gameplay::toItemId(voxel::BlockId::Dandelion);
-        case PaletteCategory::Nature: return gameplay::toItemId(voxel::BlockId::Rose);
-        case PaletteCategory::Redstone: return items::Redstone;
-        case PaletteCategory::Tools: return items::IronPickaxe;
-        case PaletteCategory::Combat: return items::IronSword;
-        case PaletteCategory::Food: return items::Bread;
-        case PaletteCategory::Materials: return items::IronIngot;
-    }
-    return gameplay::kNoItem;
+    const auto* info = detail::categoryInfo(category);
+    return info ? info->icon : gameplay::kNoItem;
 }
 
 // The category that offers `id`; nullopt when the palette does not.

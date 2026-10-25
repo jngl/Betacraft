@@ -450,12 +450,9 @@ void Application::processEvents() {
                 } else if (m_inventoryOpen && ev.wheel.y != 0) {
                     // Creative, cursor over the palette grid: the wheel scrolls the palette by
                     // rows; anywhere else on the open inventory it does nothing.
-                    const InventoryCrafting& screen = m_session->crafting();
-                    const ui::InventoryLayoutKey layout{static_cast<int>(screen.gridSize()), screen.kind(),
-                                                        player().isCreative() && !ui::isContainerScreen(screen.kind())};
                     const ui::HudCanvas canvas = hudCanvas();
                     if (ui::HudRenderer::isOverPaletteGrid(canvas.toCanvasX(m_mouseX), canvas.toCanvasY(m_mouseY),
-                                                           canvas.width, canvas.height, layout)) {
+                                                           canvas.width, canvas.height, inventoryLayout())) {
                         m_palette.scroll(ev.wheel.y);
                     }
                 }
@@ -682,11 +679,16 @@ ui::HudCanvas Application::hudCanvas() const noexcept {
                                       m_inputManager.getGuiScalePreference());
 }
 
+ui::InventoryLayoutKey Application::inventoryLayout() const noexcept {
+    const InventoryCrafting& screen = m_session->crafting();
+    return {static_cast<int>(screen.gridSize()), screen.kind(),
+            player().isCreative() && !ui::isContainerScreen(screen.kind())};
+}
+
 void Application::handleInventoryClick(int32_t mouseX, int32_t mouseY, SlotButton button) {
     InventoryCrafting& screen = m_session->crafting();
     const bool container = ui::isContainerScreen(screen.kind());
-    const ui::InventoryLayoutKey layout{static_cast<int>(screen.gridSize()), screen.kind(),
-                                        player().isCreative() && !container};
+    const ui::InventoryLayoutKey layout = inventoryLayout();
     // The inventory is laid out in the GUI Scale canvas: window points map back first.
     const ui::HudCanvas canvas = hudCanvas();
     mouseX = canvas.toCanvasX(mouseX);
@@ -711,7 +713,7 @@ void Application::handleInventoryClick(int32_t mouseX, int32_t mouseY, SlotButto
             break;
         case ui::InventoryRegion::PaletteTab:
             // Only hit while the palette is drawn, i.e. in Creative on a grid screen.
-            if (button == SlotButton::Left && hit.index < ui::kPaletteCategories.size()) {
+            if (player().isCreative() && button == SlotButton::Left && hit.index < ui::kPaletteCategories.size()) {
                 const ui::PaletteCategory category = ui::kPaletteCategories[hit.index];
                 changed = category != m_palette.category();
                 m_palette.selectCategory(category);

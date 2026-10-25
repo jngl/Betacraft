@@ -97,6 +97,9 @@ public:
     [[nodiscard]] ui::HudCanvas hudCanvas() const noexcept;
 
 private:
+    // The open inventory screen's layout: its grid and kind, the palette in Creative on a
+    // grid screen. Requires an open world.
+    [[nodiscard]] ui::InventoryLayoutKey inventoryLayout() const noexcept;
     // Leaves the title for the world: a new world gets its mode and starter kit first, and a
     // dead player lands on the death screen.
     void enterGame();

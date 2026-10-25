@@ -503,7 +503,7 @@ void HudRenderer::render(
         if (craft.kind == ScreenKind::Chest) title = "CHEST";
         render::BitmapFont::appendText(verts, title, px + 16.0f, py + 12.0f, 2.0f, titleCol);
         if (layout.palette) {
-            // The active palette category's name replaces the old "BLOCK PALETTE" title.
+            // Palette title: the active palette category's name, above its tabs.
             render::BitmapFont::appendText(verts, paletteCategoryName(ctx.palette.category()), px + 340.0f, py + kPaletteTitleTop, kPaletteTitleScale,
                                            titleCol);
         }
@@ -593,7 +593,9 @@ void HudRenderer::render(
         }
 
         // Right Bottom: Player Inventory (3 rows of 9 backpack slots + 1 row of 9 hotbar slots)
-        render::BitmapFont::appendText(verts, "PLAYER INVENTORY", px + 340.0f, py + 212.0f, 1.4f, glm::vec4(0.95f));
+        // With the palette, smaller and lower to clear its taller column (tabs above the grid).
+        render::BitmapFont::appendText(verts, "PLAYER INVENTORY", px + 340.0f, py + (layout.palette ? 212.0f : 205.0f),
+                                       layout.palette ? 1.4f : 1.7f, glm::vec4(0.95f));
         for (size_t i = 0; i < physics::Player::TOTAL_INVENTORY_SIZE; ++i) {
             const SlotRect r = inventorySlotRect(InventoryRegion::Inventory, i, screenWidth, screenHeight, layout);
             pushBeveledSlot(verts, r.x, r.y, r.size, hovered(r));
@@ -817,37 +819,50 @@ InventoryHit HudRenderer::hitTestInventory(int32_t mouseX, int32_t mouseY, int32
 }
 
 namespace {
-[[nodiscard]] bool drawsPalette(InventoryLayoutKey layout) noexcept {
-    return layout.palette && !isContainerScreen(layout.kind);
+// The palette grid's outer edges (window points), gaps between slots included.
+struct PaletteGridBounds {
+    float left{0.0f};
+    float top{0.0f};
+    float right{0.0f};
+    float bottom{0.0f};
+};
+
+// nullopt when the palette is not drawn: no palette, or a container screen (which ignores
+// InventoryLayoutKey::palette).
+[[nodiscard]] std::optional<PaletteGridBounds> paletteGridBounds(int32_t screenWidth, int32_t screenHeight,
+                                                                 InventoryLayoutKey layout) noexcept {
+    if (!layout.palette || isContainerScreen(layout.kind)) {
+        return std::nullopt;
+    }
+    const SlotRect first = HudRenderer::inventorySlotRect(InventoryRegion::Palette, 0, screenWidth, screenHeight, layout);
+    const SlotRect last = HudRenderer::inventorySlotRect(InventoryRegion::Palette, kPaletteVisibleSlots - 1,
+                                                         screenWidth, screenHeight, layout);
+    return PaletteGridBounds{first.x, first.y, last.x + last.size, last.y + last.size};
 }
 } // namespace
 
 bool HudRenderer::isOverPaletteGrid(int32_t mouseX, int32_t mouseY, int32_t screenWidth, int32_t screenHeight,
                                     InventoryLayoutKey layout) noexcept {
-    if (!drawsPalette(layout)) {
+    const auto grid = paletteGridBounds(screenWidth, screenHeight, layout);
+    if (!grid) {
         return false;
     }
-    const SlotRect first = inventorySlotRect(InventoryRegion::Palette, 0, screenWidth, screenHeight, layout);
-    const SlotRect last =
-        inventorySlotRect(InventoryRegion::Palette, kPaletteVisibleSlots - 1, screenWidth, screenHeight, layout);
     const float mx = static_cast<float>(mouseX);
     const float my = static_cast<float>(mouseY);
-    return mx >= first.x && mx < last.x + last.size && my >= first.y && my < last.y + last.size;
+    return mx >= grid->left && mx < grid->right && my >= grid->top && my < grid->bottom;
 }
 
 std::optional<PaletteScrollbar> HudRenderer::paletteScrollbar(int32_t screenWidth, int32_t screenHeight,
                                                               InventoryLayoutKey layout,
                                                               const PaletteNavigation& palette) noexcept {
-    if (!drawsPalette(layout) || !palette.scrollbarVisible()) {
+    const auto grid = paletteGridBounds(screenWidth, screenHeight, layout);
+    if (!grid || !palette.scrollbarVisible()) {
         return std::nullopt;
     }
-    const SlotRect first = inventorySlotRect(InventoryRegion::Palette, 0, screenWidth, screenHeight, layout);
-    const SlotRect last =
-        inventorySlotRect(InventoryRegion::Palette, kPaletteVisibleSlots - 1, screenWidth, screenHeight, layout);
     const PaletteScrollbarThumb thumb = palette.scrollbarThumb();
-    const float trackHeight = last.y + last.size - first.y;
-    return PaletteScrollbar{last.x + last.size + kPaletteScrollbarGap, kPaletteScrollbarWidth, first.y, trackHeight,
-                            first.y + thumb.top * trackHeight, thumb.height * trackHeight};
+    const float trackHeight = grid->bottom - grid->top;
+    return PaletteScrollbar{grid->right + kPaletteScrollbarGap, kPaletteScrollbarWidth, grid->top, trackHeight,
+                            grid->top + thumb.top * trackHeight, thumb.height * trackHeight};
 }
 
 InventoryHit HudRenderer::hitTestInventoryScreen(int32_t mouseX, int32_t mouseY, int32_t screenWidth,
