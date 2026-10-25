@@ -29,7 +29,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            ninja-build ccache pkg-config libsdl2-dev libzstd-dev libpng-dev \
+            ninja-build ccache pkg-config libsdl2-dev libglm-dev libzstd-dev libpng-dev \
             xvfb mesa-utils libgl1-mesa-dri
 
       - uses: actions/cache@v4

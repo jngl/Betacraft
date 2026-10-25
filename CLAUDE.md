@@ -7,7 +7,7 @@ Betacraft is a game inspired by Minecraft in C++20 / OpenGL 3.3 Core / SDL2 / mi
 ## Build, run, test
 
 ```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release     # needs SDL2 (pkg-config); libzstd and libpng are optional
+cmake -B build -DCMAKE_BUILD_TYPE=Release     # needs SDL2 (pkg-config) and GLM headers; libzstd and libpng are optional
 cmake --build build -j
 ctest --test-dir build --output-on-failure -LE benchmark   # what CI runs (plus -E AllTests, under xvfb)
 ctest --test-dir build -L benchmark                       # wall-clock budget tests (sets BETACRAFT_PERF_TESTS=1)
