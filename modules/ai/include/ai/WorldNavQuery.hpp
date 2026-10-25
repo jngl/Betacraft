@@ -10,7 +10,7 @@ namespace betacraft::world { class World; }
 namespace betacraft::ai {
 
 // How a block reads for navigation: water is Liquid, lava and cactus are Hazards, a wooden
-// door (wooden or iron, S8.8) is open or closed by its metadata, fences are too high to step on, and anything else
+// door (wooden or iron) is open or closed by its metadata, fences are too high to step on, and anything else
 // is Solid when it has a collision box (BlockRegistry::isSolid), Passable otherwise.
 [[nodiscard]] NavCell classifyBlock(voxel::BlockId id, uint8_t meta) noexcept;
 

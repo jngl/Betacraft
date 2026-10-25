@@ -7,7 +7,7 @@
 #include <array>
 #include <cstdint>
 
-// Concurrency (S7.7): pass 1 runs on the generation workers (world::ChunkGenPipeline),
+// Concurrency: pass 1 runs on the generation workers (world::ChunkGenPipeline),
 // several threads sharing one const WorldGen. Nothing here or in worldgen/ may hold `mutable`
 // members or non-const `static` state, and generation never reads World.
 namespace betacraft::world {
@@ -30,7 +30,7 @@ public:
     [[nodiscard]] BiomeSample sampleBiome(int32_t worldX, int32_t worldZ) const noexcept;
     void populateBiomeColumns(voxel::Chunk& chunk) const noexcept;
 
-    // P3.4 pass 1 only: biomes, terrain, surface, P3.3 caves, S6.9 ore veins and S6.10
+    // Pass 1 only: biomes, terrain, surface, caves, ore veins and
     // dungeons, computed from this chunk alone. Decoration (pass 2) and lighting are World's job once the 3x3
     // neighbourhood is resident; the chunk is left unlit and unmodified.
     void generateChunk(voxel::Chunk& chunk) const noexcept;

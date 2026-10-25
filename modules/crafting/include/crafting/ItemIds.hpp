@@ -57,10 +57,10 @@ inline constexpr voxel::BlockId kDefinedBlockIds[] = {
     voxel::BlockId::BirchLog, voxel::BlockId::PineLog, voxel::BlockId::Stick, voxel::BlockId::CoalItem,
     voxel::BlockId::WoodPickaxe, voxel::BlockId::StonePickaxe, voxel::BlockId::IronPickaxe,
     voxel::BlockId::DiamondPickaxe,
-    // S5.4 shapes
+    // Shapes
     voxel::BlockId::Bed, voxel::BlockId::WoodStairs, voxel::BlockId::Crops, voxel::BlockId::Farmland,
     voxel::BlockId::WoodDoor, voxel::BlockId::Ladder, voxel::BlockId::CobbleStairs, voxel::BlockId::Fence,
-    // S8.5 redstone
+    // Redstone
     voxel::BlockId::RedstoneWire, voxel::BlockId::Lever, voxel::BlockId::StonePressurePlate, voxel::BlockId::IronDoor,
     voxel::BlockId::WoodPressurePlate, voxel::BlockId::RedstoneTorchOff, voxel::BlockId::RedstoneTorchOn,
     voxel::BlockId::StoneButton
@@ -79,7 +79,7 @@ inline constexpr voxel::BlockId kDefinedBlockIds[] = {
 
 // The voxel::BlockId with this number, only if the codebase defines it (so
 // the result can index BlockRegistry). The legacy item-only ids 100..105 are
-// included as numbers, but nothing produces them since S2.10 (stick, coal and
+// included as numbers, but nothing produces them any more (stick, coal and
 // the pickaxes are Beta numbers now). Every item >= 256 returns nullopt.
 [[nodiscard]] constexpr std::optional<voxel::BlockId> toBlockId(ItemId id) noexcept {
     if (id == kAir) {
@@ -108,7 +108,7 @@ namespace detail {
 }
 } // namespace detail
 
-// S2.10: a placeable block keeps an id below 256, the chunk format's byte (items are >= 256).
+// A placeable block keeps an id below 256, the chunk format's byte (items are >= 256).
 static_assert(detail::everyPlaceableBlockFitsAByte(), "a placeable BlockId exceeds 255");
 
 // 0 means "not damageable". Same budget the combat module wears down (Beta: the tool breaks

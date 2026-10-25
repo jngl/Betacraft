@@ -13,7 +13,7 @@ namespace betacraft::gameplay {
 // crafting module (crafting/ItemIds.hpp) re-exports it, so both always agree:
 //  * 0..255 : voxel::BlockId values, unchanged. 54 (Chest) and 62 (lit furnace) are real
 //             blocks with Beta's block ids.
-//  * 256..  : vanilla Beta 1.7.3 item numbers, the canonical form of every item (S2.10,
+//  * 256..  : vanilla Beta 1.7.3 item numbers, the canonical form of every item (
 //             items_scheme 2). Stick, coal and the four pickaxes moved there too.
 //  * items::legacy::* are the item-only BlockIds 100..105 that older saves (items_scheme 1)
 //             and the unmigrated ui::CraftingSystem use for those six items. The loaders fold
@@ -31,7 +31,7 @@ inline constexpr ItemId Chest = toItemId(voxel::BlockId::Chest);
 inline constexpr ItemId IronShovel = 256;
 inline constexpr ItemId IronPickaxe = 257;
 inline constexpr ItemId IronAxe = 258;
-inline constexpr ItemId FlintAndSteel = 259; // Lights TNT (S6.6)
+inline constexpr ItemId FlintAndSteel = 259; // Lights TNT
 inline constexpr ItemId Apple = 260;
 inline constexpr ItemId Bow = 261;
 inline constexpr ItemId Arrow = 262;
@@ -74,12 +74,12 @@ inline constexpr ItemId Flint = 318;
 inline constexpr ItemId RawPorkchop = 319;
 inline constexpr ItemId CookedPorkchop = 320;
 inline constexpr ItemId GoldenApple = 322;
-inline constexpr ItemId WoodenDoor = 324; // Places BlockId::WoodDoor (S5.6)
+inline constexpr ItemId WoodenDoor = 324; // Places BlockId::WoodDoor
 inline constexpr ItemId Bucket = 325;
 inline constexpr ItemId WaterBucket = 326;
 inline constexpr ItemId LavaBucket = 327;
-inline constexpr ItemId IronDoor = 330; // Places BlockId::IronDoor (S8.5)
-inline constexpr ItemId Redstone = 331;  // Places BlockId::RedstoneWire (S8.5)
+inline constexpr ItemId IronDoor = 330; // Places BlockId::IronDoor
+inline constexpr ItemId Redstone = 331;  // Places BlockId::RedstoneWire
 inline constexpr ItemId Snowball = 332;
 inline constexpr ItemId MilkBucket = 335;
 inline constexpr ItemId Leather = 334;
@@ -90,9 +90,9 @@ inline constexpr ItemId GlowstoneDust = 348;
 inline constexpr ItemId Bone = 352;
 inline constexpr ItemId Sugar = 353;
 inline constexpr ItemId Cake = 354;
-inline constexpr ItemId Bed = 355; // Places BlockId::Bed (S5.8)
+inline constexpr ItemId Bed = 355; // Places BlockId::Bed
 inline constexpr ItemId Cookie = 357;
-// The vanilla numbers of the six items that used to have legacy ids; since S2.10 they are
+// The vanilla numbers of the six items that used to have legacy ids; since they are
 // the canonical ids themselves.
 namespace beta {
 inline constexpr ItemId IronPickaxe = items::IronPickaxe;
@@ -245,7 +245,7 @@ static_assert(static_cast<size_t>(voxel::BlockId::Count) <= 256, "block ids must
     return id >= items::legacy::First && id <= items::legacy::Last;
 }
 
-// The vanilla Beta number: the canonical id since S2.10.
+// The vanilla Beta number: the canonical id.
 [[nodiscard]] constexpr ItemId toVanillaId(ItemId id) noexcept {
     return canonicalize(id);
 }

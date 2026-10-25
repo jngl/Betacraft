@@ -1,5 +1,5 @@
-// Priority by distance AND field of view (roadmap P1.1 "chunks proches du joueur et situés
-// dans le champ de vision"; Diagram 1 node B "Évaluation Distance Joueur & Frustum").
+// Priority by distance AND field of view: chunks near the player
+// and inside the view frustum come first.
 // Sections outside the view cone are not excluded, only pushed back: their distance key
 // is scaled, so a near section behind the player still beats a far one in front.
 

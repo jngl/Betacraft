@@ -51,7 +51,7 @@ ItemStack makeStack(ItemId id, int32_t count) noexcept {
         return {};
     }
     if (const std::optional<ArmorInfo> armor = armorInfo(id)) {
-        return ItemStack{id, clamped, 0, armor->maxDamage}; // S6.7 armor wears too
+        return ItemStack{id, clamped, 0, armor->maxDamage}; // armor wears too
     }
     if (id == items::FlintAndSteel) {
         return ItemStack{id, clamped, 0, kFlintAndSteelMaxDamage};

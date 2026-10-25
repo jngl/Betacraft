@@ -1,4 +1,4 @@
-// P2.6 — Ingredient predicate (alternatives, by-products, durability use).
+// Ingredient predicate (alternatives, by-products, durability use).
 #include "crafting/Ingredient.hpp"
 
 #include <gtest/gtest.h>

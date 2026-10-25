@@ -15,7 +15,7 @@ namespace betacraft::voxel { class Chunk; }
 
 namespace betacraft::worldgen {
 
-// S6.9 Beta 1.7.3 ore veins (WorldGenMinable, ChunkProviderGenerate.populate), part of pass 1.
+// Beta 1.7.3 ore veins (WorldGenMinable, ChunkProviderGenerate.populate), part of pass 1.
 // Each chunk draws its veins from its own stream (chunkSeed(seed ^ kOreVeinSalt, coord)), with
 // the vein centre inside the chunk; a vein reaches at most 7 blocks out, so a chunk traces the
 // veins of its 9-chunk neighbourhood clipped to itself. The result is a pure function of the

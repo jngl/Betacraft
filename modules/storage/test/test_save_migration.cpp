@@ -1,5 +1,5 @@
-// S7.4 migration of chunks/c_X_Z.{chk,dec,be} into region bundles, on the frozen
-// pre-Sprint 7 save tests/data/saves/v1 (10 chunks, a chest and a furnace in chunk (0, 0)).
+// Migration of chunks/c_X_Z.{chk,dec,be} into region bundles, on the frozen
+// pre-region save tests/data/saves/v1 (10 chunks, a chest and a furnace in chunk (0, 0)).
 #include "StorageTestHelpers.hpp"
 #include "storage/ChunkBundleCodec.hpp"
 #include "storage/LegacyChunkStore.hpp"

@@ -12,9 +12,9 @@
 
 namespace betacraft::storage {
 
-// S7.3 chunk bundles in region files under `regionDir` (r.<rx>.<rz>.bcr, rx = floorDiv(x, 32)),
+// Chunk bundles in region files under `regionDir` (r.<rx>.<rz>.bcr, rx = floorDiv(x, 32)),
 // with the kCacheSize most recently used RegionFiles kept open (an evicted one is flushed).
-// Thread-safe: one mutex serialises every call (the S7.6 I/O worker writes from its thread).
+// Thread-safe: one mutex serialises every call (the I/O worker writes from its thread).
 class RegionChunkStore final : public IChunkStore {
 public:
     static constexpr size_t kCacheSize = 8;

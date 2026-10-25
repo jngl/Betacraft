@@ -43,15 +43,15 @@ public:
     // Window, GL and renderers; with EngineConfig::autoEnterWorld also enterWorld(worldSaveDir),
     // otherwise the title screen starts with no world.
     [[nodiscard]] bool initialize();
-    // S7.9 opens the world saved in `dir` (leaving the current one first) through
-    // WorldSession::open, with a progress bar on the Loading screen while a pre-Sprint 7 save
+    // Opens the world saved in `dir` (leaving the current one first) through
+    // WorldSession::open, with a progress bar on the Loading screen while a pre-region save
     // beyond storage::kMigrationProgressThreshold chunks is converted. A directory without
     // level.dat is a new world: `params` gives its seed, mode and name (nullopt:
     // EngineConfig::worldSeed and the title screen's mode); `params` is ignored for an
     // existing world. Ends on the title screen with the world loaded: enterGame (run,
     // runFixedFrames, "Singleplayer") goes in. False when the directory cannot be created.
     bool enterWorld(const std::filesystem::path& dir, std::optional<core::NewWorldParams> params = std::nullopt);
-    // S7.9 back to the title screen with no world: stops the meshing, closes the world
+    // Back to the title screen with no world: stops the meshing, closes the world
     // session (saved, every queued chunk written) and drops it with the per-world effects.
     // No-op without a world.
     void leaveWorld();
@@ -89,7 +89,7 @@ public:
     // The open world's level.dat is too new or unreadable (WorldSession::isSaveDisabled).
     [[nodiscard]] bool isSaveDisabled() const noexcept { return m_session && m_session->isSaveDisabled(); }
 
-    // S3.7 GUI Scale: TextRenderer::calculateGuiScale(w, h, pref) / 3 for the current window
+    // GUI Scale: TextRenderer::calculateGuiScale(w, h, pref) / 3 for the current window
     // and preference (read every frame); 1.0 for Auto at 1280x720.
     [[nodiscard]] float hudScale() const noexcept;
     // The virtual canvas the HUD, the inventory and the death screen are laid out in.
@@ -99,7 +99,7 @@ private:
     // Leaves the title for the world: a new world gets its mode and starter kit first, and a
     // dead player lands on the death screen.
     void enterGame();
-    // S7.8 menu flow: the World Select list (refreshed from savesRoot), the Create World form,
+    // Menu flow: the World Select list (refreshed from savesRoot), the Create World form,
     // and entering the chosen or new world.
     void openWorldSelect();
     void openCreateWorld();
@@ -136,12 +136,12 @@ private:
     void collectMobInstances(float tickAlpha);
 
     void handleRightClickAction();
-    // S5.6-S5.8 step 2 of the right-click order for doors and beds; true when the click was used.
+    // Step 2 of the right-click order for doors and beds; true when the click was used.
     // Hand swing and sound of a step 3/4 item use (door, bed, hoe, seeds, bucket).
     void playItemUseEffects(const ItemUseResult& used);
     bool activateDoorOrBed();
     void playRedstoneEffects(const std::vector<redstone::RedstoneEvent>& events);
-    // S8.10-S8.12 after each game tick: the flash, bolt and delayed thunder of `strike`, rain
+    // After each game tick: the flash, bolt and delayed thunder of `strike`, rain
     // splashes around the player, and the rain loop's gain and occlusion.
     void tickWeatherEffects(const std::optional<glm::vec3>& strike);
     // F3 line of the weather state.
@@ -173,7 +173,7 @@ private:
         float phase{0.0f};
         glm::vec3 lastPos{0.0f};
     };
-    // S8.10 a thunder clap on its way (speed of sound).
+    // A thunder clap on its way (speed of sound).
     struct PendingThunder {
         int32_t ticks{0};
         float volume{1.0f};
@@ -192,12 +192,12 @@ private:
         // Instances drawn this frame, and the mobs' limb swing.
         std::vector<render::ItemEntityInstance> itemInstances;
         std::vector<render::FallingBlockInstance> fallingBlockInstances;
-        std::vector<render::ArrowRenderInstance> arrowInstances; // S6.2
+        std::vector<render::ArrowRenderInstance> arrowInstances;
         std::vector<render::MobRenderInstance> mobInstances;
         std::unordered_map<ecs::EntityId, MobWalkState> mobWalk;
         std::unordered_map<ecs::EntityId, MobWalkState> mobWalkNext;
 
-        // S8.10 lightning: the thunder claps on their way, and the last bolt, drawn with the
+        // Lightning: the thunder claps on their way, and the last bolt, drawn with the
         // sky flash for kLightningFlashTicks.
         std::vector<PendingThunder> pendingThunder;
         std::optional<glm::vec3> lightningBolt;
@@ -206,7 +206,7 @@ private:
 
         int32_t digTicks{0};
         float placeCooldown{0.0f};
-        // S5.8 one-line notices above the hotbar (bed refusals, missing bed), shown for a while.
+        // One-line notices above the hotbar (bed refusals, missing bed), shown for a while.
         std::string statusMessage;
         float statusMessageSeconds{0.0f};
 

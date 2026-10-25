@@ -1,4 +1,4 @@
-// P2.1 — Gameplay components are plain data usable in pools (Fiche 3 §2.2 / Diagramme 2).
+// Gameplay components are plain data usable in pools.
 #include "ecs/Components.hpp"
 #include "ecs/Registry.hpp"
 

@@ -62,7 +62,7 @@ TEST(WorldStorageTest, ChunkPersistenceRoundtrip) {
 }
 
 // ---------------------------------------------------------------------------------------
-// Sprint 1 (S1.7): level.dat V2, versioning, atomic writes and chunk quarantine.
+// Level.dat V2, versioning, atomic writes and chunk quarantine.
 // ---------------------------------------------------------------------------------------
 
 namespace {
@@ -303,7 +303,7 @@ TEST(WorldStorageTest, ReadOnlyStorageNeverWritesNorQuarantines) {
     EXPECT_FALSE(std::filesystem::exists(tempDir.path() / "chunks" / "c_2_2.chk"));
 }
 
-// S2.4: the .be block entity codec (conventions §1, kBlockEntityFormatVersion = 1).
+// The .be block entity codec (conventions §1, kBlockEntityFormatVersion = 1).
 TEST(WorldStorageTest, BlockEntityCodecRoundTrip) {
     const betacraft::core::ChunkCoord coord{-2, 3};
     FurnaceData furnace{};

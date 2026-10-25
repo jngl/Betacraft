@@ -28,7 +28,7 @@ struct ModelBox {
     std::array<uint8_t, 6> tiles{}; // PosX, NegX, PosY, NegY, PosZ, NegZ
     glm::vec3 pivot{0.0f};          // Swing pivot (a hip or a shoulder)
     float swing{0.0f};              // Radians about the side (Z) axis; > 0 moves the far end forward
-    // S6.3 spider legs, applied before `swing` about the same pivot: `roll` about the facing
+    // Spider legs, applied before `swing` about the same pivot: `roll` about the facing
     // (X) axis (> 0 lowers the +Z end), then `turn` about the vertical axis (> 0 moves the +Z
     // end forward).
     float roll{0.0f};

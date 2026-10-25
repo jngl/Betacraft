@@ -1,4 +1,4 @@
-// P2.3 - Per-tick update budget and active-set (dirty frontier) cost bounds.
+// Per-tick update budget and active-set (dirty frontier) cost bounds.
 #include "FluidTestUtils.hpp"
 
 #include <gtest/gtest.h>

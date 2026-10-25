@@ -216,7 +216,7 @@ void jumpIfBlocked(VelocityComp& v) noexcept {
     }
 }
 
-// S6.3: a mob that climbsWalls (spider) goes up a wall it walks into, on the ground or not
+// A mob that climbsWalls (spider) goes up a wall it walks into, on the ground or not
 // (Beta EntitySpider.isOnLadder = isCollidedHorizontally, ladder climbing at 0.2 b/tick);
 // any other mob jumps.
 void climbOrJump(const Registry& reg, EntityId e, VelocityComp& v) noexcept {
@@ -229,7 +229,7 @@ void climbOrJump(const Registry& reg, EntityId e, VelocityComp& v) noexcept {
     jumpIfBlocked(v);
 }
 
-// S8.3: steers along the mob's A* waypoints. False when no waypoint is left (the caller
+// Steers along the mob's A* waypoints. False when no waypoint is left (the caller
 // then steers straight).
 bool followPath(const Registry& reg, EntityId e, MobPathComp& path, TransformComp& t, VelocityComp& v,
                 float speed) noexcept {
@@ -241,7 +241,7 @@ bool followPath(const Registry& reg, EntityId e, MobPathComp& path, TransformCom
         const glm::vec2 to = centre - horizontal(t.pos);
         if (glm::length(to) > MobAISystem::WAYPOINT_REACHED) {
             steer(t, v, to, speed);
-            // S4.11 jump, ahead of the wall contact when the next cell is a step up.
+            // Jump, ahead of the wall contact when the next cell is a step up.
             if (wp.y > static_cast<int32_t>(std::floor(t.pos.y + 1e-3f)) && v.onGround) {
                 v.linear.y = MobAISystem::JUMP_SPEED;
                 v.onGround = false;
@@ -370,7 +370,7 @@ void MobAISystem::update(Registry& reg, float dt, const MobAIParams& params) {
         });
 }
 
-// --- S8.3 PathPlanningSystem ---------------------------------------------------------------
+// --- PathPlanningSystem ---------------------------------------------------------------
 
 ai::NavAgent PathPlanningSystem::agentOf(const Registry& reg, EntityId e) noexcept {
     if (const MobKindComp* kind = reg.tryGet<MobKindComp>(e)) {

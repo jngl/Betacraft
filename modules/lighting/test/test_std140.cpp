@@ -1,4 +1,4 @@
-// P4.6 — std140 layout rules (OpenGL 4.6 spec §7.6.2.2, valid for GL 3.3 core).
+// Std140 layout rules (OpenGL 4.6 spec §7.6.2.2, valid for GL 3.3 core).
 #include "lighting/Std140.hpp"
 
 #include <gtest/gtest.h>

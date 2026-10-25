@@ -33,7 +33,7 @@ struct WeatherFrame {
     uint32_t boltSeed{0};          // Shape of the bolt
 };
 
-// S8.11 rain and snow (Beta EntityRenderer.renderRainSnow): one camera-facing quad per column
+// Rain and snow (Beta EntityRenderer.renderRainSnow): one camera-facing quad per column
 // within RADIUS blocks of the eye, from max(precipitation height, eye - RADIUS) to eye +
 // RADIUS, rain or snow by the column's biome (nothing in the desert), the pattern scrolling
 // down in the shader, alpha = rainStrength (fading towards the edge of the disc). Drawn after

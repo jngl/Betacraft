@@ -1,4 +1,4 @@
-// P3.3 integration hooks - column sampling adapters used by WorldGen to feed the carver.
+// Integration hooks - column sampling adapters used by WorldGen to feed the carver.
 //   * FunctionColumnSampler: wraps WorldGen's analytic column function.
 //   * ChunkColumnCache: samples every column the carver needs for one chunk exactly once
 //     (chunk + 1-block face ring), so resolveColumn's 5 lookups per column cost 1.25.

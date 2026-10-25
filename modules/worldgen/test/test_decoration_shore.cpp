@@ -1,4 +1,4 @@
-// P3.4 - "sans couloirs vides": shoreline features (sugar cane) must also grow on chunk border
+// "sans couloirs vides": shoreline features (sugar cane) must also grow on chunk border
 // columns whose only adjacent water lies in the neighbouring chunk. Planning reads only the
 // planned chunk, so such columns get water-conditional features that pass 2 resolves against
 // the (decoration-invariant) sea-level water of the 3x3 neighbourhood.

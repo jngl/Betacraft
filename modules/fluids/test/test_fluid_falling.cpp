@@ -1,4 +1,4 @@
-// P2.3 - Vertical (gravity) flow has priority; falling fluid resets its level on landing.
+// Vertical (gravity) flow has priority; falling fluid resets its level on landing.
 #include "FluidTestUtils.hpp"
 
 #include <gtest/gtest.h>

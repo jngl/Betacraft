@@ -1,4 +1,4 @@
-// P4.6 — DynamicLight struct, emitter lookup and CPU reference evaluation.
+// DynamicLight struct, emitter lookup and CPU reference evaluation.
 #include "lighting/DynamicLight.hpp"
 #include "lighting/DynamicLightManager.hpp"
 
@@ -77,7 +77,7 @@ TEST(DynLightEmitters, HeldRedstoneOreDoesNotGlowLikeBeta) {
 }
 
 TEST(DynLightEmitters, EveryRegisteredIdMatchesBetaItemEmission) {
-    // Only torches (14), glowstone (15) and the lit redstone torch (7, S8.5) glow as items
+    // Only torches (14), glowstone (15) and the lit redstone torch (7) glow as items
     // among this engine's ids.
     for (int raw = 0; raw < 256; ++raw) {
         const auto id = static_cast<BlockId>(raw);

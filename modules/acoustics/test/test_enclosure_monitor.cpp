@@ -1,4 +1,4 @@
-// P4.2 — 10 Hz cave/enclosure monitor feeding the shared reverb bus (rate limit, dedup, snap rules).
+// 10 Hz cave/enclosure monitor feeding the shared reverb bus (rate limit, dedup, snap rules).
 #include "test_support/AcousticsTestUtils.hpp"
 #include "acoustics/AuxReverbBus.hpp"
 #include "acoustics/EnclosureMonitor.hpp"

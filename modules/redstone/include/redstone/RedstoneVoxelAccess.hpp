@@ -10,7 +10,7 @@
 
 namespace betacraft::redstone {
 
-// S8.6 voxel view of the redstone engine, on the IFluidVoxelAccess pattern: the engine never
+// Voxel view of the redstone engine, on the IFluidVoxelAccess pattern: the engine never
 // sees World, so it runs on a small in-memory grid in the unit tests and on a World adapter in
 // the game (World::RedstoneAccess).
 //

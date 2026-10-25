@@ -43,7 +43,7 @@ enum class PlanRetention : uint8_t {
     CallerRestores // the caller persisted findPlan() or regenerates identical pass-1 terrain
 };
 
-// P3.4 two-pass generation, pass 2 orchestration.
+// Two-pass generation, pass 2 orchestration.
 //
 //   Pass 1 (caller): terrain + caves for one chunk, autonomously.
 //   onTerrainReady(c): plans c's features from its pass-1 terrain (Tier 1), then decorates

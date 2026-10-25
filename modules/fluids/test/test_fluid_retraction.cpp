@@ -1,4 +1,4 @@
-// P2.3 - Retraction: removing a source makes its flow decay away and converge to dry.
+// Retraction: removing a source makes its flow decay away and converge to dry.
 #include "FluidTestUtils.hpp"
 
 #include <gtest/gtest.h>

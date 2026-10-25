@@ -1,5 +1,5 @@
-// P2.1 — Entity slot recycling (EntityId = 24-bit index + 8-bit generation) under long-running
-// churn such as dropped items (Fiche 3 §1: "sans ralentissement ni fuite mémoire"):
+// Entity slot recycling (EntityId = 24-bit index + 8-bit generation) under long-running
+// churn such as dropped items, with no slowdown and no leak:
 //   * the all-zero handle is never issued, so zero-initialised EntityId fields never alias;
 //   * a capped registry never runs out of slots while fewer than `capacity` entities live;
 //   * the index space (and every pool's sparse pages) stays bounded by peak population;

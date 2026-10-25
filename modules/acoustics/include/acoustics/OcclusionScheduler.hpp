@@ -10,7 +10,7 @@
 
 namespace betacraft::acoustics {
 
-// Spec P4.2: occlusion rays are sampled at 10 Hz per active voice, then smoothed in the audio callback.
+// Occlusion rays are sampled at 10 Hz per active voice, then smoothed in the audio callback.
 inline constexpr double OCCLUSION_UPDATE_INTERVAL_S = 0.1;
 
 // One recomputed occlusion target, ready to be forwarded to the audio thread (e.g. as an

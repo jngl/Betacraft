@@ -84,7 +84,7 @@ struct PipelineConfig {
     // chunk: meshing requests for chunks not yet Decorated are RejectedNotReady.
     bool enforceChunkLifecycle{true};
     // Optional: when set, a staged mesh is uploaded only if its version equals this
-    // source's (Fiche 1 §5 "chunkVersion == world.getSectionVersion"). Without it the
+    // source's (chunkVersion == world.getSectionVersion). Without it the
     // caller MUST report edits through noteSectionVersion (or re-request) and unloads
     // through cancelSection/cancelChunk.
     SectionVersionSource authoritativeVersion{};
@@ -118,7 +118,7 @@ struct PipelineStats {
     uint64_t uploadFailed{0};    // consumed, but the uploader threw (item is lost)
 };
 
-// Asynchronous section-meshing orchestrator (roadmap P1.1).
+// Asynchronous section-meshing orchestrator.
 //
 // Threading contract:
 //  * submission / cancel / version / viewer calls: main (tick) thread; they are

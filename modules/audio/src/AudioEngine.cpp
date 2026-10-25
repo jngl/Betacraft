@@ -561,7 +561,7 @@ void AudioEngine::mixAudioFrames(float* outInterleavedStereo, uint32_t frameCoun
                 voice.cursor += voice.pitch;
             }
 
-            // S8.12 rain loop: band-limited noise (the hiss of the downpour) plus sparse drop
+            // Rain loop: band-limited noise (the hiss of the downpour) plus sparse drop
             // ticks, low-passed by the occlusion of the rain around the listener.
             m_rainLevel += (rainTarget - m_rainLevel) * kRainGlide * 4.0f;
             m_rainCutoffNow += (rainCutoffTarget - m_rainCutoffNow) * kRainGlide * 4.0f;

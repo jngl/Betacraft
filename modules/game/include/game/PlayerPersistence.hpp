@@ -21,9 +21,9 @@ namespace betacraft::game {
                                                     std::vector<physics::InventorySlot>* overflow);
 
 // Applies a saved snapshot, clamping every value: counts to [1, maxStackSize], health to
-// [0, 20], air to [0, 300], fire (S3.1 `player.fire`) to [0, 600], the selected slot to the
+// [0, 20], air to [0, 300], fire (`player.fire`) to [0, 600], the selected slot to the
 // hotbar. Unknown item ids empty their slot with a warning. The legacy ids 100..105 of `itemsScheme` 1 files are folded onto
-// their Beta numbers (S2.10); found in a scheme 2 file they are folded too, with a warning.
+// their Beta numbers; found in a scheme 2 file they are folded too, with a warning.
 void restorePlayer(physics::Player& player, const storage::PlayerSaveData& data,
                    uint32_t itemsScheme = storage::kCurrentItemsScheme);
 

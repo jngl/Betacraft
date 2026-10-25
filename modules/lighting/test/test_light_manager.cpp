@@ -1,4 +1,4 @@
-// P4.6 — DynamicLightManager: per-frame collection, capped to the UBO capacity by distance.
+// DynamicLightManager: per-frame collection, capped to the UBO capacity by distance.
 #include "lighting/DynamicLightManager.hpp"
 
 #include <gtest/gtest.h>

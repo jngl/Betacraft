@@ -1,4 +1,4 @@
-// P4.6 — Executes the REAL shaders/dynamic_lights.glsl (through the strict GLSL 3.30 subset
+// Executes the REAL shaders/dynamic_lights.glsl (through the strict GLSL 3.30 subset
 // interpreter in GlslMiniInterpreter.hpp) against the CPU culler / packer / shade(), so tile
 // addressing, mask lookup and shading in the shader cannot silently diverge from the CPU side.
 #include "GlslMiniInterpreter.hpp"

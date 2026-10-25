@@ -1,5 +1,5 @@
-// S4.1: the Beta 1.7.3 mob table (gameplay::mobDef): health, box, attack, daylight burning
-// and death drops of the pig, the sheep and the zombie; S6.1 skeleton, spider, creeper, cow.
+// The Beta 1.7.3 mob table (gameplay::mobDef): health, box, attack, daylight burning
+// and death drops of the pig, the sheep and the zombie; skeleton, spider, creeper, cow.
 #include "gameplay/ItemIds.hpp"
 #include "gameplay/MobDefs.hpp"
 #include "voxel/Block.hpp"
@@ -106,7 +106,7 @@ TEST(MobDefs, RolledDropsStayWithinBounds) {
     EXPECT_EQ(wool[0].count, 1);
 }
 
-// S6.1: the four Beta 1.7.3 mobs appended to MobKind.
+// The four Beta 1.7.3 mobs appended to MobKind.
 TEST(MobDefs, SkeletonSpiderCreeperCowBetaValues) {
     EXPECT_EQ(static_cast<int>(MobKind::Skeleton), 3);
     EXPECT_EQ(static_cast<int>(MobKind::Cow), 6);

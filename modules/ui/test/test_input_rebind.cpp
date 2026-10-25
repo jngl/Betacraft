@@ -91,7 +91,7 @@ TEST(InputRebindTest, DisplayNames) {
 }
 
 TEST(InputRebindTest, OptionsFilePersistenceAndRecovery) {
-    // A unique directory: UnitTests and AllTests both run this test in parallel.
+    // A unique directory: Module_ui and AllTests both run this test in parallel.
     const betacraft::test::TempDir tempDir("betacraft_options_");
     const std::filesystem::path tempPath = tempDir.path() / "test_options.txt";
 
@@ -213,9 +213,9 @@ TEST(InputRebindTest, WorldDynamicRenderDistanceLoadingAndUnloading) {
 }
 
 
-// S3.8: mouse sensitivity, persisted under mouse_sensitivity and set in 10 % steps.
+// Mouse sensitivity, persisted under mouse_sensitivity and set in 10 % steps.
 TEST(InputRebindTest, SensitivityPersists) {
-    // A unique directory: UnitTests and AllTests both run this test in parallel.
+    // A unique directory: Module_ui and AllTests both run this test in parallel.
     const betacraft::test::TempDir tempDir("betacraft_sensitivity_");
     const std::filesystem::path tempPath = tempDir.path() / "options.txt";
     InputManager input;

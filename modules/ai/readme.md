@@ -1,6 +1,6 @@
 # ai
 
-Voxel A* for walking mobs (S8.1–S8.4): what a cell means to a mob of a given size, and the search over it. The ECS system that plans and follows paths is `ecs::PathPlanningSystem`.
+Voxel A* for walking mobs: what a cell means to a mob of a given size, and the search over it. The ECS system that plans and follows paths is `ecs::PathPlanningSystem`.
 
 ## Public entry points
 

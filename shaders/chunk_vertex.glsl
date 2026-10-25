@@ -52,7 +52,7 @@ void main() {
     float secY     = float((w1 >> 23u) & 0x07u);
 
     vec3 localPos = vec3(lx, ly + secY * 16.0, lz);
-    // S5.4 fine offsets (PackedChunkVertex::setFineOffset): sixteenths below the integer grid.
+    // Fine offsets (PackedChunkVertex::setFineOffset): sixteenths below the integer grid.
     uint fineX = (w1 >> 26u) & 0xFu;
     uint fineY = sway ? 0u : animFrame & 0xFu;
     uint fineZ = ((w1 >> 30u) & 0x3u) | (((w0 >> 30u) & 0x3u) << 2u);

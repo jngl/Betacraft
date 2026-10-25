@@ -8,7 +8,7 @@
 #include <glm/glm.hpp>
 #include <optional>
 
-// S5.4 metadata-dependent shapes (Beta 1.7.3 block bounds), in sixteenths of a block so the
+// Metadata-dependent shapes (Beta 1.7.3 block bounds), in sixteenths of a block so the
 // meshers can emit them exactly (PackedChunkVertex fine offsets) and math::AABB can turn
 // them into boxes. One table feeds collision, selection and both meshers.
 
@@ -92,7 +92,7 @@ inline constexpr uint8_t kCropsMaxStage = 7;
     }
 }
 
-// The cell of the other half of a door (S5.6): above the lower half, below the upper one.
+// The cell of the other half of a door: above the lower half, below the upper one.
 [[nodiscard]] constexpr glm::ivec3 doorPartnerOffset(uint8_t meta) noexcept {
     return (meta & kDoorUpperBit) != 0 ? glm::ivec3{0, -1, 0} : glm::ivec3{0, 1, 0};
 }
@@ -109,7 +109,7 @@ inline constexpr uint8_t kCropsMaxStage = 7;
     }
 }
 
-// The cell of the other half of a bed (S5.8).
+// The cell of the other half of a bed.
 [[nodiscard]] constexpr glm::ivec3 bedPartnerOffset(uint8_t meta) noexcept {
     return (meta & kBedHeadBit) != 0 ? -bedHeadDirection(meta) : bedHeadDirection(meta);
 }
@@ -137,10 +137,10 @@ inline constexpr uint8_t kCropsMaxStage = 7;
     return lookZ >= 0.0f ? uint8_t{2} : uint8_t{3};
 }
 
-// --- Redstone parts (S8.5) -------------------------------------------------------------------
+// --- Redstone parts -------------------------------------------------------------------
 // Lever, button and redstone torch metadata bits 0-2 (Beta): 1..4 hang on the wall at -X, +X,
 // -Z, +Z of the cell, anything else stands on the floor (Beta 5/6; 0 is what the torches
-// placed before S8.5 and the engine's own torches carry).
+// placed before and the engine's own torches carry).
 inline constexpr uint8_t kAttachMask = 0x7;
 inline constexpr uint8_t kAttachWallNegX = 1;
 inline constexpr uint8_t kAttachWallPosX = 2;
@@ -263,7 +263,7 @@ inline constexpr uint8_t kPistonPoweredBit = 0x8; // Set while powered (the push
 }
 
 // The outline / ray-pick box of the block `id` with metadata `meta` when it has a detailed
-// shape: selectionShapeBox, with the S8.5 parts told apart by their block.
+// shape: selectionShapeBox, with the parts told apart by their block.
 [[nodiscard]] constexpr ShapeBox blockSelectionBox(BlockId id, RenderShape shape, uint8_t meta) noexcept {
     switch (shape) {
         case RenderShape::Flat: return flatBox(id);

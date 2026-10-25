@@ -1,7 +1,7 @@
-// P2.1 — MobAISystem (Diagramme 2, "AI & TP -> S3"): a steering state machine over
+// MobAISystem: a steering state machine over
 // (MobAIComp, TransformComp, VelocityComp). It writes horizontal velocity only; gravity and
 // collisions stay with MovementPhysicsSystem / VoxelCollisionSystem. A* path following
-// (P2.2) arrives in Phase 3 and will replace the straight-line steering towards `goal`.
+// (PathPlanningSystem) replaces the straight-line steering towards `goal` when a path exists.
 #include "ecs/Components.hpp"
 #include "ecs/Registry.hpp"
 #include "ecs/Systems.hpp"

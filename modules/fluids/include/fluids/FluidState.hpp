@@ -11,7 +11,7 @@ enum class FluidType : uint8_t {
     Lava
 };
 
-// Per-voxel fluid state, stored by the world as a 4-bit nibble (roadmap P2.3):
+// Per-voxel fluid state, stored by the world as a 4-bit nibble:
 //   bit 3     : falling (vertical flow) flag
 //   bits 0..2 : level / thickness, 7 = source (full), 6..0 = progressively thinner flow.
 // "Dry" is expressed by FluidType::None (the block id carries the fluid type), which is

@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-BetaCraft is a self-contained Minecraft Beta 1.7.3 clone in C++20 / OpenGL 3.3 Core / SDL2 / miniaudio. Requirements and design docs (mostly in French): `ORIGINAL_REQUEST.md`, `PROJECT.md` (architecture, interface contracts, deferred items), `docs/IMPROVEMENTS_ROADMAP.md` (technical proposals P1.x–P4.x), `docs/GAMEPLAY_ROADMAP.md` (sprints S1–S8 and the cross-cutting conventions summarised below). Code comments cite these IDs (`P1.1`, `S7.4`, `§9.2`).
+Betacraft is a game inspired by Minecraft in C++20 / OpenGL 3.3 Core / SDL2 / miniaudio.
 
 ## Build, run, test
 
@@ -20,22 +20,22 @@ Run a single test by invoking a GoogleTest binary directly with a filter:
 ```bash
 ./build/betacraft_voxel_tests --gtest_filter='PalettedSection*'
 ./build/betacraft_fluids_tests --gtest_filter='*Lava*'
-ctest --test-dir build -R Phase2_storage --output-on-failure
+ctest --test-dir build -R Module_storage --output-on-failure
 ```
 
-Test executables: one `betacraft_<m>_tests` per module with tests (ctest `Module_<m>`, except that modules which were Phase 2 suites keep their `Phase2_<key>` name: `Phase2_combat`→`gameplay`, `Phase2_dynlight`→`lighting`, `Phase2_fluids`, `Phase2_worldgen`, `Phase2_storage`, `Phase2_redstone`, `Phase2_streaming`, `Phase2_ecs`, `Phase2_crafting`, `Phase2_acoustics`, `Phase2_ai`), `betacraft_unit_tests`, `betacraft_integration_tests`, `betacraft_e2e_tests` (spawns the real `betacraft` binary), `betacraft_mock_tests`, `betacraft_all_tests` (everything combined, except each module's `STANDALONE_TESTS`), `betacraft_legacy_tests`. Frozen reference saves live in `tests/data/saves/vN/` (`BETACRAFT_TEST_DATA_DIR`).
+Test executables: one `betacraft_<m>_tests` per module with tests (ctest `Module_<m>`), `betacraft_integration_tests` (`tests/integration/<domain>/`, fixtures in `tests/integration/support/`), `betacraft_e2e_tests` (spawns the real `betacraft` binary), `betacraft_mock_tests`, `betacraft_all_tests` (everything combined, except each module's `STANDALONE_TESTS`), `betacraft_legacy_tests`. Frozen reference saves live in `tests/data/saves/vN/` (`BETACRAFT_TEST_DATA_DIR`).
 
-Optional build switches: `-DBETACRAFT_WITH_ZSTD=OFF` (region files stored uncompressed). Runtime feature flags turn off risky mechanics: `--no-async-gen`, `--no-region-storage`, `--no-pathfinding`, `--no-redstone`, `--no-weather`.
+Optional build switches: `-DBETACRAFT_WITH_ZSTD=OFF` (region files stored uncompressed), `-DBETACRAFT_WITH_PNG=OFF` (`assets/terrain.png` neither exported nor loaded). Runtime feature flags turn off risky mechanics: `--no-async-gen`, `--no-region-storage`, `--no-pathfinding`, `--no-redstone`, `--no-weather`.
 
 ## What CMake compiles automatically vs. by hand
 
 The engine is one static library per module (`docs/adr/0001-modules-as-static-libraries.md`, issue #24), under `modules/<m>/`, from bottom to top: `core`, `math`, `voxel`, `gameplay`, `fluids`, `redstone`, `worldgen`, `storage`, `lighting`, `world`, `physics`, `crafting`, `ai`, `ecs`, `streaming`, `acoustics`, `audio`, `render`, `ui`, `game`. The executable `betacraft` is `app/main.cpp` and links only `game`.
 
-- **Modules:** `modules/<m>/{include/<m>/,src/,test/,CMakeLists.txt,readme.md}`. `include/<m>/` holds the headers other modules use, `src/` the sources and internal headers. `modules/<m>/CMakeLists.txt` is a `betacraft_add_module(<m> DEPS … [TEST_NAME <ctest name>] [STANDALONE_TESTS <file>…])` call, plus module-specific settings (e.g. zstd in `storage`, miniaudio in `audio`, libpng in `render`) (`cmake/BetacraftModule.cmake`): it globs `src/*.cpp` and `test/*.cpp`, builds the library `<m>` (alias `betacraft::<m>`) and `betacraft_<m>_tests`, and adds the test sources to `betacraft_all_tests`, except `STANDALONE_TESTS` (tests that replace a global such as `operator new`). Module tests use only that module and its `DEPS` (plus `betacraft_test_support`: `tests/support/test_support/`, e.g. `TempDir.hpp`, `GLTestContext.hpp`, and helpers shared by several test executables). Multi-module tests stay in `tests/` (`integration`, `e2e`, `mock`, `unit`, `adversarial_*`) and link `betacraft::game`. A module only sees its own `include/` and those of its `DEPS`, so a missing dependency is a compile error. Add a new module with `add_subdirectory(modules/<m>)` in the root `CMakeLists.txt`.
-- **Globbed (no CMake edit needed):** everything under `modules/<m>/{src,test}`, and `tests/integration/phase2/*.cpp`.
-- **Listed by hand (otherwise never compiled):** `tests/unit/*` → `UNIT_TEST_SOURCES`; non-phase2 `tests/integration/*.cpp` → `INTEGRATION_TEST_SOURCES`; `tests/e2e/*` → `E2E_TEST_SOURCES`; `tests/mock/*` → `MOCK_TEST_SOURCES`.
+- **Modules:** `modules/<m>/{include/<m>/,src/,test/,CMakeLists.txt,readme.md}`. `include/<m>/` holds the headers other modules use, `src/` the sources and internal headers. `modules/<m>/CMakeLists.txt` is a `betacraft_add_module(<m> DEPS … [STANDALONE_TESTS <file>…])` call, plus module-specific settings (e.g. zstd in `storage`, miniaudio in `audio`, libpng in `render`) (`cmake/BetacraftModule.cmake`): it globs `src/*.cpp` and `test/*.cpp`, builds the library `<m>` (alias `betacraft::<m>`) and `betacraft_<m>_tests`, and adds the test sources to `betacraft_all_tests`, except `STANDALONE_TESTS` (tests that replace a global such as `operator new`). Module tests use only that module and its `DEPS` (plus `betacraft_test_support`: `tests/support/test_support/`, e.g. `TempDir.hpp`, `GLTestContext.hpp`, and helpers shared by several test executables). Multi-module tests stay in `tests/` (`integration`, `e2e`, `mock`) and link `betacraft::game`. A module only sees its own `include/` and those of its `DEPS`, so a missing dependency is a compile error. Add a new module with `add_subdirectory(modules/<m>)` in the root `CMakeLists.txt`.
+- **Globbed (no CMake edit needed):** everything under `modules/<m>/{src,test}`, and `tests/integration/**/*.cpp` → `INTEGRATION_TEST_SOURCES`.
+- **Listed by hand (otherwise never compiled):** `tests/e2e/*` → `E2E_TEST_SOURCES`; `tests/mock/*` → `MOCK_TEST_SOURCES`.
 
-Every module, `betacraft` and the test executables (through the `betacraft_warnings` interface target) build with `-Wall -Wextra -Wpedantic` (CI adds `-Werror`, ASan/UBSan, TSan on `Phase2_streaming`/`storage`/`ai`, and a no-zstd job). miniaudio is isolated in its own warning-free TU (`modules/audio/miniaudio_impl.cpp`, target `miniaudio_lib`), linked `PRIVATE` by `audio`: `AudioEngine.hpp` keeps the device behind a pimpl.
+Every module, `betacraft` and the test executables (through the `betacraft_warnings` interface target) build with `-Wall -Wextra -Wpedantic` (CI adds `-Werror`, ASan/UBSan, TSan on `Module_streaming`/`storage`/`ai`, and a no-zstd job). miniaudio is isolated in its own warning-free TU (`modules/audio/miniaudio_impl.cpp`, target `miniaudio_lib`), linked `PRIVATE` by `audio`: `AudioEngine.hpp` keeps the device behind a pimpl.
 
 ## Architecture
 
@@ -51,10 +51,11 @@ Every module, `betacraft` and the test executables (through the `betacraft_warni
 
 **Audio.** `AudioEngine` takes commands from game threads via a lock-free `MpscRingBuffer` and drains them in the miniaudio callback (no locks or allocations there). Sounds are synthesised procedurally. `game/AcousticsController` runs 10 Hz DDA occlusion and enclosure detection and posts `AcousticCommand`s applied by `acoustics/AcousticVoiceBank` (per-voice low-pass + shared FDN reverb bus).
 
-**Persistence.** `storage/WorldStorage` facade over `storage/` (region files `region/r.X.Z.bcr`, 4 KiB sectors, zstd chunk bundles; legacy `chunks/*.chk|.dec|.be` are migrated to `chunks.migrated/`). `level.dat` is a `key value` text file with header `BETACRAFT_LEVEL_V2`. Textures are generated procedurally by `render/TextureAtlas` at startup and exported to `assets/terrain.png` (a custom `assets/terrain.png` overrides it).
+**Persistence.** `storage/WorldStorage` facade over `storage/` (region files `region/r.X.Z.bcr`, 4 KiB sectors, zstd chunk bundles; legacy `chunks/*.chk|.dec|.be` are migrated to `chunks.migrated/`). `level.dat` is a `key value` text file with header `BETACRAFT_LEVEL_V2`. Textures are generated procedurally by `render/TextureAtlas` at startup and exported to `assets/terrain.png` (a custom `assets/terrain.png` overrides it); both need libpng, otherwise the generated atlas is used as is.
 
-## Conventions (from `docs/GAMEPLAY_ROADMAP.md`, "Conventions transverses")
+## Conventions
 
+- **Inspired by, not a clone:** Minecraft Beta 1.7.3 is the default reference for any mechanic not deliberately redesigned; departures are allowed and update the pinning tests with a comment (`docs/adr/0002-beta-as-behaviour-reference.md`). Player-facing text (title, HUD, `--help`, logs) says "Betacraft" with `core::kGameTitle`, never Minecraft.
 - **Saves:** every file carries a format id + version; readers accept versions ≤ their own and refuse (never overwrite) newer ones. New data = new key, no version bump. Write atomically (`.tmp` → rename old to `_old` → rename). Unreadable chunks are quarantined (`.chk.corrupt`), not silently regenerated.
 - **Enums grow only at the end:** `ScreenState`, `BlockId`, `SoundEffect`, `GameAction`, `RenderShape`, `InventoryRegion`, `MobKind`, `DamageCause`.
 - **Public signatures used by tests don't change** (add an overload or defaulted parameter instead): `WorldStorage::saveChunk/loadChunk`, `World::ensureChunkLoaded`, `SkyRenderer::evaluateAtmosphere`, `MobAISystem::update`, `Raycaster::cast`, `HudRenderer::hitTestInventory`, `EntitySimulation::tick`, `WorldSession::open`, `WorldSession::tick`, `renderWorld`.

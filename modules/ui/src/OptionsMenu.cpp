@@ -49,7 +49,7 @@ std::vector<MenuButton> OptionsMenu::layoutOptionsButtons(
     return {
         {cx, startY + 0.0f,   btnW, btnH, "FOV", 1},
         {cx, startY + 45.0f,  btnW, btnH, "Render Distance", 2},
-        // GUI Scale and Sensitivity (S3.8) share a row, each half as wide.
+        // GUI Scale and Sensitivity share a row, each half as wide.
         {cx, startY + 90.0f,  halfW, btnH, "GUI Scale", 3},
         {cx + btnW - halfW, startY + 90.0f, halfW, btnH, "Sensitivity", 7},
         {cx, startY + 135.0f, btnW, btnH, "Music", 4},

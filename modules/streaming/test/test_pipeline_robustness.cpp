@@ -126,7 +126,7 @@ TEST(PipelineRobustness, ThrowingUploaderStillAccountsForEveryConsumedItem) {
 }
 
 // ------------------------------------------- authoritative version at drain ----
-// Fiche 1 §5: the drain filter compares against the World's version, so an integrator
+// The drain filter compares against the World's version, so an integrator
 // that edits a block but forgets noteSectionVersion still never uploads a stale mesh.
 
 namespace {

@@ -1,4 +1,4 @@
-// P3.3 - A ColumnSampler built from resident chunks (scanColumn) must give the same answer
+// A ColumnSampler built from resident chunks (scanColumn) must give the same answer
 // whether or not the scanned chunk has already been carved: carving writes aquifer water at
 // Y 11..32, which must never be mistaken for a sea and lower a neighbour's aquitard ceiling.
 #include "worldgen/CaveCarver.hpp"

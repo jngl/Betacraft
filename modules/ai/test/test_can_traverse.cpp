@@ -1,4 +1,4 @@
-// S8.2 single moves: no corner cutting, and the mob's whole box (height, width) must fit.
+// Single moves: no corner cutting, and the mob's whole box (height, width) must fit.
 #include "test_support/AiTestSupport.hpp"
 
 #include <gtest/gtest.h>

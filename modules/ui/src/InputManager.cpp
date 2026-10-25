@@ -1,5 +1,7 @@
 #include "ui/InputManager.hpp"
+
 #include "core/Logger.hpp"
+#include "core/Version.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -135,7 +137,7 @@ bool InputManager::saveToFile(const std::filesystem::path& path) const {
         return false;
     }
 
-    out << "# BetaCraft 1.7.3 Options & Keybindings\n";
+    out << "# " << core::kGameTitle << " options & keybindings\n";
     out << "key_forward:" << static_cast<int>(getPrimaryBinding(GameAction::MoveForward)) << "\n";
     out << "key_backward:" << static_cast<int>(getPrimaryBinding(GameAction::MoveBackward)) << "\n";
     out << "key_left:" << static_cast<int>(getPrimaryBinding(GameAction::MoveLeft)) << "\n";

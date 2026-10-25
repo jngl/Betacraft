@@ -51,11 +51,11 @@ struct ItemEntityInstance {
     float phase{0.0f};        // Per-entity offset (Beta EntityItem.hoverStart)
 };
 
-// S5.3 falling sand or gravel to draw this frame: a full-size block cube.
+// Falling sand or gravel to draw this frame: a full-size block cube.
 struct FallingBlockInstance {
     glm::vec3 position{0.0f}; // Render-interpolated feet position of the entity
     voxel::BlockId id{voxel::BlockId::Sand};
-    float flash{0.0f}; // S6.6 primed TNT: 0..1 white flash of the last fuse ticks
+    float flash{0.0f}; // primed TNT: 0..1 white flash of the last fuse ticks
 };
 
 class WorldRenderer : private core::NonCopyable {
@@ -67,7 +67,7 @@ public:
     // Joins the meshing workers and frees the section meshes. Call while the GL context is
     // current and before the World is destroyed; the renderer meshes nothing afterwards.
     void shutdown() noexcept;
-    // S7.9 leaving a world: joins the meshing workers and frees the section meshes like
+    // Leaving a world: joins the meshing workers and frees the section meshes like
     // shutdown(), then starts fresh workers for the next world (GL programs are kept). Call
     // before the World is destroyed.
     void releaseWorld();
@@ -94,7 +94,7 @@ public:
 
     [[nodiscard]] const TextureAtlas& getAtlas() const noexcept { return m_atlas; }
 
-    // S8.10 / S8.11 weather of the next renderWorld() calls: darker, greyer sky and light
+    // Weather of the next renderWorld() calls: darker, greyer sky and light
     // (SkyRenderer::evaluateAtmosphere overload), rain or snow columns after the translucent
     // pass, and the lightning flash and bolt. The default is clear weather.
     void setWeather(const WeatherFrame& frame) noexcept { m_weather = frame; }
@@ -104,7 +104,7 @@ public:
     [[nodiscard]] static glm::mat4 cameraViewProjection(
         const physics::Player& player, const core::EngineConfig& config, float aspect) noexcept;
 
-    // CPU half of the P4.6 dynamic lights: selects and tile-culls the collected lights for
+    // CPU half of the dynamic lights: selects and tile-culls the collected lights for
     // renderWorld()'s camera. `framebufferPx` is the size given to glViewport (the drawable
     // size on HiDPI), because the shader's tile lookup uses gl_FragCoord.
     static void buildDynamicLightFrame(

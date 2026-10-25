@@ -6,10 +6,10 @@
 
 namespace betacraft::gameplay {
 
-// Roadmap P2.5: v = normalize(look.xz) * 8.5 m/s + up * 4.2 m/s. Beta's knockBack used
-// 0.4 blocks/tick (8 m/s) both ways; the roadmap values are kept as tunable defaults.
+// V = normalize(look.xz) * 8.5 m/s + up * 4.2 m/s. Beta's knockBack used
+// 0.4 blocks/tick (8 m/s) both ways; these values are tunable defaults.
 enum class KnockbackDirection : uint8_t {
-    AttackerLook,     // Roadmap P2.5: normalize(look.xz) of the attacker (player swings)
+    AttackerLook,     // normalize(look.xz) of the attacker (player swings)
     AttackerToTarget  // Beta EntityLiving.knockBack: away from the attacker's position (mobs, arrows)
 };
 

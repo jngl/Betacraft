@@ -8,7 +8,7 @@
 
 namespace betacraft::acoustics {
 
-// Tunables of the enclosure -> reverb mapping (the roadmap gives no numbers; these are chosen so that
+// Tunables of the enclosure -> reverb mapping (no reference numbers; these are chosen so that
 // open terrain stays nearly dry and a large cave gets a multi-second tail).
 struct EnclosureParams {
     float probeRange{24.0f};      // Blocks; reaches the corners of a ~25-block-wide cavern

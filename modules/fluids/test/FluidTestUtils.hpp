@@ -1,6 +1,6 @@
 #pragma once
 
-// Shared helpers for the P2.3 fluid simulator tests.
+// Shared helpers for the fluid simulator tests.
 
 #include "fluids/FluidSimulator.hpp"
 #include "fluids/GridFluidVoxelAccess.hpp"

@@ -1,6 +1,6 @@
 # acoustics
 
-Sound propagation (P4.2): voxel DDA occlusion at 10 Hz, enclosure detection, and the audio-thread side that applies them (per-voice low-pass and one shared FDN reverb bus). The game-thread driver is `game/AcousticsController`; the mixer that owns the voice bank is `audio`.
+Sound propagation: voxel DDA occlusion at 10 Hz, enclosure detection, and the audio-thread side that applies them (per-voice low-pass and one shared FDN reverb bus). The game-thread driver is `game/AcousticsController`; the mixer that owns the voice bank is `audio`.
 
 ## Public entry points
 

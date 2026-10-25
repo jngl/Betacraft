@@ -16,7 +16,7 @@
 
 namespace betacraft::ecs {
 
-// Plain-old-data gameplay components (roadmap P2.1, Fiche 3 §2.2, Diagramme 2). They carry no
+// Plain-old-data gameplay components. They carry no
 // behaviour beyond trivial helpers so that pools stay contiguous and trivially relocatable.
 
 struct TransformComp {
@@ -49,7 +49,7 @@ struct VelocityComp {
     float verticalDrag{0.0f};   // Y, always
     float groundFriction{0.0f}; // X/Z, extra while onGround (block slipperiness)
     // Set by VoxelCollisionSystem when the last sweep was stopped on X or Z (Beta
-    // isCollidedHorizontally): walking mobs jump on it, spiders will climb (S6.3).
+    // isCollidedHorizontally): walking mobs jump on it, spiders will climb.
     bool collidedHorizontally{false};
 };
 
@@ -93,7 +93,7 @@ enum class MobAIState : uint8_t {
     Flee = 3
 };
 
-// AI blackboard driven by MobAISystem; with a MobPathComp it follows A* paths (S8.3).
+// AI blackboard driven by MobAISystem; with a MobPathComp it follows A* paths.
 struct MobAIComp {
     MobAIState state{MobAIState::Idle};
     EntityId target{NULL_ENTITY};
@@ -103,11 +103,11 @@ struct MobAIComp {
     // Per-mob xorshift32 state; 0 means "not seeded yet" and is replaced by a hash of the
     // entity handle on first use, so runs are reproducible yet mobs never move in lockstep.
     uint32_t rngState{0};
-    // S6.3 set by a leap (spider): MobAISystem leaves the mob's velocity alone until it lands.
+    // Set by a leap (spider): MobAISystem leaves the mob's velocity alone until it lands.
     bool leaping{false};
 };
 
-// S8.3 the A* path a mob follows (PathPlanningSystem writes it, MobAISystem walks it). Fixed
+// The A* path a mob follows (PathPlanningSystem writes it, MobAISystem walks it). Fixed
 // capacity: a component must stay standard layout and nothrow movable, so no std::vector.
 // `waypoints[0..count)` are footprint corner cells (ai::VoxelPathfinder nodes) after the
 // start; `index` is the next one to reach. `goalCell` is the goal the path was planned for.
@@ -121,7 +121,7 @@ struct MobPathComp {
     uint8_t stuckTicks{0};
 };
 
-// S4.2: what kind of mob an entity is (gameplay::mobDef) and how long it has lived; the
+// What kind of mob an entity is (gameplay::mobDef) and how long it has lived; the
 // spawner ages it every despawn check (Beta entityAge).
 struct MobKindComp {
     gameplay::MobKind kind{gameplay::MobKind::Pig};
@@ -140,21 +140,21 @@ struct BurningComp {
     int32_t ticks{0};
 };
 
-// S5.3 sand or gravel falling as an entity (Beta EntityFallingSand); EntitySimulation turns it
+// Sand or gravel falling as an entity (Beta EntityFallingSand); EntitySimulation turns it
 // back into a block where it lands, or into an item.
 struct FallingBlockComp {
     voxel::BlockId id{voxel::BlockId::Sand};
     int32_t ticks{0}; // Game ticks in flight
 };
 
-// S6.6 lit TNT (Beta EntityTNTPrimed): explodes with power 4 when `fuse` game ticks have run
+// Lit TNT (Beta EntityTNTPrimed): explodes with power 4 when `fuse` game ticks have run
 // out. Breaking TNT or lighting it starts at 80; TNT caught in a blast at rand(20) + 10.
 struct PrimedTntComp {
     static constexpr int32_t DEFAULT_FUSE_TICKS = 80;
     int32_t fuse{DEFAULT_FUSE_TICKS};
 };
 
-// S6.2 an arrow in flight or stuck in a block (Beta EntityArrow); game/Projectiles.hpp moves
+// An arrow in flight or stuck in a block (Beta EntityArrow); game/Projectiles.hpp moves
 // it. `flightTicks` counts the ticks since it was shot (the shooter cannot be hit for the
 // first 5), `stuckIn` is the cell it is stuck in while `inGround`.
 struct ArrowComp {
@@ -166,7 +166,7 @@ struct ArrowComp {
     core::BlockPos stuckIn{};
 };
 
-// S6.3 creeper fuse (Beta EntityCreeper timeSinceIgnited / creeperState): `ticks` moves by
+// Creeper fuse (Beta EntityCreeper timeSinceIgnited / creeperState): `ticks` moves by
 // `dir` (+1 lit, -1 going out) every tick, and the creeper explodes when it reaches
 // gameplay::ExplodeAttack::fuseTicks.
 struct FuseComp {
@@ -182,7 +182,7 @@ struct PlayerInputComp {
 // Empty marker: identifies the local player entity in views.
 struct PlayerTagComp {};
 
-// Roadmap names (P2.1, Diagramme 2); the short *Comp names follow Fiche 3 §2.2.
+// Spec names of the components, as aliases of the short *Comp names.
 using TransformComponent = TransformComp;
 using VelocityComponent = VelocityComp;
 using AABBColliderComponent = AABBColliderComp;

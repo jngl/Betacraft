@@ -217,7 +217,7 @@ void WorldGen::generateChunk(voxel::Chunk& chunk) const noexcept {
         }
     }
 
-    // 3. P3.3 caves. After step 2, which restarts its soil run at every air gap: carving
+    // 3. caves. After step 2, which restarts its soil run at every air gap: carving
     // first would turn cave roofs into grass. In-chunk columns are read back from the blocks
     // just generated; ring columns of neighbours come from the identical column function.
     const core::ChunkCoord coord = chunk.getCoord();
@@ -232,8 +232,8 @@ void WorldGen::generateChunk(voxel::Chunk& chunk) const noexcept {
     const worldgen::ChunkColumnCache columns(source, coord);
     (void)m_caveCarver.carveChunk(chunk, columns);
 
-    // 4. S6.9 Beta ore veins (dirt, gravel and the ores), after the caves so the scans above
-    // saw the bare terrain; they only replace stone. 5. S6.10 dungeons inside the chunk, their
+    // 4. Beta ore veins (dirt, gravel and the ores), after the caves so the scans above
+    // saw the bare terrain; they only replace stone. 5. dungeons inside the chunk, their
     // ceilings under the surface the cache recorded before carving.
     worldgen::placeOreVeins(chunk, m_seed);
     (void)worldgen::placeDungeons(chunk, m_seed, columns);

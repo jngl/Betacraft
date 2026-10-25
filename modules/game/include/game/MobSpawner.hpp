@@ -35,7 +35,7 @@ struct MobSpawnerStats {
 //    column, a y under the surface (hostiles) or on it (passives). The cell needs two free
 //    cells, a solid floor, the category's light rule and SPAWN_MIN_DISTANCE to the player;
 //    a pack of 1..4 mobs of one kind then spreads within +-PACK_SPREAD, each member checked
-//    the same way. The kind follows MobDef::spawnWeight (S6.1): zombie, skeleton, spider
+//    the same way. The kind follows MobDef::spawnWeight: zombie, skeleton, spider
 //    and creeper 10 each; sheep 12, pig 10, cow 8.
 //  * Despawning: every DESPAWN_INTERVAL_TICKS mobs age by that much and
 //    gameplay::shouldDespawn runs. A mob whose chunk is no longer loaded is destroyed at once
@@ -48,11 +48,11 @@ public:
     static constexpr int32_t PACK_SPREAD = 4;
     static constexpr int32_t MAX_PACK_SIZE = 4;
     static constexpr int32_t DESPAWN_INTERVAL_TICKS = 20;
-    // Kept for reference; the weights live in gameplay::MobDef::spawnWeight since S6.1.
+    // Kept for reference; the weights live in gameplay::MobDef::spawnWeight.
     static constexpr int32_t PIG_WEIGHT = 10;
     static constexpr int32_t SHEEP_WEIGHT = 12;
 
-    // S8.10 `weather`: rain and thunder darken the sky light (gameplay::skylightSubtracted),
+    // `weather`: rain and thunder darken the sky light (gameplay::skylightSubtracted),
     // and during a thunderstorm hostiles read the light with skylightSubtracted 10
     // (gameplay::hostileSkylightSubtracted), so they also appear in daylight.
     void tick(world::World& world, ecs::Registry& reg, ecs::CommandBuffer& commands, const glm::vec3& playerFeet,
@@ -61,7 +61,7 @@ public:
 
     [[nodiscard]] const MobSpawnerStats& stats() const noexcept { return m_stats; }
 
-    // S6.10 dungeon spawners (Beta TileEntityMobSpawner). The MobSpawner blocks within
+    // Dungeon spawners (Beta TileEntityMobSpawner). The MobSpawner blocks within
     // SPAWNER_RANGE of the player are found every SPAWNER_SCAN_INTERVAL_TICKS and get a delay
     // of SPAWNER_MIN_DELAY + rand(SPAWNER_DELAY_RANGE) ticks; it is kept in memory only, so a
     // spawner whose chunk unloads draws a new one when it comes back. While the player is

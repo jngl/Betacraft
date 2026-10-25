@@ -1,4 +1,4 @@
-// P2.6 — Shaped recipes: sub-matrix normalisation, translation invariance,
+// Shaped recipes: sub-matrix normalisation, translation invariance,
 // horizontal mirroring and grid size gating.
 #include "crafting/ShapedRecipe.hpp"
 

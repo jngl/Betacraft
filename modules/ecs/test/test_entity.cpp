@@ -1,4 +1,4 @@
-// P2.1 — EntityId encoding (24-bit index | 8-bit generation).
+// EntityId encoding (24-bit index | 8-bit generation).
 #include "ecs/Entity.hpp"
 
 #include <gtest/gtest.h>

@@ -1,5 +1,5 @@
-// P2.1 — Roadmap names. P2.1 and Diagramme 2 name the components and systems differently
-// from the implementation; aliases let integration code follow the spec text verbatim.
+// Spec names. The original design spec named the components and systems differently from the
+// implementation; aliases let integration code use either name.
 #include "ecs/Components.hpp"
 #include "ecs/Registry.hpp"
 #include "ecs/Systems.hpp"
@@ -18,12 +18,12 @@ static_assert(std::is_same_v<ItemDropComponent, ItemDropComp>);
 static_assert(std::is_same_v<MobAIComponent, MobAIComp>);
 static_assert(std::is_same_v<PlayerInputComponent, PlayerInputComp>);
 
-static_assert(std::is_same_v<CollisionResolutionSystem, VoxelCollisionSystem>); // P2.1
-static_assert(std::is_same_v<EntityRenderSystem, EntityRenderInterpolationSystem>); // P2.1
-static_assert(std::is_same_v<CombatDamageSystem, HealthSystem>);                // Diagramme 2
-static_assert(std::is_same_v<MobPathfindingAISystem, MobAISystem>);             // Diagramme 2
+static_assert(std::is_same_v<CollisionResolutionSystem, VoxelCollisionSystem>);
+static_assert(std::is_same_v<EntityRenderSystem, EntityRenderInterpolationSystem>);
+static_assert(std::is_same_v<CombatDamageSystem, HealthSystem>);
+static_assert(std::is_same_v<MobPathfindingAISystem, MobAISystem>);
 
-// Fiche 3 §3: "dense_transforms[i] correspond exactement à dense_velocities[i]". That holds
+// The dense transforms and velocities of an owning group are index-aligned. That holds
 // for the owning group's packed prefix; getDenseComponents returns the whole pool, so only
 // its first group.size() entries are index-aligned with the partner pool.
 TEST(EcsSpecNames, DenseSpansAreIndexAlignedWithinTheOwningGroupPrefix) {

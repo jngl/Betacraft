@@ -21,10 +21,10 @@ enum class SlotButton : uint8_t {
     Right // Put down one item, or pick up half of a stack
 };
 
-// Logic of the inventory screen (roadmap P2.6), free of GL so tests drive it directly: the
+// Logic of the inventory screen, free of GL so tests drive it directly: the
 // 2x2 grid of the player inventory or the 3x3 grid of an opened CraftingTable, the result
 // slot previewing RecipeRegistry::match, and the stack carried by the cursor. Clicks follow
-// Beta's Container.slotClick rules. A furnace or chest screen (S2.6) shows the block entity
+// Beta's Container.slotClick rules. A furnace or chest screen shows the block entity
 // at containerPos() instead of a grid; its slots live in World::blockEntities().
 class InventoryCrafting {
 public:
@@ -82,18 +82,18 @@ public:
     // when nothing is carried); the caller drops it in the world.
     [[nodiscard]] physics::InventorySlot takeCarried(SlotButton button);
 
-    // S6.7 armor slot `index` (gameplay::ArmorSlot) of the player (Beta SlotArmor): it takes
+    // Armor slot `index` (gameplay::ArmorSlot) of the player (Beta SlotArmor): it takes
     // only the matching piece, one at a time; a matching cursor piece swaps with a worn one.
     bool clickArmorSlot(physics::Player& player, size_t index, SlotButton button = SlotButton::Left);
     // Shift-click on a worn piece: back into the main inventory, then the hotbar.
     bool shiftClickArmorSlot(physics::Player& player, size_t index);
 
-    // Shift-click (Beta transferStackInSlot, S3.5). Each moves as much of the clicked stack as
+    // Shift-click (Beta transferStackInSlot). Each moves as much of the clicked stack as
     // fits and leaves the rest in place; items are never created or lost. Each returns true
     // when something moved.
     // Player slot: into the open chest when `world` is given and a chest screen is open,
     // otherwise hotbar (0-8) <-> main inventory (9-35), also with a furnace open. On the
-    // player's inventory screen an armor piece goes straight into its empty armor slot (S6.7).
+    // player's inventory screen an armor piece goes straight into its empty armor slot.
     bool shiftClickInventorySlot(physics::Player& player, world::World* world, size_t index);
     // Grid slot: into the main inventory, then the hotbar.
     bool shiftClickGridSlot(physics::Player& player, size_t index);

@@ -19,8 +19,8 @@ inline constexpr uint8_t kGoldPickaxeTile = 136;
 inline constexpr uint8_t kFirstToolTile = 137;    // Axes, shovels, swords, hoes: 5 materials each
 inline constexpr uint8_t kGlowstoneDustTile = 157;
 inline constexpr uint8_t kGenericItemTile = 158;  // Tinted per item
-// S6.7 armor icons, drawn light so each material tints them: helmet, chestplate, leggings,
-// boots (gameplay::ArmorSlot order). S6.10 mob spawner cage at Beta's own tile.
+// Armor icons, drawn light so each material tints them: helmet, chestplate, leggings,
+// boots (gameplay::ArmorSlot order). Mob spawner cage at Beta's own tile.
 inline constexpr std::array<uint8_t, 4> kArmorIconTiles{238, 239, 254, 223};
 inline constexpr uint8_t kMobSpawnerTile = 65;
 

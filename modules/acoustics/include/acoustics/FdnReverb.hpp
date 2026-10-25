@@ -8,8 +8,8 @@
 
 namespace betacraft::acoustics {
 
-// 8-line Feedback Delay Network (Jot / Householder) for the ONE shared auxiliary reverb bus
-// (spec Fiche 5 §2.2). All 32 voices send into a single instance, so the whole delay memory
+// 8-line Feedback Delay Network (Jot / Householder) for the ONE shared auxiliary reverb bus.
+// All 32 voices send into a single instance, so the whole delay memory
 // (16 310 floats = 65 240 bytes) stays resident in L2 instead of 32 x 65 KB per-voice copies.
 //
 // Per sample: read the 8 delay outputs, mix them through the orthogonal Householder matrix

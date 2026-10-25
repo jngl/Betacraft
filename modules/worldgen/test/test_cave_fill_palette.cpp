@@ -1,4 +1,4 @@
-// P3.3 - "Nappes de lave systematiques sous Y=10": the lava fill needs a Lava block, which the
+// "Nappes de lave systematiques sous Y=10": the lava fill needs a Lava block, which the
 // block registry does not have yet. The palette picks it up automatically once it exists, and
 // until then the magma band is left as rock instead of becoming an empty void under aquifers.
 #include "worldgen/CaveCarver.hpp"

@@ -11,7 +11,7 @@ namespace betacraft::world {
 
 class World;
 
-// S5.1 random block ticks (Beta Block.updateTick reached from World.updateBlocksAndPlayCaveSounds):
+// Random block ticks (Beta Block.updateTick reached from World.updateBlocksAndPlayCaveSounds):
 // World::tickRandomBlocks picks kRandomTicksPerChunk random cells in every nearby chunk each
 // game tick and calls the handler of the block found there, with its metadata.
 using RandomTickFn = void (*)(World&, const core::BlockPos&, uint8_t meta, gameplay::SplitMix64&);
@@ -51,10 +51,10 @@ extern const std::array<RandomTickFn, 256> kRandomTick;
 // cells or leaves. Returns false, changing nothing, when the trunk has no room.
 bool growTreeFromSapling(World& world, const core::BlockPos& pos, gameplay::SplitMix64& rng);
 
-// S5.7 (Beta BlockFarmland.isWaterNearby): water within x/z +-4 and y 0..+1 of `pos`.
+// (Beta BlockFarmland.isWaterNearby): water within x/z +-4 and y 0..+1 of `pos`.
 [[nodiscard]] bool farmlandHasWaterNearby(const World& world, const core::BlockPos& pos);
 
-// S5.7: gameplay::cropGrowthRate of the crop at `pos`, read from the world.
+// Gameplay::cropGrowthRate of the crop at `pos`, read from the world.
 [[nodiscard]] float cropGrowthRate(const World& world, const core::BlockPos& pos);
 
 // Beta BlockLeaves.updateTick search: a log reachable from `pos` in at most

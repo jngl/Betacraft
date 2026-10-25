@@ -46,12 +46,12 @@ WorldSession::WorldSession(const OpenOptions& options)
       m_world(std::make_unique<world::World>(options.seed, options.folder)) {
     const std::string dir = m_folder.string();
     m_world->setRegionStorageEnabled(m_features.regionStorage);
-    m_simulation.setPathfinding(m_features.mobPathfinding); // S8.3, --no-pathfinding
-    m_world->setRedstoneEnabled(m_features.redstone);       // S8.7, --no-redstone
+    m_simulation.setPathfinding(m_features.mobPathfinding); // --no-pathfinding
+    m_world->setRedstoneEnabled(m_features.redstone);       // --no-redstone
 
     storage::WorldLevelData saved{};
     m_levelStatus = m_world->loadLevelDataStatus(saved);
-    // S7.4: convert a pre-Sprint 7 chunks/ save before any chunk is read (never in a read-only
+    // Convert a pre-region chunks/ save before any chunk is read (never in a read-only
     // session: a too new or unreadable level.dat skips it).
     if (m_levelStatus == storage::LevelLoadStatus::Ok || m_levelStatus == storage::LevelLoadStatus::LegacyV1 ||
         m_levelStatus == storage::LevelLoadStatus::Missing) {
@@ -61,7 +61,7 @@ WorldSession::WorldSession(const OpenOptions& options)
     if (m_levelStatus == storage::LevelLoadStatus::Ok || m_levelStatus == storage::LevelLoadStatus::LegacyV1) {
         m_world->setSeed(saved.seed);
         setTimeOfDay(saved.timeOfDay);
-        m_weather = saved.weather; // S8.9: a level.dat without weather keys is clear
+        m_weather = saved.weather; // a level.dat without weather keys is clear
         // Position first: setPosition clears the fall distance restorePlayer brings back.
         m_player.setPosition(saved.playerPos);
         m_player.setRotation(saved.playerYaw, saved.playerPitch);
@@ -92,7 +92,7 @@ WorldSession::WorldSession(const OpenOptions& options)
             if (options.newWorld) {
                 m_name = options.newWorld->name;
             }
-            core::Logger::info("WorldSession", "Generated new Beta 1.7.3 world (seed=", m_world->getSeed(),
+            core::Logger::info("WorldSession", "Generated new world (seed=", m_world->getSeed(),
                                ") at spawn (", m_spawnPoint.x, ", ", m_spawnPoint.y, ", ", m_spawnPoint.z, ").");
         } else {
             // Too new or unreadable: play, but never overwrite what is on disk (conventions §1.2).
@@ -229,7 +229,7 @@ WorldTickEvents WorldSession::tick(const PlayerActions& actions) {
 
     // World phase (Beta World.tick).
     if (m_features.weather) {
-        world::tickWeather(m_weather, m_weatherRng); // S8.9
+        world::tickWeather(m_weather, m_weatherRng);
     }
     tickSleep(events.game);
     m_simulation.spawnMobs(*m_world, m_player, m_timeOfDay, m_weather);

@@ -1,4 +1,4 @@
-// P3.3 - Vertical modulation envelope A(y) (Fiche Technique 4, section 2.2).
+// Vertical modulation envelope A(y).
 //   * Bedrock guard: A(y) = 0 for every y <= 5.
 //   * Bottom fade-in over 4 blocks (Y 5 -> 9) and top fade-out over 4 blocks, smoothed by
 //     the Hermite polynomial S(t) = 3t^2 - 2t^3.

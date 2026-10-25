@@ -1,6 +1,6 @@
 # BetaCraft
 
-A Minecraft Beta 1.7.3 clone: one player exploring, surviving and building in procedurally generated voxel worlds.
+A voxel survival and building game inspired by Minecraft: one player exploring, surviving and building in procedurally generated voxel worlds. Minecraft Beta 1.7.3 is the default reference for how mechanics behave (`docs/adr/0002-beta-as-behaviour-reference.md`).
 
 ## Language
 

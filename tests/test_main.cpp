@@ -213,7 +213,7 @@ int main() {
     testWaterExitJump();
 
     if (g_failedTests == 0) {
-        std::cout << "[PASS] All BetaCraft 1.7.3 unit tests passed successfully.\n";
+        std::cout << "[PASS] All Betacraft unit tests passed successfully.\n";
         return EXIT_SUCCESS;
     }
     std::cerr << "[FAIL] " << g_failedTests << " test assertion(s) failed.\n";

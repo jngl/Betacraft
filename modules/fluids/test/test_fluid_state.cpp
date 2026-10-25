@@ -1,4 +1,4 @@
-// P2.3 - FluidState nibble encoding (bit 3 = falling, bits 0..2 = level, 7 = source).
+// FluidState nibble encoding (bit 3 = falling, bits 0..2 = level, 7 = source).
 #include "fluids/FluidState.hpp"
 
 #include <gtest/gtest.h>

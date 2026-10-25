@@ -1,4 +1,4 @@
-// S7.1 RegionFile: 32x32 chunks in 4 KiB sectors, an 8 KiB header (offsets + timestamps)
+// RegionFile: 32x32 chunks in 4 KiB sectors, an 8 KiB header (offsets + timestamps)
 // rewritten only by flush(), after the data.
 #include "StorageTestHelpers.hpp"
 #include "storage/RegionFile.hpp"

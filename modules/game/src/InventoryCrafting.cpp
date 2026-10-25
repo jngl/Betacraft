@@ -106,7 +106,7 @@ template <class Entity>
 
 } // namespace
 
-// S2.8: the game book is the strict Beta one. Smelting now produces ingots and gems, so the
+// The game book is the strict Beta one. Smelting now produces ingots and gems, so the
 // raw-ore tool variants, the 6-slab yield and the sugar-cane bookshelf are gone.
 InventoryCrafting::InventoryCrafting()
     : InventoryCrafting(crafting::makeBetaRecipeBook(crafting::BetaRecipeOptions::vanilla())) {}
@@ -333,7 +333,7 @@ bool InventoryCrafting::shiftClickInventorySlot(physics::Player& player, world::
         return false;
     }
     int32_t left = slot.count;
-    // S6.7: on the player's own screen, an armor piece is worn at once when its slot is free.
+    // On the player's own screen, an armor piece is worn at once when its slot is free.
     if (m_kind == ui::ScreenKind::Inventory2x2) {
         if (const auto armor = gameplay::armorInfo(gameplay::canonicalize(slot.id))) {
             const auto armorSlot = static_cast<size_t>(armor->slot);

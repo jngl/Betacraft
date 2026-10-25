@@ -1,4 +1,4 @@
-// S2.2: Beta 1.7.3 FurnaceRecipes and TileEntityFurnace.getItemBurnTime.
+// Beta 1.7.3 FurnaceRecipes and TileEntityFurnace.getItemBurnTime.
 #include "crafting/SmeltingRecipes.hpp"
 
 #include <gtest/gtest.h>

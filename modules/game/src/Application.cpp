@@ -22,7 +22,7 @@ namespace betacraft::game {
 
 namespace {
 
-// F3 storage and streaming numbers (S7.5, S7.10).
+// F3 storage and streaming numbers.
 [[nodiscard]] ui::HudStorageStats hudStorageStats(const world::World& world) {
     const world::World::StorageStats& storage = world.getStorageStats();
     const world::World::StreamingStats streaming = world.getStreamingStats();
@@ -186,7 +186,7 @@ bool Application::enterWorld(const std::filesystem::path& dir, std::optional<cor
     options.features = m_config.features;
     options.dayLengthSeconds = m_config.dayLengthSeconds;
     options.defaultGameMode = m_config.defaultGameMode;
-    // S7.4: the 10 % log lines, and a progress bar beyond kMigrationProgressThreshold chunks.
+    // The 10 % log lines, and a progress bar beyond kMigrationProgressThreshold chunks.
     int lastDecile = -1;
     int lastPercent = -1;
     options.onMigrationProgress = [&](const MigrationProgress& progress) {
@@ -221,7 +221,7 @@ void Application::syncRuntimeOptions() {
     if (m_config.renderDistanceChunks != newRenderDist) {
         m_config.renderDistanceChunks = newRenderDist;
         if (m_session) {
-            // S7.7: a larger view distance streams in over the next frames instead of freezing.
+            // A larger view distance streams in over the next frames instead of freezing.
             if (m_config.features.asyncWorldGen) {
                 world().requestChunksAround(player().getPosition(), streamingRadius());
             } else {
@@ -258,7 +258,7 @@ void Application::processEvents() {
             m_mouseX = ev.motion.x;
             m_mouseY = ev.motion.y;
             if (m_screenState == ui::ScreenState::InGame && m_mouseCaptured && !m_inventoryOpen) {
-                // S3.8: Beta's sensitivity curve, 0.15 degree per pixel at the default 50 %.
+                // Beta's sensitivity curve, 0.15 degree per pixel at the default 50 %.
                 const float sensitivity = m_inputManager.getDegreesPerPixel();
                 player().rotate(
                     static_cast<float>(ev.motion.xrel) * sensitivity,
@@ -434,7 +434,7 @@ void Application::processEvents() {
                         m_screenState = ui::ScreenState::OptionsMenu;
                     } else if (my >= startY + 100.0f && my <= startY + 100.0f + btnH) {
                         m_audio.playUiClick();
-                        leaveWorld(); // S7.9: saved, every queued chunk on disk, world closed
+                        leaveWorld(); // saved, every queued chunk on disk, world closed
                     }
                 }
             }
@@ -532,7 +532,7 @@ void Application::processEvents() {
                 }
 
                 // Q throws one item, Ctrl+Q the whole stack (Beta dropCurrentItem); not from
-                // the inventory screen (out of scope for S3.4).
+                // the inventory screen.
                 if (!m_inventoryOpen &&
                     ev.key.keysym.scancode == m_inputManager.getPrimaryBinding(ui::GameAction::DropItem)) {
                     const bool wholeStack = (SDL_GetModState() & KMOD_CTRL) != 0;
@@ -542,7 +542,7 @@ void Application::processEvents() {
                     break;
                 }
 
-                // S8.13 debug weather cycle: no default key, Creative only.
+                // Debug weather cycle: no default key, Creative only.
                 if (const SDL_Scancode cycleKey = m_inputManager.getPrimaryBinding(ui::GameAction::CycleWeather);
                     cycleKey != SDL_SCANCODE_UNKNOWN && ev.key.keysym.scancode == cycleKey) {
                     if (m_session->cycleWeatherIfCreative()) {
@@ -627,7 +627,7 @@ void Application::openContainerScreen(ui::ScreenKind kind, const core::BlockPos&
     if (!voxel::hasBlockEntity(block)) {
         return;
     }
-    (void)fillDungeonChest(world(), pos);                  // S6.10: loot drawn on first open
+    (void)fillDungeonChest(world(), pos);                  // loot drawn on first open
     (void)world().blockEntities().getOrCreate(pos, block); // Created on first open
     dropAtPlayer(m_session->crafting().openContainer(kind, pos, player()));
     m_inventoryOpen = true;
@@ -675,13 +675,13 @@ void Application::handleInventoryClick(int32_t mouseX, int32_t mouseY, SlotButto
     const bool container = ui::isContainerScreen(screen.kind());
     const ui::InventoryLayoutKey layout{static_cast<int>(screen.gridSize()), screen.kind(),
                                         player().isCreative() && !container};
-    // The inventory is laid out in the GUI Scale canvas (S3.7): window points map back first.
+    // The inventory is laid out in the GUI Scale canvas: window points map back first.
     const ui::HudCanvas canvas = hudCanvas();
     mouseX = canvas.toCanvasX(mouseX);
     mouseY = canvas.toCanvasY(mouseY);
     const ui::InventoryHit hit =
         ui::HudRenderer::hitTestInventoryScreen(mouseX, mouseY, canvas.width, canvas.height, layout);
-    // Shift-click moves whole stacks between sections (Beta transferStackInSlot, S3.5).
+    // Shift-click moves whole stacks between sections (Beta transferStackInSlot).
     const bool shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
     bool changed = false;
     switch (hit.region) {
@@ -714,7 +714,7 @@ void Application::handleInventoryClick(int32_t mouseX, int32_t mouseY, SlotButto
             dropAtPlayer(overflow);
             break;
         }
-        case ui::InventoryRegion::Armor: // S6.7
+        case ui::InventoryRegion::Armor:
             changed = shift ? screen.shiftClickArmorSlot(player(), hit.index)
                             : screen.clickArmorSlot(player(), hit.index, button);
             break;
@@ -735,8 +735,8 @@ void Application::handleInventoryClick(int32_t mouseX, int32_t mouseY, SlotButto
     }
 }
 
-// Beta Minecraft.clickMouse(1), in the canonical right-click order (roadmap conventions §2):
-// 1. the entity under the crosshair (an empty bucket on a cow, S6.3);
+// Beta Minecraft.clickMouse(1), in the canonical right-click order (CLAUDE.md conventions):
+// 1. the entity under the crosshair (an empty bucket on a cow);
 // 2. activating the targeted block unless sneaking (workbench, furnace, chest, Creative piston);
 // 3. the held item on the targeted block (placing the held block);
 // 4. the held item in the void (food), also when a block is targeted but step 3 did nothing.
@@ -746,7 +746,7 @@ void Application::handleRightClickAction() {
     }
     const bool onBlock = m_inWorld.state.currentTarget.hit;
 
-    // Step 1 (S6.3): the held item on the entity under the crosshair (milking a cow).
+    // Step 1: the held item on the entity under the crosshair (milking a cow).
     if (const std::optional<ecs::EntityId> entity = sim().meleeTarget(player(), m_inWorld.state.currentTarget)) {
         if (sim().useHeldItemOnEntity(player(), *entity)) {
             m_inWorld.state.placeCooldown = 0.16f;
@@ -755,7 +755,7 @@ void Application::handleRightClickAction() {
     }
 
     if (onBlock && !player().isSneaking()) {
-        // S8.7: a lever switches, a button goes down (their click comes back as a redstone
+        // A lever switches, a button goes down (their click comes back as a redstone
         // event); an iron door takes the click and does nothing (Beta BlockDoor.blockActivated).
         const voxel::BlockId targeted = m_inWorld.state.currentTarget.blockId;
         if (targeted == voxel::BlockId::Lever || targeted == voxel::BlockId::StoneButton ||
@@ -804,7 +804,7 @@ void Application::handleRightClickAction() {
     }
 
     if (onBlock) {
-        // Step 3: flint and steel on TNT (S6.6), the held item on the block (door, bed, seeds,
+        // Step 3: flint and steel on TNT, the held item on the block (door, bed, seeds,
         // hoe, bucket), then the held block.
         if (sim().igniteTnt(world(), player(), m_inWorld.state.currentTarget)) {
             m_inWorld.state.placeCooldown = 0.16f;
@@ -825,7 +825,7 @@ void Application::handleRightClickAction() {
         }
     }
 
-    // Step 4 for buckets (S6.4): a liquid source or a wall within reach, nothing under the
+    // Step 4 for buckets: a liquid source or a wall within reach, nothing under the
     // crosshair.
     if (!onBlock) {
         if (const std::optional<ItemUseResult> used = useHeldBucket(world(), player())) {
@@ -956,7 +956,7 @@ void Application::gameTick() {
 void Application::tickWeatherEffects(const std::optional<glm::vec3>& strike) {
     const glm::vec3 eye = player().getInterpolatedEyePosition(m_renderAlpha);
 
-    // S8.10 lightning: the flash and bolt fade over kLightningFlashTicks; the thunder follows at the
+    // Lightning: the flash and bolt fade over kLightningFlashTicks; the thunder follows at the
     // speed of sound, quieter for a far strike.
     if (m_inWorld.state.lightningTicks > 0 && --m_inWorld.state.lightningTicks == 0) {
         m_inWorld.state.lightningBolt.reset();
@@ -977,7 +977,7 @@ void Application::tickWeatherEffects(const std::optional<glm::vec3>& strike) {
         }
     }
 
-    // S8.11 splashes where the rain lands around the player (Beta addRainParticles).
+    // Splashes where the rain lands around the player (Beta addRainParticles).
     const float rain = m_session->weather().rainStrength;
     if (rain > 0.0f) {
         const int32_t splashes = static_cast<int32_t>(rain * rain * 12.0f);
@@ -995,7 +995,7 @@ void Application::tickWeatherEffects(const std::optional<glm::vec3>& strike) {
         }
     }
 
-    // S8.12 the rain loop, re-measured 4 times a second.
+    // The rain loop, re-measured 4 times a second.
     if (rain <= 0.0f) {
         m_audio.setRainLoop(0.0f);
     } else if (m_session->gameTicks() % 5U == 0U) {
@@ -1015,14 +1015,14 @@ std::string Application::weatherDebugLine() const {
         << m_session->weather().thunderStrength << " (" << m_session->weather().thunderTime << " t)  "
         << (precip == world::Precipitation::Snow ? "snow" : precip == world::Precipitation::Rain ? "rain" : "dry")
         << " here" << (m_config.features.weather ? "" : "  [--no-weather]");
-    // Sprint 8 tick costs next to the fluids and lighting ones: A* nodes and redstone work.
+    // Tick costs next to the fluids and lighting ones: A* nodes and redstone work.
     const redstone::RedstoneTickStats& rs = world().getRedstoneStats();
     out << "  |  A* " << sim().lastPathNodes() << " nodes  redstone " << rs.evaluations << " evals"
         << (rs.pending > 0 ? " (+" + std::to_string(rs.pending) + " pending)" : std::string{});
     return out.str();
 }
 
-// S8.7 Beta sounds of the redstone events: random.click (volume 0.3, pitch 0.6 down / on,
+// Beta sounds of the redstone events: random.click (volume 0.3, pitch 0.6 down / on,
 // 0.5 up / off), the door sounds, the piston, and random.fizz for a torch burning out.
 void Application::playRedstoneEffects(const std::vector<redstone::RedstoneEvent>& events) {
     for (const redstone::RedstoneEvent& ev : events) {
@@ -1105,7 +1105,7 @@ void Application::playGameTickEffects(const GameTickEvents& events) {
         float pitchScale = 1.0f;
         if (mob.sound == MobSoundKind::Ambient) {
             volume = 0.6f;
-            // No dedicated voices for the S6.3 mobs: the nearest existing one, re-pitched.
+            // No dedicated voices for the mobs: the nearest existing one, re-pitched.
             switch (mob.kind) {
                 case gameplay::MobKind::Zombie: effect = audio::SoundEffect::ZombieGroan; break;
                 case gameplay::MobKind::Skeleton: effect = audio::SoundEffect::ZombieGroan; pitchScale = 1.4f; break;
@@ -1151,7 +1151,7 @@ void Application::playGameTickEffects(const GameTickEvents& events) {
 }
 
 void Application::update(float dt) {
-    // The world keeps running while the player sleeps (S5.8).
+    // The world keeps running while the player sleeps.
     if (!m_session || (m_screenState != ui::ScreenState::InGame && m_screenState != ui::ScreenState::Sleeping)) {
         m_audio.setRainLoop(0.0f); // Paused or in a menu: the rain falls silent
         return;
@@ -1184,7 +1184,7 @@ void Application::update(float dt) {
     m_renderAlpha = m_inWorld.state.accumulator / FIXED_DT;
     player().setRenderAlpha(m_renderAlpha);
 
-    // Stream chunks around player: S7.7 disk reads and pass 1 off the main thread, then at
+    // Stream chunks around player: disk reads and pass 1 off the main thread, then at
     // most kIntegrationBudget of integration per frame (--no-async-gen: 2 chunks in place).
     m_session->streamAround(streamingRadius());
 
@@ -1223,7 +1223,7 @@ void Application::collectMobInstances(float tickAlpha) {
                 inst.death = std::clamp((static_cast<float>(corpse->ticks) + tickAlpha) /
                                             static_cast<float>(gameplay::kDeathAnimationTicks), 0.0f, 1.0f);
             }
-            // S6.3 creeper fuse: Beta RenderCreeper swells the body and flashes it white on
+            // Creeper fuse: Beta RenderCreeper swells the body and flashes it white on
             // every other tenth of the fuse, brighter as it burns down.
             if (const auto* fuse = reg.tryGet<ecs::FuseComp>(e); fuse != nullptr && fuse->ticks > 0) {
                 const float total = static_cast<float>(std::max(1, gameplay::mobDef(mob.kind).explode.fuseTicks));
@@ -1261,7 +1261,7 @@ void Application::renderFrame(bool present) {
     SDL_GL_GetDrawableSize(m_window, &framebufferWidth, &framebufferHeight);
 
     if (!m_session) {
-        // Title and world menus with no world open (S7.9).
+        // Title and world menus with no world open.
         clearFrame(framebufferWidth, framebufferHeight);
     } else {
         renderWorldFrame(framebufferWidth, framebufferHeight);
@@ -1291,13 +1291,13 @@ void Application::renderWorldFrame(int framebufferWidth, int framebufferHeight) 
         [&](ecs::EntityId, const ecs::TransformComp& t, const ecs::FallingBlockComp& falling) {
             m_inWorld.state.fallingBlockInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), falling.id});
         });
-    // S6.6 primed TNT: the block itself, blinking white over the last kTntFlashTicks.
+    // Primed TNT: the block itself, blinking white over the last kTntFlashTicks.
     sim().entities().view<ecs::TransformComp, ecs::PrimedTntComp>().each(
         [&](ecs::EntityId, const ecs::TransformComp& t, const ecs::PrimedTntComp& tnt) {
             const float flash = tnt.fuse <= kTntFlashTicks && (tnt.fuse / 2) % 2 == 0 ? 0.8f : 0.0f;
             m_inWorld.state.fallingBlockInstances.push_back({glm::mix(t.prevPos, t.pos, tickAlpha), voxel::BlockId::TNT, flash});
         });
-    // S6.2 arrows, along their flight.
+    // Arrows, along their flight.
     m_inWorld.state.arrowInstances.clear();
     sim().entities().view<ecs::TransformComp, ecs::ArrowComp>().each(
         [&](ecs::EntityId, const ecs::TransformComp& t, const ecs::ArrowComp&) {
@@ -1307,7 +1307,7 @@ void Application::renderWorldFrame(int framebufferWidth, int framebufferHeight) 
     const bool crackOnTarget = m_inWorld.state.currentTarget.hit && sim().miningTarget() &&
                                *sim().miningTarget() == m_inWorld.state.currentTarget.blockPos;
 
-    // S8.10 / S8.11 weather of this frame, interpolated on the game tick.
+    // Weather of this frame, interpolated on the game tick.
     m_worldRenderer.setWeather(render::WeatherFrame{
         .rainStrength = world::rainStrengthAt(m_session->weather(), tickAlpha),
         .thunderStrength = world::thunderStrengthAt(m_session->weather(), tickAlpha),
@@ -1651,7 +1651,7 @@ void Application::respawnPlayer() {
     if (!m_session) {
         return;
     }
-    // S5.8: next to the bed slept in, or back to the world spawn when it is gone.
+    // Next to the bed slept in, or back to the world spawn when it is gone.
     if (m_session->respawn().bedMissing) {
         showStatusMessage("Your home bed was missing or obstructed");
     }
@@ -1681,7 +1681,7 @@ int32_t Application::streamingRadius() const noexcept {
 void Application::shutdown() noexcept {
     // Meshing workers and section meshes go first, while the World and GL context exist.
     m_worldRenderer.shutdown();
-    leaveWorld(); // Saved and flushed (S7.6: unload saves still queued included)
+    leaveWorld(); // Saved and flushed (unload saves still queued included)
 
     m_audio.shutdown();
 

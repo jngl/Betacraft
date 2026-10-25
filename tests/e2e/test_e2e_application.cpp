@@ -32,7 +32,7 @@ TEST(ApplicationE2ETest, RunMultipleFramesAndCleanShutdown) {
     config.worldSaveDir = tempDir.path().string();
     config.worldSeed = 123456ULL;
     config.renderDistanceChunks = 2; // small render distance for fast test execution
-    config.autoEnterWorld = true; // S7.9: open worldSaveDir in initialize(), as --save-dir does
+    config.autoEnterWorld = true; // open worldSaveDir in initialize(), as --save-dir does
 
     game::Application app(config);
     ASSERT_TRUE(app.initialize());
@@ -148,7 +148,7 @@ namespace {
 
 [[nodiscard]] core::EngineConfig sprint1Config(const test::TempDir& dir) {
     core::EngineConfig config{};
-    config.windowTitle = "BetaCraft E2E Sprint 1";
+    config.windowTitle = "Betacraft E2E Survival";
     config.windowWidth = 320;
     config.windowHeight = 240;
     config.vsync = false;
@@ -161,7 +161,7 @@ namespace {
 
 } // namespace
 
-// S1.7 / S1.4 hand-off: entering a new world from the title starts it in the title's mode
+// Hand-off: entering a new world from the title starts it in the title's mode
 // (Survival) and writes level.dat; shutdown closes the session so the inventory comes back.
 // Details of the saved state: test_world_session_lifecycle.cpp.
 TEST(ApplicationE2ETest, SurvivalWorldSavesInventoryOnShutdown) {
@@ -189,7 +189,7 @@ TEST(ApplicationE2ETest, SurvivalWorldSavesInventoryOnShutdown) {
     app.shutdown();
 }
 
-// S1.4 hand-off: the title's mode (EngineConfig::defaultGameMode) starts the new world.
+// Hand-off: the title's mode (EngineConfig::defaultGameMode) starts the new world.
 TEST(ApplicationE2ETest, NewCreativeWorldGetsTheCreativeKit) {
     if (!test::GLTestContext::isAvailable()) {
         GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
@@ -207,7 +207,7 @@ TEST(ApplicationE2ETest, NewCreativeWorldGetsTheCreativeKit) {
     app.shutdown();
 }
 
-// S1.6: dying opens the death screen with the inventory scattered; Respawn goes back in game
+// Dying opens the death screen with the inventory scattered; Respawn goes back in game
 // alive. Where and how the player comes back: test_world_session_respawn (GL-free).
 TEST(ApplicationE2ETest, DeathScreenThenRespawnAtSpawn) {
     if (!test::GLTestContext::isAvailable()) {
@@ -236,7 +236,7 @@ TEST(ApplicationE2ETest, DeathScreenThenRespawnAtSpawn) {
     app.shutdown();
 }
 
-// S1.4 hand-off: quitting from the title screen of a new world writes no level.dat, so the
+// Hand-off: quitting from the title screen of a new world writes no level.dat, so the
 // next launch still offers the mode choice.
 TEST(ApplicationE2ETest, NewWorldQuitAtTitleKeepsTheModeChoice) {
     if (!test::GLTestContext::isAvailable()) {
@@ -286,7 +286,7 @@ TEST(ApplicationE2ETest, TooNewLevelDatIsNeverOverwritten) {
 
 namespace {
 
-// S7.9: no autoEnterWorld, worlds under <dir>/saves (the menu flow).
+// No autoEnterWorld, worlds under <dir>/saves (the menu flow).
 [[nodiscard]] core::EngineConfig menuConfig(const test::TempDir& dir) {
     core::EngineConfig config = sprint1Config(dir);
     config.autoEnterWorld = false;
@@ -332,7 +332,7 @@ void pushText(const char* text) {
 
 } // namespace
 
-// S7.9: without autoEnterWorld the game starts on the title screen with no world, and nothing
+// Without autoEnterWorld the game starts on the title screen with no world, and nothing
 // is written until a world is picked.
 TEST(ApplicationWorldsE2ETest, StartsOnTitleWithoutWorldUnlessAutoEnter) {
     if (!test::GLTestContext::isAvailable()) {
@@ -352,7 +352,7 @@ TEST(ApplicationWorldsE2ETest, StartsOnTitleWithoutWorldUnlessAutoEnter) {
     EXPECT_FALSE(std::filesystem::exists(dir.path() / "saves"));
 }
 
-// S7.8 / S7.9 through real SDL events: Singleplayer -> World Select -> Create New World ->
+// Through real SDL events: Singleplayer -> World Select -> Create New World ->
 // typed name and seed, Survival toggled to Creative -> in game in the new world's folder.
 TEST(ApplicationWorldsE2ETest, MenusCreateAndEnterANewWorld) {
     if (!test::GLTestContext::isAvailable()) {
@@ -402,7 +402,7 @@ TEST(ApplicationWorldsE2ETest, MenusCreateAndEnterANewWorld) {
     EXPECT_FALSE(worlds[0].needsMigration);
 }
 
-// S7.9 hand-off: leaveWorld closes the session and returns to the title; entering B then A
+// Hand-off: leaveWorld closes the session and returns to the title; entering B then A
 // opens each in turn, and the World Select list orders them by last play.
 // What each world keeps: test_world_session_lifecycle.cpp.
 TEST(ApplicationWorldsE2ETest, LeaveWorldThenAnotherWorldKeepsNothingOfTheFirst) {
@@ -475,7 +475,7 @@ TEST(ApplicationWorldsE2ETest, SameSeedTextGivesSameTerrain) {
     app.shutdown();
 }
 
-// S7.4 / S7.8 / S7.9 hand-off: a pre-Sprint 7 save is listed as "to migrate", entering it
+// Hand-off: a pre-region save is listed as "to migrate", entering it
 // from the Application converts it, and it is no longer flagged.
 // The migration itself: test_world_session_lifecycle.cpp.
 TEST(ApplicationWorldsE2ETest, LegacySaveFlaggedThenMigratedOnEnter) {

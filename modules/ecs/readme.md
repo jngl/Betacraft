@@ -1,6 +1,6 @@
 # ecs
 
-The sparse-set entity component system (P2.1) and the systems that move dropped items, mobs and projectiles each tick. It sits above `world`, `physics` and `ai`.
+The sparse-set entity component system and the systems that move dropped items, mobs and projectiles each tick. It sits above `world`, `physics` and `ai`.
 
 ## Public entry points
 

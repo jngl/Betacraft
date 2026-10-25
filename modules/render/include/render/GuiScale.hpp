@@ -4,7 +4,7 @@
 
 namespace betacraft::render {
 
-// S3.7: the player's GUI scale choice; TextRenderer::calculateGuiScale resolves Auto from the
+// The player's GUI scale choice; TextRenderer::calculateGuiScale resolves Auto from the
 // window size.
 enum class GuiScalePreference : uint8_t {
     Auto = 0,

@@ -1,4 +1,4 @@
-// P2.1 — Extended randomized differential testing of the Registry against a naive
+// Extended randomized differential testing of the Registry against a naive
 // std::map model: a three-way owning group, a view mixing owned and free pools, full
 // registry clears and stale handles surviving across clears and slot recycling.
 #include "ecs/Registry.hpp"

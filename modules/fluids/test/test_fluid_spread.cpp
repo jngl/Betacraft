@@ -1,4 +1,4 @@
-// P2.3 - Horizontal spreading on a flat floor: diamond shapes with decreasing levels.
+// Horizontal spreading on a flat floor: diamond shapes with decreasing levels.
 #include "FluidTestUtils.hpp"
 
 #include <gtest/gtest.h>
@@ -238,7 +238,7 @@ TEST(FluidChunkBorders, BorderWakeOnlyTouchesTheShellNotTheInterior) {
 }
 
 TEST(FluidSpread, AdapterContractOutermostRingIsNibbleZeroNotDry) {
-    // Adapter contract (see IFluidVoxelAccess): the roadmap's "0 = dry" nibble cannot hold
+    // Adapter contract (see IFluidVoxelAccess): a "0 = dry" nibble cannot hold
     // with a 7-block water reach (source + 7 flowing levels + dry = 9 states > 8), so the
     // 7th ring is stored as nibble 0 and dryness comes from the block id alone. A World
     // adapter that decoded nibble 0 as dry would erase this ring.

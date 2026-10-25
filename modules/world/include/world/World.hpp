@@ -59,7 +59,7 @@ public:
     // for findSafeSpawnPosition, respawn, startup and tests; cancels any async request of it.
     voxel::Chunk& ensureChunkLoaded(core::ChunkCoord coord);
 
-    // S7.7 asynchronous streaming. requestChunksAround asks the I/O worker for every missing
+    // Asynchronous streaming. requestChunksAround asks the I/O worker for every missing
     // chunk within the radius (nearest first); those absent from disk go to the pass-1
     // generation pool. It also unloads chunks beyond radius + 3 and cancels their requests.
     // integrateReadyChunks then adds finished chunks on the calling (main) thread through the
@@ -87,7 +87,7 @@ public:
     // finished reads wait for the next integrateReadyChunks. Tests use it to order a disk
     // answer against later main-thread calls.
     void waitDiskIdle();
-    // S7.10 F3 numbers.
+    // F3 numbers.
     struct StreamingStats {
         size_t loading{0};     // Disk reads requested, not answered yet
         size_t generating{0};  // Pass-1 jobs pending or running
@@ -103,23 +103,23 @@ public:
     [[nodiscard]] const voxel::Chunk* getChunk(core::ChunkCoord coord) const noexcept;
     [[nodiscard]] voxel::Chunk* getChunkMutable(core::ChunkCoord coord) noexcept;
 
-    // P3.4 pass 2 (trees, flora) runs on a chunk once its 3x3 neighbourhood is resident;
+    // Pass 2 (trees, flora) runs on a chunk once its 3x3 neighbourhood is resident;
     // until then the chunk holds pass-1 terrain + caves only.
     [[nodiscard]] bool isChunkDecorated(core::ChunkCoord coord) const noexcept;
     [[nodiscard]] const worldgen::DecorationPipeline& getDecorationPipeline() const noexcept { return *m_decoration; }
 
     // One 50 ms game tick (core::EngineConfig::GAME_TICKS_PER_SECOND): counts the tick, runs
-    // at most kMaxScheduledTicksPerTick due scheduled block updates (S5.2), then advances the
-    // P2.3 fluid simulation. Fluid writes go through setBlock/setMetadata internals: block
+    // at most kMaxScheduledTicksPerTick due scheduled block updates, then advances the
+    // Fluid simulation. Fluid writes go through setBlock/setMetadata internals: block
     // changes relight and mark the touched chunks (and border neighbours) for re-meshing;
     // level-only changes are saved but re-mesh nothing (meshers read metadata only for the
-    // S5.4 shapes, never for liquids).
+    // Shapes, never for liquids).
     fluids::FluidTickStats tick();
     static constexpr size_t kMaxScheduledTicksPerTick = 512;
     // Game ticks run so far (tick() calls); scheduled updates are due relative to it.
     [[nodiscard]] uint64_t getTickCount() const noexcept { return m_tickCount; }
 
-    // S8.7 redstone (redstone::RedstoneEngine over this World, sharing its scheduled tick
+    // Redstone (redstone::RedstoneEngine over this World, sharing its scheduled tick
     // queue): every block or metadata edit that can matter to a circuit (a redstone part, a
     // door, a piston, a normal cube appearing or going) reaches the engine, tick() runs it
     // right before the fluids, and chunks read from disk get their torches checked and their
@@ -138,13 +138,13 @@ public:
     [[nodiscard]] std::vector<redstone::RedstoneEvent> takeRedstoneEvents() noexcept;
     [[nodiscard]] const redstone::RedstoneTickStats& getRedstoneStats() const noexcept { return m_redstoneStats; }
 
-    // S5.2: runs the scheduled update of the block now at `pos` after `delayTicks` game ticks
+    // Runs the scheduled update of the block now at `pos` after `delayTicks` game ticks
     // (Beta World.scheduleBlockUpdate). Ignored (false) when `pos` already has one pending;
     // the update does nothing if the block changed in the meantime. Not persisted.
     bool scheduleBlockTick(core::BlockPos pos, int32_t delayTicks);
     [[nodiscard]] const voxel::ScheduledTickQueue& getScheduledTicks() const noexcept { return m_scheduledTicks; }
 
-    // S5.3: sand and gravel the scheduled update found over air or liquid: the cell is already
+    // Sand and gravel the scheduled update found over air or liquid: the cell is already
     // air, whoever runs the game tick spawns the falling entity (EntitySimulation::tickFallingBlocks).
     struct FallingBlockSpawn {
         core::BlockPos pos{};
@@ -154,7 +154,7 @@ public:
     // Beta BlockSand.tickRate: sand and gravel fall 3 ticks after a change around them.
     static constexpr int32_t kFallingBlockDelayTicks = 3;
 
-    // S5.1 random ticks (BlockTicks.hpp): kRandomTicksPerChunk random cells in each decorated
+    // Random ticks (BlockTicks.hpp): kRandomTicksPerChunk random cells in each decorated
     // chunk within kRandomTickRadiusChunks of `centre`, sections holding no ticking block
     // skipped. `skylightSubtracted` (gameplay::skylightSubtracted) dims the sky light the
     // handlers see through getEffectiveLight, so nothing grows by night.
@@ -206,11 +206,11 @@ public:
     struct UnsupportedBreak {
         core::BlockPos pos{};
         voxel::BlockId block{voxel::BlockId::Air};
-        uint8_t meta{0}; // Its metadata when it broke (crop stage: S5.7 drops)
+        uint8_t meta{0}; // Its metadata when it broke (crop stage: drops)
     };
     [[nodiscard]] std::vector<UnsupportedBreak> takeUnsupportedBreaks() noexcept;
 
-    // S2.4 block entities (furnaces, chests) of the resident chunks. They follow their chunk
+    // Block entities (furnaces, chests) of the resident chunks. They follow their chunk
     // to and from disk (.be file) and leave the store when an edit replaces their block with
     // an incompatible one (furnace <-> lit furnace keeps it), whatever caused the edit.
     [[nodiscard]] voxel::BlockEntityStore& blockEntities() noexcept { return m_blockEntities; }
@@ -257,11 +257,11 @@ public:
     // level.dat nor chunks, is written to the save directory.
     void setSaveDisabled(bool disabled);
     [[nodiscard]] bool isSaveDisabled() const noexcept { return m_saveDisabled; }
-    // FeatureFlags::regionStorage (S7.3); see WorldStorage::setRegionStorageEnabled.
+    // FeatureFlags::regionStorage; see WorldStorage::setRegionStorageEnabled.
     void setRegionStorageEnabled(bool enabled);
     // Waits for the I/O worker first, so the store holds every save queued so far.
     [[nodiscard]] const storage::WorldStorage& getStorage() const;
-    // S7.4: whether this save still has legacy chunks to convert, given level.dat's
+    // Whether this save still has legacy chunks to convert, given level.dat's
     // storage_format, and the conversion itself (call before any chunk is loaded).
     [[nodiscard]] bool needsStorageMigration(uint32_t levelStorageFormat) const {
         return m_storage.needsMigration(levelStorageFormat);
@@ -270,7 +270,7 @@ public:
     // What level.dat should record as storage_format.
     [[nodiscard]] uint32_t storageFormat() const { return m_storage.storageFormat(); }
 
-    // S7.5 counters for F3: bundles handed to the store (queued on the S7.6 I/O worker), and those for a chunk none of whose
+    // Counters for F3: bundles handed to the store (queued on the I/O worker), and those for a chunk none of whose
     // 3x3 neighbourhood the player touched (fluid simulation alone: must stay 0, bug 8).
     struct StorageStats {
         uint64_t bundlesWritten{0};
@@ -304,7 +304,7 @@ private:
     // Hands an edit at (wx, wy, wz) from `oldId` to `newId` to the redstone engine when it can
     // matter to a circuit.
     void notifyRedstone(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId oldId, voxel::BlockId newId);
-    // S8.7: the redstone blocks of a chunk read from disk (RedstoneEngine::onBlockLoaded).
+    // The redstone blocks of a chunk read from disk (RedstoneEngine::onBlockLoaded).
     void rescheduleRedstone(core::ChunkCoord coord);
     // Marks the sections of adjacent columns whose meshes see voxel (lx, wy, lz) of `coord`.
     void markNeighborChunksDirty(core::ChunkCoord coord, int32_t lx, int32_t wy, int32_t lz) noexcept;
@@ -330,15 +330,15 @@ private:
     void cancelStreamRequest(core::ChunkCoord coord);
     ChunkGenPipeline& genPipeline();
 
-    // Sand and gravel at `pos` and just above it get a falling check (S5.3).
+    // Sand and gravel at `pos` and just above it get a falling check.
     void scheduleFallingChecks(int32_t wx, int32_t wy, int32_t wz);
     void runScheduledTick(const voxel::ScheduledTickQueue::Entry& entry);
     // Beta BlockLog/BlockLeaves.onBlockRemoval: leaves within `radius` start checking for decay.
     void flagLeavesForDecay(int32_t wx, int32_t wy, int32_t wz, int32_t radius, EditOrigin origin);
-    // S5.5: ladders hanging on (wx, wy, wz), which stopped being a normal cube, and a door
-    // standing on it (S5.6) break and are recorded as UnsupportedBreak.
+    // Ladders hanging on (wx, wy, wz), which stopped being a normal cube, and a door
+    // standing on it break and are recorded as UnsupportedBreak.
     void breakDetachedWallBlocks(int32_t wx, int32_t wy, int32_t wz, EditOrigin origin);
-    // S5.6/S5.8: the other half of the door or bed (`id`, metadata `meta`) that was at
+    // The other half of the door or bed (`id`, metadata `meta`) that was at
     // (wx, wy, wz) goes too, without a drop of its own.
     void removeOtherHalf(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId id, uint8_t meta, EditOrigin origin);
 
@@ -365,7 +365,7 @@ private:
     int32_t m_skylightSubtracted{0};
     StorageStats m_storageStats;
 
-    // S7.7 async streaming state (main thread only).
+    // Async streaming state (main thread only).
     struct StreamRequest {
         enum class Stage : uint8_t { Loading, Loaded, Generating };
         Stage stage{Stage::Loading};
@@ -383,7 +383,7 @@ private:
     std::chrono::nanoseconds m_lastIntegration{0};
     std::deque<std::chrono::nanoseconds> m_integrationWindow;
 
-    // S7.6 last: the worker drains its saves into m_storage before either is destroyed.
+    // Last: the worker drains its saves into m_storage before either is destroyed.
     class StorageIo;
     std::unique_ptr<StorageIo> m_ioStore;
     std::unique_ptr<storage::ChunkIoWorker> m_io;

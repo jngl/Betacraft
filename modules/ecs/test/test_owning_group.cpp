@@ -1,4 +1,4 @@
-// P2.1 — Synchronised owning groups ("Owning Pools", Fiche 3 §3): owned pools keep the group's
+// Synchronised owning groups ("owning pools"): owned pools keep the group's
 // members packed at the front of their dense arrays, in the same order, so that
 // dense_A[i] and dense_B[i] always belong to the same entity.
 #include "ecs/Group.hpp"

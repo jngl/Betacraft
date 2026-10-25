@@ -10,7 +10,7 @@
 
 namespace betacraft::ecs {
 
-// Components are plain data stored contiguously (Fiche 3 §2.2). Nothrow moves are required
+// Components are plain data stored contiguously. Nothrow moves are required
 // because swap-and-pop must never fail half-way and desynchronise the dense arrays.
 template<typename T>
 concept ComponentType = std::is_standard_layout_v<T> && !std::is_pointer_v<T> &&

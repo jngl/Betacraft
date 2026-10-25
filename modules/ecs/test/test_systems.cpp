@@ -1,4 +1,4 @@
-// P2.1 — Systems over the registry (Diagramme 2): movement integration, voxel collision,
+// Systems over the registry: movement integration, voxel collision,
 // health/damage, item-drop lifetime, render interpolation, player control and spawn helpers.
 #include "ecs/Components.hpp"
 #include "ecs/Registry.hpp"
@@ -260,7 +260,7 @@ TEST(EcsCollisionSystem, ThousandItemDropsSettleOnFloor) {
 }
 
 TEST(EcsCollisionSystem, WorldOverloadCollidesWithPlacedBlocks) {
-    const auto saveDir = std::filesystem::path(::testing::TempDir()) / "betacraft_p2_ecs_world";
+    const auto saveDir = std::filesystem::path(::testing::TempDir()) / "betacraft_ecs_world";
     world::World world(1234U, saveDir);
     (void)world.ensureChunkLoaded({0, 0});
     // Build a stone platform high above any generated terrain.

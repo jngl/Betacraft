@@ -48,7 +48,7 @@ struct ToolRule {
         case BlockId::LitFurnace:
         case BlockId::MobSpawner:  return {N, P, 0};
         case BlockId::RedstoneOre: return {N, P, 2};
-        // S8.5: Material.rock / Material.iron, not in ItemPickaxe's list.
+        // Material.rock / Material.iron, not in ItemPickaxe's list.
         case BlockId::StonePressurePlate:
         case BlockId::IronDoor:    return {N, P, 0};
         case BlockId::Obsidian:    return {N, P, 3};
@@ -110,7 +110,7 @@ struct DropRule {
     }
 }
 
-// Drops rolled on top of dropRule, independently of it (S2.9). Apples from leaves are a
+// Drops rolled on top of dropRule, independently of it. Apples from leaves are a
 // deliberate deviation from Beta 1.7.3: there is no other food before the mobs.
 [[nodiscard]] std::optional<DropRule> bonusDropRule(BlockId id) noexcept {
     if (id == BlockId::Leaves) {
@@ -228,12 +228,12 @@ void rollHarvestDrops(voxel::BlockId block, uint64_t dropSeed, uint8_t meta, Blo
         outcome.bonusDrop = rollDrop(*bonus, dropSeed ^ kBonusSeedSalt);
     }
     if (block == voxel::BlockId::Gravel) {
-        // S6.6 Beta BlockGravel.idDropped: flint 1 time in 10, the gravel otherwise.
+        // Beta BlockGravel.idDropped: flint 1 time in 10, the gravel otherwise.
         SplitMix64 rng(dropSeed);
         outcome.drop = makeStack(rng.nextInt(kGravelFlintOneIn) == 0 ? items::Flint : toItemId(block), 1);
     }
     if (block == voxel::BlockId::Crops) {
-        // S5.7: wheat when ripe as the drop, the seeds as the second stack.
+        // Wheat when ripe as the drop, the seeds as the second stack.
         SplitMix64 rng(dropSeed);
         const CropHarvest harvest = rollCropHarvest(meta, rng);
         const ItemStack wheat = makeStack(items::Wheat, harvest.wheat);

@@ -32,7 +32,7 @@ struct OcclusionSample {
     bool valid{false};          // False for non-finite / out-of-range input
 };
 
-// Tunables of the occlusion model. Cutoff values are the spec's (P4.2); the gain curve is not
+// Tunables of the occlusion model. Cutoff values are the spec's; the gain curve is not
 // specified, so a gentle per-block attenuation with a floor keeps occluded sounds faintly audible.
 struct OcclusionParams {
     float maxCutoffHz{20000.0f};
@@ -73,7 +73,7 @@ inline constexpr float TIE_EPSILON_BLOCKS = 1.0e-4f;
 [[nodiscard]] OcclusionTarget occlusionTargetFor(const OcclusionSample& sample,
                                                  const OcclusionParams& params = {}) noexcept;
 
-// Spec facade (Fiche 5 §2.3 SpatialAudioEngine::computeVoxelOcclusion): one DDA ray, returned as the
+// Facade (SpatialAudioEngine::computeVoxelOcclusion): one DDA ray, returned as the
 // occlusion LPF cutoff in Hz, i.e. the value of AudioCommand::lpfCutoffHz. The listener is explicit
 // because this module holds no engine state (the engine passes its m_listenerPos). Callers that also
 // want the gain or the range flag use measureOcclusion() + occlusionTargetFor() directly.

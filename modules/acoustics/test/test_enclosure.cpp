@@ -1,4 +1,4 @@
-// P4.2 — cave / enclosure detection from ray probes around the listener -> reverb parameters.
+// Cave / enclosure detection from ray probes around the listener -> reverb parameters.
 #include "test_support/AcousticsTestUtils.hpp"
 #include "acoustics/AuxReverbBus.hpp"
 #include "acoustics/EnclosureDetector.hpp"

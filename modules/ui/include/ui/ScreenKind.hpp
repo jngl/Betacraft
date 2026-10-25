@@ -6,7 +6,7 @@
 namespace betacraft::ui {
 
 // Which screen the inventory UI shows (game::InventoryCrafting, HudRenderer): the
-// player's 2x2 grid, an opened workbench, or a block entity's container (S2.6).
+// player's 2x2 grid, an opened workbench, or a block entity's container.
 enum class ScreenKind : uint8_t { Inventory2x2, Workbench3x3, Furnace, Chest };
 
 [[nodiscard]] constexpr bool isContainerScreen(ScreenKind kind) noexcept {

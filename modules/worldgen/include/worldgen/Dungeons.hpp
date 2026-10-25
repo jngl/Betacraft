@@ -15,7 +15,7 @@ namespace betacraft::voxel { class Chunk; }
 
 namespace betacraft::worldgen {
 
-// S6.10 Beta 1.7.3 dungeons (WorldGenDungeons), placed in pass 1 after the ore veins. Unlike
+// Beta 1.7.3 dungeons (WorldGenDungeons), placed in pass 1 after the ore veins. Unlike
 // Beta, whose rooms may straddle chunks, a room stays inside its chunk so pass 1 remains a
 // function of the chunk alone and DecorationPipeline / FeaturePlanCodec are untouched.
 

@@ -1,4 +1,4 @@
-// P3.3 integration hook - WorldGen::columnContext is the pass-1 column function the carver
+// Integration hook - WorldGen::columnContext is the pass-1 column function the carver
 // uses for ring columns of chunks that are not generated yet. It must give exactly what
 // CaveCarver::scanColumn reads from the generated chunk, or carving would differ on either
 // side of a chunk border depending on which chunk was generated first.

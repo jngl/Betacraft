@@ -1,4 +1,4 @@
-// P4.6 — Contract between shaders/dynamic_lights.glsl and the C++ std140 packer. The shader is
+// Contract between shaders/dynamic_lights.glsl and the C++ std140 packer. The shader is
 // parsed, its UBO members are replayed through std140::LayoutBuilder and every offset must
 // match the constants used by packDynamicLightUbo().
 #include "lighting/DynamicLightUbo.hpp"

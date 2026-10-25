@@ -23,10 +23,10 @@ namespace betacraft::game {
     }
     const gameplay::ItemId id = gameplay::canonicalize(slot.id);
     if (const auto armor = gameplay::armorInfo(id)) {
-        return gameplay::ItemStack{id, slot.count, slot.damage, armor->maxDamage}; // S6.7
+        return gameplay::ItemStack{id, slot.count, slot.damage, armor->maxDamage};
     }
     if (id == gameplay::items::FlintAndSteel) {
-        // S6.6: keeps its wear through every conversion (mining with it, dropping it...).
+        // Keeps its wear through every conversion (mining with it, dropping it...).
         return gameplay::ItemStack{id, slot.count, slot.damage, gameplay::kFlintAndSteelMaxDamage};
     }
     const auto tool = gameplay::findTool(id);

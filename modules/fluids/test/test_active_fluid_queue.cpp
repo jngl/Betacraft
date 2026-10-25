@@ -1,4 +1,4 @@
-// P2.3 - ActiveFluidQueue: deduplicated scheduled-tick queue with deterministic ordering.
+// ActiveFluidQueue: deduplicated scheduled-tick queue with deterministic ordering.
 #include "fluids/ActiveFluidQueue.hpp"
 
 #include <gtest/gtest.h>

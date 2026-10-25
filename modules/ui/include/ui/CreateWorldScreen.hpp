@@ -36,7 +36,7 @@ namespace betacraft::ui {
 
 enum class CreateWorldChoice : uint8_t { None, Create, Cancel };
 
-// Beta GuiCreateWorld: "World Name" and "Seed for the World Generator" fields, the S1.4 game
+// Beta GuiCreateWorld: "World Name" and "Seed for the World Generator" fields, the game
 // mode button (moved here from the title screen), "Create New World" and "Cancel".
 class CreateWorldScreen {
 public:

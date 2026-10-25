@@ -133,7 +133,7 @@ TEST(Breath, ExtremeValuesAreSanitised) {
     EXPECT_EQ(high.air, kMaxAirTicks - 1);
 }
 
-// S3.1: Beta Entity.fire. Lava sets 600 ticks, a burning entity loses 1 health whenever
+// Beta Entity.fire. Lava sets 600 ticks, a burning entity loses 1 health whenever
 // fireTicks % 20 == 0, water puts it out, and the fire burns out on its own after 30 s.
 TEST(Fire, LavaSetsSixHundredFireTicks) {
     Burning b{};

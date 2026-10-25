@@ -1,4 +1,4 @@
-// S8.2 octile heuristic: admissible (never above the real cost) and consistent (never drops
+// Octile heuristic: admissible (never above the real cost) and consistent (never drops
 // by more than the cost of a move), so A* returns optimal paths without reopening nodes.
 #include "test_support/AiTestSupport.hpp"
 

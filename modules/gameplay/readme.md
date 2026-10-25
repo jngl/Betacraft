@@ -1,6 +1,6 @@
 # gameplay
 
-Beta 1.7.3 survival rules as pure functions and small value types: the item id scheme, tools and their wear, mining speed, melee damage, knockback, health, armor, food, crops, explosions, mob definitions and spawn rules. None of it sees `World`, so each rule is tested on its own; `world` and `game` feed it from the live state.
+Survival rules as pure functions and small value types: the item id scheme, tools and their wear, mining speed, melee damage, knockback, health, armor, food, crops, explosions, mob definitions and spawn rules. None of it sees `World`, so each rule is tested on its own; `world` and `game` feed it from the live state.
 
 ## Public entry points
 

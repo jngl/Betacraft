@@ -20,7 +20,7 @@ inline constexpr int32_t kLavaFireTicks = 600; // Lava (re)sets the fire to 30 s
 inline constexpr int32_t kFireIntervalTicks = 20;
 inline constexpr int32_t kFireDamage = 1;
 inline constexpr int32_t kCactusDamage = 1;
-// Beta EntityLiving: every tick with the eyes inside an opaque solid block (S5.3).
+// Beta EntityLiving: every tick with the eyes inside an opaque solid block.
 inline constexpr int32_t kSuffocationDamage = 1;
 
 struct Burning {

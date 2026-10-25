@@ -21,12 +21,12 @@ ItemStack tool(ToolType type, ToolMaterial mat) {
 constexpr std::array<BlockId, 15> kOverridden{BlockId::Ice,       BlockId::Glass,      BlockId::Glowstone,
                                               BlockId::Leaves,    BlockId::Bookshelf,  BlockId::DiamondOre,
                                               BlockId::RedstoneOre, BlockId::SnowBlock,
-                                              // S5.6-S5.8: seeds, the door and bed items, wheat
+                                              // Seeds, the door and bed items, wheat
                                               BlockId::TallGrass, BlockId::WoodDoor,   BlockId::Bed,
                                               BlockId::Crops,
-                                              // S6.6: flint from gravel
+                                              // Flint from gravel
                                               BlockId::Gravel,
-                                              // S8.5: redstone dust from wire, the iron door item
+                                              // Redstone dust from wire, the iron door item
                                               BlockId::RedstoneWire, BlockId::IronDoor};
 
 bool isOverridden(BlockId id) {
@@ -131,7 +131,7 @@ TEST(BlockDrops, PropertyOtherBlocksDropTheirRegistryItemOnce) {
                 continue;
             }
             ASSERT_TRUE(r.drop.has_value()) << BlockRegistry::get(id).name;
-            // S2.10: legacy item BlockIds in dropId (coal, stick) drop as their Beta number.
+            // Legacy item BlockIds in dropId (coal, stick) drop as their Beta number.
             EXPECT_EQ(r.drop->id, canonicalize(toItemId(expected))) << BlockRegistry::get(id).name;
             EXPECT_EQ(r.drop->count, 1) << BlockRegistry::get(id).name;
         }
@@ -156,7 +156,7 @@ TEST(BlockDrops, DropIdentityOfCommonBlocks) {
     EXPECT_EQ(breakBlockWith(BlockId::CoalOre, pick).drop->id, items::Coal); // 263, not legacy 101
 }
 
-// S5.7 regression: tall grass no longer drops nothing, it gives seeds 1 time in 8 (Beta
+// Regression: tall grass no longer drops nothing, it gives seeds 1 time in 8 (Beta
 // BlockTallGrass.idDropped: rand(8) == 0 ? seeds : nothing).
 TEST(BlockDrops, TallGrassDropsSeedsOneTimeInEight) {
     constexpr int kTrials = 16'000;
@@ -177,7 +177,7 @@ TEST(BlockDrops, TallGrassDropsSeedsOneTimeInEight) {
     EXPECT_LT(seeds, 2300);
 }
 
-// S5.6 / S5.8: each door or bed half drops the one item (the other half goes without one).
+// Each door or bed half drops the one item (the other half goes without one).
 TEST(BlockDrops, DoorAndBedHalvesDropTheirItem) {
     for (const uint8_t meta : {uint8_t{0}, uint8_t{8}}) {
         ItemStack hand{};
@@ -198,7 +198,7 @@ TEST(BlockDrops, OverridesDoNotBypassHarvestLevels) {
     EXPECT_FALSE(breakBlockWith(BlockId::DiamondOre, woodPick, 7).drop.has_value());
 }
 
-// S6.6 Beta BlockGravel.idDropped: flint 1 time in 10, the gravel itself otherwise.
+// Beta BlockGravel.idDropped: flint 1 time in 10, the gravel itself otherwise.
 TEST(BlockDrops, GravelDropsFlintOneTimeInTen) {
     constexpr int kTrials = 20'000;
     int flint = 0;
@@ -219,7 +219,7 @@ TEST(BlockDrops, GravelDropsFlintOneTimeInTen) {
     EXPECT_EQ(items::Flint, 318);
 }
 
-// S6.6 explosions drop what a harvest would, without the tool check.
+// Explosions drop what a harvest would, without the tool check.
 TEST(BlockDrops, ExplosionDropsIgnoreTheTool) {
     const BlockBreakOutcome stone = explosionDrops(BlockId::Stone, 1);
     ASSERT_TRUE(stone.drop.has_value());

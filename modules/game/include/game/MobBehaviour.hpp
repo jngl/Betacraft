@@ -16,7 +16,7 @@ namespace betacraft::world { class World; }
 
 namespace betacraft::game {
 
-// Sprint 4 mob rules that need the World or the player but not the EntitySimulation: target
+// Mob rules that need the World or the player but not the EntitySimulation: target
 // acquisition, contact attacks, burning in daylight and ambient sounds. EntitySimulation runs them
 // on the 20 TPS tick around the ECS systems; the player is seen through its proxy entity
 // (ecs::EntityFactory::spawnPlayerProxy).
@@ -41,7 +41,7 @@ inline constexpr float kAmbientSoundRange = 16.0f;
 
 enum class MobSoundKind : uint8_t { Ambient, Hurt, Death };
 
-// A mob sound for the Application to play (S4.9): ambient groans/oinks/baas, hurt and death.
+// A mob sound for the Application to play: ambient groans/oinks/baas, hurt and death.
 struct MobSoundEvent {
     gameplay::MobKind kind{gameplay::MobKind::Pig};
     MobSoundKind sound{MobSoundKind::Ambient};
@@ -64,7 +64,7 @@ struct MobMeleeHit {
 // closer than the player). Each mob searches on the ticks where
 // (tick + entityIndex(e)) % kTargetSearchIntervalTicks == 0. In Creative, with a dead player
 // or without a valid proxy, every hostile drops its target at once (MobAISystem then idles).
-// S6.3: a mob that is neutralInDaylight (spider) does not look for the player while
+// A mob that is neutralInDaylight (spider) does not look for the player while
 // `sunBrightness` (gameplay::sunBrightness) is above kSpiderNeutralBrightness (Beta
 // EntitySpider.findPlayerToAttack); the default 0 is night.
 void acquireTargets(ecs::Registry& reg, const world::World& world, ecs::EntityId proxy, core::GameMode mode,
@@ -86,7 +86,7 @@ void acquireTargets(ecs::Registry& reg, const world::World& world, ecs::EntityId
 // its head is out of water and rand(30) < (brightness - 0.4) * 2. An already burning mob is
 // topped back up to kSunBurnTicks, keeping its damage rhythm.
 void sunBurn(ecs::Registry& reg, const world::World& world, float timeOfDay, gameplay::SplitMix64& rng);
-// S8.10: the same under `weather`. A mob standing in the rain (world::isRainingAt at its feet
+// The same under `weather`. A mob standing in the rain (world::isRainingAt at its feet
 // or eyes: Beta Entity.isWet) never catches fire.
 void sunBurn(ecs::Registry& reg, const world::World& world, float timeOfDay, gameplay::SplitMix64& rng,
              const storage::WeatherState& weather);
@@ -95,14 +95,14 @@ void sunBurn(ecs::Registry& reg, const world::World& world, float timeOfDay, gam
 // the fire goes out when it runs down or the mob touches water. Returns the mobs the fire
 // hurt this tick.
 std::vector<ecs::EntityId> tickBurning(ecs::Registry& reg, const world::World& world);
-// S8.10: rain also puts the fire out (Beta Entity.isWet: in water or in the rain).
+// Rain also puts the fire out (Beta Entity.isWet: in water or in the rain).
 std::vector<ecs::EntityId> tickBurning(ecs::Registry& reg, const world::World& world,
                                        const storage::WeatherState& weather);
 
 // True while `e` has a BurningComp with ticks left.
 [[nodiscard]] bool isBurning(const ecs::Registry& reg, ecs::EntityId e);
 
-// --- S6.3 skeleton, spider and creeper (Beta EntitySkeleton / EntitySpider / EntityCreeper) ---
+// --- Skeleton, spider and creeper (Beta EntitySkeleton / EntitySpider / EntityCreeper) ---
 
 // Spider: Beta EntitySpider.attackEntity leaps between these distances, 1 tick in kSpiderLeapChance.
 inline constexpr float kSpiderLeapMinDistance = 2.0f;

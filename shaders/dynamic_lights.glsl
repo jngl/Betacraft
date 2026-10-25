@@ -1,4 +1,4 @@
-// dynamic_lights.glsl — P4.6 real-time dynamic lights (held torch, dropped glowstone...).
+// dynamic_lights.glsl — real-time dynamic lights (held torch, dropped glowstone...).
 //
 // Include file (GLSL 3.30 has no #include): splice it right after the `#version` line of the
 // chunk fragment shader, e.g. with lighting::injectShaderInclude(). The block layout is
@@ -28,7 +28,7 @@ layout(std140) uniform DynamicLightBlock {
     uvec4 u_dynTileMasks[DYN_TILE_MASK_VEC4S]; // 4 tiles per uvec4, bit i == light i
 };
 
-// Spec P4.6: Light = Color * (1 - d/R)^2. Must match lighting::attenuation() on the CPU.
+// Light = Color * (1 - d/R)^2. Must match lighting::attenuation() on the CPU.
 // `!(R > 0.0)` (not `R <= 0.0`) so a NaN radius also takes the early-out where IEEE NaN
 // compares are honoured; the packer additionally uploads invalid lights as all-zero slots.
 float dynLightAttenuation(float d, float R) {

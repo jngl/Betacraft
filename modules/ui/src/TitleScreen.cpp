@@ -1,4 +1,6 @@
 #include "ui/TitleScreen.hpp"
+
+#include "core/Version.hpp"
 #include "render/TextRenderer.hpp"
 
 namespace betacraft::ui {
@@ -67,7 +69,7 @@ void TitleScreen::render(
     pushSolidQuad(outVerts, 0.0f, 0.0f, sw, sh, glm::vec4(0.12f, 0.08f, 0.05f, 1.0f));
 
     // Logo / Title banner
-    const std::string title = "BetaCraft 1.7.3";
+    const std::string title{core::kGameName};
     const float titleW = render::TextRenderer::measureTextWidth(title, 3.2f);
     render::TextRenderer::appendText(
         outVerts,
@@ -79,7 +81,7 @@ void TitleScreen::render(
         true
     );
 
-    const std::string subtitle = "High Performance C++20 Modernization";
+    const std::string subtitle = "Explore, survive, build";
     const float subW = render::TextRenderer::measureTextWidth(subtitle, 1.4f);
     render::TextRenderer::appendText(
         outVerts,
@@ -113,7 +115,7 @@ void TitleScreen::render(
     }
 
     // Footer
-    const std::string footer = "BetaCraft 1.7.3 Modernization. All rights reserved.";
+    const std::string footer{core::kGameTitle};
     render::TextRenderer::appendText(outVerts, footer, 12.0f, sh - 24.0f, 1.2f, glm::vec4(0.6f, 0.6f, 0.6f, 1.0f), true);
 }
 

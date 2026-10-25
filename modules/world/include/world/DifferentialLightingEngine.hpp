@@ -37,7 +37,7 @@ public:
     static void setBlockAndUpdateLighting(World& world, int32_t wx, int32_t wy, int32_t wz, voxel::BlockId newBlock) noexcept;
     static void updateLightSource(World& world, int32_t wx, int32_t wy, int32_t wz, uint8_t newEmission) noexcept;
 
-    // Mathematical analytical bounds (Fiche 2, P3.2)
+    // Mathematical analytical bounds
     [[nodiscard]] static constexpr size_t analyticalManhattanShell(size_t r) noexcept {
         if (r == 0) return 1;
         return 4 * r * r + 2;

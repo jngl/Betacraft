@@ -158,7 +158,7 @@ TEST(MeleeAttack, ExpiredCorpseIsNotAttackable) {
 }
 
 TEST(MeleeAttack, KnockbackFollowsLookNotPosition) {
-    // Roadmap formula: push along the attacker's look heading.
+    // Push along the attacker's look heading.
     AttackerState a = attackerFacingPlusX();
     a.look = glm::normalize(glm::vec3{0.0f, -0.3f, -1.0f});
     TargetState target = zombieAt(2.0f);

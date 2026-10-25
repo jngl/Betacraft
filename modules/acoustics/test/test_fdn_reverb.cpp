@@ -1,4 +1,4 @@
-// P4.2 — shared 8-line Householder FDN reverb (spec Fiche 5 §2.2 / §3).
+// Shared 8-line Householder FDN reverb.
 #include "acoustics/FdnReverb.hpp"
 
 #include <gtest/gtest.h>

@@ -1,4 +1,6 @@
 #include "ui/HudRenderer.hpp"
+
+#include "core/Version.hpp"
 #include "gameplay/Armor.hpp"
 #include "gameplay/ItemStack.hpp"
 #include "gameplay/MobSpawnRules.hpp"
@@ -191,7 +193,7 @@ void pushHeartIcon(std::vector<render::UiQuadVertex>& out, float x, float y, flo
     }
 }
 
-// S6.7 armor bar icon (a chestplate): fillState 0 = empty, 1 = half, 2 = full.
+// Armor bar icon (a chestplate): fillState 0 = empty, 1 = half, 2 = full.
 void pushArmorIcon(std::vector<render::UiQuadVertex>& out, float x, float y, float s, int fillState) {
     static constexpr uint8_t plateMask[7] = {
         0b1100011,
@@ -311,7 +313,7 @@ void HudRenderer::render(
         pushRect(verts, 0.0f, 0.0f, sw, sh, glm::vec4(0.85f, 0.0f, 0.0f, 0.25f * std::clamp(ctx.hurtFlash, 0.0f, 1.0f)));
     }
 
-    // S5.8 sleeping: the screen fades to black over the 100 sleep ticks (Beta GuiIngame
+    // Sleeping: the screen fades to black over the 100 sleep ticks (Beta GuiIngame
     // sleepTimer overlay).
     if (ctx.sleepFade > 0.0f) {
         pushRect(verts, 0.0f, 0.0f, sw, sh, glm::vec4(0.02f, 0.02f, 0.05f, 0.85f * std::clamp(ctx.sleepFade, 0.0f, 1.0f)));
@@ -326,10 +328,10 @@ void HudRenderer::render(
         render::BitmapFont::appendText(verts, ctx.statusMessage, x, y, kMsgScale, glm::vec4(1.0f, 1.0f, 1.0f, a));
     }
 
-    // 2. Iconic Top-Left "Minecraft Beta 1.7.3" Watermark & F3 Debug Screen
+    // 2. Top-left title watermark & F3 debug screen
     constexpr float fontScale = 2.0f;
     if (!ctx.showDebug) {
-        render::BitmapFont::appendText(verts, "Minecraft Beta 1.7.3", 10.0f, 10.0f, fontScale, glm::vec4(1.0f));
+        render::BitmapFont::appendText(verts, core::kGameTitle, 10.0f, 10.0f, fontScale, glm::vec4(1.0f));
         render::BitmapFont::appendText(
             verts,
             ctx.creative ? "[F3] Debug  [E] Inventory/Craft  [F] Fly  [T] Time  [L] Smooth Light  [M] Music"
@@ -353,7 +355,7 @@ void HudRenderer::render(
         const uint8_t feetLight = gameplay::effectiveLight(world.getSkyLight(bx, by, bz), world.getBlockLight(bx, by, bz),
                                                            gameplay::skylightSubtracted(ctx.timeOfDay));
         std::ostringstream l1, l2, l3, l4, l5, l6;
-        l1 << "Minecraft Beta 1.7.3 (" << static_cast<int>(std::round(ctx.fps)) << " fps, "
+        l1 << core::kGameTitle << " (" << static_cast<int>(std::round(ctx.fps)) << " fps, "
            << ctx.renderStats.visibleChunks << "/" << ctx.renderStats.totalChunks << " chunks)";
         l2 << "Vertices: " << (ctx.renderStats.totalVertices / 1000) << "k  Frame: "
            << std::fixed << std::setprecision(2) << ctx.frameTimeMs << " ms  Mesh queue: "
@@ -385,7 +387,7 @@ void HudRenderer::render(
         render::BitmapFont::appendText(verts, storageDebugLine(ctx.storage), 10.0f, 150.0f, fontScale,
                                ctx.storage.unsolicitedWrites == 0 ? glm::vec4(0.8f, 0.8f, 0.95f, 1.0f)
                                                                   : glm::vec4(1.0f, 0.3f, 0.3f, 1.0f));
-        // S7.10: red while an integration over the last seconds broke the 8 ms budget.
+        // Red while an integration over the last seconds broke the 8 ms budget.
         render::BitmapFont::appendText(verts, streamingDebugLine(ctx.storage), 10.0f, 170.0f, fontScale,
                                ctx.storage.maxIntegrationMs <= kIntegrationHitchMs ? glm::vec4(0.8f, 0.9f, 0.95f, 1.0f)
                                                                                     : glm::vec4(1.0f, 0.3f, 0.3f, 1.0f));
@@ -430,7 +432,7 @@ void HudRenderer::render(
         }
     }
 
-    // S6.7 armor bar above the hearts (Beta GuiIngame): 10 icons of 2 points, drawn only
+    // Armor bar above the hearts (Beta GuiIngame): 10 icons of 2 points, drawn only
     // while some armor is worn.
     const int32_t armorPoints = ctx.creative ? 0 : player.armorValue();
     for (int i = 0; armorPoints > 0 && i < 10; ++i) {
@@ -491,10 +493,10 @@ void HudRenderer::render(
         if (craft.kind == ScreenKind::Chest) title = "CHEST";
         render::BitmapFont::appendText(verts, title, px + 16.0f, py + 12.0f, 2.0f, titleCol);
         if (layout.palette) {
-            render::BitmapFont::appendText(verts, "BETA 1.7.3 BLOCK PALETTE (CLICK TO EQUIP)", px + 340.0f, py + 12.0f, 2.0f, titleCol);
+            render::BitmapFont::appendText(verts, "BLOCK PALETTE (CLICK TO EQUIP)", px + 340.0f, py + 12.0f, 2.0f, titleCol);
         }
 
-        // Container screens (S2.6): the block entity's slots in the palette area.
+        // Container screens: the block entity's slots in the palette area.
         const glm::vec4 gaugeBack(0.30f, 0.30f, 0.32f, 0.95f);
         if (craft.kind == ScreenKind::Chest) {
             for (size_t i = 0; i < containerSlotCount(craft.kind); ++i) {
@@ -567,7 +569,7 @@ void HudRenderer::render(
             pushSlotContents(verts, player.getInventorySlot(i), r.x, r.y, r.size, 6.0f, 1.5f);
         }
 
-        // S6.7 armor column; an empty slot shows the faint outline of its piece.
+        // Armor column; an empty slot shows the faint outline of its piece.
         for (size_t i = 0; craft.kind == ScreenKind::Inventory2x2 && i < physics::Player::ARMOR_SLOT_COUNT; ++i) {
             const SlotRect r = inventorySlotRect(InventoryRegion::Armor, i, screenWidth, screenHeight, layout);
             pushBeveledSlot(verts, r.x, r.y, r.size, hovered(r));
@@ -586,7 +588,7 @@ void HudRenderer::render(
             pushSlotContents(verts, craft.carried, mx - carriedSize * 0.5f, my - carriedSize * 0.5f, carriedSize, 4.0f, 1.5f);
         }
 
-        // S3.6: hovering a filled slot with an empty cursor shows its name (and the remaining
+        // Hovering a filled slot with an empty cursor shows its name (and the remaining
         // durability of a tool) in a dark frame next to the mouse (Beta GuiContainer).
         if (craft.carried.isEmpty()) {
             const InventoryHit hit = hitTestInventory(ctx.mouseX, ctx.mouseY, screenWidth, screenHeight, layout);
@@ -725,7 +727,7 @@ SlotRect HudRenderer::inventorySlotRect(InventoryRegion region, size_t index, in
             return {};
         }
         case InventoryRegion::Armor:
-            // S6.7: a column left of the inventory rows, helmet at the top (Beta GuiInventory).
+            // A column left of the inventory rows, helmet at the top (Beta GuiInventory).
             if (layout.kind != ScreenKind::Inventory2x2 || index >= physics::Player::ARMOR_SLOT_COUNT) return {};
             return {rightX - kSlot - 14.0f, py + 228.0f + static_cast<float>(index) * kSlot, kSlot};
         case InventoryRegion::Inventory: {

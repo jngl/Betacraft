@@ -1,5 +1,5 @@
-// S7.3 WorldStorage as a facade over RegionChunkStore (writes) and LegacyChunkStore (reads
-// of saves not migrated yet): the pre-Sprint 7 wrappers share one bundle per chunk, broken
+// WorldStorage as a facade over RegionChunkStore (writes) and LegacyChunkStore (reads
+// of saves not migrated yet): the legacy wrappers share one bundle per chunk, broken
 // region entries are quarantined, and a read-only session touches nothing.
 #include "StorageTestHelpers.hpp"
 #include "storage/RegionChunkStore.hpp"

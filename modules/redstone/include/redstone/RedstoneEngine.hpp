@@ -66,7 +66,7 @@ struct RedstoneEvent {
            id == BlockId::StonePressurePlate || id == BlockId::WoodPressurePlate;
 }
 
-// S8.6 redstone (P2.4) over an IRedstoneVoxelAccess, Beta 1.7.3 rules:
+// Redstone over an IRedstoneVoxelAccess, Beta 1.7.3 rules:
 //  * sources: lever (on), button (pressed), pressure plates (pressed) and lit torches. They
 //    weakly power every neighbour (a torch not the block it hangs on) and strongly power one
 //    block: the lever's and button's support, the block under a plate, the block over a torch;

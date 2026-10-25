@@ -20,7 +20,7 @@ namespace {
 // Verbatim copies of shaders/weather.vert and shaders/weather.frag (test_weather checks it),
 // used when the files are not next to the binary.
 constexpr const char* WEATHER_VS = R"(#version 330 core
-// S8.11 rain and snow columns (render/WeatherRenderer.cpp keeps an embedded copy).
+// Rain and snow columns (render/WeatherRenderer.cpp keeps an embedded copy).
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aUV;     // u across the quad, v = world height + column offset
 layout(location = 2) in vec4 aParams; // x alpha, y light 0..1, z kind (0 rain, 1 snow, 2 bolt), w fall speed
@@ -44,7 +44,7 @@ void main() {
 )";
 
 constexpr const char* WEATHER_FS = R"(#version 330 core
-// S8.11 procedural rain streaks and snowflakes (no texture; render/WeatherRenderer.cpp keeps
+// Procedural rain streaks and snowflakes (no texture; render/WeatherRenderer.cpp keeps
 // an embedded copy).
 in vec2 vUV;
 in float vAlpha;

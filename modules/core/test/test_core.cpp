@@ -120,7 +120,7 @@ TEST(CoreConfigTest, ConstantsAndDefaults) {
     EXPECT_GT(cfg.renderDistanceChunks, 0);
     EXPECT_FLOAT_EQ(cfg.fovDegrees, 70.0f);
     EXPECT_EQ(cfg.worldSeed, 173173173ULL);
-    // S5.11: Beta's 24000-tick day, 20 minutes at 20 ticks per second.
+    // Beta's 24000-tick day, 20 minutes at 20 ticks per second.
     EXPECT_FLOAT_EQ(cfg.dayLengthSeconds, 1200.0f);
     EXPECT_FLOAT_EQ(cfg.dayLengthSeconds * static_cast<float>(EngineConfig::GAME_TICKS_PER_SECOND), 24000.0f);
 }

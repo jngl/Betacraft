@@ -31,14 +31,14 @@ public:
         float mouseY
     );
 
-    // S7.8: "Singleplayer" opens the World Select screen, unless a world is already loaded
+    // "Singleplayer" opens the World Select screen, unless a world is already loaded
     // (EngineConfig::autoEnterWorld), which it then enters directly.
     void setWorldLoaded(bool loaded) noexcept { m_worldLoaded = loaded; }
     [[nodiscard]] bool isWorldLoaded() const noexcept { return m_worldLoaded; }
 
     // A new world loaded at startup (autoEnterWorld) shows the "Game Mode" button (id 4)
     // under Singleplayer; clicking it alternates Survival / Creative. Worlds made from the menu
-    // pick their mode on the Create World screen (S7.8).
+    // pick their mode on the Create World screen.
     void setNewWorld(bool newWorld) noexcept { m_newWorld = newWorld; }
     [[nodiscard]] bool isNewWorld() const noexcept { return m_newWorld; }
     void setSelectedMode(core::GameMode mode) noexcept { m_selectedMode = mode; }

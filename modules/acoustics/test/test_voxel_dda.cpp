@@ -1,4 +1,4 @@
-// P4.2 — Amanatides-Woo voxel traversal: exact visited-voxel sequences.
+// Amanatides-Woo voxel traversal: exact visited-voxel sequences.
 #include "acoustics/VoxelDda.hpp"
 
 #include <gtest/gtest.h>

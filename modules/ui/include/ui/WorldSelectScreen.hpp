@@ -16,15 +16,15 @@
 
 namespace betacraft::ui {
 
-// S7.8 one line of the World Select list (Beta SaveFormatComparator).
+// One line of the World Select list (Beta SaveFormatComparator).
 struct WorldSummary {
     std::string name;           // level.dat "name", or the folder name
     std::filesystem::path path; // The save directory
     uint64_t seed{0};
     core::GameMode mode{core::GameMode::Survival};
     int64_t lastPlayed{0}; // Unix seconds: when level.dat (or the folder) was last written
-    // "à migrer": a pre-Sprint 7 chunks/ directory and storage_format below 2; opening the
-    // world converts it (S7.4).
+    // "à migrer": a pre-region chunks/ directory and storage_format below 2; opening the
+    // world converts it.
     bool needsMigration{false};
     // Missing for a world never entered; TooNew / Corrupt open read-only (conventions §1.2).
     storage::LevelLoadStatus status{storage::LevelLoadStatus::Missing};
@@ -76,7 +76,7 @@ private:
     size_t m_scroll{0}; // First row shown
 };
 
-// The Loading screen (S7.8/S7.9): a title, a status line and, when `progress` is set, Beta's
+// The Loading screen: a title, a status line and, when `progress` is set, Beta's
 // grey and green progress bar (0..1).
 void appendLoadingScreen(std::vector<render::UiQuadVertex>& outVerts, int windowWidth, int windowHeight,
                          std::string_view title, std::string_view status, std::optional<float> progress);

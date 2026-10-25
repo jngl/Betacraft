@@ -6,7 +6,7 @@
 
 namespace betacraft::ai {
 
-// What a voxel means to a walking mob (S8.1, roadmap P2.2 / Fiche 3). Grows only at the end.
+// What a voxel means to a walking mob. Grows only at the end.
 //   Solid       a floor to stand on and a wall to go around;
 //   Passable    air and walk-through decorations (flowers, torches, crops...);
 //   Liquid      water: swum through at a cost;

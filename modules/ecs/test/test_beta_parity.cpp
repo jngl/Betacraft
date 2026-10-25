@@ -1,4 +1,4 @@
-// P2.1 — Behavioural parity of the basic gameplay systems with Beta 1.7.3 and with the legacy
+// Behavioural parity of the basic gameplay systems with Beta 1.7.3 and with the legacy
 // physics::Player they will replace ("Player devient une entité comme les autres"):
 // damage/heal arithmetic, hurt-window and knockback rules (EntityLiving.attackEntityFrom /
 // knockBack), dropped-item drag (EntityItem.onUpdate) and player walking control.

@@ -1,4 +1,4 @@
-// P2.1 — Typed component pool: payload array kept parallel to the sparse set's dense array.
+// Typed component pool: payload array kept parallel to the sparse set's dense array.
 #include "ecs/ComponentPool.hpp"
 
 #include <gtest/gtest.h>

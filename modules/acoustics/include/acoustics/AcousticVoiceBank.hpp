@@ -31,7 +31,7 @@ namespace betacraft::acoustics {
 class AcousticVoiceBank {
 public:
     static constexpr size_t MAX_VOICES = 32;      // == AudioEngine voice array
-    // Spec value (Fiche 5 §5): 32 voices x 10 Hz use < 4 entries per frame, the rest absorbs bursts.
+    // Spec value: 32 voices x 10 Hz use < 4 entries per frame, the rest absorbs bursts.
     static constexpr size_t QUEUE_CAPACITY = 512;
 
     explicit AcousticVoiceBank(float sampleRate = DEFAULT_SAMPLE_RATE);

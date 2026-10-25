@@ -1,4 +1,4 @@
-// S6.3 MobAISystem additions: spiders (MobDef::climbsWalls) climb the walls they walk into at
+// MobAISystem additions: spiders (MobDef::climbsWalls) climb the walls they walk into at
 // CLIMB_SPEED where other mobs jump, and a leaping mob (MobAIComp::leaping) keeps its impulse
 // until it lands. Creepers get a FuseComp from the factory.
 #include "ecs/Components.hpp"

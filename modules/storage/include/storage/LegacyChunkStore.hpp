@@ -9,8 +9,8 @@
 
 namespace betacraft::storage {
 
-// S7.3 the pre-Sprint 7 layout, read-only: chunks/c_X_Z.chk (Chunk::serializeRLE), .dec
-// (decoration record, P3.4) and .be (block entities, S2.4) beside it. Only the quarantine
+// The pre-region layout, read-only: chunks/c_X_Z.chk (Chunk::serializeRLE), .dec
+// (decoration record) and .be (block entities) beside it. Only the quarantine
 // helpers touch the directory (renames, conventions §1.5); nothing is ever written.
 class LegacyChunkStore final : public IChunkStore {
 public:

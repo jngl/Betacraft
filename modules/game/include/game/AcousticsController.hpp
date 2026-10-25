@@ -15,7 +15,7 @@
 
 namespace betacraft::game {
 
-// S8.12 how much of the rain around a listener reaches it: the mean occlusion gain of
+// How much of the rain around a listener reaches it: the mean occlusion gain of
 // kRainProbeCount columns around (and including) the listener's, each heard where the rain
 // falls through them (the listener's height, or just above a roof that is higher). Columns
 // without rain (snow, desert) count as silent. `cutoffHz` is the gain-weighted occlusion
@@ -28,7 +28,7 @@ inline constexpr int32_t kRainProbeCount = 9;
 inline constexpr float kRainProbeRadius = 4.0f;
 [[nodiscard]] RainAudibility measureRainAudibility(const world::World& world, const glm::vec3& listener) noexcept;
 
-// Game-thread half of the acoustic layer (P4.2). Every world sound starts with an occlusion target
+// Game-thread half of the acoustic layer. Every world sound starts with an occlusion target
 // ray-marched from the listener at play time; while it plays, the OcclusionScheduler re-evaluates it
 // at 10 Hz and the EnclosureMonitor tracks the listener's surroundings. Both post their results
 // through AudioEngine's command queue to the AcousticVoiceBank in the mixer.

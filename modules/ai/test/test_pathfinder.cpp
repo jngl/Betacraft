@@ -1,4 +1,4 @@
-// S8.2 VoxelPathfinder: optimal straight lines, detours around walls, one-block steps, drops
+// VoxelPathfinder: optimal straight lines, detours around walls, one-block steps, drops
 // of at most 3 blocks, no lava, closed doors for zombies, best partial paths, time slicing and
 // determinism.
 #include "test_support/AiTestSupport.hpp"

@@ -6,7 +6,7 @@
 #include <array>
 #include <cstdint>
 
-// S5.7 wheat rules (Beta 1.7.3 BlockCrops / BlockFarmland), free of World so they can be
+// Wheat rules (Beta 1.7.3 BlockCrops / BlockFarmland), free of World so they can be
 // unit-tested; world/BlockTicks.cpp feeds them from the world.
 
 namespace betacraft::gameplay {

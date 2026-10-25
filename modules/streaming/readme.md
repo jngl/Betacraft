@@ -1,6 +1,6 @@
 # streaming
 
-GL-free asynchronous meshing (P1.1): capture a section and its neighbours on the main thread, mesh it on a worker pool, hand the result back to the render thread under an upload budget. `render` uses it, never the other way round (ADR 0001).
+GL-free asynchronous meshing: capture a section and its neighbours on the main thread, mesh it on a worker pool, hand the result back to the render thread under an upload budget. `render` uses it, never the other way round (ADR 0001).
 
 ## Public entry points
 

@@ -50,7 +50,7 @@ constexpr std::array<NamedItem, 33> kNamedItems{{
     {items::Sugar, "Sugar", {0.98f, 0.98f, 0.98f}},
     {items::Cake, "Cake", {0.95f, 0.85f, 0.75f}},
     {items::Cookie, "Cookie", {0.78f, 0.52f, 0.28f}},
-    // S6.1 / S6.6: mob drops, flint and flint and steel.
+    // Mob drops, flint and flint and steel.
     {items::FlintAndSteel, "Flint and Steel", {0.62f, 0.62f, 0.66f}},
     {items::Bow, "Bow", {0.60f, 0.42f, 0.22f}},
     {items::Arrow, "Arrow", {0.82f, 0.80f, 0.76f}},
@@ -98,7 +98,7 @@ ItemAppearance itemAppearance(gameplay::ItemId rawId) {
         out.faceTiles = allFaces(toolIconTile(info->kind, info->material).value_or(kGenericItemTile));
         return out;
     }
-    // S6.7 armor: one sprite per slot, tinted by material.
+    // Armor: one sprite per slot, tinted by material.
     if (const std::optional<gameplay::ArmorInfo> armor = gameplay::armorInfo(id)) {
         static constexpr std::array<glm::vec3, 5> kArmorTints{{
             {0.63f, 0.40f, 0.24f}, // Leather
@@ -112,13 +112,13 @@ ItemAppearance itemAppearance(gameplay::ItemId rawId) {
         out.tint = kArmorTints[static_cast<size_t>(*gameplay::armorMaterial(id))];
         return out;
     }
-    // S5.6 / S5.8: the door and the bed items show their block's sprite.
+    // The door and the bed items show their block's sprite.
     if (id == items::WoodenDoor) {
         out.name = "Wooden Door";
         out.faceTiles = allFaces(voxel::kDoorUpperTile);
         return out;
     }
-    if (id == items::IronDoor) { // S8.5
+    if (id == items::IronDoor) {
         out.name = "Iron Door";
         out.faceTiles = allFaces(voxel::kIronDoorUpperTile);
         return out;

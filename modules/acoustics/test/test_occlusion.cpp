@@ -1,4 +1,4 @@
-// P4.2 — voxel occlusion measurement and the spec's cutoff / gain mapping.
+// Voxel occlusion measurement and the spec's cutoff / gain mapping.
 #include "test_support/AcousticsTestUtils.hpp"
 
 #include <gtest/gtest.h>
@@ -178,7 +178,7 @@ TEST(OcclusionMapping, CustomParamsAreHonoured) {
     EXPECT_FLOAT_EQ(occlusionCutoffHz(4.0f, p), 1000.0f);
 }
 
-// --- Exact edge / corner ties: zero-length visits (P4.2 "chaque bloc solide traversé") ----------
+// --- Exact edge / corner ties: zero-length visits (every solid block crossed counts) ----------
 
 TEST(OcclusionTies, GrazingTheEdgeOfOneBlockDoesNotOcclude) {
     // The ray passes exactly through the corner point (1,1): it only touches the edge of (1,0,0)
@@ -284,7 +284,7 @@ TEST(OcclusionTies, QueryCountStaysLinearForAllTieDiagonals) {
     EXPECT_LE(grid.queries(), static_cast<uint64_t>(7u * MAX_DDA_STEPS / 3u));
 }
 
-// --- Audible range R_max (Fiche 5 §4) -------------------------------------------------------------
+// --- Audible range R_max -------------------------------------------------------------
 
 TEST(OcclusionRange, SourcesBeyondRmaxAreFlaggedEvenWhenTheRayFitsTheStepBudget) {
     FakeVoxelGrid grid;

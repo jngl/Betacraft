@@ -42,11 +42,11 @@ enum class SoundEffect : uint8_t {
     SheepBaa,    // Beta mob.sheep
     MobHurt,     // A mob hit (melee, fire)
     MobDeath,    // A mob dies
-    DoorOpen,    // Beta random.door_open (S5.6)
+    DoorOpen,    // Beta random.door_open
     DoorClose,   // Beta random.door_close
-    Explosion,   // Beta random.explode (S6.6)
-    Click,       // Beta random.click: levers, buttons, pressure plates (S8.7)
-    Thunder,     // Beta ambient.weather.thunder (S8.12)
+    Explosion,   // Beta random.explode
+    Click,       // Beta random.click: levers, buttons, pressure plates
+    Thunder,     // Beta ambient.weather.thunder
     Count
 };
 
@@ -110,11 +110,11 @@ public:
     void playUiClick();
     void stopAll();
 
-    // S8.12 one thunder clap, non-spatial (Beta plays it at volume 10000: heard everywhere);
+    // One thunder clap, non-spatial (Beta plays it at volume 10000: heard everywhere);
     // `volume` 0..1, e.g. lower for a far strike.
     PlayedVoice playThunder(float volume);
 
-    // S8.12 procedural rain loop (Beta ambient.weather.rain), mixed dry under the voices. The
+    // Procedural rain loop (Beta ambient.weather.rain), mixed dry under the voices. The
     // game sets its gain (rainStrength x acoustic occlusion of the rain around the listener,
     // 0 = silent) and the low-pass cutoff of that occlusion; the mixer glides to both within
     // ~0.25 s so changes never click. Any thread.

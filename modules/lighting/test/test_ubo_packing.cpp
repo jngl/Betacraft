@@ -1,4 +1,4 @@
-// P4.6 — std140-exact packing of the DynamicLightBlock UBO into a byte buffer.
+// Std140-exact packing of the DynamicLightBlock UBO into a byte buffer.
 #include "lighting/DynamicLightUbo.hpp"
 
 #include <gtest/gtest.h>

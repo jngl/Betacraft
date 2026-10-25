@@ -21,7 +21,7 @@ namespace betacraft::ecs {
 namespace detail {
 
 // Dense, process-wide component type ids. The counter lives in Registry.cpp so every
-// translation unit (and every Phase 2 static library) agrees on the same numbering.
+// translation unit (and every module static library) agrees on the same numbering.
 [[nodiscard]] uint32_t nextComponentTypeId() noexcept;
 
 template<typename T>
@@ -41,7 +41,7 @@ template<typename T, typename... Rest>
 
 } // namespace detail
 
-// ECS registry (Fiche 3 §2.2): owns entity slots and one sparse-set pool per component type.
+// ECS registry: owns entity slots and one sparse-set pool per component type.
 //
 // Error policy: lookups (tryGet/has/remove/destroy) are total and simply fail on invalid or
 // stale handles; mutations that cannot be honoured (emplace on a dead entity, duplicate
@@ -234,13 +234,13 @@ public:
 
     [[nodiscard]] size_t groupCount() const noexcept { return m_groups.size(); }
 
-    // Roadmap name (Fiche 3 §2.2): synchronised, indirection-free iteration of a pair.
+    // Spec name: synchronised, indirection-free iteration of a pair.
     template<ComponentType T1, ComponentType T2, typename Func>
     void forEachOwnedGroup(Func&& func) {
         group<T1, T2>().each(std::forward<Func>(func));
     }
 
-    // ---- Roadmap API names (Fiche 3 §2.2) -------------------------------------------------
+    // ---- Spec API names ----------------------------------------------------
 
     [[nodiscard]] EntityId createEntity() { return create(); }
     void destroyEntity(EntityId e) { (void)destroy(e); }

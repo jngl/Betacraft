@@ -1,4 +1,4 @@
-// P2.3 - Determinism and randomized property tests (fixed seeds) on random terrain.
+// Determinism and randomized property tests (fixed seeds) on random terrain.
 #include "FluidTestUtils.hpp"
 
 #include <gtest/gtest.h>

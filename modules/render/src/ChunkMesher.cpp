@@ -401,7 +401,7 @@ ChunkMeshData ChunkMesher::buildMesh(
                     continue;
                 }
 
-                // S5.4 ladders, doors, fences, stairs...: boxes inside the cell (BlockShapeMesher)
+                // Ladders, doors, fences, stairs...: boxes inside the cell (BlockShapeMesher)
                 if (voxel::isDetailedShape(def.shape)) {
                     const auto sample = [&](int32_t dx, int32_t dy, int32_t dz) {
                         const int32_t sx = wx + dx;

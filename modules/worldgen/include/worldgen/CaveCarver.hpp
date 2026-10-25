@@ -38,7 +38,7 @@ enum class CaveFill : uint8_t { Air = 0, Water, Lava };
 
 namespace detail {
 // Detecting the enumerator instead of naming it kept this module buildable before Block.hpp
-// gained BlockId::Lava; the default palette now resolves to it (pinned by the Phase 2
+// gained BlockId::Lava; the default palette now resolves to it (pinned by the
 // worldgen integration tests).
 template <typename E>
 inline constexpr bool hasLavaBlock = requires { E::Lava; };
@@ -81,7 +81,7 @@ struct CarveStats {
     [[nodiscard]] constexpr uint32_t total() const noexcept { return air + water + lava; }
 };
 
-// P3.3 volumetric cave carver (Fiche Technique 4, section 2.2), on Simplex 3D noise:
+// Volumetric cave carver, on Simplex 3D noise:
 //  * spaghetti tunnels where N1^2 + N2^2 < T_worm * A(y)  (two ridged fields crossing 0),
 //  * cheese chambers where N_cheese * A(y) > 0.58, below Y = 50,
 //  * A(y) = 0 at Y <= 5 (bedrock guard) and above surface - 3 / water_floor - 6 (aquitard).

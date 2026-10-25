@@ -10,7 +10,7 @@
 
 namespace betacraft::lighting {
 
-// P4.6 — real-time dynamic lights (held torch, dropped glowstone, ...). These lights are
+// Real-time dynamic lights (held torch, dropped glowstone, ...). These lights are
 // evaluated per fragment from a UBO so chunks never need to be re-meshed when the player
 // walks around holding a torch.
 
@@ -48,7 +48,7 @@ struct DynamicLight {
     return v < 1.0f ? v : 1.0f;
 }
 
-// Spec P4.6: Light = Color * (1 - d/R)^2. Bit-for-bit equivalent to dynLightAttenuation() in
+// Light = Color * (1 - d/R)^2. Bit-for-bit equivalent to dynLightAttenuation() in
 // shaders/dynamic_lights.glsl for finite inputs (test_glsl_execution.cpp runs the shader code
 // itself). A NaN radius takes the early-out on both sides; NaN distances are implementation-
 // defined on GPUs, which is why packDynamicLightUbo() never uploads a non-finite light.

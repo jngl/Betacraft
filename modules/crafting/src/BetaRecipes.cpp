@@ -180,9 +180,9 @@ BookStats registerBetaRecipes(RecipeRegistry& registry, const BetaRecipeOptions&
     b.shaped("4 Wooden Stairs", {"#  ", "## ", "###"}, {{'#', planks}}, {toItemId(BlockId::WoodStairs), 4});
     b.shaped("4 Cobblestone Stairs", {"#  ", "## ", "###"}, {{'#', cobble}},
              {toItemId(BlockId::CobbleStairs), 4});
-    // S5.6-S5.8 (Beta 1.7.3 RecipesFood / RecipesCrafting / CraftingManager: 1 door, 1 bed).
+    // (Beta 1.7.3 RecipesFood / RecipesCrafting / CraftingManager: 1 door, 1 bed).
     b.shaped("Wooden Door", {"##", "##", "##"}, {{'#', planks}}, {items::WoodenDoor, 1});
-    // S8.5 redstone (Beta 1.7.3 CraftingManager / RecipesCrafting: one of each, iron door 1).
+    // Redstone (Beta 1.7.3 CraftingManager / RecipesCrafting: one of each, iron door 1).
     const Ingredient stone = Ingredient::of(toItemId(BlockId::Stone));
     b.shaped("Iron Door", {"##", "##", "##"}, {{'#', iron}}, {items::IronDoor, 1});
     if (ores) {
@@ -196,12 +196,12 @@ BookStats registerBetaRecipes(RecipeRegistry& registry, const BetaRecipeOptions&
     b.shaped("Bread", {"###"}, {{'#', Ingredient::of(items::Wheat)}}, {items::Bread, 1});
     b.shaped("Bed", {"###", "XXX"}, {{'#', Ingredient::of(toItemId(BlockId::Wool))}, {'X', planks}},
              {items::Bed, 1});
-    // S6.6 (Beta 1.7.3 CraftingManager): flint and steel, shapeless; TNT from gunpowder and sand.
+    // (Beta 1.7.3 CraftingManager): flint and steel, shapeless; TNT from gunpowder and sand.
     b.shapeless("Flint and Steel", {iron, Ingredient::of(items::Flint)}, {items::FlintAndSteel, 1});
     b.shaped("TNT", {"X#X", "#X#", "X#X"},
              {{'X', Ingredient::of(items::Gunpowder)}, {'#', Ingredient::of(toItemId(BlockId::Sand))}},
              {toItemId(BlockId::TNT), 1});
-    // S6.7 armor (Beta 1.7.3 RecipesArmor, same order: per material, helmet to boots). Chain
+    // Armor (Beta 1.7.3 RecipesArmor, same order: per material, helmet to boots). Chain
     // armor is not craftable.
     for (const auto& [material, x] : {std::pair{gameplay::ArmorMaterial::Leather, Ingredient::of(items::Leather)},
                                       std::pair{gameplay::ArmorMaterial::Iron, iron},

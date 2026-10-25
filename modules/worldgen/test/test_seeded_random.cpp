@@ -1,4 +1,4 @@
-// P3.4 - Deterministic per-chunk RNG derived from (world seed, chunk coordinate).
+// Deterministic per-chunk RNG derived from (world seed, chunk coordinate).
 #include "worldgen/SeededRandom.hpp"
 
 #include <gtest/gtest.h>

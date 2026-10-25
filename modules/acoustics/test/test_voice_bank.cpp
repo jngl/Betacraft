@@ -1,4 +1,4 @@
-// P4.2 — audio-thread side: MPSC acoustic commands applied to 32 voice filters + the shared aux bus.
+// Audio-thread side: MPSC acoustic commands applied to 32 voice filters + the shared aux bus.
 #include "acoustics/AcousticVoiceBank.hpp"
 
 #include <gtest/gtest.h>
@@ -406,7 +406,7 @@ TEST(AcousticVoiceBankHandles, StartVoiceSnapsToInitialStateAndClearsFilterMemor
 }
 
 TEST(AcousticVoiceBank, QueueMatchesTheSpecCommandQueueCapacity) {
-    // Fiche 5 §5: a 512-entry MPSC queue absorbs bursts (e.g. 50 TNT at once). Whether acoustic
+    // A 512-entry MPSC queue absorbs bursts (e.g. 50 TNT at once). Whether acoustic
     // commands ride the engine's own queue (via apply()) or this one, the burst headroom is the same.
     EXPECT_EQ(AcousticVoiceBank::QUEUE_CAPACITY, 512u);
 }

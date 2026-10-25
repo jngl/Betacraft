@@ -1,4 +1,4 @@
-// S7.7 ChunkGenPipeline: pass 1 (terrain + own lighting) on worker threads from a shared
+// ChunkGenPipeline: pass 1 (terrain + own lighting) on worker threads from a shared
 // const WorldGen, nearest jobs first, cancellable, reset by a seed change.
 #include "voxel/Block.hpp"
 #include "world/ChunkGenPipeline.hpp"

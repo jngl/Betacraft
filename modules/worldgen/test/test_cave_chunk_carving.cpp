@@ -1,4 +1,4 @@
-// P3.3 - Carving real Chunk data: sanctuaries, seamless borders, order independence.
+// Carving real Chunk data: sanctuaries, seamless borders, order independence.
 #include "worldgen/CaveCarver.hpp"
 #include "WorldgenTestSupport.hpp"
 

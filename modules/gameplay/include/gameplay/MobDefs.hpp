@@ -12,7 +12,7 @@
 
 namespace betacraft::gameplay {
 
-// Mob kinds. Grows only at the end, before Count (S6.1 appended Skeleton, Spider, Creeper, Cow).
+// Mob kinds. Grows only at the end, before Count (appended Skeleton, Spider, Creeper, Cow).
 enum class MobKind : uint8_t { Pig, Sheep, Zombie, Skeleton, Spider, Creeper, Cow, Count };
 
 enum class MobCategory : uint8_t { Passive, Hostile };
@@ -25,7 +25,7 @@ struct MobDrop {
     int32_t max{0};
 };
 
-// S6.1 ranged attack (Beta EntitySkeleton.attackEntity): within `range` blocks and in line of
+// Ranged attack (Beta EntitySkeleton.attackEntity): within `range` blocks and in line of
 // sight the mob stops and shoots an arrow every `intervalTicks` at `speed` blocks per second,
 // aimed `elevation` x distance higher, with Beta's `spread` (EntityArrow.setArrowHeading).
 // intervalTicks == 0: no ranged attack.
@@ -40,7 +40,7 @@ struct RangedAttack {
     [[nodiscard]] constexpr bool enabled() const noexcept { return intervalTicks > 0; }
 };
 
-// S6.1 suicide attack (Beta EntityCreeper): the fuse counts up while the target is closer than
+// Suicide attack (Beta EntityCreeper): the fuse counts up while the target is closer than
 // `igniteRange`, down again beyond `cancelRange`, and at `fuseTicks` the mob explodes with
 // `power` (EntitySimulation::explode) and disappears without drops. fuseTicks == 0: none.
 struct ExplodeAttack {
@@ -67,14 +67,14 @@ struct MobDef {
     bool burnsInDaylight{false};
     std::array<MobDrop, 2> drops{};
     std::string_view name{};
-    // S6.1. Natural spawning picks a kind of the category with these weights (Beta
+    // Natural spawning picks a kind of the category with these weights (Beta
     // BiomeGenBase spawn lists: 10 per hostile; sheep 12, pig 10, cow 8).
     int32_t spawnWeight{0};
-    bool climbsWalls{false};       // Spider: climbs when blocked horizontally (S6.3)
-    bool neutralInDaylight{false}; // Spider: loses its target in bright light (S6.3)
+    bool climbsWalls{false};       // Spider: climbs when blocked horizontally
+    bool neutralInDaylight{false}; // Spider: loses its target in bright light
     RangedAttack ranged{};
     ExplodeAttack explode{};
-    // S8.4 the box A* plans for (ai::NavAgent): width, height, depth in blocks. Beta's
+    // The box A* plans for (ai::NavAgent): width, height, depth in blocks. Beta's
     // PathFinder rounds the entity size up, so a zombie needs 1x2x1 cells, a spider 2x1x2.
     glm::vec3 navExtents{0.6f, 1.8f, 0.6f};
     bool canOpenDoors{false}; // No Beta 1.7.3 mob opens doors (zombies breaking them is out of scope)
@@ -83,7 +83,7 @@ struct MobDef {
 // The definition of `kind`; kinds at or past Count fall back to the pig.
 [[nodiscard]] const MobDef& mobDef(MobKind kind) noexcept;
 
-// S6.1: a kind of `category` drawn with the spawnWeight of each kind (Beta
+// A kind of `category` drawn with the spawnWeight of each kind (Beta
 // WeightedRandom.getRandomItem over the biome spawn list).
 [[nodiscard]] MobKind pickSpawnKind(MobCategory category, SplitMix64& rng) noexcept;
 

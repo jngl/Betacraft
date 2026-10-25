@@ -1,4 +1,4 @@
-// P2.1 — Strong exception safety of the sparse sets under allocation failure (Fiche 3 §4:
+// Strong exception safety of the sparse sets under allocation failure: an
 // O(1) insert must never leave a half-inserted entity behind). Allocation failures are
 // injected deterministically by replacing the global operator new for this test binary;
 // injection is disarmed by default so every other test allocates normally.

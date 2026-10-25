@@ -1,4 +1,4 @@
-// S8.6 sources: the lever switches, the button stays down for 20 ticks, a plate stays down
+// Sources: the lever switches, the button stays down for 20 ticks, a plate stays down
 // while something stands on it.
 #include "RedstoneTestUtils.hpp"
 

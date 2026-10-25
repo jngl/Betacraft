@@ -1,4 +1,4 @@
-// P2.1 — Paged sparse set (dense array + sparse index, O(1) insert/remove via swap-and-pop).
+// Paged sparse set (dense array + sparse index, O(1) insert/remove via swap-and-pop).
 #include "ecs/SparseSet.hpp"
 
 #include <gtest/gtest.h>

@@ -151,7 +151,7 @@ TEST(PlayerTest, InventoryOperations) {
 
 TEST(PlayerTest, FlyingAndHealth) {
     Player p;
-    p.setGameMode(core::GameMode::Creative); // Flying is a Creative cheat (S1.1)
+    p.setGameMode(core::GameMode::Creative); // Flying is a Creative cheat
     EXPECT_FALSE(p.isFlying());
     p.toggleFlyMode();
     EXPECT_TRUE(p.isFlying());
@@ -166,7 +166,7 @@ TEST(PlayerTest, FlyingAndHealth) {
     EXPECT_EQ(p.getHealth(), 0);
 }
 
-// S1.2: inventories start empty; game::applyStarterKit fills a new Creative world's.
+// Inventories start empty; game::applyStarterKit fills a new Creative world's.
 TEST(PlayerTest, DefaultPlayerHasEmptyInventory) {
     const Player p;
     EXPECT_EQ(p.gameMode(), core::GameMode::Survival);
@@ -178,7 +178,7 @@ TEST(PlayerTest, DefaultPlayerHasEmptyInventory) {
     EXPECT_FLOAT_EQ(p.getAirRatio(), 1.0f);
 }
 
-// S1.1: flying is a Creative cheat; switching to Survival lands the player.
+// Flying is a Creative cheat; switching to Survival lands the player.
 TEST(PlayerTest, SurvivalCannotToggleFly) {
     Player p;
     EXPECT_FALSE(p.toggleFlyMode());
@@ -198,7 +198,7 @@ TEST(PlayerTest, SurvivalCannotToggleFly) {
     EXPECT_EQ(core::parseGameMode("hardcore"), std::nullopt);
 }
 
-// S1.5: physics records the fall; the 20 TPS game tick (EntitySimulation) turns it into damage.
+// Physics records the fall; the 20 TPS game tick (EntitySimulation) turns it into damage.
 TEST(PlayerTest, LandingRecordsPendingFallWithoutDamage) {
     test::TempDir tempDir;
     world::World w(173ULL, tempDir.path());
@@ -256,7 +256,7 @@ void settle(Player& p, const world::World& w, const PlayerInput& input = {}, int
 
 } // namespace
 
-// S3.1: the cactus collision box is inset by 1/16, so walking into it overlaps its cell.
+// The cactus collision box is inset by 1/16, so walking into it overlaps its cell.
 TEST(PlayerTest, TouchingCactusFlag) {
     voxel::BlockRegistry::initialize();
     test::TempDir tempDir;
@@ -318,7 +318,7 @@ TEST(PlayerTest, InLavaFlag) {
     EXPECT_TRUE(p.isInWaterMaterial());
 }
 
-// S3.2: Beta hurtCameraEffect, -sin(f^4 * pi) * 14 with f = (hurtTime - alpha) / 10.
+// Beta hurtCameraEffect, -sin(f^4 * pi) * 14 with f = (hurtTime - alpha) / 10.
 TEST(PlayerTest, HurtCameraRollPeaksAndDecays) {
     Player p;
     EXPECT_FLOAT_EQ(p.hurtCameraRollDeg(0.0f), 0.0f);

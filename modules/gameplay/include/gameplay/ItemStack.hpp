@@ -13,7 +13,7 @@ enum class WearResult : uint8_t {
     Broken     // Damage exceeded maxDamage: one item of the stack was destroyed
 };
 
-// Replacement for physics::InventorySlot that can carry tool wear (roadmap P2.5).
+// Replacement for physics::InventorySlot that can carry tool wear.
 // maxDamage is cached in the stack so HUD/serialisation do not need a registry lookup.
 struct ItemStack {
     ItemId id{kNoItem};
@@ -44,7 +44,7 @@ struct ItemStack {
 // Tool definition of the held stack, nullopt for empty hands and non-tool items.
 [[nodiscard]] std::optional<ToolDef> toolOf(const ItemStack& stack) noexcept;
 
-// Beta ItemFlintAndSteel: 64 uses (S6.6). It is no tool (digging and hitting leave it alone)
+// Beta ItemFlintAndSteel: 64 uses. It is no tool (digging and hitting leave it alone)
 // but it carries its wear like one.
 inline constexpr int32_t kFlintAndSteelMaxDamage = 64;
 

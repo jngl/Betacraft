@@ -10,7 +10,7 @@
 
 namespace betacraft::worldgen {
 
-// What World persists next to a saved chunk for P3.4: whether pass 2 already ran on it and
+// What World persists next to a saved chunk for the two-pass decoration: whether pass 2 already ran on it and
 // the plan it was registered with (DecorationPipeline::findPlan). The plan is required for
 // an undecorated chunk whose neighbour already consumed it (re-planning edited terrain would
 // cut that neighbour's trees) and lets a decorated chunk feed neighbours still waiting.

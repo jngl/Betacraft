@@ -1,4 +1,4 @@
-// P2.1 Impact: "plus de 1 000 entités dynamiques ... à 60+ FPS". Wall-clock assertions are
+// Impact: "plus de 1 000 entités dynamiques ... à 60+ FPS". Wall-clock assertions are
 // nondeterministic (sanitizers, loaded CI), so the budget is pinned as work counts instead:
 // with 2 500 dynamic entities, a full simulation tick costs a bounded number of collision
 // queries per body, every system touches every entity once, and the world stays sane.

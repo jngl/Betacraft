@@ -1,4 +1,4 @@
-// P2.1 — Registry: entity lifecycle (versioned handles) and component CRUD.
+// Registry: entity lifecycle (versioned handles) and component CRUD.
 #include "ecs/Registry.hpp"
 
 #include <gtest/gtest.h>

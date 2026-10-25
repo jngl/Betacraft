@@ -1,4 +1,4 @@
-// S2.3: Beta 1.7.3 TileEntityFurnace.updateEntity rules on voxel::FurnaceData.
+// Beta 1.7.3 TileEntityFurnace.updateEntity rules on voxel::FurnaceData.
 #include "crafting/Furnace.hpp"
 
 #include <gtest/gtest.h>

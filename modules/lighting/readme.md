@@ -1,6 +1,6 @@
 # lighting
 
-Dynamic lights (P4.6): held torches, dropped glowing items and burning entities, shaded per fragment so chunks never re-mesh when a light moves. The module does all the CPU work (selecting the 16 nearest lights, Forward+ tile culling, std140 packing) and holds the GLSL include; it never touches OpenGL, the uniform buffer itself lives in `render`.
+Dynamic lights: held torches, dropped glowing items and burning entities, shaded per fragment so chunks never re-mesh when a light moves. The module does all the CPU work (selecting the 16 nearest lights, Forward+ tile culling, std140 packing) and holds the GLSL include; it never touches OpenGL, the uniform buffer itself lives in `render`.
 
 ## Public entry points
 

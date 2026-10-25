@@ -20,7 +20,7 @@ namespace betacraft::fluids {
         case BlockId::Dandelion:
         case BlockId::Rose:
         case BlockId::Torch:
-        // S8.5 Material.circuits: wire, lever, button and redstone torches wash away too.
+        // Material.circuits: wire, lever, button and redstone torches wash away too.
         case BlockId::RedstoneWire:
         case BlockId::Lever:
         case BlockId::StoneButton:
@@ -48,7 +48,7 @@ namespace betacraft::fluids {
 //  - Storage encoding for an adapter: the fluid *type* (and hence wet vs dry) comes from
 //    the block id (water / lava, still or flowing). In memory, FluidState::toNibble() level
 //    0 is the thinnest *flowing* level (Beta decay 7, the 7th ring of a water spread), NOT
-//    dry: the roadmap's "0 = sec" cannot coexist with its 7-block reach (source + 7
+//    dry: "0 = dry" cannot coexist with its 7-block reach (source + 7
 //    flowing levels + dry = 9 states for 3 bits). World's per-voxel metadata stores Beta's
 //    native value instead (FluidState::betaDecay() / fromBetaDecay(), 0 = source), because
 //    every water cell written before the nibble existed reads 0 and must stay a source.

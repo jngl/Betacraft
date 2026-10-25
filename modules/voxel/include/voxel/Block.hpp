@@ -31,7 +31,7 @@ enum class BlockId : uint8_t {
     Glass = 20,
     LapisOre = 21,
     Sandstone = 24,
-    Bed = 26,        // S5.4/S5.8: meta bits 0-1 orientation, bit 3 head half
+    Bed = 26,        // meta bits 0-1 orientation, bit 3 head half
     TallGrass = 31,
     DeadBush = 32,
     Piston = 33,
@@ -46,27 +46,27 @@ enum class BlockId : uint8_t {
     MossyCobble = 48,
     Obsidian = 49,
     Torch = 50,
-    MobSpawner = 52, // S6.10 dungeon spawner; its state lives in game::MobSpawner (not saved)
-    WoodStairs = 53, // S5.10: meta 0..3 = the side the high step faces (+X, -X, +Z, -Z)
+    MobSpawner = 52, // dungeon spawner; its state lives in game::MobSpawner (not saved)
+    WoodStairs = 53, // meta 0..3 = the side the high step faces (+X, -X, +Z, -Z)
     Chest = 54,
-    RedstoneWire = 55, // S8.5: meta = power 0..15
+    RedstoneWire = 55, // meta = power 0..15
     DiamondOre = 56,
     CraftingTable = 58,
-    Crops = 59,      // S5.4/S5.7: meta = growth stage 0..7
-    Farmland = 60,   // S5.4/S5.7: meta = moisture 0..7
+    Crops = 59,      // meta = growth stage 0..7
+    Farmland = 60,   // meta = moisture 0..7
     Furnace = 61,
     LitFurnace = 62, // Burning furnace: same block entity as Furnace, light 13
-    WoodDoor = 64,   // S5.4/S5.6: meta bits 0-1 orientation, bit 2 open, bit 3 upper half
-    Ladder = 65,     // S5.5: meta 2..5 = Beta side of the wall it hangs on
+    WoodDoor = 64,   // meta bits 0-1 orientation, bit 2 open, bit 3 upper half
+    Ladder = 65,     // meta 2..5 = Beta side of the wall it hangs on
     CobbleStairs = 67,
-    Lever = 69,              // S8.5: meta 0x7 = attachment (kAttach*), 0x8 = on
-    StonePressurePlate = 70, // S8.5: meta 0x1 = pressed
-    IronDoor = 71,           // S8.5: door metadata (S5.6); opened by redstone only
-    WoodPressurePlate = 72,  // S8.5: meta 0x1 = pressed
+    Lever = 69,              // meta 0x7 = attachment (kAttach*), 0x8 = on
+    StonePressurePlate = 70, // meta 0x1 = pressed
+    IronDoor = 71,           // door metadata; opened by redstone only
+    WoodPressurePlate = 72,  // meta 0x1 = pressed
     RedstoneOre = 73,
-    RedstoneTorchOff = 75,   // S8.5: meta = attachment, like Lever
+    RedstoneTorchOff = 75,   // meta = attachment, like Lever
     RedstoneTorchOn = 76,    // Light 7
-    StoneButton = 77,        // S8.5: meta 0x7 = attachment, 0x8 = pressed
+    StoneButton = 77,        // meta 0x7 = attachment, 0x8 = pressed
     SnowGrass = 78,
     Ice = 79,
     SnowBlock = 80,
@@ -97,7 +97,7 @@ enum class RenderShape : uint8_t {
     Slab,
     Cactus,
     Liquid,
-    // S5.4 shapes whose geometry and boxes come from voxel/BlockShapes.hpp. All but Fence
+    // Shapes whose geometry and boxes come from voxel/BlockShapes.hpp. All but Fence
     // depend on the metadata (Fence depends on its neighbours).
     Ladder,
     Door,
@@ -106,13 +106,13 @@ enum class RenderShape : uint8_t {
     Crops,
     Farmland,
     Stairs,
-    // S8.5: a plate lying on the floor (redstone wire, pressure plates) and a small part
+    // A plate lying on the floor (redstone wire, pressure plates) and a small part
     // attached to a wall or the floor (lever, button), both from voxel/BlockShapes.hpp.
     Flat,
     Lever
 };
 
-// Whether a metadata change can alter the geometry of a block of this shape (S5.4): such
+// Whether a metadata change can alter the geometry of a block of this shape: such
 // changes re-mesh the section. Liquids keep their full-cube look whatever their level.
 [[nodiscard]] constexpr bool shapeDependsOnMetadata(RenderShape shape) noexcept {
     switch (shape) {
@@ -153,7 +153,7 @@ enum class SoundCategory : uint8_t {
     Water
 };
 
-// Atlas tiles of the S5.4 shapes (Beta terrain.png positions where the procedural atlas has
+// Atlas tiles of the shapes (Beta terrain.png positions where the procedural atlas has
 // them free).
 inline constexpr uint8_t kDoorUpperTile = 81;
 inline constexpr uint8_t kLadderTile = 83;
@@ -165,7 +165,7 @@ inline constexpr uint8_t kBedHeadTopTile = 100;
 inline constexpr uint8_t kBedFootTopTile = 101;
 inline constexpr uint8_t kBedHeadSideTile = 102;
 inline constexpr uint8_t kBedFootSideTile = 103;
-// S8.5 redstone tiles (Beta terrain.png positions).
+// Redstone tiles (Beta terrain.png positions).
 inline constexpr uint8_t kIronDoorUpperTile = 82;
 inline constexpr uint8_t kLeverTile = 96;
 inline constexpr uint8_t kIronDoorLowerTile = 98;
@@ -195,7 +195,7 @@ struct BlockDef {
 
     // Atlas tile indices (0..255 in 16x16 grid): PosX, NegX, PosY, NegY, PosZ, NegZ
     std::array<uint8_t, 6> faceTiles{0, 0, 0, 0, 0, 0};
-    // S6.5 Beta Block.getExplosionResistance (blockResistance / 5): what one block takes off
+    // Beta Block.getExplosionResistance (blockResistance / 5): what one block takes off
     // an explosion ray (gameplay::explosionBlocks). BlockRegistry::initialize sets it to the
     // hardness (never below 0), then applies Beta's setResistance overrides.
     float blastResistance{0.0f};
@@ -215,7 +215,7 @@ struct BlockDef {
     return id == BlockId::Lava || id == BlockId::StillLava;
 }
 
-// S5.6/S8.5: both door blocks share the geometry and the two-half metadata.
+// Both door blocks share the geometry and the two-half metadata.
 [[nodiscard]] constexpr bool isDoorBlock(BlockId id) noexcept {
     return id == BlockId::WoodDoor || id == BlockId::IronDoor;
 }

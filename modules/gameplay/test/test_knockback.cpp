@@ -18,7 +18,7 @@ bool isFinite(const glm::vec3& v) {
 const glm::vec3 kOrigin{0.0f, 64.0f, 0.0f};
 } // namespace
 
-TEST(Knockback, DefaultParamsMatchRoadmap) {
+TEST(Knockback, DefaultParams) {
     const KnockbackParams p{};
     EXPECT_FLOAT_EQ(p.horizontalSpeed, 8.5f);
     EXPECT_FLOAT_EQ(p.verticalSpeed, 4.2f);

@@ -1,4 +1,4 @@
-// P3.4 persistence - a chunk's decoration record (pass-2 flag + feature plan) round-trips
+// Persistence - a chunk's decoration record (pass-2 flag + feature plan) round-trips
 // through bytes, so World can save it next to the chunk and restore it next session.
 #include "worldgen/FeaturePlanCodec.hpp"
 

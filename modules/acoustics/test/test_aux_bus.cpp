@@ -1,4 +1,4 @@
-// P4.2 — shared auxiliary reverb bus (one FDN for all voices) and the per-voice occlusion filter.
+// Shared auxiliary reverb bus (one FDN for all voices) and the per-voice occlusion filter.
 #include "acoustics/AuxReverbBus.hpp"
 #include "acoustics/VoiceAcousticFilter.hpp"
 
@@ -358,7 +358,7 @@ TEST(AuxReverbBus, DefaultBusIsAudibleBeforeAnyEnvironmentUpdate) {
 }
 
 TEST(AuxReverbBus, DefaultBusIsTheNeutralUnitySendOfTheSpec) {
-    // No extra bus gain on top of the voice send (Fiche 5: reverbSendGain 0.15 straight into the FDN).
+    // No extra bus gain on top of the voice send (reverbSendGain 0.15 straight into the FDN).
     AuxReverbBus unconfigured;
     AuxReverbBus explicitUnity;
     ReverbParams unity;

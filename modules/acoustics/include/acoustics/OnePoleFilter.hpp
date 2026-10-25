@@ -10,7 +10,7 @@ inline constexpr float DEFAULT_SAMPLE_RATE = 44100.0f;
 // Lowest cutoff the occlusion LPF may be driven to; keeps the coefficient strictly positive so the
 // filter can never freeze on a stale value.
 inline constexpr float MIN_FILTER_CUTOFF_HZ = 10.0f;
-// The spec's "unoccluded" cutoff (P4.2 clamp max). At and above it the LPF is an exact bypass (a = 1):
+// The spec's "unoccluded" cutoff (clamp max). At and above it the LPF is an exact bypass (a = 1):
 // an unoccluded voice must lose nothing, not ~1-3 dB in its top octave.
 inline constexpr float BYPASS_CUTOFF_HZ = 20000.0f;
 // Below this magnitude recursive states are flushed to 0: subnormal floats are up to 100x slower on
