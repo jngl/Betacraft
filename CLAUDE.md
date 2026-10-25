@@ -39,7 +39,7 @@ Every module, `betacraft` and the test executables (through the `betacraft_warni
 
 ## CI
 
-`.github/workflows/ci.yml` (GitHub Actions, `ubuntu-latest`, GCC) builds Debug and Release with `-Werror`, runs `ctest -LE benchmark -E AllTests` and the `--frames 300` smoke test under `xvfb-run` with Mesa, so GL and e2e tests really run. It sets `BETACRAFT_REQUIRE_GL=1`: a test guarded by `BETACRAFT_REQUIRE_GL_CONTEXT()` (`test_support/GLTestContext.hpp`) then fails instead of skipping when no OpenGL 3.3 context exists. Guard every new GL test with that macro.
+`.github/workflows/ci.yml` (GitHub Actions, `ubuntu-26.04`, GCC 15 like the dev machine) builds Debug and Release with `-Werror`, runs `ctest -LE benchmark -E AllTests` and the `--frames 300` smoke test under `xvfb-run` with Mesa, so GL and e2e tests really run. It sets `BETACRAFT_REQUIRE_GL=1`: a test guarded by `BETACRAFT_REQUIRE_GL_CONTEXT()` (`test_support/GLTestContext.hpp`) then fails instead of skipping when no OpenGL 3.3 context exists. Guard every new GL test with that macro.
 
 ## Architecture
 
