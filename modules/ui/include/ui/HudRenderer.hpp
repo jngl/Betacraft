@@ -166,7 +166,8 @@ public:
         const HudDebugContext& ctx
     );
 
-    // Creative palette clicks: equips the block in the selected hotbar slot and returns true.
+    // Creative palette clicks: equips a full stack of the entry in the selected hotbar slot and
+    // returns true (false for an empty palette slot).
     // Inventory, grid and result slots belong to game::InventoryCrafting (hitTestInventory).
     bool handleInventoryClick(
         int32_t mouseX,

@@ -553,9 +553,8 @@ void HudRenderer::render(
         render::BitmapFont::appendText(verts, "LEFT: TAKE/PLACE STACK  RIGHT: HALF/ONE", px + 16.0f, py + kPanelH - 26.0f, 1.4f,
                                glm::vec4(0.92f, 0.92f, 0.92f, 0.9f));
 
-        // Right Top: 36-item Creative / Block Palette (9x4 grid)
-        const auto palette = creativePalette();
-        for (size_t i = 0; layout.palette && i < palette.size(); ++i) {
+        // Right Top: the creative palette's 9x4 grid (the Building category, unscrolled).
+        for (size_t i = 0; layout.palette && i < kPaletteVisibleSlots; ++i) {
             const SlotRect r = inventorySlotRect(InventoryRegion::Palette, i, screenWidth, screenHeight, layout);
             pushBeveledSlot(verts, r.x, r.y, r.size, hovered(r));
             pushItemIcon(verts, paletteItem(i), r.x + 6.0f, r.y + 6.0f, r.size - 12.0f);
@@ -768,7 +767,7 @@ InventoryHit HudRenderer::hitTestInventory(int32_t mouseX, int32_t mouseY, int32
         if (const auto hit = scan(InventoryRegion::CraftingGrid, dim * dim)) return *hit;
         if (const auto hit = scan(InventoryRegion::CraftingResult, 1)) return *hit;
         if (layout.palette) {
-            if (const auto hit = scan(InventoryRegion::Palette, kCreativePalette.size())) return *hit;
+            if (const auto hit = scan(InventoryRegion::Palette, kPaletteVisibleSlots)) return *hit;
         }
     }
     if (const auto hit = scan(InventoryRegion::Inventory, physics::Player::TOTAL_INVENTORY_SIZE)) return *hit;
@@ -803,6 +802,9 @@ bool HudRenderer::handleInventoryClick(
         return false;
     }
     const gameplay::ItemId item = paletteItem(hit.index);
+    if (item == gameplay::kNoItem) {
+        return false; // An empty palette slot hands out nothing
+    }
     player.setHeldItem(physics::InventorySlot{item, gameplay::maxStackSize(item)});
     return true;
 }

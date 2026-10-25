@@ -8,7 +8,8 @@ Input and screens: SDL key bindings and `options.txt`, the screen state machine,
 - `ui/ScreenState.hpp`, `ui/ScreenKind.hpp`: the screen state machine.
 - `ui/TitleScreen.hpp`, `ui/WorldSelectScreen.hpp`, `ui/CreateWorldScreen.hpp`, `ui/OptionsMenu.hpp`, `ui/DeathScreen.hpp`, `ui/TextField.hpp`.
 - `ui/HudRenderer.hpp`: HUD and inventory drawing, `hitTestInventory`.
-- `ui/CraftingSystem.hpp`, `ui/CreativePalette.hpp`.
+- `ui/CraftingSystem.hpp`: the legacy Phase 1 recipe list.
+- `ui/CreativePalette.hpp`: the creative palette catalogue (`PaletteCategory`, `paletteEntries`) and its GL-free navigation state (`PaletteNavigation`).
 
 ## What it does not do
 
