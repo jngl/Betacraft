@@ -81,7 +81,9 @@ TEST(HudInventoryLayout, PaletteClicksStillEquipAndOtherSlotsAreLeftToTheGame) {
     const ui::SlotRect pal = HudRenderer::inventorySlotRect(InventoryRegion::Palette, 1, kW, kH, 2);
     EXPECT_TRUE(hud.handleInventoryClick(static_cast<int32_t>(pal.x + 5.0f), static_cast<int32_t>(pal.y + 5.0f),
                                          kW, kH, player));
-    EXPECT_EQ(player.getHeldItem().id, voxel::BlockId::Grass);
+    // Slot 1 was grass in the fixed 36-entry palette; the categorised palette (issue #64)
+    // opens on Building, whose second entry is cobblestone (grass moved to Nature).
+    EXPECT_EQ(player.getHeldItem().id, voxel::BlockId::Cobblestone);
 }
 
 // Survival draws no palette, so its slots are not clickable either; the rest of the
