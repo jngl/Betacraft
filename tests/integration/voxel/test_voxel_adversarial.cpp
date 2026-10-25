@@ -242,7 +242,7 @@ TEST(AdversarialPalettedSection, PaletteTransitionAndBackBehavior) {
     }
 
     // Note architectural invariant: does PalettedSection demote back to 0-bit?
-    // In Sprint 1.1 specification, demotion/compaction is NOT part of the runtime setBlock path
+    // By design, demotion/compaction is NOT part of the runtime setBlock path
     // because full scan on every setBlock would destroy O(1) write performance.
     // BitsPerVoxel remains 16, but correctness is 100% preserved.
     ASSERT_EQ(sec.getBitsPerVoxel(), 16) << "setBlock maintains 16-bit for O(1) performance";

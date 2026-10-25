@@ -1,4 +1,4 @@
-// P2.3 - Abstract voxel access contract, exercised through the in-memory grid.
+// Abstract voxel access contract, exercised through the in-memory grid.
 #include "fluids/GridFluidVoxelAccess.hpp"
 
 #include <gtest/gtest.h>

@@ -1,4 +1,4 @@
-// P2.1 — Robustness of the systems against hostile inputs: non-finite time steps (a paused
+// Robustness of the systems against hostile inputs: non-finite time steps (a paused
 // or broken frame timer), non-finite positions (a NaN from a gameplay bug) and teleports.
 // A single NaN must never poison the whole owning group or hang the collision sweep.
 #include "ecs/Components.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 
-// Shared fixtures for the P1.1 streaming test-suite. Kept free of SDL/GL so the
+// Shared fixtures for the streaming test-suite. Kept free of SDL/GL so the
 // suite runs headless (and under ThreadSanitizer) on CI machines.
 
 #include "voxel/Block.hpp"

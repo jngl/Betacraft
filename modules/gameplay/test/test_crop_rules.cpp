@@ -1,4 +1,4 @@
-// S5.7 wheat rules (Beta 1.7.3 BlockCrops): the growth rate from the farmland and the
+// Wheat rules (Beta 1.7.3 BlockCrops): the growth rate from the farmland and the
 // crowding around a crop, and the harvest of wheat and seeds by stage.
 #include "gameplay/Crops.hpp"
 #include "gameplay/Harvesting.hpp"

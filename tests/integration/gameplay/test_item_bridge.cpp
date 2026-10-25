@@ -1,4 +1,4 @@
-// Integration hook P2.5 x P2.6: field-by-field conversion between the inventory slot, the
+// Field-by-field conversion between the inventory slot, the
 // wearable gameplay::ItemStack and the crafting::SlotStack (game/ItemBridge.hpp), plus the
 // inventory widened to the shared item id scheme.
 #include "game/ItemBridge.hpp"

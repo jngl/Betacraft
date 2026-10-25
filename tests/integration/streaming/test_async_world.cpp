@@ -1,4 +1,4 @@
-// Sprint 7 integration (S7.6, S7.7): World streaming through the I/O worker and the pass-1
+// Integration: World streaming through the I/O worker and the pass-1
 // generation pool ends with the same chunks (blocks, decoration, light) as synchronous
 // loading, and integration stays within its per-frame budget.
 #include "test_support/GLTestContext.hpp"
@@ -146,7 +146,7 @@ TEST(StreamingAsyncWorld, UnloadedEditReloadsFromSaveQueue) {
     EXPECT_GT(w.getStreamingStats().openRegionBytes, 0U);
 }
 
-// Sprint 8 hardening: an async read of a chunk, cancelled by a synchronous ensureChunkLoaded
+// An async read of a chunk, cancelled by a synchronous ensureChunkLoaded
 // after it finished but before it was collected, must not answer the chunk's next request:
 // the chunk was edited, unloaded and requested again in between, and the late answer holds
 // the older contents.

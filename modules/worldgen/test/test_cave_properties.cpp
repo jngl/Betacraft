@@ -1,4 +1,4 @@
-// P3.3 - Randomized (fixed-seed) property tests and boundary inputs for the cave carver.
+// Randomized (fixed-seed) property tests and boundary inputs for the cave carver.
 #include "worldgen/CaveCarver.hpp"
 #include "worldgen/ColumnSampling.hpp"
 #include "worldgen/SeededRandom.hpp"

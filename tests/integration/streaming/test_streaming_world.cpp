@@ -1,4 +1,4 @@
-// Integration, P1.1 asynchronous chunk streaming: the live World feeds the
+// Asynchronous chunk streaming: the live World feeds the
 // AsyncChunkPipeline through WorldMeshStreamer (lifecycle reports, dirty-section captures,
 // re-requests, unload cancellation). A GL-free uploader stands in for WorldRenderer and
 // checks that what ends up "on the GPU" is exactly the newest mesh of every section.

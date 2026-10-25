@@ -1,4 +1,4 @@
-// P4.2 — one-pole low-pass (occlusion LPF) and EMA parameter smoothing (anti-zipper).
+// One-pole low-pass (occlusion LPF) and EMA parameter smoothing (anti-zipper).
 #include "acoustics/OnePoleFilter.hpp"
 
 #include <gtest/gtest.h>
@@ -242,7 +242,7 @@ TEST(ParameterSmoother, SettlesExactlyOnTarget) {
     EXPECT_EQ(s.current(), 1.0f);
 }
 
-// --- Spec cutoffs (P4.2: 20000 * 0.65^N) must really be the -3 dB points ------------------------
+// --- Spec cutoffs (20000 * 0.65^N) must really be the -3 dB points ------------------------
 
 namespace {
 

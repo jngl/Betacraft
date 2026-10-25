@@ -1,10 +1,10 @@
-// P3.3 - Pins the carver to the specification itself rather than to its own implementation.
+// Pins the carver to the specification itself rather than to its own implementation.
 //
-// SpecOracle below is an independent transliteration of the Fiche Technique 4 reference
+// SpecOracle below is an independent transliteration of the original cave design spec's reference
 // code (VolumetricCaveCarver::computeVerticalEnvelope / shouldCarve /
 // getExcavationFillBlock) with every constant written as a literal from the spec. The only
 // project-specific parts are the noise primitive (SimplexNoise instead of PerlinNoise, as
-// P3.3 requires) and the per-field seed derivation, which is itself pinned because changing
+// Requires) and the per-field seed derivation, which is itself pinned because changing
 // it changes every world.
 #include "worldgen/CaveCarver.hpp"
 #include "worldgen/SeededRandom.hpp"

@@ -1,4 +1,4 @@
-// Integration, P2.3 fluids in the world tick: World owns a FluidSimulator over a
+// Fluids in the world tick: World owns a FluidSimulator over a
 // World-backed IFluidVoxelAccess (block id + Beta metadata nibble), advanced once per
 // 20 TPS game tick by World::tick(). Block edits, chunk loads and saved mid-flow water all
 // feed it; every voxel it writes marks the touched chunks for re-meshing.

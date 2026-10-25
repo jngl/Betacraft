@@ -1,4 +1,4 @@
-// Integration, P4.2 acoustics in the game loop: Application plays world sounds at their
+// Acoustics in the game loop: Application plays world sounds at their
 // voxel through the AcousticsController. The fizz of a lava/water contact is the one sound that
 // comes from the simulation rather than the player, so it is checked from the real fluid events.
 #include "test_support/GLTestContext.hpp"

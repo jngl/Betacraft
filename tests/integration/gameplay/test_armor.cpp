@@ -1,4 +1,4 @@
-// S6.7: Beta 1.7.3 armor (ItemArmor values, InventoryPlayer.getTotalArmorValue / damageArmor,
+// Beta 1.7.3 armor (ItemArmor values, InventoryPlayer.getTotalArmorValue / damageArmor,
 // EntityPlayer.damageEntity), plus the armor slots of the inventory screen.
 #include "game/InventoryCrafting.hpp"
 #include "gameplay/Armor.hpp"
@@ -64,7 +64,7 @@ TEST(Armor, ReductionIsTheSameForEveryMaterial) {
 }
 
 // Beta ItemArmor: maxDamageArray[type] * 3 << material, material leather 0, chain 1, iron 2,
-// diamond 3, gold 1. (The roadmap's 363/528/495/429 for diamond are the 1.0 values; Beta 1.7.3
+// diamond 3, gold 1. (363/528/495/429 for diamond are the 1.0 values; Beta 1.7.3
 // gives 264/384/360/312.)
 TEST(Armor, DurabilitiesFollowBetaFormula) {
     const std::array<int32_t, 4> leather{33, 48, 45, 39};

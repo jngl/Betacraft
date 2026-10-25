@@ -1,4 +1,4 @@
-// P2.3 - Beta getOptimalFlowDirections(): flowing fluid heads for the nearest drop.
+// Beta getOptimalFlowDirections(): flowing fluid heads for the nearest drop.
 #include "FluidTestUtils.hpp"
 
 #include <gtest/gtest.h>

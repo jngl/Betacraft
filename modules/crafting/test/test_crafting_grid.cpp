@@ -1,4 +1,4 @@
-// P2.6 — CraftingGrid behaviour (2x2 inventory grid, 3x3 workbench grid).
+// CraftingGrid behaviour (2x2 inventory grid, 3x3 workbench grid).
 #include "crafting/CraftingGrid.hpp"
 
 #include <gtest/gtest.h>

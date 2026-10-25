@@ -1,4 +1,4 @@
-// P2.6 — Standard Beta 1.7.3 recipe book + preservation of every legacy
+// Standard Beta 1.7.3 recipe book + preservation of every legacy
 // ui::CraftingSystem recipe.
 #include "crafting/BetaRecipes.hpp"
 #include "game/InventoryCrafting.hpp"
@@ -123,16 +123,15 @@ std::vector<std::string> expectedLabels(bool legacy) {
     for (const char* label : {"2 Ladders", "2 Fences", "4 Wooden Stairs", "4 Cobblestone Stairs", "Wooden Door"}) {
         v.emplace_back(label);
     }
-    // S8.5 redstone
+    // Redstone
     v.emplace_back("Iron Door");
     if (legacy) {
         v.emplace_back("Iron Door (Ore)");
     }
     for (const char* label : {"Lever", "Redstone Torch", "Stone Pressure Plate", "Wooden Pressure Plate", "Button",
                               "Bread", "Bed",
-                              // S6.6
                               "Flint and Steel", "TNT",
-                              // S6.7 armor (RecipesArmor order; chain armor is not craftable)
+                              // Armor (RecipesArmor order; chain armor is not craftable)
                               "Leather Cap", "Leather Tunic", "Leather Pants", "Leather Boots",
                               "Iron Helmet", "Iron Chestplate", "Iron Leggings", "Iron Boots",
                               "Diamond Helmet", "Diamond Chestplate", "Diamond Leggings", "Diamond Boots",
@@ -198,7 +197,7 @@ TEST(BetaRecipeBook, PreservesEveryLegacyCraftingSystemRecipe) {
     // For each legacy recipe (unordered ingredient counts) there must be a
     // recipe in the book that uses exactly that multiset and yields the same
     // result id and count once laid out in a workbench grid. CraftingSystem still yields
-    // the legacy ids 100..105, which fold onto the Beta numbers since S2.10.
+    // the legacy ids 100..105, which fold onto the Beta numbers.
     const RecipeRegistry& reg = book();
     for (const betacraft::ui::CraftingRecipe& legacy : betacraft::ui::CraftingSystem::getRecipes()) {
         bool found = false;
@@ -285,7 +284,7 @@ TEST(BetaRecipes, FurnaceAndChestNeedTheWorkbench) {
               toItemId(BlockId::Furnace));
 }
 
-// S5.5, S5.9, S5.10 at Beta 1.7.3 yields.
+// Ladders, fences and stairs at Beta 1.7.3 yields.
 TEST(BetaRecipes, LadderFenceAndStairs) {
     const ItemId stick = items::Stick;
     EXPECT_EQ(resultOf(book(), layout(GridSize::Workbench3x3, {"# #", "###", "# #"}, {{'#', stick}})),
@@ -474,7 +473,7 @@ TEST(BetaRecipes, LegacyOreSubstitutesCanBeDisabled) {
     EXPECT_EQ(resultOf(strict, toolGrid(ToolKind::Axe, items::IronIngot, 0, false)).id, items::IronAxe);
 }
 
-// S2.8: the game screen uses the strict vanilla book now that the furnace makes ingots. The
+// The game screen uses the strict vanilla book now that the furnace makes ingots. The
 // library default keeps the legacy variants (tests above) for compatibility.
 TEST(BetaRecipes, GameBookRejectsRawOreTools) {
     const betacraft::game::InventoryCrafting screen;
@@ -621,7 +620,7 @@ TEST(BetaRecipesProperty, IndexedMatchAgreesWithLinearScanOnVanillaBook) {
     EXPECT_GT(hits, 400u);
 }
 
-// S8.5: the Beta 1.7.3 redstone recipes, one of each.
+// The Beta 1.7.3 redstone recipes, one of each.
 TEST(BetaRecipes, RedstoneParts) {
     const ItemId stone = toItemId(BlockId::Stone);
     const ItemId redstone = items::Redstone;

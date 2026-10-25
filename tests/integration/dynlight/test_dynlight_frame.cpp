@@ -1,4 +1,4 @@
-// Integration, P4.6 on the renderer's CPU side: the dynamic-light frame WorldRenderer
+// On the renderer's CPU side: the dynamic-light frame WorldRenderer
 // builds each frame from the collected lights and its own camera (selection, Forward+ tiles in
 // framebuffer pixels, UBO bytes), and the light level the first-person hand is shaded with.
 // The GL upload itself is covered by test_dynlight_shader.cpp and the e2e binary runs.

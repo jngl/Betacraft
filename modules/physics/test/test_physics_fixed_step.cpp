@@ -172,7 +172,7 @@ TEST(PhysicsFixedStepTest, SpiralOfDeathAccumulatorClamp) {
     EXPECT_GE(accumulator, 0.0f);
 }
 
-// S1.8 (bug 9): the walking bob moves the camera only. Raycasts, melee and drops use the
+// (bug 9): the walking bob moves the camera only. Raycasts, melee and drops use the
 // gameplay eye, which must sit exactly at feet + eye height.
 TEST(PhysicsFixedStepTest, BobbingMovesCameraButNotGameplayEye) {
     world::World world(42, "");

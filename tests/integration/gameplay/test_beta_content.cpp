@@ -1,8 +1,8 @@
-// Sprint 6 integration (Beta content) through the GL-free game::EntitySimulation and a real World:
-// S6.4 buckets (Raycaster LiquidSources, game::useHeldBucket), S6.6 explosions and TNT
+// Integration: (Beta content) through the GL-free game::EntitySimulation and a real World:
+// Buckets (Raycaster LiquidSources, game::useHeldBucket), explosions and TNT
 // (EntitySimulation::explode, primed TNT, flint and steel, chain reactions, the 4-per-tick queue),
-// S6.2 arrows and S6.3 skeletons, spiders, creepers and cows in a running session, S6.7 armor
-// (every hit but the void), S6.10 dungeon chests and spawners.
+// Arrows and skeletons, spiders, creepers and cows in a running session, armor
+// (every hit but the void), dungeon chests and spawners.
 #include "tests/integration/support/GameplaySupport.hpp"
 
 #include "crafting/BetaRecipes.hpp"
@@ -93,7 +93,7 @@ protected:
 
 } // namespace
 
-// --- S6.4 buckets --------------------------------------------------------------------------
+// --- Buckets --------------------------------------------------------------------------
 
 TEST_F(BetaContent, LiquidSourceRaycastModeHitsSourcesOnly) {
     ASSERT_TRUE(m_world->setBlockWithMetadata(5, kEyeY, 2, BlockId::Water, 0));
@@ -204,7 +204,7 @@ TEST_F(BetaContent, BucketRecipeAndStackOfOne) {
     }
 }
 
-// --- S6.6 explosions and TNT ---------------------------------------------------------------
+// --- Explosions and TNT ---------------------------------------------------------------
 
 TEST_F(BetaContent, FlintAndSteelRecipeAndTntRecipe) {
     const crafting::RecipeRegistry book = crafting::makeBetaRecipeBook();
@@ -424,7 +424,7 @@ TEST_F(BetaContent, AtMostFourExplosionsRunPerTick) {
     EXPECT_EQ(m_session.pendingExplosions(), 0U);
 }
 
-// Wall-clock budget (roadmap S6 risks): one TNT blast in solid ground under 15 ms in Release.
+// Wall-clock budget: one TNT blast in solid ground under 15 ms in Release.
 // ctest label "benchmark" (Integration_beta_content_perf) sets BETACRAFT_PERF_TESTS.
 TEST_F(BetaContent, ExplosionBudget) {
     if (std::getenv("BETACRAFT_PERF_TESTS") == nullptr) {
@@ -443,7 +443,7 @@ TEST_F(BetaContent, ExplosionBudget) {
     EXPECT_LT(worst, 15.0);
 }
 
-// --- S6.2 arrows and S6.3 mobs ----------------------------------------------------------------
+// --- Arrows and mobs ----------------------------------------------------------------
 
 TEST_F(BetaContent, SkeletonStopsAndShootsEveryThirtyTicks) {
     const ecs::EntityId skeleton = spawnHunting(gameplay::MobKind::Skeleton, {8.5f, static_cast<float>(kY), 2.5f});
@@ -659,7 +659,7 @@ TEST_F(BetaContent, CowsArePassiveAndDropLeather) {
     EXPECT_LE(leather, 40);
 }
 
-// --- S6.7 armor ----------------------------------------------------------------------------
+// --- Armor ----------------------------------------------------------------------------
 
 namespace {
 
@@ -770,7 +770,7 @@ TEST_F(BetaContent, ArmorRecipes) {
     }
 }
 
-// --- S6.10 dungeons ------------------------------------------------------------------------
+// --- Dungeons ------------------------------------------------------------------------
 
 TEST_F(BetaContent, DungeonChestDrawsTheSameLootOnFirstAccess) {
     m_session.setNaturalSpawning(false);

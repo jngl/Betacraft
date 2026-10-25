@@ -1,4 +1,4 @@
-// P2.1 x P2.5 integration hook: a mob knocked back by a hit (HealthComp hurt window open,
+// Integration hook: a mob knocked back by a hit (HealthComp hurt window open,
 // airborne) has no air control, so MobAISystem leaves its velocity to the physics systems
 // until it lands. Otherwise the next AI step would overwrite the knockback impulse.
 #include "ecs/Components.hpp"

@@ -1,4 +1,4 @@
-// Integration, P3.4 decoration state across sessions: a saved chunk remembers
+// Decoration state across sessions: a saved chunk remembers
 // whether pass 2 ran and the feature plan it was registered with, so reloading neither
 // re-decorates player edits nor re-plans edited terrain; saves predating the record load as
 // decorated (their decoration is baked in).

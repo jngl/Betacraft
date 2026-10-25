@@ -1,4 +1,4 @@
-// S8.6 wire networks: decay of one level per wire, 15 at most, two-phase updates that clear
+// Wire networks: decay of one level per wire, 15 at most, two-phase updates that clear
 // a network once its source goes, and no recursion on a 10,000-wire network.
 #include "RedstoneTestUtils.hpp"
 

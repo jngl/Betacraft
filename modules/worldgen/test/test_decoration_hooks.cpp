@@ -1,4 +1,4 @@
-// P3.4 integration hooks:
+// Integration hooks:
 //   * FunctionChunkAccess lets World plug `getChunkMutable` into the pipeline via a lambda.
 //   * onDecoratedChunkLoaded(coord, pass1Copy): WorldStorage does not persist feature plans,
 //     so a chunk restored from disk is re-planned from a deterministically regenerated

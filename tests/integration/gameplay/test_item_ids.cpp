@@ -1,4 +1,4 @@
-// P2.5 — the shared item id scheme (gameplay/ItemIds.hpp) that crafting re-exports.
+// The shared item id scheme (gameplay/ItemIds.hpp) that crafting re-exports.
 #include "gameplay/ItemIds.hpp"
 #include "gameplay/ToolDefinitions.hpp"
 
@@ -61,7 +61,7 @@ TEST(SharedItemIds, FindToolReportsTheCanonicalIdForVanillaAliases) {
     const auto def = findTool(items::beta::StonePickaxe);
     ASSERT_TRUE(def.has_value());
     EXPECT_EQ(def->id, items::StonePickaxe);
-    EXPECT_EQ(def->id, 274) << "S2.10: the Beta number is canonical";
+    EXPECT_EQ(def->id, 274) << "the Beta number is canonical";
     EXPECT_EQ(findTool(toItemId(BlockId::StonePickaxe))->id, items::StonePickaxe) << "legacy id folds";
     EXPECT_EQ(def->maxDamage, materialStats(ToolMaterial::Stone).maxUses);
     EXPECT_EQ(def->name, "Stone Pickaxe");
@@ -77,7 +77,7 @@ TEST(SharedItemIds, BucketsAndThrowablesFollowBetaStackLimits) {
     EXPECT_EQ(maxStackSize(kNoItem), 0);
 }
 
-// --- S2.10: Beta item numbers are canonical; legacy ids 100..105 are only read on load ---
+// --- Beta item numbers are canonical; legacy ids 100..105 are only read on load ---
 
 // Nothing the game produces carries a legacy id: recipes, smelting, block drops, the
 // Creative kit and palette. voxel::BlockId gains no item past the six legacy ones.
@@ -130,7 +130,7 @@ TEST(SharedItemIds, NoNewLegacyIds) {
     }
 }
 
-// A level.dat written before S2.10 (items_scheme 1, frozen below) loads its legacy ids as
+// A level.dat written before the Beta item numbers (items_scheme 1, frozen below) loads its legacy ids as
 // Beta numbers; the next save writes items_scheme 2 ids only.
 TEST(SharedItemIds, LoadFoldsLegacyIds) {
     betacraft::voxel::BlockRegistry::initialize();

@@ -1,4 +1,4 @@
-// Integration, P3.3 volumetric caves in WorldGen pass 1: the legacy tube caves are
+// Volumetric caves in WorldGen pass 1: the legacy tube caves are
 // gone, CaveCarver is the only source of cavities, the bedrock guard (Y <= 5) and the 6-block
 // sea-floor aquitard hold on real generated chunks, and the magma band is filled with lava.
 #include "tests/integration/support/WorldgenSupport.hpp"

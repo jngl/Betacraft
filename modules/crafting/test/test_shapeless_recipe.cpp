@@ -1,4 +1,4 @@
-// P2.6 — Shapeless recipes: order-independent multiset matching.
+// Shapeless recipes: order-independent multiset matching.
 #include "crafting/ShapelessRecipe.hpp"
 
 #include <gtest/gtest.h>

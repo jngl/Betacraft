@@ -1,4 +1,4 @@
-// P4.2 — adapter from block ids (World or any block source) to the acoustic solidity query.
+// Adapter from block ids (World or any block source) to the acoustic solidity query.
 #include "acoustics/OcclusionScheduler.hpp"
 #include "acoustics/WorldSolidity.hpp"
 #include "core/MpscRingBuffer.hpp"

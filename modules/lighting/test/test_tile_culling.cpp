@@ -1,4 +1,4 @@
-// P4.6 — Forward+ screen-tile light culling on the CPU.
+// Forward+ screen-tile light culling on the CPU.
 #include "lighting/TileLightCuller.hpp"
 
 #include <gtest/gtest.h>

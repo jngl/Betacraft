@@ -32,7 +32,7 @@ protected:
         (void)m_session->simulation().dropInventoryOnDeath(player());
     }
 
-    // S5.8 a bed on a stone floor (beds and respawn spots need normal cubes under them), foot
+    // A bed on a stone floor (beds and respawn spots need normal cubes under them), foot
     // at (5, kY, 2) and head at (6, kY, 2), slept in through the night: the bed spawn.
     void sleepInABed() {
         for (int32_t z = kBedZ - 3; z <= kBedZ + 3; ++z) {
@@ -72,7 +72,7 @@ protected:
     const core::BlockPos m_bedHead{kBedX + 1, kY, kBedZ};
 };
 
-// S1.6: dying scatters the inventory; Respawn brings the player back to the spawn point with
+// Dying scatters the inventory; Respawn brings the player back to the spawn point with
 // full health, air and no fire, standing on the first free cell, the inventory still empty and
 // the mode and selected slot untouched.
 TEST_F(WorldSessionRespawn, DeathThenRespawnAtSpawn) {
@@ -115,7 +115,7 @@ TEST_F(WorldSessionRespawn, DeathThenRespawnAtSpawn) {
               3);
 }
 
-// S5.8: the player comes back next to the bed slept in, which stays the spawn.
+// The player comes back next to the bed slept in, which stays the spawn.
 TEST_F(WorldSessionRespawn, RespawnNextToTheBed) {
     sleepInABed();
     placePlayer({12.5f, static_cast<float>(kY), 12.5f});
@@ -129,7 +129,7 @@ TEST_F(WorldSessionRespawn, RespawnNextToTheBed) {
     expectNextToTheBed(player().getPosition());
 }
 
-// S5.8: a bed broken since the night is forgotten; the player is back at the world spawn
+// A bed broken since the night is forgotten; the player is back at the world spawn
 // (World::findSafeSpawnPosition), which becomes the spawn point, and Application is told.
 TEST_F(WorldSessionRespawn, AMissingBedFallsBackToTheWorldSpawn) {
     sleepInABed();
@@ -153,7 +153,7 @@ TEST_F(WorldSessionRespawn, AMissingBedFallsBackToTheWorldSpawn) {
     EXPECT_EQ(m_session->spawnPoint(), worldSpawn);
 }
 
-// S1.6: a world saved while dead (death screen, then "Title menu") reopens with the player
+// A world saved while dead (death screen, then "Title menu") reopens with the player
 // dead, so the Application shows the death screen; Respawn then uses the saved bed.
 TEST_F(WorldSessionRespawn, AWorldSavedWhileDeadReopensDeadThenRespawns) {
     sleepInABed();

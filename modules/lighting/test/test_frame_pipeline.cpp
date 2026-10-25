@@ -1,4 +1,4 @@
-// P4.6 — End-to-end CPU pipeline: manager -> selection -> tile culling -> std140 bytes,
+// End-to-end CPU pipeline: manager -> selection -> tile culling -> std140 bytes,
 // plus the shader include splicer used to inject dynamic_lights.glsl into CHUNK_FS.
 #include "lighting/DynamicLightFrame.hpp"
 #include "lighting/ShaderInclude.hpp"

@@ -1,5 +1,5 @@
 #pragma once
-// Shared fixtures for the P3.3 / P3.4 worldgen tests: an analytic synthetic terrain that
+// Shared fixtures for the worldgen tests: an analytic synthetic terrain that
 // mixes oceans (floor < 64) and hills, usable both as a ColumnSampler and as a chunk filler.
 
 #include "core/Config.hpp"

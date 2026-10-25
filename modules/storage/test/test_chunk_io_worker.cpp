@@ -1,4 +1,4 @@
-// S7.6 ChunkIoWorker: saves serialised on the caller, written on one worker thread with only
+// ChunkIoWorker: saves serialised on the caller, written on one worker thread with only
 // the newest job per chunk kept, loads first and answered from the save queue while a save is
 // pending. Synchronisation goes through waitIdle / flushAll and explicit gates, never sleep.
 #include "StorageTestHelpers.hpp"
@@ -245,7 +245,7 @@ TEST(ChunkIoWorker, FailedWriteReportedAndFlushFails) {
     EXPECT_TRUE(io.flushAll()) << "nothing failed since";
 }
 
-// Sprint 8: each answer carries the ticket of its loadAsync, so World can drop a late answer
+// Each answer carries the ticket of its loadAsync, so World can drop a late answer
 // to a cancelled request of the same chunk.
 TEST(ChunkIoWorker, LoadResultsEchoTheirTicket) {
     RecordingStore store;

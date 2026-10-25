@@ -1,4 +1,4 @@
-// P2.1 — Structural changes made by a callback while a view or group is being iterated.
+// Structural changes made by a callback while a view or group is being iterated.
 // Systems routinely do this (an AI system emplacing VelocityComp to "wake" a mob, combat
 // destroying its target), so the contract must hold even when the iterated pools are owned
 // by a group and get reordered underneath the iteration.

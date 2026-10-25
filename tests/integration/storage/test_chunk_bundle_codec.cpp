@@ -1,5 +1,5 @@
-// S7.2 ChunkBundle: BUNDLE_V1 then {tag, u32 len, bytes} records for blocks ('B'), the P3.4
-// decoration record ('D') and the S2.4 block entities ('E'); unknown tags are skipped.
+// ChunkBundle: BUNDLE_V1 then {tag, u32 len, bytes} records for blocks ('B'), the
+// decoration record ('D') and the block entities ('E'); unknown tags are skipped.
 #include "storage/ChunkBundleCodec.hpp"
 #include "test_support/GLTestContext.hpp"
 #include "voxel/BlockEntityStore.hpp"

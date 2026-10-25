@@ -1,4 +1,4 @@
-// S8.5 redstone blocks: Beta ids, registry flags, the Flat and Lever shapes (appended to
+// Redstone blocks: Beta ids, registry flags, the Flat and Lever shapes (appended to
 // RenderShape), their boxes, and the geometry the shared shape mesher builds for them.
 #include "gameplay/Harvesting.hpp"
 #include "gameplay/ItemIds.hpp"
@@ -28,7 +28,7 @@ TEST(RedstoneBlocks, BetaIdsAndAppendedShapes) {
     EXPECT_EQ(static_cast<int>(BlockId::RedstoneTorchOn), 76);
     EXPECT_EQ(static_cast<int>(BlockId::StoneButton), 77);
     EXPECT_EQ(static_cast<int>(BlockId::SnowGrass), 78) << "78 is never reassigned";
-    // Appended after the S5.4 shapes.
+    // Appended after the shapes.
     EXPECT_EQ(static_cast<int>(RenderShape::Flat), static_cast<int>(RenderShape::Stairs) + 1);
     EXPECT_EQ(static_cast<int>(RenderShape::Lever), static_cast<int>(RenderShape::Stairs) + 2);
     EXPECT_TRUE(voxel::isDetailedShape(RenderShape::Flat));
@@ -104,7 +104,7 @@ TEST(RedstoneBlocks, AttachmentAndBoxes) {
     EXPECT_EQ(attachmentOffset(voxel::kAttachWallNegZ), glm::ivec3(0, 0, -1));
     EXPECT_EQ(attachmentOffset(voxel::kAttachWallPosZ), glm::ivec3(0, 0, 1));
     EXPECT_EQ(attachmentOffset(voxel::kAttachFloor), glm::ivec3(0, -1, 0));
-    EXPECT_EQ(attachmentOffset(0), glm::ivec3(0, -1, 0)) << "torches placed before S8.5 stand";
+    EXPECT_EQ(attachmentOffset(0), glm::ivec3(0, -1, 0)) << "torches placed before stand";
     EXPECT_EQ(attachmentOffset(voxel::kAttachWallPosX | voxel::kLeverOnBit), glm::ivec3(1, 0, 0));
     EXPECT_EQ(voxel::attachmentForClickedFace(core::FaceDir::PosX), voxel::kAttachWallNegX);
     EXPECT_EQ(voxel::attachmentForClickedFace(core::FaceDir::PosY), voxel::kAttachFloor);

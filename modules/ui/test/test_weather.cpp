@@ -1,4 +1,4 @@
-// S8.9 - S8.13 weather: Beta durations and 400-tick ramps (world::tickWeather), thunder only
+// Weather: Beta durations and 400-tick ramps (world::tickWeather), thunder only
 // while it rains, precipitation by biome, the level.dat weather.* keys, the darker sky
 // (SkyRenderer::evaluateAtmosphere overload), the lightning helpers, the debug cycle and its
 // unbound GameAction, and the weather shaders on disk matching the embedded copies.

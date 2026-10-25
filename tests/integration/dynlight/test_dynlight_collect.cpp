@@ -1,4 +1,4 @@
-// Integration, P4.6 on the game side: which dynamic lights a frame submits for a given
+// On the game side: which dynamic lights a frame submits for a given
 // player / hotbar state and set of dropped item entities (game::collectDynamicLights, called by
 // Application once per rendered frame before WorldRenderer::renderWorld).
 #include "ecs/Registry.hpp"

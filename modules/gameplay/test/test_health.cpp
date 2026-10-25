@@ -51,7 +51,7 @@ TEST(Health, FullHitAppliesDamageAndStartsTimers) {
 
 TEST(Health, HurtTimingConstants) {
     EXPECT_EQ(kHurtResistanceTicks, 10); // Beta: heartsLife > heartsHalvesLife / 2
-    EXPECT_EQ(kHurtFlashTicks, 5);       // Roadmap: 0.25 s red flash at 20 TPS
+    EXPECT_EQ(kHurtFlashTicks, 5);       // 0.25 s red flash at 20 TPS
 }
 
 TEST(Health, WeakerOrEqualHitDuringResistanceIsAbsorbed) {

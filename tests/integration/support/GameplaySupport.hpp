@@ -1,6 +1,6 @@
 #pragma once
-// Shared fixture for the gameplay integration tests (P2.1 ECS entities, P2.5 tools,
-// durability and combat, P2.6 crafting) through the GL-free game::EntitySimulation.
+// Shared fixture for the gameplay integration tests (ECS entities, tools,
+// durability and combat, crafting) through the GL-free game::EntitySimulation.
 
 #include "test_support/GLTestContext.hpp"
 

@@ -1,8 +1,8 @@
-// Sprint 5 survival blocks. S5.5 ladder: placed against the side of a normal cube (metadata =
+// Survival blocks. Ladder: placed against the side of a normal cube (metadata =
 // Beta side 2..5), climbed (descent capped at 3 b/s, no fall damage, sneaking holds on,
 // pushing against the wall climbs at 4 b/s), broken and dropped when its wall goes.
-// S5.6 door: placed as two halves, both flip on a click, one item dropped. S5.7 farming: hoe,
-// farmland moisture, seeds, crop growth, trampling, harvest. S5.8 bed: placed along the look,
+// Door: placed as two halves, both flip on a click, one item dropped. Farming: hoe,
+// farmland moisture, seeds, crop growth, trampling, harvest. Bed: placed along the look,
 // and its recipe (sleeping is a WorldSession matter: test_world_session_sleep.cpp).
 #include "tests/integration/support/GameplaySupport.hpp"
 
@@ -152,7 +152,7 @@ TEST_F(LadderBlock, BreaksAndDropsWhenItsWallGoes) {
     EXPECT_LT(fastest, -physics::Player::LADDER_MAX_DESCENT_SPEED - 1.0f);
 }
 
-// --- S5.6 door ------------------------------------------------------------------------------
+// --- Door ------------------------------------------------------------------------------
 
 namespace {
 
@@ -283,7 +283,7 @@ TEST_F(DoorBlock, ACreativePistonBreaksTheDoorWithOneDropAndKeepsStairsOrientati
     EXPECT_EQ(m_world->getMetadata(kX + 1, kY, kZ), 2);
 }
 
-// --- S5.7 farming ---------------------------------------------------------------------------
+// --- Farming ---------------------------------------------------------------------------
 
 namespace {
 
@@ -483,7 +483,7 @@ TEST_F(Farming, TallGrassGivesSeedsSometimes) {
     EXPECT_LT(seeds, 24);
 }
 
-// --- S5.8 bed -------------------------------------------------------------------------------
+// --- Bed -------------------------------------------------------------------------------
 
 namespace {
 

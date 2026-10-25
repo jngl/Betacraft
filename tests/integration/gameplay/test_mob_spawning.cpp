@@ -1,8 +1,8 @@
-// Sprint 4 integration: natural mob spawning and despawning in a real World. S4.4's
+// Integration: natural mob spawning and despawning in a real World.
 // game::MobSpawner runs on a flat grass world (no caves, so daylight really means no dark
 // spot): zombies appear at night at least 24 blocks away and never beyond their cap, pigs
 // and sheep appear by day on grass, and a mob whose chunk is no longer loaded is removed.
-// S4.5-S4.9 through game::EntitySimulation: zombies chase and hit the player (5 damage at most
+// Through game::EntitySimulation: zombies chase and hit the player (5 damage at most
 // every 20 ticks, with knockback) but ignore a Creative player, burn in the sun but not under
 // a roof, passives flee when hit, and death drops and mob sounds come out of the tick.
 #include "test_support/GLTestContext.hpp"
@@ -114,7 +114,7 @@ TEST_F(MobsSession, ZombiesSpawnAtMidnightFarFromThePlayerAndUnderTheCap) {
             [&](const ecs::MobKindComp& mob, const ecs::TransformComp& t) {
                 if (mob.ageTicks == 0) { // fresh: still where it was spawned
                     EXPECT_GE(glm::length(t.pos - m_feet), game::MobSpawner::SPAWN_MIN_DISTANCE);
-                    // S6.1: any hostile kind, by MobDef::spawnWeight.
+                    // Any hostile kind, by MobDef::spawnWeight.
                     EXPECT_EQ(gameplay::mobDef(mob.kind).category, MobCategory::Hostile);
                     EXPECT_EQ(m_world->getBlock(static_cast<int32_t>(std::floor(t.pos.x)), kGroundY,
                                                 static_cast<int32_t>(std::floor(t.pos.z))),
@@ -151,7 +151,7 @@ TEST_F(MobsSession, PassivesButNoHostilesAtNoon) {
     EXPECT_GE(count(MobCategory::Passive), 1);
     EXPECT_LE(count(MobCategory::Passive), gameplay::mobCap(MobCategory::Passive, 81));
     m_reg.view<ecs::MobKindComp, ecs::TransformComp>().each([&](const ecs::MobKindComp& mob, const ecs::TransformComp& t) {
-        EXPECT_EQ(gameplay::mobDef(mob.kind).category, MobCategory::Passive); // S6.1: pig, sheep or cow
+        EXPECT_EQ(gameplay::mobDef(mob.kind).category, MobCategory::Passive); // pig, sheep or cow
         EXPECT_GE(glm::length(t.pos - m_feet), game::MobSpawner::SPAWN_MIN_DISTANCE);
     });
 }
@@ -205,7 +205,7 @@ TEST_F(MobsSession, BothPassiveKindsAppear) {
     EXPECT_GT(sheep, 0);
 }
 
-// S6.1: natural spawning draws every kind of the category, the four hostiles at night and
+// Natural spawning draws every kind of the category, the four hostiles at night and
 // the pig, sheep and cow by day (MobDef::spawnWeight).
 TEST_F(MobsSession, EveryNaturalKindAppears) {
     std::array<int32_t, static_cast<size_t>(MobKind::Count)> seen{};

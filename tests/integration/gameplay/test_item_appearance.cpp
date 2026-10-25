@@ -1,4 +1,4 @@
-// Integration hook P2.5 x renderer/HUD: every item of the shared id scheme has a display
+// X renderer/HUD: every item of the shared id scheme has a display
 // (render::ItemAppearance): blocks keep their BlockDef look, tools at 256 and above get
 // procedural icon tiles, and the shipped atlas PNG (exported before those icons existed)
 // receives them through TextureAtlas::fillPlaceholderTiles.

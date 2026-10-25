@@ -1,4 +1,4 @@
-// Integration, P2.6 crafting grids in the game: the inventory screen logic
+// Crafting grids in the game: the inventory screen logic
 // (game::InventoryCrafting) replaces the legacy ui::CraftingSystem recipe list with
 // crafting::RecipeRegistry over a 2x2 grid (player inventory) and a 3x3 grid (workbench),
 // driven by Beta's slot clicks, on an inventory widened to item ids so tools can be held.

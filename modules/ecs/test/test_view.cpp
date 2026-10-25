@@ -1,4 +1,4 @@
-// P2.1 — Multi-component views: iterate the smallest pool, filter by the others.
+// Multi-component views: iterate the smallest pool, filter by the others.
 #include "ecs/Registry.hpp"
 #include "ecs/View.hpp"
 

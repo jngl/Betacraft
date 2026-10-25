@@ -1,4 +1,4 @@
-// Sprint 5 (S5.1) random block ticks: World::tickRandomBlocks gives 80 random cells per nearby
+// Random block ticks: World::tickRandomBlocks gives 80 random cells per nearby
 // decorated chunk a Beta 1.7.3 updateTick each game tick. Saplings grow into oaks in the light,
 // grass spreads over lit dirt, leaves cut off from their log decay (unless the player placed
 // them), cactus and sugar cane grow to 3 blocks.

@@ -1,4 +1,4 @@
-// P2.3 - Infinite water source: >= 2 horizontal sources + solid (or water source) below.
+// Infinite water source: >= 2 horizontal sources + solid (or water source) below.
 #include "FluidTestUtils.hpp"
 
 #include <gtest/gtest.h>

@@ -1,4 +1,4 @@
-// P2.1 — Systems over the registry (Diagramme 2): movement integration, voxel collision,
+// Systems over the registry: movement integration, voxel collision,
 // health/damage, item-drop lifetime, render interpolation, player control and spawn helpers.
 #include "ecs/Components.hpp"
 #include "ecs/Registry.hpp"

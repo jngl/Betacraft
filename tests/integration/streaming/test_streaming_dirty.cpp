@@ -1,4 +1,4 @@
-// Integration, P1.1 streaming: mesh staleness is tracked per 16-high section so
+// Streaming: mesh staleness is tracked per 16-high section so
 // the AsyncChunkPipeline re-meshes only the sections whose 18^3 neighbourhood an edit
 // touched (its own, plus the ones across every section or column seam it lies on).
 #include "test_support/GLTestContext.hpp"

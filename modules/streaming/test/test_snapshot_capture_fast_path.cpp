@@ -1,6 +1,6 @@
 // Exactness of the row-wise / homogeneous fast paths of SectionNeighborhoodSnapshot18::
-// capture, plus a capture-cost benchmark so regressions are visible (Fiche 1 §4 target:
-// "Capture du snapshot 18^3 < 1.5 us").
+// capture, plus a capture-cost benchmark so regressions are visible (target: an 18^3
+// snapshot captured in < 1.5 us).
 
 #include "streaming/SectionNeighborhoodSnapshot18.hpp"
 

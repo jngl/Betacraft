@@ -1,4 +1,4 @@
-// P3.4 - Two-pass decoration pipeline: pass 2 of a chunk runs only once its 3x3
+// Two-pass decoration pipeline: pass 2 of a chunk runs only once its 3x3
 // neighbourhood finished pass 1; results are identical for any chunk load order.
 #include "worldgen/DecorationPipeline.hpp"
 #include "worldgen/SeededRandom.hpp"
@@ -363,7 +363,7 @@ TEST(DecorationPipeline, RegeneratedDecoratedChunkWithoutUnloadIsRedecorated) {
 
 // An undecorated frontier chunk whose plan was already consumed by a decorated neighbour is
 // edited, unloaded and reloaded: it must keep its ORIGINAL plan, or the neighbour's leaves
-// would hang next to a trunk that never grows (the P3.4 border glitch, reintroduced).
+// would hang next to a trunk that never grows (the border glitch, reintroduced).
 TEST(DecorationPipeline, EditedFrontierChunkReloadedAfterUnloadKeepsItsOriginalPlan) {
     Harness h;
     for (ChunkCoord c : grid(-1, 1)) (void)h.load(c);

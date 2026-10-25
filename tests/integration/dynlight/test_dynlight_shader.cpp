@@ -1,4 +1,4 @@
-// Integration, P4.6 dynamic lights in the chunk shaders: the program WorldRenderer
+// Dynamic lights in the chunk shaders: the program WorldRenderer
 // compiles must declare the same DynamicLightBlock that DynamicLightUbo packs, and feed it the
 // fragment's world position. Source checks run everywhere; the compile check needs a GL 3.3 context.
 #include "test_support/GLTestContext.hpp"

@@ -1,4 +1,4 @@
-// S2.9: food (Beta 1.7.3 ItemFood / ItemSoup) is eaten at once with a right click through
+// Food (Beta 1.7.3 ItemFood / ItemSoup) is eaten at once with a right click through
 // EntitySimulation::useHeldItem, even at full health, and heals through gameplay::heal.
 #include "game/EntitySimulation.hpp"
 #include "gameplay/Food.hpp"
@@ -92,7 +92,7 @@ TEST_F(FoodTest, DeadCannotEat) {
     EXPECT_EQ(m_player.getHealth(), 0);
 }
 
-// S2.9: leaves roll an apple 1 time in 200 on top of (and independently of) the sapling.
+// Leaves roll an apple 1 time in 200 on top of (and independently of) the sapling.
 TEST(Food, LeavesDropAnAppleOneTimeIn200) {
     voxel::BlockRegistry::initialize();
     int apples = 0;

@@ -1,6 +1,6 @@
-// Sprint 2 integration: block entities (furnace, chest) live in World::blockEntities(),
-// follow their chunk to and from disk (the chunk bundle's block entity record since S7.2; the
-// .be file before), leave the store through the single
+// Integration: block entities (furnace, chest) live in World::blockEntities(),
+// follow their chunk to and from disk (the chunk bundle's block entity record; the
+// legacy .be file before), leave the store through the single
 // applyBlockEdit hook (their contents drop on the next game tick), and the furnace ticks in
 // EntitySimulation, swapping Furnace <-> LitFurnace without losing its inventory.
 #include "tests/integration/support/GameplaySupport.hpp"
@@ -56,7 +56,7 @@ protected:
         m_world->markBlockEntityChanged(kChestPos);
     }
 
-    // S7.3: block entities are stored in chunk (0, 0)'s region bundle, not a .be file.
+    // Block entities are stored in chunk (0, 0)'s region bundle, not a .be file.
     [[nodiscard]] std::vector<voxel::BlockEntityEntry> storedEntities() const {
         return m_world->getStorage().loadBlockEntities({0, 0});
     }
@@ -224,7 +224,7 @@ TEST_F(BlockEntities, NoBeFileForOldSaves) {
     EXPECT_EQ(w->blockEntities().size(), 0U);
 }
 
-// S2.10: a record written with the legacy ids 100..105 (items_scheme 1 era) loads its stacks
+// A record written with the legacy ids 100..105 (items_scheme 1 era) loads its stacks
 // as Beta numbers; the codec itself stays byte-exact.
 TEST_F(BlockEntities, LegacyItemIdsInBeFileFoldOnLoad) {
     ChestData legacy{};

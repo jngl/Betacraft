@@ -1,4 +1,4 @@
-// P2.3 - Lava/water mixing: source lava -> obsidian, flowing lava -> cobblestone,
+// Lava/water mixing: source lava -> obsidian, flowing lava -> cobblestone,
 // lava falling onto water -> stone (Beta BlockFluid.checkForHarden + BlockFlowing).
 #include "FluidTestUtils.hpp"
 

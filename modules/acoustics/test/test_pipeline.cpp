@@ -1,4 +1,4 @@
-// P4.2 — end-to-end acoustic pipeline: world geometry -> 10 Hz DDA -> MPSC command -> voice filter
+// End-to-end acoustic pipeline: world geometry -> 10 Hz DDA -> MPSC command -> voice filter
 // + shared aux FDN -> stereo output. Mirrors what AudioEngine will do once integrated.
 #include "test_support/AcousticsTestUtils.hpp"
 #include "acoustics/AcousticVoiceBank.hpp"
@@ -211,7 +211,7 @@ TEST(AcousticPipeline, DdaRayMeetsTheSpecBudgetInOptimisedBuilds) {
     const double rangeUs = bestMicrosPerRay(grid, listener, fullRange, 9, sink);
     const double worstUs = bestMicrosPerRay(grid, listener, worstCase, 9, sink);
     EXPECT_GT(sink, 0u);
-    // P4.2 / Fiche 5 §4: < 0.5 us per ray across the audible radius.
+    // Budget: < 0.5 us per ray across the audible radius.
     EXPECT_LT(rangeUs, 0.5) << "mean " << rangeUs << " us per R_max ray";
     // Longest legal rays: guards against a 2x+ regression (measured ~0.6-0.9 us on a desktop CPU).
     EXPECT_LT(worstUs, 1.5) << "mean " << worstUs << " us per 144-step ray";

@@ -1,4 +1,4 @@
-// Integration, P4.2 acoustics in AudioEngine: the game-thread AcousticsController
+// Acoustics in AudioEngine: the game-thread AcousticsController
 // ray-marches the real World (occlusion at start and at 10 Hz, enclosure probes), posts through
 // AudioEngine's command queue, and the mixer routes every voice through the AcousticVoiceBank
 // (occlusion LPF + gain, shared FDN aux bus). AudioEngine::renderFrames runs that mixing path

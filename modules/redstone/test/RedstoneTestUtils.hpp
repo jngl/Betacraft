@@ -1,5 +1,5 @@
 #pragma once
-// Shared bench of the S8.6 redstone unit tests: a stone floor at y = 0 of an in-memory grid,
+// Shared bench of the redstone unit tests: a stone floor at y = 0 of an in-memory grid,
 // circuits at y = 1, and an engine that drains its own scheduled tick queue.
 
 #include "redstone/RedstoneEngine.hpp"

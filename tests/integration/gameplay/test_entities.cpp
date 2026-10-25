@@ -1,4 +1,4 @@
-// Integration, P2.1 ECS entities in the game tick: game::EntitySimulation owns an
+// ECS entities in the game tick: game::EntitySimulation owns an
 // ecs::Registry of non-player entities and runs its systems every 20 TPS tick. Dropped items
 // are ItemDropComp entities that fall, rest on the floor and are picked up by the player
 // after Beta's delay; melee swings hit the first entity on the look ray with Beta damage,
@@ -253,7 +253,7 @@ TEST_F(GameplayEntities, FlowersWashedAwayByWaterDropAsItemEntities) {
 TEST_F(GameplayEntities, FizzEventsAndDroplessWashesSpawnNothing) {
     const std::vector<fluids::FluidEvent> events{
         {fluids::FluidEventKind::Fizz, {1, kY, 1}, BlockId::Obsidian},
-        {fluids::FluidEventKind::BlockWashedAway, {2, kY, 1}, BlockId::TallGrass}, // Seeds 1 time in 8 (S5.7): not on this seeded roll
+        {fluids::FluidEventKind::BlockWashedAway, {2, kY, 1}, BlockId::TallGrass}, // Seeds 1 time in 8: not on this seeded roll
         {fluids::FluidEventKind::BlockWashedAway, {3, kY, 1}, BlockId::Torch},
     };
     EXPECT_EQ(m_session.spawnFluidDrops(events), 1U);
@@ -282,7 +282,7 @@ TEST_F(GameplayEntities, EntitiesThatFallOutOfTheWorldAreRemoved) {
     EXPECT_FALSE(m_session.entities().valid(e));
 }
 
-// S3.4: Q throws one item of the held stack, Ctrl+Q the whole stack, wear kept, through
+// Q throws one item of the held stack, Ctrl+Q the whole stack, wear kept, through
 // dropFromPlayer (thrown along the look, collectable after Beta's 40 ticks only).
 TEST_F(GameplayEntities, DropHeldItemThrowsOneOrWholeStack) {
     hold({BlockId::Cobblestone, 10});

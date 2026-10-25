@@ -98,7 +98,7 @@ TEST(HudRendererTest, InventoryClickPaletteItemSelection) {
     EXPECT_EQ(player.getHeldItem().count, 64);
 }
 
-// S1.4: the provisional "Game Mode" button (id 4) only exists for a new world, under
+// The provisional "Game Mode" button (id 4) only exists for a new world, under
 // Singleplayer, and alternates Survival / Creative without leaving the title screen.
 TEST(TitleScreenTest, GameModeButtonOnlyForNewWorlds) {
     audio::AudioEngine audio;
@@ -127,11 +127,11 @@ TEST(TitleScreenTest, GameModeButtonOnlyForNewWorlds) {
     EXPECT_FALSE(quit);
 }
 
-// S1.6: DeathScreen comes after the five original states, and its two buttons.
+// DeathScreen comes after the five original states, and its two buttons.
 TEST(DeathScreenTest, ButtonsAndEnumPlacement) {
     EXPECT_EQ(static_cast<int>(ScreenState::KeybindingMenu), 4);
     EXPECT_EQ(static_cast<int>(ScreenState::DeathScreen), 5);
-    EXPECT_EQ(static_cast<int>(ScreenState::Sleeping), 6) << "S5.8 appended after DeathScreen";
+    EXPECT_EQ(static_cast<int>(ScreenState::Sleeping), 6) << "appended after DeathScreen";
 
     audio::AudioEngine audio;
     const DeathScreen screen;
@@ -144,7 +144,7 @@ TEST(DeathScreenTest, ButtonsAndEnumPlacement) {
     EXPECT_EQ(screen.handleMouseClick(10.0f, 10.0f, 800, 600, audio), DeathChoice::None);
 }
 
-// S4.10: the F3 overlay lists the mobs against their caps and the effective light at the feet.
+// The F3 overlay lists the mobs against their caps and the effective light at the feet.
 TEST(HudMobDebugLine, ShowsCountsCapsAndFeetLight) {
     const HudMobStats mobs{.passive = 3, .hostile = 7, .passiveCap = 4, .hostileCap = 22};
     EXPECT_EQ(mobDebugLine(mobs, 11), "Mobs: 3/4 passive  7/22 hostile  Feet light: 11");
@@ -153,7 +153,7 @@ TEST(HudMobDebugLine, ShowsCountsCapsAndFeetLight) {
     EXPECT_EQ(ctx.mobs.hostileCap, 0);
 }
 
-// S7.5: F3 counts the chunk bundles written, and those with no player edit around them
+// F3 counts the chunk bundles written, and those with no player edit around them
 // (bug 8 regression detector, must stay at 0).
 TEST(HudStorageDebugLine, ShowsBundlesAndUnsolicitedWrites) {
     EXPECT_EQ(storageDebugLine({.bundlesWritten = 12, .unsolicitedWrites = 0}),
@@ -161,7 +161,7 @@ TEST(HudStorageDebugLine, ShowsBundlesAndUnsolicitedWrites) {
     EXPECT_EQ(HudDebugContext{}.storage.unsolicitedWrites, 0U);
 }
 
-// S7.10: F3 shows the chunks at each streaming stage, the per-frame integration time (last
+// F3 shows the chunks at each streaming stage, the per-frame integration time (last
 // and slowest recently) and the open region files.
 TEST(HudStorageDebugLine, StreamingLineShowsStagesIntegrationAndRegions) {
     HudStorageStats stats{};
@@ -180,7 +180,7 @@ TEST(HudStorageDebugLine, StreamingLineShowsStagesIntegrationAndRegions) {
     EXPECT_LE(stats.maxIntegrationMs, kIntegrationHitchMs);
 }
 
-// S7.8: the screens come after DeathScreen and Sleeping, in the planned order.
+// The screens come after DeathScreen and Sleeping, in the planned order.
 TEST(ScreenStateTest, WorldScreensAppendedAtTheEnd) {
     EXPECT_EQ(static_cast<int>(ScreenState::Sleeping), 6);
     EXPECT_EQ(static_cast<int>(ScreenState::WorldSelect), 7);
@@ -188,7 +188,7 @@ TEST(ScreenStateTest, WorldScreensAppendedAtTheEnd) {
     EXPECT_EQ(static_cast<int>(ScreenState::Loading), 9);
 }
 
-// S7.8: with no world loaded, "Singleplayer" opens the world list, and the S1.4 mode button
+// With no world loaded, "Singleplayer" opens the world list, and the mode button
 // is gone from the title (it lives on the Create World screen).
 TEST(TitleScreenTest, SingleplayerOpensWorldSelectWithoutLoadedWorld) {
     audio::AudioEngine audio;
@@ -206,7 +206,7 @@ TEST(TitleScreenTest, SingleplayerOpensWorldSelectWithoutLoadedWorld) {
     EXPECT_FALSE(quit);
 }
 
-// S7.8: printable ASCII only (UTF-8 sequences dropped whole), minus the field's forbidden
+// Printable ASCII only (UTF-8 sequences dropped whole), minus the field's forbidden
 // characters, at most 32 characters; Backspace removes the last one.
 TEST(TextFieldTest, TextFieldFiltersForbiddenChars) {
     TextField name(TextField::kDefaultMaxLength, kForbiddenFileNameChars);
@@ -230,7 +230,7 @@ TEST(TextFieldTest, TextFieldFiltersForbiddenChars) {
     EXPECT_TRUE(TextField::isAllowedChar('~', {}));
 }
 
-// S7.8: Beta GuiCreateWorld seeds. Reference values from Java ("x".hashCode(), Long.parseLong).
+// Beta GuiCreateWorld seeds. Reference values from Java ("x".hashCode(), Long.parseLong).
 TEST(CreateWorldTest, SeedStringHashMatchesBeta) {
     EXPECT_EQ(javaStringHashCode(""), 0);
     EXPECT_EQ(javaStringHashCode("a"), 97);
@@ -256,7 +256,7 @@ TEST(CreateWorldTest, SeedStringHashMatchesBeta) {
     EXPECT_EQ(seedFromText(" 12", kRandom), static_cast<uint64_t>(javaStringHashCode(" 12")));
 }
 
-// S7.8: folder names are sanitised (Beta's forbidden characters, "World" when empty, no
+// Folder names are sanitised (Beta's forbidden characters, "World" when empty, no
 // hidden or device names) and made unique by appending '-' like Beta.
 TEST(CreateWorldTest, UniqueFolderName) {
     EXPECT_EQ(sanitizeFolderName("  My World  "), "My World");
@@ -279,7 +279,7 @@ TEST(CreateWorldTest, UniqueFolderName) {
     EXPECT_EQ(uniqueFolderName(root.path(), ""), "World-");
 }
 
-// S7.8: the Create World form gives the trimmed name, the seed and the mode toggled by its
+// The Create World form gives the trimmed name, the seed and the mode toggled by its
 // button; Enter creates, Escape cancels.
 TEST(CreateWorldTest, ScreenProducesNewWorldParams) {
     audio::AudioEngine audio;
@@ -313,7 +313,7 @@ TEST(CreateWorldTest, ScreenProducesNewWorldParams) {
     EXPECT_TRUE(screen.seedField().text().empty());
 }
 
-// S7.8: listWorlds reads every world's level.dat (name, seed, mode), flags pre-Sprint 7 saves
+// ListWorlds reads every world's level.dat (name, seed, mode), flags pre-region saves
 // still to migrate, skips what is not a world and lists the most recent first.
 TEST(WorldSelectTest, ListWorldsReadsSummariesAndMigrationFlag) {
     test::TempDir root;
@@ -389,7 +389,7 @@ TEST(WorldSelectTest, ListWorldsReadsSummariesAndMigrationFlag) {
     EXPECT_FALSE(verts.empty());
 }
 
-// S7.8: level.dat keeps the world's display name (key "name", spaces included).
+// Level.dat keeps the world's display name (key "name", spaces included).
 TEST(WorldSelectTest, LevelDatNameRoundTrips) {
     storage::WorldLevelData data{};
     data.name = "Two  words: ok";

@@ -39,13 +39,13 @@ TEST(AudioEngineTest, LifecycleAndPlaybackCalls) {
     engine.shutdown();
 }
 
-// S3.3: the hurt, fall, pop and eat sounds are synthesised with the rest of the bank,
+// The hurt, fall, pop and eat sounds are synthesised with the rest of the bank,
 // appended before Count so earlier SoundEffect values keep their numbers.
 TEST(AudioEngineTest, NewSoundBuffersAreNonEmptyAndFinite) {
     EXPECT_EQ(static_cast<int>(SoundEffect::LavaFizz), 13);
     EXPECT_EQ(static_cast<int>(SoundEffect::Hurt), 14);
     EXPECT_EQ(static_cast<int>(SoundEffect::Eat), 18);
-    EXPECT_EQ(static_cast<int>(SoundEffect::Count), 29); // S4.9 appended the five mob sounds, S5.6 the doors, S6.6 the explosion, S8.7 the click, S8.12 the thunder
+    EXPECT_EQ(static_cast<int>(SoundEffect::Count), 29); // appended the five mob sounds, the doors, the explosion, the click, the thunder
 
     const AudioEngine engine; // No device needed: the bank is built in the constructor
     for (const SoundEffect effect : {SoundEffect::Hurt, SoundEffect::FallSmall, SoundEffect::FallBig,
@@ -70,14 +70,14 @@ TEST(AudioEngineTest, NewSoundBuffersAreNonEmptyAndFinite) {
     }
 }
 
-// S4.9: the mob sounds are appended after Eat, so every earlier value keeps its number.
+// The mob sounds are appended after Eat, so every earlier value keeps its number.
 TEST(AudioEngineTest, MobSoundsAreAppendedAndAudible) {
     EXPECT_EQ(static_cast<int>(SoundEffect::ZombieGroan), 19);
     EXPECT_EQ(static_cast<int>(SoundEffect::PigOink), 20);
     EXPECT_EQ(static_cast<int>(SoundEffect::SheepBaa), 21);
     EXPECT_EQ(static_cast<int>(SoundEffect::MobHurt), 22);
     EXPECT_EQ(static_cast<int>(SoundEffect::MobDeath), 23);
-    EXPECT_EQ(static_cast<int>(SoundEffect::Count), 29); // S5.6 appended the two door sounds, S6.6 the explosion, S8.7 the click, S8.12 the thunder
+    EXPECT_EQ(static_cast<int>(SoundEffect::Count), 29); // appended the two door sounds, the explosion, the click, the thunder
 
     const AudioEngine engine;
     for (const SoundEffect effect : {SoundEffect::ZombieGroan, SoundEffect::PigOink, SoundEffect::SheepBaa,
@@ -97,11 +97,11 @@ TEST(AudioEngineTest, MobSoundsAreAppendedAndAudible) {
     EXPECT_GT(engine.soundBuffer(SoundEffect::ZombieGroan).size(), engine.soundBuffer(SoundEffect::MobHurt).size());
 }
 
-// S5.6: the door sounds are appended after the mob sounds, before Count.
+// The door sounds are appended after the mob sounds, before Count.
 TEST(AudioEngineTest, DoorSoundsAreAppendedAndAudible) {
     EXPECT_EQ(static_cast<int>(SoundEffect::DoorOpen), 24);
     EXPECT_EQ(static_cast<int>(SoundEffect::DoorClose), 25);
-    EXPECT_EQ(static_cast<int>(SoundEffect::Count), 29); // S6.6 appended the explosion, S8.7 the click, S8.12 the thunder
+    EXPECT_EQ(static_cast<int>(SoundEffect::Count), 29); // appended the explosion, the click, the thunder
 
     const AudioEngine engine;
     for (const SoundEffect effect : {SoundEffect::DoorOpen, SoundEffect::DoorClose}) {
@@ -122,10 +122,10 @@ TEST(AudioEngineTest, DoorSoundsAreAppendedAndAudible) {
                                  engine.soundBuffer(SoundEffect::DoorClose).end()));
 }
 
-// S6.6: the explosion (Beta random.explode) is appended after the doors, before Count.
+// The explosion (Beta random.explode) is appended after the doors, before Count.
 TEST(AudioEngineTest, ExplosionSoundIsAppendedAndAudible) {
     EXPECT_EQ(static_cast<int>(SoundEffect::Explosion), 26);
-    EXPECT_EQ(static_cast<int>(SoundEffect::Count), 29); // S8.7 appended the click, S8.12 the thunder
+    EXPECT_EQ(static_cast<int>(SoundEffect::Count), 29); // appended the click, the thunder
 
     const AudioEngine engine;
     const std::span<const float> samples = engine.soundBuffer(SoundEffect::Explosion);
@@ -141,10 +141,10 @@ TEST(AudioEngineTest, ExplosionSoundIsAppendedAndAudible) {
     EXPECT_GT(samples.size(), engine.soundBuffer(SoundEffect::DoorClose).size());
 }
 
-// S8.7: the redstone click (Beta random.click) is appended after the explosion, before Count.
+// The redstone click (Beta random.click) is appended after the explosion, before Count.
 TEST(AudioEngineTest, ClickSoundIsAppendedAndAudible) {
     EXPECT_EQ(static_cast<int>(SoundEffect::Click), 27);
-    EXPECT_EQ(static_cast<int>(SoundEffect::Count), 29); // S8.12 appended the thunder
+    EXPECT_EQ(static_cast<int>(SoundEffect::Count), 29); // appended the thunder
 
     const AudioEngine engine;
     const std::span<const float> samples = engine.soundBuffer(SoundEffect::Click);
@@ -160,7 +160,7 @@ TEST(AudioEngineTest, ClickSoundIsAppendedAndAudible) {
     EXPECT_LT(samples.size(), engine.soundBuffer(SoundEffect::DoorOpen).size());
 }
 
-// S8.12: the thunder (Beta ambient.weather.thunder) is appended after the click, before Count.
+// The thunder (Beta ambient.weather.thunder) is appended after the click, before Count.
 TEST(AudioEngineTest, ThunderSoundIsAppendedAndAudible) {
     EXPECT_EQ(static_cast<int>(SoundEffect::Thunder), 28);
     EXPECT_EQ(static_cast<int>(SoundEffect::Count), 29);
@@ -191,7 +191,7 @@ namespace {
 
 } // namespace
 
-// S8.12: the rain loop follows its gain (silent at 0) and is darker when occluded.
+// The rain loop follows its gain (silent at 0) and is darker when occluded.
 TEST(AudioEngineTest, RainLoopFollowsGainAndOcclusion) {
     AudioEngine engine; // no device: renderFrames drives the mixer
     constexpr uint32_t kFrames = 44100 / 2;

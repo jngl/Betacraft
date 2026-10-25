@@ -1,4 +1,4 @@
-// Sprint 8 integration (S8.5-S8.8): the redstone engine on a real World and through the
+// Integration: the redstone engine on a real World and through the
 // GL-free EntitySimulation: a lever opens an iron door through wire (and the AI sees the door
 // open), a pressure plate under the player fires a piston, circuits survive a save and
 // reload, and chunks read from disk get their torches and buttons scheduled again.
@@ -62,7 +62,7 @@ TEST_F(RedstoneWorld, LeverOpensDoorThroughWire) {
     worldTicks(5);
     ASSERT_FALSE(doorOpen(kDoor));
     const ai::WorldNavQuery nav(*m_world);
-    EXPECT_EQ(nav.classify(kDoor), ai::NavCell::DoorClosed) << "S8.8: a closed iron door stops the AI";
+    EXPECT_EQ(nav.classify(kDoor), ai::NavCell::DoorClosed) << "a closed iron door stops the AI";
 
     ASSERT_TRUE(m_world->toggleLever(kLever));
     worldTicks(3);

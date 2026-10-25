@@ -1,4 +1,4 @@
-// P2.1 — Deferred structural changes. References handed to View::each / Group::each point
+// Deferred structural changes. References handed to View::each / Group::each point
 // into the pools' std::vector storage: an emplace into an iterated pool may reallocate it, a
 // group join swaps payloads and a destroy swap-and-pops them. A CommandBuffer records such
 // changes during iteration and applies them afterwards, so the references stay valid.

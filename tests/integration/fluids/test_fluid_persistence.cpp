@@ -1,4 +1,4 @@
-// Sprint 1 integration, bug 8: fluid simulation edits (EditOrigin::Simulation) only mark a
+// Integration: bug 8: fluid simulation edits (EditOrigin::Simulation) only mark a
 // chunk modified when it or one of its 8 neighbours was touched by the player, so generated
 // water settling in unexplored terrain never writes a .chk (it is simulated again after a
 // reload), while player water flowing over a chunk seam is still saved.
@@ -59,7 +59,7 @@ TEST(FluidPersistence, GeneratedFluidSettlingMarksNothingModified) {
     }
     w.saveModifiedChunks(storage::WorldLevelData{});
     EXPECT_EQ(chunkFileCount(dir.path()), 0U) << "exploring without editing writes no .chk";
-    EXPECT_FALSE(std::filesystem::exists(dir.path() / "region")) << "nor any region bundle (S7.3)";
+    EXPECT_FALSE(std::filesystem::exists(dir.path() / "region")) << "nor any region bundle";
 }
 
 TEST(FluidPersistence, PlayerWaterFlowingAcrossASeamIsPersisted) {

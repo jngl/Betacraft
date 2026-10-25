@@ -1,4 +1,4 @@
-// P4.6 — attenuation curve shared by CPU and GLSL: L = C * (1 - d/R)^2.
+// Attenuation curve shared by CPU and GLSL: L = C * (1 - d/R)^2.
 #include "lighting/DynamicLight.hpp"
 
 #include <gtest/gtest.h>

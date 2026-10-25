@@ -1,4 +1,4 @@
-// P3.3 - Deterministic seeded Simplex noise (2D / 3D) contract tests.
+// Deterministic seeded Simplex noise (2D / 3D) contract tests.
 #include "worldgen/SimplexNoise.hpp"
 
 #include <gtest/gtest.h>

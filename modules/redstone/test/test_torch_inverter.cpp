@@ -1,4 +1,4 @@
-// S8.6 redstone torches: they invert the power of the block they hang on 2 ticks later, burn
+// Redstone torches: they invert the power of the block they hang on 2 ticks later, burn
 // out when switched more than 8 times in 60 ticks, come back after 60 ticks, and two of them
 // make a stable RS NOR latch.
 #include "RedstoneTestUtils.hpp"

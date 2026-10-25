@@ -213,7 +213,7 @@ TEST(InputRebindTest, WorldDynamicRenderDistanceLoadingAndUnloading) {
 }
 
 
-// S3.8: mouse sensitivity, persisted under mouse_sensitivity and set in 10 % steps.
+// Mouse sensitivity, persisted under mouse_sensitivity and set in 10 % steps.
 TEST(InputRebindTest, SensitivityPersists) {
     // A unique directory: Module_ui and AllTests both run this test in parallel.
     const betacraft::test::TempDir tempDir("betacraft_sensitivity_");

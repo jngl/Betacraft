@@ -1,4 +1,4 @@
-// P4.2 integration seam, game-thread side: game::AcousticsController gives each world sound its
+// Integration seam, game-thread side: game::AcousticsController gives each world sound its
 // initial occlusion, tracks it for the 10 Hz OcclusionScheduler until it has played out, and posts
 // enclosure changes. Checked against the sparse fake grid; the real-World path is covered by
 // test_acoustics_game.cpp and test_acoustics_mixing.cpp.

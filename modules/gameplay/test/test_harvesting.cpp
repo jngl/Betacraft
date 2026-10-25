@@ -87,14 +87,14 @@ TEST(HarvestTable, EveryRegisteredBlockHasADeliberateRule) {
         {BlockId::Glowstone, N, N, 0},    {BlockId::BirchLog, A, N, 0},
         {BlockId::PineLog, A, N, 0},      {BlockId::Chest, A, N, 0},
         {BlockId::LitFurnace, N, P, 0},
-        // S5.4 shapes: only the cobblestone stairs need a pickaxe, only farmland is shovel-fast
+        // Shapes: only the cobblestone stairs need a pickaxe, only farmland is shovel-fast
         {BlockId::Bed, N, N, 0},          {BlockId::WoodStairs, N, N, 0},
         {BlockId::Crops, N, N, 0},        {BlockId::Farmland, S, N, 0},
         {BlockId::WoodDoor, N, N, 0},     {BlockId::Ladder, N, N, 0},
         {BlockId::CobbleStairs, N, P, 0}, {BlockId::Fence, N, N, 0},
-        // S6.10: Material.rock without a place in ItemPickaxe's list
+        // Material.rock without a place in ItemPickaxe's list
         {BlockId::MobSpawner, N, P, 0},
-        // S8.5 redstone: the stone plate (rock) and the iron door (iron) need a pickaxe
+        // Redstone: the stone plate (rock) and the iron door (iron) need a pickaxe
         {BlockId::RedstoneWire, N, N, 0}, {BlockId::Lever, N, N, 0},
         {BlockId::StonePressurePlate, N, P, 0}, {BlockId::IronDoor, N, P, 0},
         {BlockId::WoodPressurePlate, N, N, 0}, {BlockId::RedstoneTorchOff, N, N, 0},
@@ -120,7 +120,7 @@ TEST(HarvestTable, HardnessComesFromBlockRegistry) {
 }
 
 TEST(HarvestTable, OreHarvestLevels) {
-    // Roadmap P2.5: an iron pickaxe (level 2) is mandatory for diamond and gold.
+    // An iron pickaxe (level 2) is mandatory for diamond and gold.
     EXPECT_EQ(harvestInfo(BlockId::CoalOre).minHarvestLevel, 0);
     EXPECT_EQ(harvestInfo(BlockId::IronOre).minHarvestLevel, 1);
     EXPECT_EQ(harvestInfo(BlockId::LapisOre).minHarvestLevel, 1);

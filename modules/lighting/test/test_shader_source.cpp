@@ -1,4 +1,4 @@
-// P4.6 — Runtime access to the dynamic-light include and its injection into the REAL chunk
+// Runtime access to the dynamic-light include and its injection into the REAL chunk
 // fragment shader, which WorldRenderer compiles from the inline PACKED_CHUNK_FS string
 // (shaders/chunk_fragment.glsl is not loaded by anything).
 #include "lighting/DynamicLightUbo.hpp"

@@ -1,4 +1,4 @@
-// P2.6 — RecipeRegistry: deterministic priority, hashed shape index,
+// RecipeRegistry: deterministic priority, hashed shape index,
 // consumption (1 per slot), by-products (empty bucket) and durability use.
 #include "crafting/RecipeRegistry.hpp"
 

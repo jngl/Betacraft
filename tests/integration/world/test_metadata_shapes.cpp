@@ -1,4 +1,4 @@
-// Sprint 5 (S5.4, S5.9, S5.10) metadata-dependent shapes: collision and pick boxes from
+// Metadata-dependent shapes: collision and pick boxes from
 // math::AABB (ladder, door, bed, fence, farmland, crops, stairs), the player walking
 // through an open door but not a closed one nor over a fence, the 18^3 snapshot carrying the
 // metadata, metadata edits re-meshing only shaped blocks, and both meshers emitting the same

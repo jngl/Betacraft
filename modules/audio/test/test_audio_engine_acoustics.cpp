@@ -1,4 +1,4 @@
-// P4.2 integration seam: AudioEngine routes its voices through the AcousticVoiceBank. Driven through
+// Integration seam: AudioEngine routes its voices through the AcousticVoiceBank. Driven through
 // renderFrames(), the device-less mixing path, so it runs on machines without audio hardware.
 #include "acoustics/AcousticCommand.hpp"
 #include "audio/AudioEngine.hpp"

@@ -1,5 +1,5 @@
 #pragma once
-// Shared helpers for the worldgen integration tests (P3.3 caves + P3.4 two-pass
+// Shared helpers for the worldgen integration tests (caves + two-pass
 // decoration through the real World / WorldGen API).
 
 #include "core/Config.hpp"

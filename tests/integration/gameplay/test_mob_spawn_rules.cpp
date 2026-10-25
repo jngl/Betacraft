@@ -1,4 +1,4 @@
-// S4.3: the pure Beta 1.7.3 spawning rules (gameplay/MobSpawnRules): sky darkening over the
+// The pure Beta 1.7.3 spawning rules (gameplay/MobSpawnRules): sky darkening over the
 // day, effective light, the hostile and passive light tests, mob caps, the sun curve and
 // despawning.
 #include "gameplay/MobSpawnRules.hpp"
@@ -24,7 +24,7 @@ TEST(MobSpawnRules, SkylightSubtractedIsZeroAtNoonElevenAtMidnightAndMonotonic) 
         previous = s;
     }
     EXPECT_EQ(previous, 11);
-    // Rain and thunder darken the noon sky (S8.10).
+    // Rain and thunder darken the noon sky.
     EXPECT_GT(gameplay::skylightSubtracted(0.25f, 1.0f, 1.0f), 0);
 }
 

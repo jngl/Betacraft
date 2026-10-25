@@ -1,4 +1,4 @@
-// P3.4 - Feature planning (pure function of seed + pass-1 chunk) and clipped rasterization.
+// Feature planning (pure function of seed + pass-1 chunk) and clipped rasterization.
 #include "worldgen/DecorationFeatures.hpp"
 #include "worldgen/SeededRandom.hpp"
 #include "WorldgenTestSupport.hpp"

@@ -63,7 +63,7 @@ constexpr std::array<ToolMaterial, 5> kAllMaterials{ToolMaterial::Wood, ToolMate
 } // namespace
 
 TEST(ToolItems, LegacyPickaxesKeepEngineBlockIds) {
-    // S2.10: the pickaxes are Beta numbers now; the old BlockIds 102..105 only fold onto
+    // The pickaxes are Beta numbers now; the old BlockIds 102..105 only fold onto
     // them (saves with items_scheme 1).
     EXPECT_EQ(toolItemId(ToolType::Pickaxe, ToolMaterial::Wood), 270);
     EXPECT_EQ(toolItemId(ToolType::Pickaxe, ToolMaterial::Stone), 274);
@@ -122,7 +122,7 @@ TEST(ToolItems, RoundTripAllTwentyFiveTools) {
 }
 
 TEST(ToolItems, BetaPickaxeIdsAreAliases) {
-    // Vanilla numeric ids are the canonical ones (S2.10); the legacy 102 still resolves.
+    // Vanilla numeric ids are the canonical ones; the legacy 102 still resolves.
     const auto wood = findTool(270);
     ASSERT_TRUE(wood.has_value());
     EXPECT_EQ(wood->type, ToolType::Pickaxe);

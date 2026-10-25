@@ -60,7 +60,7 @@ TEST(PersistenceIntegrationTest, ModifySaveAndReloadWorld) {
     }
 }
 
-// S5.4: the metadata of the shaped blocks (door state, ladder side, crop stage) survives a
+// The metadata of the shaped blocks (door state, ladder side, crop stage) survives a
 // save cycle through the chunk RLE (format v2 carries the nibble).
 TEST(PersistenceIntegrationTest, ShapedBlockMetadataSurvivesRestart) {
     voxel::BlockRegistry::initialize();
@@ -91,7 +91,7 @@ TEST(PersistenceIntegrationTest, ShapedBlockMetadataSurvivesRestart) {
     }
 }
 
-// S5.8: the bed the player slept in (level.dat key "bed") and the spawn point next to it
+// The bed the player slept in (level.dat key "bed") and the spawn point next to it
 // survive a restart; a level.dat without the key has no bed spawn.
 TEST(PersistenceIntegrationTest, BedSpawnSurvivesRestart) {
     voxel::BlockRegistry::initialize();
@@ -117,7 +117,7 @@ TEST(PersistenceIntegrationTest, BedSpawnSurvivesRestart) {
     EXPECT_FALSE(noBed.bedPos.has_value());
 }
 
-// S1.7: the player's inventory (wear included), health, air, selection, mode and the spawn
+// The player's inventory (wear included), health, air, selection, mode and the spawn
 // point survive a restart through level.dat V2, even saved with the crafting screen open.
 TEST(PersistenceIntegrationTest, PlayerInventoryHealthSpawnSurviveRestart) {
     voxel::BlockRegistry::initialize();
@@ -211,7 +211,7 @@ TEST(PersistenceIntegrationTest, RestorePlayerClampsSavedValues) {
     EXPECT_EQ(player.getHealth(), 0);
 }
 
-// S6.8: worn armor round-trips through level.dat (`armor` keys, no version change), and a
+// Worn armor round-trips through level.dat (`armor` keys, no version change), and a
 // level.dat without them loads with the armor slots empty.
 TEST(PersistenceIntegrationTest, ArmorSurvivesRestart) {
     voxel::BlockRegistry::initialize();

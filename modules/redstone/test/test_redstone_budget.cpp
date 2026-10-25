@@ -1,4 +1,4 @@
-// S8.6 budget: at most 1024 evaluations per tick, the rest carried over to the next ticks
+// Budget: at most 1024 evaluations per tick, the rest carried over to the next ticks
 // with the same end result.
 #include "RedstoneTestUtils.hpp"
 

@@ -1,4 +1,4 @@
-// P2.3 - Simulator scheduling: water updates every 5 ticks, lava every 30.
+// Simulator scheduling: water updates every 5 ticks, lava every 30.
 #include "FluidTestUtils.hpp"
 
 #include <gtest/gtest.h>

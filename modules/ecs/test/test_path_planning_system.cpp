@@ -1,4 +1,4 @@
-// S8.3 PathPlanningSystem + MobAISystem path following: plans when the target moves, shares
+// PathPlanningSystem + MobAISystem path following: plans when the target moves, shares
 // a global node budget round-robin, forgets searches of destroyed mobs, and leaves mobs
 // without a MobPathComp on straight-line steering.
 #include "test_support/AiTestSupport.hpp"
@@ -220,7 +220,7 @@ TEST(AiPathPlanningSystem, FallbackStraightLineWithoutComp) {
     EXPECT_FLOAT_EQ(reg.get<VelocityComp>(planned).linear.y, MobAISystem::JUMP_SPEED);
 }
 
-// S8.4: each mob kind plans with its own box (Beta sizes) and nobody opens doors.
+// Each mob kind plans with its own box (Beta sizes) and nobody opens doors.
 TEST(AiPathPlanningSystem, MobDefsGiveNavExtents) {
     const gameplay::MobDef& zombie = gameplay::mobDef(gameplay::MobKind::Zombie);
     const gameplay::MobDef& spider = gameplay::mobDef(gameplay::MobKind::Spider);

@@ -1,4 +1,4 @@
-// P3.3 - "lacs d'eau souterrains confines entre Y=11 et Y=32": aquifer water must be confined,
+// "lacs d'eau souterrains confines entre Y=11 et Y=32": aquifer water must be confined,
 // i.e. no excavated water voxel may sit beside or above an air voxel it could drain into
 // (fluids spread through faces only: 4 horizontal neighbours + the one below).
 #include "worldgen/CaveCarver.hpp"

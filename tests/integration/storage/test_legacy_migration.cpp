@@ -1,4 +1,4 @@
-// Sprint 7 integration (S7.4): the frozen pre-Sprint 7 save tests/data/saves/v1, migrated to
+// Integration: the frozen pre-region save tests/data/saves/v1, migrated to
 // region files, loads exactly like the same save read by the legacy code path: blocks,
 // metadata, decoration (no tree pasted twice, the undecorated chunk keeps its plan), block
 // entities and the player in level.dat.
@@ -46,7 +46,7 @@ TEST(StorageLegacyMigration, MigratedSaveLoadsIdenticalToLegacy) {
     ASSERT_TRUE(report.completed);
     ASSERT_EQ(report.migrated, 10U);
 
-    // Legacy: the pre-Sprint 7 reader (region storage off, chunks/ files only).
+    // Legacy: the pre-region reader (region storage off, chunks/ files only).
     world::World legacy(kSeed, legacySave);
     legacy.setRegionStorageEnabled(false);
     world::World migrated(kSeed, migratedSave);

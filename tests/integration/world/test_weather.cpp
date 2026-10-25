@@ -1,4 +1,4 @@
-// Sprint 8 weather in a real World (S8.10 - S8.12). On the flat grass world of the mob tests:
+// Weather in a real World. On the flat grass world of the mob tests:
 // a thunderstorm lets hostiles spawn on the sunlit surface at noon (Beta reads their light with
 // skylightSubtracted 10), zombies in the rain neither catch fire nor keep burning (Beta
 // Entity.isWet) while snow does not save them, the rain and snow columns of the renderer stop

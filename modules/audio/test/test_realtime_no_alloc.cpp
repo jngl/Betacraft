@@ -1,4 +1,4 @@
-// P4.2 — real-time contract: no heap allocation in any audio-thread path, nor in the 10 Hz scheduler
+// Real-time contract: no heap allocation in any audio-thread path, nor in the 10 Hz scheduler
 // hot path. Global operator new/delete are replaced in this test binary to count allocations.
 #include "test_support/AcousticsTestUtils.hpp"
 #include "acoustics/AcousticVoiceBank.hpp"

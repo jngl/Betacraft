@@ -77,7 +77,7 @@
 namespace betacraft::test_contracts {
 
 // ============================================================================
-// 1. PackedChunkVertex Contract & Specification Model (Fiche 1, P1.2)
+// 1. PackedChunkVertex Contract & Specification Model
 // ============================================================================
 
 struct alignas(8) ContractPackedChunkVertex {
@@ -180,7 +180,7 @@ inline glm::vec2 computePlanarUV(glm::vec3 worldPos, uint32_t normalIdx) {
 }
 
 // ============================================================================
-// 2. PalettedSection & DenseLightArray Contract (Fiche 2, P3.1)
+// 2. PalettedSection & DenseLightArray Contract
 // ============================================================================
 
 using BlockStateId = uint16_t;
@@ -408,7 +408,7 @@ static_assert(sizeof(ContractPalettedSection) <= 64, "PalettedSection must be <=
 static_assert(alignof(ContractPalettedSection) == 64, "PalettedSection must be alignas(64)");
 
 // ============================================================================
-// 3. Certified BFS Differential Lighting Math Model (Fiche 2, P3.2)
+// 3. Certified BFS Differential Lighting Math Model
 // ============================================================================
 
 // Mathematical analytical formula for discrete Manhattan sphere shell and volume:
@@ -471,7 +471,7 @@ inline size_t computeDiscreteManhattanVolumeBFS(int maxRadius) {
 }
 
 // ============================================================================
-// 4. Lockless MpscRingBuffer Contract (Fiche 5, P4.1)
+// 4. Lockless MpscRingBuffer Contract
 // ============================================================================
 
 template<typename T, size_t Capacity = 512>
@@ -535,7 +535,7 @@ private:
 };
 
 // ============================================================================
-// 5. Fixed Timestep Physics Simulator (Fiedler P1.6)
+// 5. Fixed Timestep Physics Simulator (Fiedler)
 // ============================================================================
 
 struct PhysicsSimulationResult {
@@ -583,7 +583,7 @@ inline PhysicsSimulationResult simulateFiedlerPhysics(
 }
 
 // ============================================================================
-// 6. MSDF Font Math & Virtual GUI Scaling (P4.3)
+// 6. MSDF Font Math & Virtual GUI Scaling
 // ============================================================================
 
 inline float msdfMedian(float r, float g, float b) noexcept {
@@ -617,7 +617,7 @@ inline int calculateVirtualGuiScale(int windowWidth, int windowHeight, GuiScaleP
 }
 
 // ============================================================================
-// 7. Dynamic Key Rebinding & options.txt Model (P4.4)
+// 7. Dynamic Key Rebinding & options.txt Model
 // ============================================================================
 
 enum class GameAction {

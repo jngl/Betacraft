@@ -45,7 +45,7 @@ TEST(SharedItemScheme, BothModulesUseTheSameIdTypeAndEnums) {
 
 TEST(SharedItemScheme, SharedItemConstantsCoverToolsAndMaterials) {
     namespace items = gameplay::items;
-    // S2.10: Beta numbers; the legacy BlockIds fold onto them.
+    // Beta numbers; the legacy BlockIds fold onto them.
     EXPECT_EQ(items::Stick, gameplay::canonicalize(gameplay::toItemId(BlockId::Stick)));
     EXPECT_EQ(items::Coal, gameplay::canonicalize(gameplay::toItemId(BlockId::CoalItem)));
     EXPECT_EQ(items::GlowstoneDust, 348);

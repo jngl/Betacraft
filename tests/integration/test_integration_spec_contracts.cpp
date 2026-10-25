@@ -15,7 +15,7 @@ using namespace betacraft::test_contracts;
 using namespace testing;
 
 // ============================================================================
-// FEATURE 1: Fixed Timestep Physics (Fiedler P1.6)
+// FEATURE 1: Fixed Timestep Physics (Fiedler)
 // ============================================================================
 
 // Tier 1: Primary behaviors (>=5 tests)
@@ -165,7 +165,7 @@ TEST(FixedTimestepIntegration, ExactTickBoundaryNoRemainder) {
 }
 
 // ============================================================================
-// FEATURE 2 & 3: PalettedSection & Dynamic Palette Transitions (P3.1)
+// FEATURE 2 & 3: PalettedSection & Dynamic Palette Transitions
 // ============================================================================
 
 // Tier 1: Primary behaviors (>=5 tests)
@@ -309,7 +309,7 @@ TEST(PalettedSectionIntegration, CopyAndAssignmentIndependence) {
 }
 
 // ============================================================================
-// FEATURE 4 & 5: Lazy DenseLightArray Allocation (P3.1)
+// FEATURE 4 & 5: Lazy DenseLightArray Allocation
 // ============================================================================
 
 // Tier 1: Primary behaviors (>=5 tests)
@@ -430,7 +430,7 @@ TEST(LazyLightIntegration, ChunkPublicInterfaceCompatibility) {
 }
 
 // ============================================================================
-// FEATURE 6 & 7: PackedChunkVertex & Static Shared EBO (P1.2)
+// FEATURE 6 & 7: PackedChunkVertex & Static Shared EBO
 // ============================================================================
 
 // Tier 1: Primary behaviors (>=5 tests)
@@ -553,7 +553,7 @@ TEST(PackedVertexIntegration, LargeSharedEboValidation) {
 }
 
 // ============================================================================
-// FEATURE 10, 11, 12: Certified BFS Differential Lighting (P3.2)
+// FEATURE 10, 11, 12: Certified BFS Differential Lighting
 // ============================================================================
 
 // Tier 1: Primary behaviors (>=5 tests)
@@ -630,7 +630,7 @@ TEST(BFSLightingIntegration, Skylight1DRaycastExtinction) {
 }
 
 // ============================================================================
-// FEATURE 13 & 14: Lockless MpscRingBuffer Concurrency (P4.1)
+// FEATURE 13 & 14: Lockless MpscRingBuffer Concurrency
 // ============================================================================
 
 struct DummyAudioCommand {
@@ -784,7 +784,7 @@ TEST(MpscRingBufferIntegration, BurstPushSaturationAndRecovery) {
 }
 
 // ============================================================================
-// FEATURE 15-19: UI MSDF & Dynamic Key Rebinding (P4.3, P4.4)
+// FEATURE 15-19: UI MSDF & Dynamic Key Rebinding
 // ============================================================================
 
 // Tier 1: Primary behaviors (>=5 tests)

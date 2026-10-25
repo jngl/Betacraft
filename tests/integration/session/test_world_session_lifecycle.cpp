@@ -30,7 +30,7 @@ protected:
     TempDir m_dir{"betacraft_world_session_"};
 };
 
-// S1.4: a new world waits for its mode; choosing Creative gives the creative kit and writes
+// A new world waits for its mode; choosing Creative gives the creative kit and writes
 // the first level.dat at once.
 TEST_F(WorldSessionLifecycle, NewCreativeWorldGetsTheCreativeKit) {
     std::unique_ptr<WorldSession> session = open();
@@ -46,7 +46,7 @@ TEST_F(WorldSessionLifecycle, NewCreativeWorldGetsTheCreativeKit) {
     EXPECT_TRUE(levelDatExists()) << "the first level.dat is written with the mode";
 }
 
-// S1.7 / S1.4: a new Survival world starts empty, and what the player holds, its health and
+// A new Survival world starts empty, and what the player holds, its health and
 // its selection come back when the world is reopened, with no kit on top.
 TEST_F(WorldSessionLifecycle, SurvivalWorldSavesInventoryOnShutdown) {
     glm::vec3 spawn{};
@@ -81,7 +81,7 @@ TEST_F(WorldSessionLifecycle, SurvivalWorldSavesInventoryOnShutdown) {
     EXPECT_EQ(session->spawnPoint(), spawn);
 }
 
-// S1.4: a new world closed before its mode is chosen writes nothing, so the next open still
+// A new world closed before its mode is chosen writes nothing, so the next open still
 // waits for the mode and gives the chosen mode's starter kit.
 TEST_F(WorldSessionLifecycle, NewWorldQuitAtTitleKeepsTheModeChoice) {
     {
@@ -136,7 +136,7 @@ TEST_F(WorldSessionLifecycle, TooNewLevelDatIsNeverOverwritten) {
     EXPECT_EQ(written, 0U) << "no chunk, region or temporary file written either";
 }
 
-// S7.4: opening a pre-Sprint 7 save converts it to region files (chunks.migrated/ kept),
+// Opening a pre-region save converts it to region files (chunks.migrated/ kept),
 // reports its progress from 0, and brings its inventory back; the next open has nothing left
 // to convert.
 TEST_F(WorldSessionLifecycle, LegacySaveFlaggedThenMigratedOnEnter) {
@@ -170,7 +170,7 @@ TEST_F(WorldSessionLifecycle, LegacySaveFlaggedThenMigratedOnEnter) {
     EXPECT_TRUE(progress.empty()) << "nothing left to migrate";
 }
 
-// S7.9: closing world A saves it completely; world B opened next starts clean; A reopens as
+// Closing world A saves it completely; world B opened next starts clean; A reopens as
 // it was left, the new-world parameters of an existing world being ignored.
 TEST_F(WorldSessionLifecycle, LeaveWorldThenAnotherWorldKeepsNothingOfTheFirst) {
     const std::filesystem::path a = m_dir.path() / "A";

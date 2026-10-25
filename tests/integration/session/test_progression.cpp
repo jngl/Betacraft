@@ -1,4 +1,4 @@
-// Sprint 2 integration: a scripted Survival run of the material progression, through the
+// Integration: a scripted Survival run of the material progression, through the
 // game's own rules only (WorldSession ticks: mining and pickup, the InventoryCrafting screen with
 // the vanilla book, the furnace screen and its block entity): log -> planks -> workbench ->
 // wooden pickaxe -> cobblestone -> stone pickaxe -> furnace -> iron ingots -> iron pickaxe
@@ -149,7 +149,7 @@ TEST_F(Progression, FromALogToADiamond) {
     for (const size_t cell : {0, 1, 2}) placeOne(toItemId(BlockId::IronOre), cell);
     placeOne(items::Stick, 4);
     placeOne(items::Stick, 7);
-    EXPECT_TRUE(ui().resultPreview().isEmpty()) << "raw ore makes no tool (S2.8)";
+    EXPECT_TRUE(ui().resultPreview().isEmpty()) << "raw ore makes no tool";
     EXPECT_TRUE(ui().close(player()).empty());
     ASSERT_EQ(player().countItem(BlockId::IronOre), 3);
 

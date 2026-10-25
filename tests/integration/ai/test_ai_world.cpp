@@ -1,4 +1,4 @@
-// Sprint 8 integration (S8.1-S8.4): through the GL-free EntitySimulation on a real World, a zombie
+// Integration: through the GL-free EntitySimulation on a real World, a zombie
 // chasing the player goes around a 6-block wall and climbs a one-block step in under 200
 // ticks; straight-line steering (--no-pathfinding) stays stuck against the wall.
 #include "tests/integration/support/GameplaySupport.hpp"
@@ -77,7 +77,7 @@ TEST_F(AiWorld, WorldNavQueryReadsBlocks) {
     EXPECT_EQ(ai::classifyBlock(BlockId::WoodDoor, 0), ai::NavCell::DoorClosed);
     EXPECT_EQ(ai::classifyBlock(BlockId::WoodDoor, voxel::kDoorOpenBit | voxel::kDoorUpperBit),
               ai::NavCell::DoorOpen);
-    // S8.8: the iron door reads the same open bit, which only redstone changes.
+    // The iron door reads the same open bit, which only redstone changes.
     EXPECT_EQ(ai::classifyBlock(BlockId::IronDoor, 0), ai::NavCell::DoorClosed);
     EXPECT_EQ(ai::classifyBlock(BlockId::IronDoor, voxel::kDoorOpenBit), ai::NavCell::DoorOpen);
     EXPECT_EQ(ai::classifyBlock(BlockId::IronDoor, voxel::kDoorOpenBit | voxel::kDoorUpperBit), ai::NavCell::DoorOpen);

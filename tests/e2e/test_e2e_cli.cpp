@@ -35,7 +35,7 @@ TEST(CliE2ETest, RunHeadlessFrames) {
     EXPECT_TRUE(std::filesystem::exists(levelDat));
 }
 
-// S7.4: launching on a pre-Sprint 7 save (frozen copy of tests/data/saves/v1) migrates its
+// Launching on a pre-region save (frozen copy of tests/data/saves/v1) migrates its
 // chunks/ files to region/ and keeps them as chunks.migrated/.
 TEST(CliE2ETest, LegacySaveMigratedToRegions) {
     if (!betacraft::test::GLTestContext::isAvailable()) {

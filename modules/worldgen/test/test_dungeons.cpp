@@ -1,4 +1,4 @@
-// S6.10: Beta 1.7.3 dungeons (WorldGenDungeons) placed in pass 1 inside one chunk: bounds,
+// Beta 1.7.3 dungeons (WorldGenDungeons) placed in pass 1 inside one chunk: bounds,
 // ceiling under the surface, 1..5 openings, the spawner and the loot chests, determinism, and a
 // decoration plan left unchanged.
 #include "WorldgenTestSupport.hpp"

@@ -95,7 +95,7 @@ TEST_F(WorldSessionTick, TheTickThePlayerDiesScattersTheGridTheCursorAndTheInven
     EXPECT_FALSE(m_session->simulation().miningTarget().has_value());
 }
 
-// S8.10 the lightning roll is part of the tick: in a lasting thunderstorm a strike comes back
+// The lightning roll is part of the tick: in a lasting thunderstorm a strike comes back
 // in the events, within 64 blocks of the player, on top of a rainy column.
 TEST_F(WorldSessionTick, AThunderstormReturnsLightningStrikes) {
     m_session->setWeather(storage::WeatherState{.raining = true,

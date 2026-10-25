@@ -1,4 +1,4 @@
-// Sprint 1 integration, honest survival: one player health (gameplay::Health), one damage
+// Integration: honest survival: one player health (gameplay::Health), one damage
 // entry point (EntitySimulation::damagePlayer) and the survival rules the game tick runs first
 // (fall damage from the landing physics recorded, drowning, the void), all with Beta 1.7.3
 // numbers. Creative ignores them.

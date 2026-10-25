@@ -1,4 +1,4 @@
-// P2.3 - FluidSimulator::isSettled: which fluid cells a freshly loaded or generated region
+// FluidSimulator::isSettled: which fluid cells a freshly loaded or generated region
 // must schedule. A settled cell's update would change nothing, so the World only queues
 // the unsettled ones instead of every fluid cell of an ocean.
 #include "FluidTestUtils.hpp"

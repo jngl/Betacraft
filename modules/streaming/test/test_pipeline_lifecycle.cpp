@@ -1,4 +1,4 @@
-// Strict per-chunk state machine enforced by the pipeline (roadmap P1.1):
+// Strict per-chunk state machine enforced by the pipeline:
 //   Unloaded -> TerrainGen -> Lit -> Decorated -> Meshed -> Uploaded
 // The first three stages are produced outside the pipeline (World generation and
 // lighting) and reported through advanceChunkStage; the last two are owned by the

@@ -1,4 +1,4 @@
-// GL-free WorldSession sleep (spec #9, ticket #14), S5.8 bed: refused by day and near
+// GL-free WorldSession sleep (spec #9, ticket #14), bed: refused by day and near
 // monsters, the night passes after 100 ticks (the session applies the morning and the bed
 // spawn), a hit or a lost bed ends the sleep, and a broken bed is no longer a respawn point.
 

@@ -488,7 +488,7 @@ TEST_F(AdversarialPlayerCollision, VoidFallRecoveryAndCeilingBoundary) {
     world->ensureChunkLoaded({0, 0});
 
     Player player;
-    player.setGameMode(core::GameMode::Creative); // The void safety net is Creative-only (S1.5)
+    player.setGameMode(core::GameMode::Creative); // The void safety net is Creative-only
     // Drop player into deep void below Y = -15.0f
     player.setPosition(glm::vec3(8.0f, -16.0f, 8.0f));
     player.resetInterpolationHistory();

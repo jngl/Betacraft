@@ -1,4 +1,4 @@
-// S7.1 / conventions §4: a build without libzstd (or with BETACRAFT_WITH_ZSTD=OFF) stores
+// / conventions §4: a build without libzstd (or with BETACRAFT_WITH_ZSTD=OFF) stores
 // chunks with compression byte 0, and every build reads them.
 #include "StorageTestHelpers.hpp"
 #include "storage/RegionFile.hpp"

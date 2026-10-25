@@ -1,4 +1,4 @@
-// P4.2 — 10 Hz occlusion scheduler: per-source rate limiting with an injected clock.
+// 10 Hz occlusion scheduler: per-source rate limiting with an injected clock.
 #include "test_support/AcousticsTestUtils.hpp"
 #include "acoustics/OcclusionScheduler.hpp"
 

@@ -1,4 +1,4 @@
-// Integration hook P2.6 (UI): the inventory screen draws the 2x2 / 3x3 crafting grid, its
+// (UI): the inventory screen draws the 2x2 / 3x3 crafting grid, its
 // result slot, the creative palette and the 36 inventory slots from one GL-free layout, and
 // mouse clicks are mapped back to those slots with the same layout.
 #include "ui/HudRenderer.hpp"
@@ -84,7 +84,7 @@ TEST(HudInventoryLayout, PaletteClicksStillEquipAndOtherSlotsAreLeftToTheGame) {
     EXPECT_EQ(player.getHeldItem().id, voxel::BlockId::Grass);
 }
 
-// S1.3: Survival draws no palette, so its slots are not clickable either; the rest of the
+// Survival draws no palette, so its slots are not clickable either; the rest of the
 // screen maps exactly as in Creative.
 TEST(HudInventoryLayout, PaletteIsNotHitWithoutCreative) {
     for (const int dim : {2, 3}) {
@@ -106,7 +106,7 @@ TEST(HudInventoryLayout, PaletteIsNotHitWithoutCreative) {
     }
 }
 
-// S2.6: furnace and chest slots sit in the palette area (no grid, no result, no palette on
+// Furnace and chest slots sit in the palette area (no grid, no result, no palette on
 // those screens), map back to their index and never overlap the inventory.
 TEST(HudInventoryLayout, FurnaceAndChestSlotsMapBackAndDoNotOverlap) {
     struct Case {
@@ -160,7 +160,7 @@ TEST(HudInventoryLayout, FurnaceAndChestSlotsMapBackAndDoNotOverlap) {
     EXPECT_EQ(a.y, b.y);
 }
 
-// S3.4: off the dialog panel the screen hit test reports Outside (Beta drops the cursor
+// Off the dialog panel the screen hit test reports Outside (Beta drops the cursor
 // stack there); gaps inside the panel stay None, and slots keep mapping as before.
 TEST(HudInventoryLayout, OffPanelClicksReportOutside) {
     const ui::InventoryLayoutKey layout{2, ui::ScreenKind::Inventory2x2, false};
@@ -181,7 +181,7 @@ TEST(HudInventoryLayout, OffPanelClicksReportOutside) {
     EXPECT_EQ(HudRenderer::hitTestInventory(2, 2, kW, kH, layout).region, InventoryRegion::None);
 }
 
-// S3.7: GUI Scale lays the HUD out in a (window / scale) canvas, scale = guiScale / 3. Auto at
+// GUI Scale lays the HUD out in a (window / scale) canvas, scale = guiScale / 3. Auto at
 // 1280x720 is guiScale 3, so the canvas is the window and the layout is unchanged.
 TEST(HudInventoryLayout, AutoScaleAt720pKeepsLayout) {
     const ui::HudCanvas canvas = HudRenderer::hudCanvas(kW, kH, render::GuiScalePreference::Auto);
@@ -254,7 +254,7 @@ TEST(HudInventoryLayout, SlotsMapBackAtEveryGuiScale) {
     }
 }
 
-// S3.6: the tooltip names the hovered item; a tool adds its remaining durability.
+// The tooltip names the hovered item; a tool adds its remaining durability.
 TEST(HudInventoryLayout, TooltipShowsNameAndToolDurability) {
     EXPECT_TRUE(HudRenderer::inventoryTooltip({}).empty());
     const std::vector<std::string> dirt = HudRenderer::inventoryTooltip({voxel::BlockId::Dirt, 12});
@@ -266,7 +266,7 @@ TEST(HudInventoryLayout, TooltipShowsNameAndToolDurability) {
     EXPECT_EQ(pick[1], "100 / 131");
 }
 
-// S6.7: the 4 armor slots sit left of the inventory rows, inside the panel, on the player's
+// The 4 armor slots sit left of the inventory rows, inside the panel, on the player's
 // inventory screen only, and overlap nothing else.
 TEST(HudInventoryLayout, ArmorSlotsOnlyOnThePlayerInventory) {
     const auto overlaps = [](const ui::SlotRect& a, const ui::SlotRect& b) {

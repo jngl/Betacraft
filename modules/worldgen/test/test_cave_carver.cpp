@@ -1,4 +1,4 @@
-// P3.3 - Point-wise cave carving decision: spaghetti + cheese Simplex fields modulated by A(y).
+// Point-wise cave carving decision: spaghetti + cheese Simplex fields modulated by A(y).
 #include "worldgen/CaveCarver.hpp"
 #include "WorldgenTestSupport.hpp"
 

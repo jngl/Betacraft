@@ -1,6 +1,6 @@
-// S4.2 / S4.11: the player's ECS stand-in (EntityFactory::spawnPlayerProxy) that mobs target,
+// The player's ECS stand-in (EntityFactory::spawnPlayerProxy) that mobs target,
 // mobs built from the gameplay::mobDef table, and the jump of a walking mob stopped by a wall
-// (VelocityComp::collidedHorizontally). S4.5: hostiles acquire the proxy through
+// (VelocityComp::collidedHorizontally). Hostiles acquire the proxy through
 // game::acquireTargets (range, line of sight, Creative / dead player) and hit it on contact.
 #include "test_support/GLTestContext.hpp"
 

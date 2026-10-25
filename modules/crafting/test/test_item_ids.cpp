@@ -1,4 +1,4 @@
-// P2.6 — Item id scheme shared with the tools/combat module (P2.5).
+// Item id scheme shared with the tools/combat module.
 #include "crafting/ItemIds.hpp"
 #include "voxel/Block.hpp"
 
@@ -32,7 +32,7 @@ TEST(ItemIds, ToBlockIdOnlyForBlockRange) {
     EXPECT_FALSE(toBlockId(items::IronIngot).has_value());
 }
 
-// S2.10: the six items that had codebase ids (BlockId 100..105) use their Beta numbers;
+// The six items that had codebase ids (BlockId 100..105) use their Beta numbers;
 // the old ids only fold onto them.
 TEST(ItemIds, LegacyItemsKeepTheirCodebaseIds) {
     EXPECT_EQ(items::Stick, 280);
@@ -183,7 +183,7 @@ TEST(ItemIds, PlaceableBlocksExcludeItemsAirAndReservedIds) {
     EXPECT_FALSE(isPlaceableBlock(items::beta::Stick));
 }
 
-// S2.1: the chest and the burning furnace became real blocks with their Beta ids.
+// The chest and the burning furnace became real blocks with their Beta ids.
 TEST(ItemIds, ChestAndLitFurnaceArePlaceable) {
     EXPECT_EQ(items::Chest, 54);
     EXPECT_EQ(toItemId(BlockId::LitFurnace), 62);

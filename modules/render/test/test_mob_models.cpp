@@ -1,5 +1,5 @@
-// S4.8: cube models of the Sprint 4 mobs (render/MobModels.hpp), built on the CPU without GL;
-// S6.3 adds the skeleton, spider, creeper and cow, the creeper's swell and the S6.2 arrow.
+// Cube models of the mobs (render/MobModels.hpp), built on the CPU without GL;
+// Adds the skeleton, spider, creeper and cow, the creeper's swell and the arrow.
 #include "gameplay/MobDefs.hpp"
 #include "render/MobModels.hpp"
 #include "render/TextureAtlas.hpp"

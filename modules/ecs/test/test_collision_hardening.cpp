@@ -1,4 +1,4 @@
-// P2.1 — Hardening of VoxelCollisionSystem (Diagramme 2, S2) against inputs that used to be
+// Hardening of VoxelCollisionSystem against inputs that used to be
 // undefined behaviour or to freeze bodies: finite but huge coordinates (float -> int32 casts),
 // very fast bodies (tunnelling) and bodies that start a tick embedded in solid blocks.
 #include "ecs/Components.hpp"

@@ -1,4 +1,4 @@
-// Integration hook P2.6 (UI): game::InventoryCrafting is the inventory screen logic over a
+// (UI): game::InventoryCrafting is the inventory screen logic over a
 // CraftingGrid 2x2 (inventory) or 3x3 (workbench), the RecipeRegistry preview and the
 // cursor stack, with Beta Container.slotClick rules for left and right clicks.
 #include "game/InventoryCrafting.hpp"
@@ -135,7 +135,7 @@ TEST_F(InventoryCraftingTest, CloseReturnsEverythingAndOpenEmptiesTheOldGrid) {
     EXPECT_EQ(m_player.countItem(BlockId::Cobblestone), 3);
 }
 
-// --- S2.6: furnace and chest screens over World::blockEntities() ---
+// --- Furnace and chest screens over World::blockEntities() ---
 
 namespace {
 
@@ -252,7 +252,7 @@ TEST_F(ContainerScreenTest, ContainerClickAfterBlockRemovedClosesScreen) {
     EXPECT_TRUE(m_ui.containerSlot(*m_world, 3).isEmpty());
 }
 
-// S3.4: a click off the panel throws the cursor stack (left) or one item of it (right).
+// A click off the panel throws the cursor stack (left) or one item of it (right).
 TEST_F(InventoryCraftingTest, TakeCarriedThrowsWholeStackOrOneItem) {
     EXPECT_TRUE(m_ui.takeCarried(SlotButton::Left).isEmpty()) << "nothing carried";
     m_player.setInventorySlot(0, {BlockId::Dirt, 12});
@@ -269,7 +269,7 @@ TEST_F(InventoryCraftingTest, TakeCarriedThrowsWholeStackOrOneItem) {
     EXPECT_TRUE(m_ui.pendingStacks().empty());
 }
 
-// --- S3.5: shift-click (Beta transferStackInSlot) ---
+// --- Shift-click (Beta transferStackInSlot) ---
 
 TEST_F(InventoryCraftingTest, ShiftClickHotbarToMainAndBack) {
     m_player.setInventorySlot(2, {BlockId::Dirt, 20});
