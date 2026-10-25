@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <cstdlib>
 #include <iostream>
 #include <memory>
 
@@ -120,8 +121,10 @@ TEST_F(SnapshotCaptureFastPath, MissingNeighboursAndColumnEdgesAreExact) {
 }
 
 // Not a pass/fail performance gate: Debug and sanitizer builds are 10-100x slower than
-// Release. The measurement is printed and recorded (gtest XML property) so a regression
-// is visible; optimised builds additionally enforce a generous ceiling.
+// Release, and a loaded machine (ctest -j) is too. The measurement is always printed and
+// recorded (gtest XML property) so a regression is visible; the ceiling is a benchmark,
+// enforced only in optimised builds under the ctest label "benchmark" (Module_streaming_perf),
+// which sets BETACRAFT_PERF_TESTS.
 TEST_F(SnapshotCaptureFastPath, CaptureCostIsMeasured) {
     loadGenerated3x3();
     constexpr int kIters = 200;
@@ -137,6 +140,8 @@ TEST_F(SnapshotCaptureFastPath, CaptureCostIsMeasured) {
     std::cout << "[ perf     ] SectionNeighborhoodSnapshot18::capture: " << usPerCapture << " us/capture (guard "
               << guard % 7 << ")\n";
 #if defined(NDEBUG) && !defined(__SANITIZE_THREAD__)
-    EXPECT_LT(usPerCapture, 100.0);
+    if (std::getenv("BETACRAFT_PERF_TESTS") != nullptr) {
+        EXPECT_LT(usPerCapture, 100.0);
+    }
 #endif
 }

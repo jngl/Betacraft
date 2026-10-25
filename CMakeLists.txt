@@ -134,7 +134,7 @@ add_test(NAME BetaCraftLegacyTests COMMAND betacraft_legacy_tests)
 
 # Wall-clock budgets are benchmarks: skipped unless BETACRAFT_PERF_TESTS is set, run with
 # `ctest -L benchmark` (CI runs `ctest -LE benchmark`). Module budgets are registered by their
-# module (Module_acoustics_perf in modules/acoustics).
+# module (Module_acoustics_perf, Module_streaming_perf).
 
 # One TNT blast under 15 ms in Release.
 add_test(NAME Integration_beta_content_perf COMMAND betacraft_integration_tests --gtest_filter=BetaContent.*Budget*)
