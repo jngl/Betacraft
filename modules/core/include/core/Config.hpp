@@ -29,11 +29,11 @@ enum class GameMode : uint8_t { Survival = 0, Creative = 1 };
     return std::nullopt;
 }
 
-// Risky mechanics behind switches (roadmap conventions §3), each exposed on the command line
+// Risky mechanics behind switches (CLAUDE.md conventions), each exposed on the command line
 // (--no-async-gen, --no-region-storage, ...) and removed one version after it stabilises.
 struct FeatureFlags {
     bool asyncWorldGen{true};
-    bool regionStorage{true}; // S7.3: chunk bundles in region/ (off: legacy chunks/ files)
+    bool regionStorage{true}; // chunk bundles in region/ (off: legacy chunks/ files)
     bool mobPathfinding{true};
     bool redstone{true};
     bool weather{true};
@@ -50,7 +50,7 @@ struct FeatureFlags {
     return true;
 }
 
-// S7.8 a world made on the Create World screen: display name, seed and game mode.
+// A world made on the Create World screen: display name, seed and game mode.
 struct NewWorldParams {
     std::string name;
     uint64_t seed{0};
@@ -81,7 +81,7 @@ struct EngineConfig {
     float nearPlane{0.08f};
     float farPlane{256.0f};
     bool smoothLighting{true};
-    // Per-frame GPU upload budget for finished section meshes (roadmap P1.1: 4 ms). At least
+    // Per-frame GPU upload budget for finished section meshes (4 ms by default). At least
     // one mesh is uploaded every frame, however small the budget.
     float meshUploadBudgetMs{4.0f};
 
@@ -109,7 +109,7 @@ struct EngineConfig {
     uint64_t worldSeed{173173173ULL};
     // Mode of a freshly created world (--gamemode); existing worlds keep their saved mode.
     GameMode defaultGameMode{GameMode::Survival};
-    // S7.9: initialize() opens worldSaveDir at once (main sets it for --save-dir, --seed and
+    // Initialize() opens worldSaveDir at once (main sets it for --save-dir, --seed and
     // --frames; the E2E tests too). Otherwise the game starts on the title screen with no
     // world and worlds are picked from savesRoot on the World Select screen.
     bool autoEnterWorld{false};

@@ -68,7 +68,7 @@ struct DigResult {
 struct BlockBreakOutcome {
     bool broken{false};             // False for unbreakable blocks (nothing happened)
     std::optional<ItemStack> drop{}; // BlockDef::dropId x1 when harvested, nullopt otherwise
-    // Second, independent roll (S2.9): leaves give an apple 1 time in 200; the seeds of crops.
+    // Second, independent roll: leaves give an apple 1 time in 200; the seeds of crops.
     std::optional<ItemStack> bonusDrop{};
     WearResult toolWear{WearResult::Unchanged};
     // Beta BlockIce.harvestBlock: the caller places flowing water in the broken cell when the
@@ -84,16 +84,16 @@ struct BlockBreakOutcome {
 // snowballs, leaves a sapling 1 time in 20 and, as a bonus roll, an apple 1 time in 200 -
 // not in Beta 1.7.3, but the only food before mobs); `dropSeed` feeds those random rolls
 // deterministically, so pass a fresh value from the world RNG per broken block.
-// S5.6-S5.8: tall grass gives seeds 1 time in 8, a door or bed half its item, crops (by
+// Tall grass gives seeds 1 time in 8, a door or bed half its item, crops (by
 // their stage `meta`) wheat when ripe as `drop` and 0..3 seeds as `bonusDrop`.
-// S6.6: gravel gives flint 1 time in kGravelFlintOneIn, gravel otherwise.
+// Gravel gives flint 1 time in kGravelFlintOneIn, gravel otherwise.
 BlockBreakOutcome breakBlockWith(voxel::BlockId block, ItemStack& held, uint64_t dropSeed = 0,
                                  uint8_t meta = 0) noexcept;
 
 // Beta 1.7.3 BlockGravel.idDropped: rand(10) == 0 gives flint.
 inline constexpr int32_t kGravelFlintOneIn = 10;
 
-// S6.6 what a block destroyed by an explosion drops when its 0.3 chance comes up (Beta
+// What a block destroyed by an explosion drops when its 0.3 chance comes up (Beta
 // Block.dropBlockAsItemWithChance): the same items as a harvest, without the tool check
 // (stone gives cobblestone, obsidian would give obsidian); nothing for air and liquids, even
 // for unbreakable blocks the caller let through.

@@ -24,7 +24,7 @@ inline constexpr float kWeatherRampPerTick = 1.0f / 400.0f;
 inline constexpr float kRainingThreshold = 0.2f;
 inline constexpr float kThunderingThreshold = 0.9f;
 
-// S8.10 lightning: Beta tries 1 in 100000 per loaded chunk and tick while it thunders. Fewer
+// Lightning: Beta tries 1 in 100000 per loaded chunk and tick while it thunders. Fewer
 // chunks are loaded around the player here than in Beta's 400, so the count is raised to at
 // least kLightningMinChunks: about one strike every 250 ticks (12.5 s) during a storm.
 inline constexpr int32_t kLightningOneIn = 100000;
@@ -34,10 +34,10 @@ inline constexpr float kSpeedOfSoundBlocksPerSecond = 343.0f;
 
 enum class Precipitation : uint8_t { None, Rain, Snow };
 
-// One weather tick (Beta World.updateWeather, with the roadmap's 1/400 ramp).
+// One weather tick (Beta World.updateWeather, with a 1/400 ramp).
 void tickWeather(storage::WeatherState& state, gameplay::SplitMix64& rng);
 
-// S8.13 debug cycle: clear -> rain -> thunderstorm -> clear. The flags flip at once with fresh
+// Debug cycle: clear -> rain -> thunderstorm -> clear. The flags flip at once with fresh
 // durations; the strengths still ramp over 400 ticks.
 void cycleWeather(storage::WeatherState& state, gameplay::SplitMix64& rng);
 

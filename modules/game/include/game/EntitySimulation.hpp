@@ -50,7 +50,7 @@ struct MeleeHitEvent {
     gameplay::MeleeResult result{};
 };
 
-// What hurt the player. Grows only at the end (S6.2 arrows hit as Projectile, S6.6 blasts as
+// What hurt the player. Grows only at the end (arrows hit as Projectile, blasts as
 // Explosion).
 enum class DamageCause : uint8_t { Fall, Drown, Void, Lava, Fire, Cactus, Mob, Suffocation, Projectile, Explosion };
 
@@ -58,8 +58,8 @@ enum class DamageCause : uint8_t { Fall, Drown, Void, Lava, Fire, Cactus, Mob, S
 struct PlayerDamage {
     int32_t amount{0};
     DamageCause cause{DamageCause::Fall};
-    std::optional<glm::vec3> sourcePos{}; // Attacker position: a full hit knocks the player away (S4.5)
-    bool bypassArmor{false};              // Armor (S6.7) ignores this hit: only the void (Beta: falls and drowning go through it)
+    std::optional<glm::vec3> sourcePos{}; // Attacker position: a full hit knocks the player away
+    bool bypassArmor{false};              // Armor ignores this hit: only the void (Beta: falls and drowning go through it)
 };
 
 struct PlayerHurtEvent {
@@ -68,14 +68,14 @@ struct PlayerHurtEvent {
     bool killed{false};
 };
 
-// S6.6 one explosion that went off (particles and the explosion sound).
+// One explosion that went off (particles and the explosion sound).
 struct ExplosionEvent {
     glm::vec3 centre{0.0f};
     float power{0.0f};
     size_t blocksDestroyed{0};
 };
 
-// S6.6 explosions and TNT (Beta Explosion / EntityTNTPrimed / BlockTNT).
+// Explosions and TNT (Beta Explosion / EntityTNTPrimed / BlockTNT).
 inline constexpr float kTntPower = 4.0f;
 // Beta EntityTNTPrimed: thrown up at 0.2 blocks per tick, a 0.02 random sideways nudge.
 inline constexpr float kPrimedTntLaunchSpeed = 0.2f * 20.0f;
@@ -102,17 +102,17 @@ struct GameTickEvents {
     int32_t itemsPickedUp{0};
     std::vector<PlayerHurtEvent> playerHurt; // Hits that landed this tick, in order
     bool playerDied{false};                  // Set on the tick whose hit killed the player
-    std::vector<MobSoundEvent> mobSounds;    // Ambient, hurt and death sounds of mobs (S4.9)
-    // S5.8: set on the tick a full night's sleep ends, to the head of the bed slept in. The
+    std::vector<MobSoundEvent> mobSounds;    // Ambient, hurt and death sounds of mobs
+    // Set on the tick a full night's sleep ends, to the head of the bed slept in. The
     // WorldSession has already applied the morning and the bed spawn.
     std::optional<core::BlockPos> wokeInBed;
-    std::vector<ExplosionEvent> explosions; // S6.6, in the order they went off
+    std::vector<ExplosionEvent> explosions; // in the order they went off
 };
 
 // Dead entities stay targetable for gameplay::kDeathAnimationTicks before they are removed.
 struct CorpseComp {
     int32_t ticks{0};
-    bool burning{false}; // On fire when it died: a pig then drops cooked porkchop (S4.6)
+    bool burning{false}; // On fire when it died: a pig then drops cooked porkchop
 };
 
 // GL-free entity simulation (glossary: Entity simulation), the part of the WorldSession that
@@ -147,19 +147,19 @@ public:
     // player's survival rules (fall, breath, void, health timers), the player's attack (melee
     // or mining), then the drops of the blocks and block entities those edits removed. Entity
     // phase: the entity systems (target search, AI, skeleton shots, spider leaps and creeper
-    // fuses (S6.3), movement, voxel collision, arrows (S6.2), sun burning, mob contact hits,
+    // fuses, movement, voxel collision, arrows, sun burning, mob contact hits,
     // health/corpses/death drops, item ageing), the falling blocks, the pressure plates, the
-    // primed TNT fuses and up to kMaxExplosionsPerTick queued explosions (S6.6), the drops of
+    // primed TNT fuses and up to kMaxExplosionsPerTick queued explosions, the drops of
     // what they removed, and item pickup; drops spawned after the movement still move in this
     // tick (Beta updates entities added during the loop). Block entities run last. A dead
     // player neither attacks nor picks anything up. `timeOfDay` follows SkyRenderer (0.25 =
-    // noon, the default). S8.10 `weather`: mobs in the rain do not burn and lose their fire
+    // noon, the default). `weather`: mobs in the rain do not burn and lose their fire
     // (clear by default). Natural spawning is spawnMobs, called after.
     GameTickEvents tick(world::World& world, physics::Player& player, const PlayerActions& actions,
                         float timeOfDay = 0.25f, const storage::WeatherState& weather = {});
 
-    // Natural mob spawning and despawning (MobSpawner) and the dungeon spawners (S6.10), when
-    // naturalSpawning() is on. S8.10 rain and thunder darken spawning, and a thunderstorm lets
+    // Natural mob spawning and despawning (MobSpawner) and the dungeon spawners, when
+    // naturalSpawning() is on. Rain and thunder darken spawning, and a thunderstorm lets
     // hostiles spawn by day. The WorldSession calls it once per game tick, after tick().
     void spawnMobs(world::World& world, const physics::Player& player, float timeOfDay,
                    const storage::WeatherState& weather);
@@ -169,10 +169,10 @@ public:
     // gameplay::applyDamage runs (hurt-resistance window included), a PlayerHurtEvent is
     // recorded when health was removed, and playerDied is set on the killing hit. A full hit
     // also starts the hurt camera roll (Player::onHurt). Unless `bypassArmor`, the landing
-    // damage wears the worn armor and is reduced by it (S6.7, gameplay::absorbDamage).
+    // damage wears the worn armor and is reduced by it (gameplay::absorbDamage).
     gameplay::HitResult damagePlayer(physics::Player& player, const PlayerDamage& damage, GameTickEvents& events);
 
-    // S6.6 Beta Explosion.doExplosionA/B at `centre` with `power` (TNT 4, creeper 3): the
+    // Beta Explosion.doExplosionA/B at `centre` with `power` (TNT 4, creeper 3): the
     // gameplay::explosionBlocks cells turn to air, each dropping its item with
     // kExplosionDropChance (a door or bed once); TNT in them becomes primed TNT with a
     // kChainFuseMin + rand(kChainFuseRandom) fuse. Within 2 x power, mobs take
@@ -188,18 +188,18 @@ public:
     void queueExplosion(const glm::vec3& centre, float power, ecs::EntityId source = ecs::NULL_ENTITY);
     [[nodiscard]] size_t pendingExplosions() const noexcept { return m_explosionQueue.size(); }
 
-    // S6.6 turns the TNT block at `cell` into a primed TNT entity (Beta EntityTNTPrimed: thrown
+    // Turns the TNT block at `cell` into a primed TNT entity (Beta EntityTNTPrimed: thrown
     // up at kPrimedTntLaunchSpeed) with `fuse` ticks. Returns NULL_ENTITY when `cell` holds no
     // TNT (it is left as is) or the registry is full.
     ecs::EntityId primeTnt(world::World& world, const core::BlockPos& cell,
                            int32_t fuse = ecs::PrimedTntComp::DEFAULT_FUSE_TICKS);
-    // S6.6 right click with flint and steel (259) on TNT (step 3 of the right-click order):
+    // Right click with flint and steel (259) on TNT (step 3 of the right-click order):
     // primes it and wears the flint and steel by 1 (64 uses). Returns the primed entity,
     // nullopt when the held item or the target does not fit.
     std::optional<ecs::EntityId> igniteTnt(world::World& world, physics::Player& player,
                                            const physics::RaycastHit& target);
 
-    // S5.8 Beta sleepInBedAt: a living hostile mob within x/z +-kBedMonsterReachXZ and y
+    // Beta sleepInBedAt: a living hostile mob within x/z +-kBedMonsterReachXZ and y
     // -kBedMonsterReachY..+kBedMonsterReachY+1 of the bed whose head is at `bedHead`.
     [[nodiscard]] bool hostileMobNearBed(const core::BlockPos& bedHead);
 
@@ -217,12 +217,12 @@ public:
     void setNaturalSpawning(bool enabled) noexcept { m_naturalSpawning = enabled; }
     [[nodiscard]] bool naturalSpawning() const noexcept { return m_naturalSpawning; }
 
-    // S8.3 A* path following for mobs (FeatureFlags::mobPathfinding, --no-pathfinding); on by
+    // A* path following for mobs (FeatureFlags::mobPathfinding, --no-pathfinding); on by
     // default. Off: mobs lose their MobPathComp and steer in straight lines.
     void setPathfinding(bool enabled);
     [[nodiscard]] bool pathfinding() const noexcept { return m_pathfinding; }
     [[nodiscard]] const ecs::PathPlanningSystem& pathPlanning() const noexcept { return m_pathPlanning; }
-    // A* nodes expanded by the last tick's planning (F3 tick costs, Sprint 8 risks).
+    // A* nodes expanded by the last tick's planning (F3 tick costs).
     [[nodiscard]] int32_t lastPathNodes() const noexcept { return m_lastPathNodes; }
 
     // Death drops of a mob (Beta EntityLiving.dropFewItems), quantities rolled with the
@@ -245,7 +245,7 @@ public:
     // (World::takeUnsupportedBreaks); tick() runs it after the player's attack and after the
     // explosions, the WorldSession after the world phase.
     size_t spawnUnsupportedDrops(world::World& world);
-    // S5.3: spawns the falling sand and gravel entities World's scheduled updates released
+    // Spawns the falling sand and gravel entities World's scheduled updates released
     // (World::takeFallingBlockSpawns); the WorldSession runs it right after the world phase.
     // Returns the number of entities spawned.
     size_t spawnFallingBlocks(world::World& world);
@@ -255,7 +255,7 @@ public:
     // moved them.
     void tickFallingBlocks(world::World& world);
 
-    // S8.7 pressure plates (Beta BlockPressurePlate.onEntityCollidedWithBlock): every plate
+    // Pressure plates (Beta BlockPressurePlate.onEntityCollidedWithBlock): every plate
     // whose trigger box (inset 1/8, 1/4 high) the player or a mob touches is reported to
     // World::reportPlateContact; a wooden plate also reacts to items, arrows, falling blocks
     // and primed TNT. tick() runs it after the entities moved. Returns the contacts reported.
@@ -299,7 +299,7 @@ public:
     // and the cursor stack are scattered too. Returns the number of entities spawned.
     size_t dropInventoryOnDeath(physics::Player& player);
 
-    // S6.3 right click on the entity under the crosshair (step 1 of the right-click order,
+    // Right click on the entity under the crosshair (step 1 of the right-click order,
     // `target` from meleeTarget): an empty bucket on a living cow becomes a milk bucket (Beta
     // EntityCow.interact). Returns false when nothing happened.
     bool useHeldItemOnEntity(physics::Player& player, ecs::EntityId target);
@@ -356,7 +356,7 @@ private:
     GameTickEvents m_pendingEvents;
 };
 
-// Metadata a block placed by the player at `pos` starts with (S5.4): the player bit of leaves,
+// Metadata a block placed by the player at `pos` starts with: the player bit of leaves,
 // the wall side of a ladder (nullopt when no normal cube can hold it), the orientation of
 // stairs from the look direction, 0 otherwise.
 std::optional<uint8_t> placementMetadata(const world::World& world, const physics::Player& player,
@@ -368,14 +368,14 @@ std::optional<uint8_t> placementMetadata(const world::World& world, const physic
 std::optional<voxel::BlockId> placeHeldBlock(world::World& world, physics::Player& player,
                                              const physics::RaycastHit& target);
 
-// S6.10: a dungeon chest (Chest with worldgen::kChestLootPendingMeta) draws its loot on first
+// A dungeon chest (Chest with worldgen::kChestLootPendingMeta) draws its loot on first
 // access (worldgen::rollDungeonChestLoot, seeded by the world seed and `pos`): the slots go to
 // the BlockEntityStore and the metadata drops to 0. Returns false for anything else (an
 // ordinary or already opened chest is left alone). Opening, breaking and blasting a chest
 // call it first.
 bool fillDungeonChest(world::World& world, const core::BlockPos& pos);
 
-// S5.8: the head cell of the bed one of whose halves is at `pos`; nullopt when `pos` is not
+// The head cell of the bed one of whose halves is at `pos`; nullopt when `pos` is not
 // part of a whole bed.
 [[nodiscard]] std::optional<core::BlockPos> bedHeadAt(const world::World& world, const core::BlockPos& pos);
 

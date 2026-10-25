@@ -33,7 +33,7 @@ namespace betacraft::streaming {
  *   - Reserved/LOD  : 9 bits  [0..511]  (bits 23..31) mask 0x1FF (stores sectionY index 0..7 or LOD)
  *   Total Word 1: 4 + 4 + 8 + 5 + 1 + 1 + 9 = 32 bits.
  *
- * Fine offsets (S5.4 shapes: ladders, doors, fences, stairs...): a vertex may sit 0..15
+ * Fine offsets (shapes: ladders, doors, fences, stairs...): a vertex may sit 0..15
  * sixteenths below its integer position on each axis. They live in bits no mesher used:
  *   - offX : word1 bits 26..29 (reserved, above the 3-bit section index)
  *   - offY : word1 bits 16..19 (anim frame; only read while the sway flag is clear)

@@ -10,7 +10,7 @@
 
 namespace betacraft::storage {
 
-// S7.1 region file `region/r.X.Z.bcr`: 32x32 chunks in 4 KiB sectors.
+// Region file `region/r.X.Z.bcr`: 32x32 chunks in 4 KiB sectors.
 //
 // Layout (big-endian):
 //   sector 0: 1024 entries {uint24 sectorOffset, uint8 sectorCount}, index localX + 32 * localZ

@@ -1,6 +1,6 @@
 betacraft_add_module(storage DEPS betacraft::core betacraft::voxel betacraft::worldgen)
 
-# S7.1: zstd-compressed region chunks when libzstd is found (RegionFile::kZstdAvailable).
+# Zstd-compressed region chunks when libzstd is found (RegionFile::kZstdAvailable).
 if(BETACRAFT_WITH_ZSTD AND ZSTD_FOUND)
     target_compile_definitions(storage PUBLIC BETACRAFT_HAS_ZSTD=1)
     target_link_libraries(storage PRIVATE PkgConfig::ZSTD)

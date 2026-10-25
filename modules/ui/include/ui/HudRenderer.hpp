@@ -29,7 +29,7 @@ struct CraftingScreenView {
     std::array<physics::InventorySlot, 9> grid{};
     physics::InventorySlot result{};
     physics::InventorySlot carried{}; // Drawn under the mouse cursor
-    // S2.6: a furnace (container[0..2]: input, fuel, output) or a chest (27 slots) replaces
+    // A furnace (container[0..2]: input, fuel, output) or a chest (27 slots) replaces
     // the grid and the palette.
     ScreenKind kind{ScreenKind::Inventory2x2};
     std::array<physics::InventorySlot, 27> container{};
@@ -37,8 +37,8 @@ struct CraftingScreenView {
     float burnProgress{0.0f}; // Furnace flame fill, 0..1
 };
 
-// Outside (S3.4): the cursor is off the dialog panel; only hitTestInventoryScreen reports it.
-// Armor (S6.7): the 4 armor slots left of the player inventory, index = gameplay::ArmorSlot;
+// Outside: the cursor is off the dialog panel; only hitTestInventoryScreen reports it.
+// Armor: the 4 armor slots left of the player inventory, index = gameplay::ArmorSlot;
 // only on the player's own inventory screen (Inventory2x2).
 enum class InventoryRegion : uint8_t { None, Palette, Inventory, CraftingGrid, CraftingResult, Container, Outside, Armor };
 
@@ -61,7 +61,7 @@ struct SlotRect {
     float size{0.0f};
 };
 
-// S3.7 GUI Scale: the HUD, the inventory and the death screen are laid out in a virtual
+// GUI Scale: the HUD, the inventory and the death screen are laid out in a virtual
 // canvas of (window / scale) points, stretched over the window by the orthographic matrix.
 // scale = TextRenderer::calculateGuiScale / 3, so Auto at 1280x720 (guiScale 3) is 1.0 and
 // the canvas is the window itself.
@@ -82,7 +82,7 @@ struct HudCanvas {
     }
 };
 
-// Mob numbers and caps for the F3 overlay (game::MobSpawner::stats, S4.10).
+// Mob numbers and caps for the F3 overlay (game::MobSpawner::stats).
 struct HudMobStats {
     int32_t passive{0};
     int32_t hostile{0};
@@ -94,13 +94,13 @@ struct HudMobStats {
 // `feetLight` being the effective light (gameplay::effectiveLight) of the feet cell.
 [[nodiscard]] std::string mobDebugLine(const HudMobStats& mobs, int32_t feetLight);
 
-// Chunk storage numbers for the F3 overlay (world::World::getStorageStats, S7.5).
+// Chunk storage numbers for the F3 overlay (world::World::getStorageStats).
 struct HudStorageStats {
     uint64_t bundlesWritten{0};
     // Bundles written for a chunk with no player edit in its 3x3 neighbourhood: must stay 0
     // (bug 8, fluid simulation alone never saves a chunk).
     uint64_t unsolicitedWrites{0};
-    // S7.10 streaming (world::World::getStreamingStats): chunks waiting on each stage, the
+    // Streaming (world::World::getStreamingStats): chunks waiting on each stage, the
     // slowest per-frame integration of the last couple of seconds and the open region files.
     uint32_t generating{0};
     uint32_t integrating{0};
@@ -114,10 +114,10 @@ struct HudStorageStats {
 
 // F3 line of the storage: "Storage: <n> bundles written  <m> without player edit".
 [[nodiscard]] std::string storageDebugLine(const HudStorageStats& storage);
-// S7.10 F3 line: "Chunks: <r> read  <g> gen  <i> integrate  <w> write  Integration:
+// F3 line: "Chunks: <r> read  <g> gen  <i> integrate  <w> write  Integration:
 // <last>/<max> ms  Regions: <n> (<kib> KiB)".
 [[nodiscard]] std::string streamingDebugLine(const HudStorageStats& storage);
-// Above this, integration made a frame miss the Sprint 7 target (no hitch over 8 ms): red.
+// Above this, integration made a frame miss the streaming target (no hitch over 8 ms): red.
 inline constexpr float kIntegrationHitchMs = 8.0f;
 
 struct HudDebugContext {
@@ -133,20 +133,20 @@ struct HudDebugContext {
     render::RenderStats renderStats{};
     physics::RaycastHit targetHit{};
     CraftingScreenView crafting{};
-    // S3.2 hurt feedback (Survival)
+    // Hurt feedback (Survival)
     float hurtFlash{0.0f};   // gameplay::hurtFlashIntensity: red veil of 0.25 * hurtFlash
     bool heartsBlink{false}; // Hearts outlined in white (invulnerability blink)
     bool lowHealth{false};   // Health <= 4: the hearts jitter
     bool burning{false};     // Orange veil
     uint32_t jitterSeed{0};  // Changes every game tick, so the jitter moves at 20 Hz
     HudMobStats mobs{};      // F3 mob counts and caps
-    // S5.8: a one-line notice above the hotbar (empty: none), faded by statusAlpha 0..1, and
+    // A one-line notice above the hotbar (empty: none), faded by statusAlpha 0..1, and
     // the black veil of the sleep screen (0..1).
     std::string statusMessage{};
     float statusAlpha{0.0f};
     float sleepFade{0.0f};
-    HudStorageStats storage{}; // F3 chunk storage counters (S7.5)
-    std::string weather{};     // S8.9 F3 weather line (empty: not shown)
+    HudStorageStats storage{}; // F3 chunk storage counters
+    std::string weather{};     // F3 weather line (empty: not shown)
 };
 
 class HudRenderer : private core::NonCopyable {
@@ -194,12 +194,12 @@ public:
     [[nodiscard]] static InventoryHit hitTestInventoryScreen(int32_t mouseX, int32_t mouseY, int32_t screenWidth,
                                                              int32_t screenHeight, InventoryLayoutKey layout) noexcept;
 
-    // S3.7: TextRenderer::calculateGuiScale(w, h, pref) / 3.
+    // TextRenderer::calculateGuiScale(w, h, pref) / 3.
     [[nodiscard]] static float hudScale(int32_t windowWidth, int32_t windowHeight, render::GuiScalePreference pref) noexcept;
     [[nodiscard]] static HudCanvas hudCanvas(int32_t windowWidth, int32_t windowHeight,
                                              render::GuiScalePreference pref) noexcept;
 
-    // S3.6: the lines of the tooltip shown when hovering `slot` with an empty cursor: the item
+    // The lines of the tooltip shown when hovering `slot` with an empty cursor: the item
     // name, then "remaining / max" durability for a tool. Empty for an empty slot.
     [[nodiscard]] static std::vector<std::string> inventoryTooltip(const physics::InventorySlot& slot);
 

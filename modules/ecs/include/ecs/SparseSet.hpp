@@ -13,7 +13,7 @@ namespace betacraft::ecs {
 
 // Type-erased sparse set of entity handles: a packed dense array plus a paged sparse index
 // (entity index -> dense position). Pages of PAGE_SIZE entries are allocated on demand so the
-// memory cost is O(active pages) instead of O(max entity index) (Fiche 3 §4).
+// memory cost is O(active pages) instead of O(max entity index).
 //
 // Derived component pools keep a payload array parallel to the dense array; the virtual
 // swapPayload/popPayload hooks let this base class perform swap-and-pop on both at once.

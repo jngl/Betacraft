@@ -22,7 +22,7 @@ struct VoxelSample {
     voxel::BlockStateId state{static_cast<voxel::BlockStateId>(voxel::BlockId::Air)};
     uint8_t skyLight{15};
     uint8_t blockLight{0};
-    uint8_t meta{0}; // 4-bit block metadata (S5.4: door state, ladder side, crop stage...)
+    uint8_t meta{0}; // 4-bit block metadata (door state, ladder side, crop stage...)
 };
 
 // Value used for voxels whose source is absent (unloaded neighbour chunk) or for reads
@@ -116,7 +116,7 @@ private:
         return lx >= 0 && lx < SIZE && ly >= 0 && ly < SIZE && lz >= 0 && lz < SIZE;
     }
 
-    // S5.4: the metadata nibble rides in the top 4 bits of the stored state (states hold a
+    // The metadata nibble rides in the top 4 bits of the stored state (states hold a
     // block id, below 256), which keeps the snapshot at its 17 KB footprint.
     static constexpr uint32_t kMetaShift = 12;
     static constexpr voxel::BlockStateId kStateMask = (1u << kMetaShift) - 1u;

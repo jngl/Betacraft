@@ -17,8 +17,8 @@
 
 namespace betacraft::gameplay {
 
-// S6.5 Beta 1.7.3 Explosion.doExplosionA, as pure functions over callbacks so that tests need
-// no World. EntitySimulation::explode (S6.6) applies the result to the world and the entities.
+// Beta 1.7.3 Explosion.doExplosionA, as pure functions over callbacks so that tests need
+// no World. EntitySimulation::explode applies the result to the world and the entities.
 
 struct ExplosionInput {
     glm::vec3 centre{0.0f};

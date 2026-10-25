@@ -14,7 +14,7 @@ class Chunk;
 
 namespace betacraft::worldgen {
 
-// P3.4 decoration, split in two tiers (same philosophy as the Jigsaw spec, Fiche 4 s.1-5):
+// Decoration, split in two tiers (same philosophy as Jigsaw structures):
 //   Tier 1 - planning: FeaturePlanner turns a pass-1 chunk into an abstract FeaturePlan
 //            (pure function of world seed + that chunk's terrain; no voxel written).
 //   Tier 2 - rasterization: rasterizeFeature() writes the part of a feature that lies inside

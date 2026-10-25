@@ -27,7 +27,7 @@ struct WorldMeshStreamerConfig {
     size_t maxRequestsPerUpdate{512};
 };
 
-// Main-thread glue between the live World and the AsyncChunkPipeline (roadmap P1.1):
+// Main-thread glue between the live World and the AsyncChunkPipeline:
 // reports each resident chunk's lifecycle (TerrainGen and Lit on arrival, Decorated once
 // World's pass 2 ran), captures and submits every dirty section of decorated chunks,
 // re-requests what the bounded queue evicted or refused, and cancels unloaded columns.

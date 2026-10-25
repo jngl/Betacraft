@@ -13,14 +13,14 @@ struct MigrationReport {
     bool completed{false}; // chunks/ renamed (or absent); false: nothing renamed, retry later
 };
 
-// Beyond this many chunks the game shows the progress bar (Loading screen, S7.8).
+// Beyond this many chunks the game shows the progress bar (Loading screen).
 inline constexpr size_t kMigrationProgressThreshold = 200;
 
 // Number of chunks/c_X_Z.chk files a migration of `saveDir` would go through (0 without
 // chunks/); above kMigrationProgressThreshold the Loading screen shows a progress bar.
 [[nodiscard]] size_t countLegacyChunks(const std::filesystem::path& saveDir);
 
-// S7.4 one-way conversion of chunks/c_X_Z.{chk,dec,be} into region bundles:
+// One-way conversion of chunks/c_X_Z.{chk,dec,be} into region bundles:
 //   1. every chunk not yet in a region is read, checked (its blocks must deserialize) and
 //      written as one bundle; chunks already present are skipped, so an interrupted run
 //      resumes; a corrupt chunk is counted, never fatal;

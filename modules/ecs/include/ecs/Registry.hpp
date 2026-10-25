@@ -41,7 +41,7 @@ template<typename T, typename... Rest>
 
 } // namespace detail
 
-// ECS registry (Fiche 3 §2.2): owns entity slots and one sparse-set pool per component type.
+// ECS registry: owns entity slots and one sparse-set pool per component type.
 //
 // Error policy: lookups (tryGet/has/remove/destroy) are total and simply fail on invalid or
 // stale handles; mutations that cannot be honoured (emplace on a dead entity, duplicate
@@ -234,13 +234,13 @@ public:
 
     [[nodiscard]] size_t groupCount() const noexcept { return m_groups.size(); }
 
-    // Roadmap name (Fiche 3 §2.2): synchronised, indirection-free iteration of a pair.
+    // Spec name: synchronised, indirection-free iteration of a pair.
     template<ComponentType T1, ComponentType T2, typename Func>
     void forEachOwnedGroup(Func&& func) {
         group<T1, T2>().each(std::forward<Func>(func));
     }
 
-    // ---- Roadmap API names (Fiche 3 §2.2) -------------------------------------------------
+    // ---- Spec API names ----------------------------------------------------
 
     [[nodiscard]] EntityId createEntity() { return create(); }
     void destroyEntity(EntityId e) { (void)destroy(e); }

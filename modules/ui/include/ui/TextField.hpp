@@ -15,7 +15,7 @@ namespace betacraft::ui {
 // '>', '|', '"', ':'. The control characters are refused by every TextField anyway.
 inline constexpr std::string_view kForbiddenFileNameChars{"/`?*\\<>|\":"};
 
-// S7.8 one-line text input (Beta GuiTextField): SDL_TEXTINPUT text goes through insertText,
+// One-line text input (Beta GuiTextField): SDL_TEXTINPUT text goes through insertText,
 // Backspace through backspace(). Only printable ASCII is accepted (the bitmap font has no other
 // glyph, and a UTF-8 sequence is dropped whole), minus the field's `forbidden` characters, up to
 // `maxLength` characters.
@@ -52,7 +52,7 @@ private:
     bool m_focused{false};
 };
 
-// Shared drawing of the S7.8 menu screens.
+// Shared drawing of the menu screens.
 void appendSolidQuad(std::vector<render::UiQuadVertex>& out, float x0, float y0, float x1, float y1, const glm::vec4& color);
 // A title-screen style button; a disabled one is darker and never highlighted.
 void appendMenuButton(std::vector<render::UiQuadVertex>& out, const MenuButton& button, std::string_view label, bool hovered,

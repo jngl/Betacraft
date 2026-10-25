@@ -13,7 +13,7 @@ namespace betacraft::world { class World; }
 
 namespace betacraft::game {
 
-// S5.3 falling sand and gravel (Beta EntityFallingSand): a 0.98 cube with the mobs' gravity and
+// Falling sand and gravel (Beta EntityFallingSand): a 0.98 cube with the mobs' gravity and
 // the items' 0.98 air drag per tick, moved by the ECS movement and voxel collision systems.
 inline constexpr float kFallingBlockSize = 0.98f;
 inline constexpr float kFallingBlockGravityScale = 1.0f;

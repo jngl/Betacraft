@@ -12,7 +12,7 @@
 
 namespace betacraft::ecs {
 
-// Bookkeeping for one owning group (Fiche 3 §3, "Owning Pools", EnTT::group-like).
+// Bookkeeping for one owning group ("owning pools", EnTT::group-like).
 //
 // Invariant: the first size() dense slots of every owned pool hold exactly the entities that
 // own all the group's components, in the same order. Hence dense_A[i] and dense_B[i] belong

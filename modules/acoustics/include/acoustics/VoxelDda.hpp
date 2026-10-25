@@ -11,7 +11,7 @@
 
 namespace betacraft::acoustics {
 
-// Maximal audibility radius R_max (P4.2). measureOcclusion() flags sources beyond it
+// Maximal audibility radius R_max. measureOcclusion() flags sources beyond it
 // (OcclusionSample::beyondAudibleRange) so the mixer can cull them; the DDA itself is bounded by the
 // derived step budget below.
 inline constexpr int32_t MAX_AUDIBLE_RANGE = 48;

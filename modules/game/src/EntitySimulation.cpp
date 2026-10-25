@@ -122,7 +122,7 @@ void EntitySimulation::spawnMobs(world::World& world, const physics::Player& pla
     m_spawner.tick(world, m_entities, m_commands, player.getPosition(), timeOfDay, player.gameMode(), m_spawnRng,
                    weather);
     m_spawner.tickSpawners(world, m_entities, m_commands, player.getPosition(), timeOfDay, m_spawnRng,
-                           weather); // S6.10
+                           weather);
     (void)m_commands.flush(m_entities);
 }
 
@@ -131,7 +131,7 @@ gameplay::HitResult EntitySimulation::damagePlayer(physics::Player& player, cons
     if (player.isCreative() || player.isDead()) {
         return {};
     }
-    // S6.7 Beta EntityPlayer.damageEntity: the part of the hit that lands wears every worn
+    // Beta EntityPlayer.damageEntity: the part of the hit that lands wears every worn
     // piece by its full amount, then the armor value computed before the wear absorbs it
     // (fractions carried in the remainder). Only the void bypasses armor.
     const gameplay::HitResult hit =
@@ -556,7 +556,7 @@ void EntitySimulation::breakBlock(world::World& world, physics::Player& player, 
                              voxel::BlockId block, GameTickEvents& events) {
     gameplay::ItemStack held = toItemStack(player.getHeldItem());
     if (block == voxel::BlockId::TNT && !player.isCreative()) {
-        // S6.6: TNT broken in Survival lights instead of dropping (Beta BlockTNT with the
+        // TNT broken in Survival lights instead of dropping (Beta BlockTNT with the
         // ignite bit); the tool wears as on any block.
         if (primeTnt(world, pos) == ecs::NULL_ENTITY) {
             return;
@@ -567,10 +567,10 @@ void EntitySimulation::breakBlock(world::World& world, physics::Player& player, 
         return;
     }
     if (block == voxel::BlockId::Chest) {
-        (void)fillDungeonChest(world, pos); // S6.10: the loot is drawn before it spills out
+        (void)fillDungeonChest(world, pos); // the loot is drawn before it spills out
     }
     const gameplay::BlockBreakOutcome outcome =
-        gameplay::breakBlockWith(block, held, m_rng.next(), world.getMetadata(pos)); // Crop stage (S5.7)
+        gameplay::breakBlockWith(block, held, m_rng.next(), world.getMetadata(pos)); // Crop stage
     if (!outcome.broken) {
         return;
     }
@@ -635,7 +635,7 @@ void EntitySimulation::attackEntity(physics::Player& player, ecs::EntityId targe
 }
 
 // Fixed-tick order from the ECS integration notes: target search -> AI -> skeleton, spider and
-// creeper attacks (S6.3) -> movement -> voxel collision -> arrows (S6.2) -> fire -> mob contact hits -> health (corpses, death drops) -> item
+// creeper attacks -> movement -> voxel collision -> arrows -> fire -> mob contact hits -> health (corpses, death drops) -> item
 // ageing. Structural changes go through the command buffer.
 void EntitySimulation::setPathfinding(bool enabled) {
     m_pathfinding = enabled;
@@ -655,7 +655,7 @@ void EntitySimulation::runEntitySystems(world::World& world, physics::Player& pl
     const float sun = gameplay::sunBrightness(timeOfDay);
     acquireTargets(m_entities, world, m_playerProxy, player.gameMode(), m_ticks, player.isDead(), sun);
     if (m_pathfinding) {
-        // S8.3: every mob follows A* paths, planned before the steering.
+        // Every mob follows A* paths, planned before the steering.
         std::vector<ecs::EntityId> unplanned;
         m_entities.view<ecs::MobAIComp>().each([&](ecs::EntityId e, const ecs::MobAIComp&) {
             if (!m_entities.has<ecs::MobPathComp>(e)) {
@@ -671,7 +671,7 @@ void EntitySimulation::runEntitySystems(world::World& world, physics::Player& pl
         m_lastPathNodes = budget.spent;
     }
     ecs::MobAISystem::update(m_entities, TICK_SECONDS);
-    // S6.3 attacks that override the steering: skeletons stop and shoot, spiders leap, lit
+    // Attacks that override the steering: skeletons stop and shoot, spiders leap, lit
     // creepers stand still and explode.
     (void)rangedAttacks(m_entities, world, m_playerProxy, m_mobRng);
     spiderBehaviour(m_entities, world, m_playerProxy, sun, m_mobRng);
@@ -682,7 +682,7 @@ void EntitySimulation::runEntitySystems(world::World& world, physics::Player& pl
     ecs::MovementPhysicsSystem::update(m_entities, TICK_SECONDS);
     ecs::VoxelCollisionSystem::update(m_entities, world);
     m_movedThisTick = true; // Drops spawned from here on move in moveLateDrops
-    // S6.2 arrows, on the segment they just flew.
+    // Arrows, on the segment they just flew.
     const ArrowTickResult arrows = tickArrows(m_entities, world, m_playerProxy, [&](const ArrowPlayerHit& hit) {
         const gameplay::HitResult r = damagePlayer(
             player, {.amount = hit.damage, .cause = DamageCause::Projectile, .sourcePos = hit.sourcePos}, events);
@@ -900,7 +900,7 @@ void EntitySimulation::explode(world::World& world, physics::Player& player, glm
             continue;
         }
         if (id == voxel::BlockId::Chest) {
-            (void)fillDungeonChest(world, p); // S6.10
+            (void)fillDungeonChest(world, p);
         }
         const uint8_t meta = world.getMetadata(p);
         const bool drops = m_rng.nextFloat() < kExplosionDropChance;
@@ -1012,7 +1012,7 @@ std::optional<uint8_t> placementMetadata(const world::World& world, const physic
             const glm::vec3 look = player.getLookDirection();
             return voxel::stairsMetaForLook(look.x, look.z);
         }
-        // S8.5: a lever on any side or on top of a normal cube, a button on its sides, a
+        // A lever on any side or on top of a normal cube, a button on its sides, a
         // redstone torch and the plates on top of one (Beta canPlaceBlockAt).
         case voxel::BlockId::Lever:
         case voxel::BlockId::StoneButton: {
@@ -1053,7 +1053,7 @@ std::optional<voxel::BlockId> placeHeldBlock(world::World& world, physics::Playe
     // farmland is never placed as a block.
     if (voxel::isDoorBlock(block) || block == voxel::BlockId::Bed || block == voxel::BlockId::Crops ||
         block == voxel::BlockId::RedstoneWire || block == voxel::BlockId::RedstoneTorchOff) {
-        return std::nullopt; // S8.5: wire comes from redstone dust, an unlit torch from a lit one
+        return std::nullopt; // wire comes from redstone dust, an unlit torch from a lit one
     }
     const core::BlockPos pos = target.adjacentPos;
     if (pos.y < 0 || pos.y >= voxel::Chunk::HEIGHT ||

@@ -9,7 +9,7 @@
 
 namespace betacraft::streaming {
 
-// Strict per-chunk streaming state machine (roadmap P1.1):
+// Strict per-chunk streaming state machine:
 //   Unloaded -> TerrainGen -> Lit -> Decorated -> Meshed -> Uploaded
 // Extra legal edges: any loaded stage -> Unloaded (eviction), and Meshed/Uploaded ->
 // Decorated (a block edit invalidates the mesh but keeps terrain and decoration).

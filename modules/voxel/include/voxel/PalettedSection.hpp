@@ -93,7 +93,7 @@ public:
     [[nodiscard]] size_t getPaletteSize() const noexcept;
     // Whether `pred(BlockId)` may hold for some voxel of the section: exact for a single-block
     // section, a superset for paletted ones (an entry can outlive its last voxel), always true
-    // in direct 16-bit storage, which keeps no palette. Lets S5.1 random ticks skip sections.
+    // in direct 16-bit storage, which keeps no palette. Lets random ticks skip sections.
     template <typename Pred>
     [[nodiscard]] bool mayContain(Pred&& pred) const {
         if (m_bitsPerVoxel == 0) return pred(static_cast<BlockId>(m_singleBlock));

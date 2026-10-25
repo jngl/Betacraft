@@ -11,7 +11,7 @@
 #include <type_traits>
 #include <vector>
 
-// S5.4 geometry of the detailed shapes (voxel::isDetailedShape): ladders, doors, beds, fences,
+// Geometry of the detailed shapes (voxel::isDetailedShape): ladders, doors, beds, fences,
 // crops, farmland and stairs, built from 1/16-block boxes and planes. Shared by
 // render::ChunkMesher (live World reads) and SnapshotMesher (18^3 snapshot reads)
 // so the two meshes stay identical by construction: each passes a sampler returning the
@@ -252,7 +252,7 @@ void emitDetailedShape(std::vector<PackedChunkVertex>& out, const voxel::BlockDe
             break;
         }
         case RenderShape::Flat: {
-            // S8.5 wire (bright tile when powered) and pressure plates: a 1/16 slab whose
+            // Wire (bright tile when powered) and pressure plates: a 1/16 slab whose
             // underside lies on the block below.
             uint32_t tile = def.tileForFace(core::FaceDir::PosY);
             if (def.id == voxel::BlockId::RedstoneWire) {
@@ -262,7 +262,7 @@ void emitDetailedShape(std::vector<PackedChunkVertex>& out, const voxel::BlockDe
             break;
         }
         case RenderShape::Lever: {
-            // S8.5 lever (cobblestone base and a stick that leans the other way when on) and
+            // Lever (cobblestone base and a stick that leans the other way when on) and
             // button, turned onto the wall or floor they hang on.
             if (def.id == voxel::BlockId::Lever) {
                 e.box(voxel::orientAttachedBox(voxel::leverBaseBox(), meta), kAllFaces,

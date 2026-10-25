@@ -15,7 +15,7 @@ find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
 
 pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
-# S7.1 region files compress chunk bundles with zstd level 3 when available; without it they
+# Region files compress chunk bundles with zstd level 3 when available; without it they
 # are stored uncompressed (compression byte 0), which every build can read.
 option(BETACRAFT_WITH_ZSTD "Compress region file chunks with zstd" ON)
 if(BETACRAFT_WITH_ZSTD)
@@ -94,7 +94,7 @@ target_link_libraries(betacraft_e2e_tests PRIVATE betacraft::game betacraft_warn
 add_dependencies(betacraft_e2e_tests betacraft)
 add_test(NAME E2ETests COMMAND betacraft_e2e_tests)
 
-# Frozen reference saves (tests/data/saves/vN, roadmap conventions §1.8).
+# Frozen reference saves (tests/data/saves/vN, CLAUDE.md conventions).
 foreach(t betacraft_integration_tests betacraft_e2e_tests)
     target_compile_definitions(${t} PRIVATE BETACRAFT_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
 endforeach()
@@ -129,6 +129,6 @@ add_test(NAME BetaCraftLegacyTests COMMAND betacraft_legacy_tests)
 # `ctest -L benchmark` (CI runs `ctest -LE benchmark`). Module budgets are registered by their
 # module (Module_acoustics_perf in modules/acoustics).
 
-# S6.6: one TNT blast under 15 ms in Release.
+# One TNT blast under 15 ms in Release.
 add_test(NAME Integration_beta_content_perf COMMAND betacraft_integration_tests --gtest_filter=BetaContent.*Budget*)
 set_tests_properties(Integration_beta_content_perf PROPERTIES LABELS benchmark ENVIRONMENT BETACRAFT_PERF_TESTS=1)

@@ -13,7 +13,7 @@
 
 namespace betacraft::ai {
 
-// S8.2 voxel A* for walking mobs (roadmap P2.2, Fiche 3).
+// Voxel A* for walking mobs.
 //
 // A node is the cell of the mob's feet, i.e. the corner cell of its footprint: ceil(extents.x)
 // x ceil(extents.z) columns towards +X/+Z, ceil(extents.y) cells tall (a zombie 1x1x2, a

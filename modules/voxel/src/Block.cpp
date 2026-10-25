@@ -666,7 +666,7 @@ void BlockRegistry::initialize() noexcept {
         .faceTiles = allFaces(80)
     });
 
-    // Mob spawner (52, S6.10): Beta BlockMobSpawner, a see-through cage that drops nothing.
+    // Mob spawner (52): Beta BlockMobSpawner, a see-through cage that drops nothing.
     reg(BlockDef{
         .id = BlockId::MobSpawner,
         .name = "Monster Spawner",
@@ -955,10 +955,10 @@ void BlockRegistry::initialize() noexcept {
         .faceTiles = topBottomSide(21, 21, 116)
     });
 
-    // --- S5.4 metadata-dependent shapes (geometry and boxes: BlockShapes.hpp) ---
+    // --- Metadata-dependent shapes (geometry and boxes: BlockShapes.hpp) ---
 
     // Bed (26): 9/16 high; the head half (meta bit 3) shows the pillow tiles. Dropped as the
-    // bed item by the game rules (S5.8), not by dropId.
+    // bed item by the game rules, not by dropId.
     reg(BlockDef{
         .id = BlockId::Bed,
         .name = "Bed",
@@ -1011,7 +1011,7 @@ void BlockRegistry::initialize() noexcept {
         .faceTiles = allFaces(16)
     });
 
-    // Crops (59): walk-through, tile 88 + growth stage. Harvest drops come from S5.7.
+    // Crops (59): walk-through, tile 88 + growth stage. Harvest drops come from gameplay/Crops.
     reg(BlockDef{
         .id = BlockId::Crops,
         .name = "Crops",
@@ -1048,7 +1048,7 @@ void BlockRegistry::initialize() noexcept {
     });
 
     // Wooden door (64): 3/16 thick, lower half tile 97, upper half 81. One item per door is
-    // dropped by the game rules (S5.6).
+    // dropped by the game rules.
     reg(BlockDef{
         .id = BlockId::WoodDoor,
         .name = "Wooden Door",
@@ -1066,7 +1066,7 @@ void BlockRegistry::initialize() noexcept {
         .faceTiles = allFaces(kDoorLowerTile)
     });
 
-    // Ladder (65): a 2/16 plate against its wall, which the player climbs (S5.5).
+    // Ladder (65): a 2/16 plate against its wall, which the player climbs.
     reg(BlockDef{
         .id = BlockId::Ladder,
         .name = "Ladder",
@@ -1084,7 +1084,7 @@ void BlockRegistry::initialize() noexcept {
         .faceTiles = allFaces(kLadderTile)
     });
 
-    // Fence (85): a post with bars towards neighbouring fences, collides 1.5 high (S5.9).
+    // Fence (85): a post with bars towards neighbouring fences, collides 1.5 high.
     reg(BlockDef{
         .id = BlockId::Fence,
         .name = "Fence",
@@ -1102,7 +1102,7 @@ void BlockRegistry::initialize() noexcept {
         .faceTiles = allFaces(4)
     });
 
-    // S8.5 redstone (Beta 1.7.3 hardness; none of them collides). The wire's power, the
+    // Redstone (Beta 1.7.3 hardness; none of them collides). The wire's power, the
     // lever's state and the plates' and button's press live in the metadata.
     reg(BlockDef{
         .id = BlockId::RedstoneWire,
@@ -1302,7 +1302,7 @@ void BlockRegistry::initialize() noexcept {
         .faceTiles = allFaces(135)
     });
 
-    // S6.5 blast resistance: Beta setHardness makes it the hardness, setResistance raises it.
+    // Blast resistance: Beta setHardness makes it the hardness, setResistance raises it.
     for (BlockDef& def : s_defs) {
         def.blastResistance = def.hardness > 0.0f ? def.hardness : 0.0f;
     }

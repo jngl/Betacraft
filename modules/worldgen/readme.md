@@ -1,6 +1,6 @@
 # worldgen
 
-The generation passes that work on one chunk or a chunk neighbourhood: simplex-noise caves and aquifers (P3.3), ore veins and dungeons, and the two-pass decoration of trees, flowers and shore features (P3.4). Every step is a pure function of the seed and the chunk, so the result is the same whatever the generation order.
+The generation passes that work on one chunk or a chunk neighbourhood: simplex-noise caves and aquifers, ore veins and dungeons, and the two-pass decoration of trees, flowers and shore features. Every step is a pure function of the seed and the chunk, so the result is the same whatever the generation order.
 
 ## Public entry points
 

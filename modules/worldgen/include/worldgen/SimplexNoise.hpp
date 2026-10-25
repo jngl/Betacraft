@@ -7,7 +7,7 @@
 namespace betacraft::worldgen {
 
 // Seeded 2D / 3D Simplex noise (Gustavson / Perlin 2001 formulation).
-// Chosen over the classic Perlin lattice for the P3.3 caves because simplex has no
+// Chosen over the classic Perlin lattice for the caves because simplex has no
 // axis-aligned artefacts and costs O(N) corners instead of O(2^N), which matters when
 // every voxel of a 16x128x16 chunk is evaluated twice (spaghetti) plus once (cheese).
 // The output is a pure function of (seed, coordinates): no hidden state, so evaluating

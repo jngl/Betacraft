@@ -11,7 +11,7 @@ namespace betacraft::ui {
 
 // The 36 blocks the inventory screen offers for free (click to equip in the selected slot).
 // The two pickaxes are listed by their legacy BlockId for ui::CraftingSystem, which is not
-// migrated; the game hands out paletteItem(), in the Beta item numbering (S2.10).
+// migrated; the game hands out paletteItem(), in the Beta item numbering.
 inline constexpr std::array<voxel::BlockId, 36> kCreativePalette{{
     voxel::BlockId::Stone, voxel::BlockId::Grass, voxel::BlockId::Dirt, voxel::BlockId::Cobblestone,
     voxel::BlockId::OakPlanks, voxel::BlockId::OakLog, voxel::BlockId::BirchLog, voxel::BlockId::PineLog,

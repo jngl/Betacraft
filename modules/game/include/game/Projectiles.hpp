@@ -14,11 +14,11 @@ namespace betacraft::world { class World; }
 
 namespace betacraft::game {
 
-// S6.2 arrows (Beta EntityArrow). An arrow is a TransformComp, a VelocityComp without gravity
+// Arrows (Beta EntityArrow). An arrow is a TransformComp, a VelocityComp without gravity
 // (MovementPhysicsSystem only integrates it) and an ecs::ArrowComp; it has no collider, so
 // the voxel collision system leaves it alone, and tickArrows does the rest each game tick.
 
-// Beta EntityArrow.onUpdate (roadmap values): after each move the motion is multiplied by
+// Beta EntityArrow.onUpdate: after each move the motion is multiplied by
 // 0.99 (0.8 in water), then loses 0.05 blocks per tick downwards.
 inline constexpr float kArrowDrag = 0.99f;
 inline constexpr float kArrowWaterDrag = 0.8f;

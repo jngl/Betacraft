@@ -449,7 +449,7 @@ bool WorldStorage::saveChunkBundle(core::ChunkCoord coord, const ChunkBundle& bu
     if (m_regionWrites) {
         return ensureSaveRoot() && m_regions->write(coord, encodeBundle(bundle));
     }
-    // Pre-Sprint 7 order: record first (a chunk file without one would load as a pre-P3.4
+    // Pre-region order: record first (a chunk file without one would load as a pre-two-pass
     // decorated save), block entities next, so a chunk file never refers to newer contents.
     if (bundle.decoration && !saveLegacyDecoration(coord, *bundle.decoration)) return false;
     if (!saveLegacyBlockEntities(coord, bundle.blockEntities)) return false;
@@ -544,7 +544,7 @@ MigrationReport WorldStorage::migrateLegacyChunks(const std::function<void(float
     return storage::migrateLegacyChunks(m_saveDir, progress);
 }
 
-// --- Pre-Sprint 7 wrappers -----------------------------------------------------------------
+// --- Pre-region wrappers -----------------------------------------------------------------
 
 template <typename Edit>
 bool WorldStorage::editBundle(core::ChunkCoord coord, Edit&& edit) const {

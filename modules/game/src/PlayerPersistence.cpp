@@ -90,7 +90,7 @@ void restorePlayer(physics::Player& player, const storage::PlayerSaveData& data,
         player.setInventorySlot(i, physics::InventorySlot{id, count, std::max(0, saved.damage)});
     }
 
-    // S6.8: an armor slot holds one piece of its own type; anything else empties it.
+    // An armor slot holds one piece of its own type; anything else empties it.
     for (size_t i = 0; i < physics::Player::ARMOR_SLOT_COUNT && i < data.armor.size(); ++i) {
         const storage::SavedStack& saved = data.armor[i];
         player.setArmorSlot(i, {});

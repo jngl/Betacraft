@@ -1,5 +1,5 @@
 #version 330 core
-// S8.11 procedural rain streaks and snowflakes (no texture; render/WeatherRenderer.cpp keeps
+// Procedural rain streaks and snowflakes (no texture; render/WeatherRenderer.cpp keeps
 // an embedded copy).
 in vec2 vUV;
 in float vAlpha;

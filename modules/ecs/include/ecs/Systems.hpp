@@ -19,7 +19,7 @@ namespace betacraft::world { class World; }
 
 namespace betacraft::ecs {
 
-// Systems of Diagramme 2. They are stateless: all state lives in the Registry, so the
+// ECS systems. They are stateless: all state lives in the Registry, so the
 // Application can run them in a fixed order every 50 ms simulation tick.
 
 struct MovementParams {
@@ -30,7 +30,7 @@ struct MovementParams {
 };
 
 // S1: integrates velocity into position over the (Transform, Velocity) owning group, i.e. a
-// stride-1 loop over two index-aligned dense arrays with no sparse indirection (Fiche 3 §3).
+// stride-1 loop over two index-aligned dense arrays with no sparse indirection.
 class MovementPhysicsSystem {
 public:
     static void update(Registry& reg, float dt, const MovementParams& params = {});
@@ -275,8 +275,8 @@ private:
     }
 };
 
-// S4 (basic part, Diagramme 2 "CombatDamageSystem"): Beta 1.7.3 damage, knockback, healing.
-// Melee/tool rules belong to the combat module (P2.5) which builds on these primitives.
+// CombatDamageSystem (basic part): Beta 1.7.3 damage, knockback, healing.
+// Melee/tool rules belong to the combat module which builds on these primitives.
 //
 // Hurt window (EntityLiving.attackEntityFrom): a fresh hit opens a 10-tick window
 // (heartsLife = 20, window while > 10). Inside it a hit no stronger than the strongest hit so
@@ -317,7 +317,7 @@ struct PathBudget {
     int32_t spent{0};
 };
 
-// S8.3 A* planning for mobs that Chase or Wander and carry a MobPathComp; runs before
+// A* planning for mobs that Chase or Wander and carry a MobPathComp; runs before
 // MobAISystem. A mob plans again when its goal moved more than REPATH_DISTANCE blocks from
 // the cell its path leads to, when it has been stuck for more than STUCK_TICKS ticks, or when
 // it ran out of waypoints short of the goal, and never more than once per
@@ -375,20 +375,20 @@ private:
     size_t m_cursor{0};
 };
 
-// S3 (Diagramme 2, "AI & TP"): steering state machine over (MobAIComp, Transform, Velocity).
+// Mob AI: steering state machine over (MobAIComp, Transform, Velocity).
 //   Idle   -> stands still; when stateTimer runs out, picks a random goal and Wanders.
 //   Wander -> walks straight to goal; on arrival or timeout, Idles for a random duration.
 //   Chase  -> walks to target; stops within arrivalRadius; Idles once the target is stale,
 //             has no Transform or is beyond loseTargetRange.
 //   Flee   -> walks away from target until stateTimer runs out (or the target vanishes).
 // It writes horizontal velocity and yaw only: gravity and collisions stay with the physics
-// systems (S8.3 path following, below, replaces the straight line when planned). Mobs in
+// systems (path following, below, replaces the straight line when planned). Mobs in
 // the air during their hurt window (knocked back) are left alone until they land. A grounded
 // mob that Chases or Wanders into a wall (VelocityComp::collidedHorizontally) jumps at
 // JUMP_SPEED (Beta EntityLiving.jump, 0.42 blocks/tick), which climbs one block; a mob whose
-// MobDef climbsWalls (spider, S6.3) climbs at CLIMB_SPEED instead, airborne or not. A mob
+// MobDef climbsWalls (spider) climbs at CLIMB_SPEED instead, airborne or not. A mob
 // with MobAIComp::leaping set is left alone until it lands.
-// S8.3: a Chasing or Wandering mob with a MobPathComp walks to the centre of its footprint at
+// A Chasing or Wandering mob with a MobPathComp walks to the centre of its footprint at
 // waypoints[index] instead, moving on once within WAYPOINT_REACHED blocks (horizontally),
 // and jumps when that waypoint is a block higher than its feet; past the last waypoint (or
 // without a path) it steers straight again.
@@ -460,7 +460,7 @@ public:
     }
     static EntityId spawnMob(Registry& reg, const glm::vec3& feetPos, int16_t maxHealth,
                              float width, float height);
-    // S4.2: a mob of `kind` built from gameplay::mobDef (health, box, walking speed), with
+    // A mob of `kind` built from gameplay::mobDef (health, box, walking speed), with
     // MobKindComp and, for hostiles, MobAttackComp (the melee cooldown, or the bow's for a
     // ranged attacker); a mob with an ExplodeAttack (creeper) also gets a FuseComp.
     static EntityId spawnMob(Registry& reg, const glm::vec3& feetPos, gameplay::MobKind kind);
@@ -470,9 +470,8 @@ public:
     static EntityId spawnPlayerProxy(Registry& reg, const glm::vec3& feetPos);
 };
 
-// Roadmap names: P2.1 lists CollisionResolutionSystem / EntityRenderSystem, Diagramme 2 lists
-// VoxelCollisionSystem / CombatDamageSystem / MobPathfindingAISystem (MobAISystem, which
-// follows PathPlanningSystem's A* paths since S8.3) / EntityRenderInterpolationSystem.
+// Spec names of the systems (CollisionResolutionSystem, EntityRenderSystem, CombatDamageSystem,
+// MobPathfindingAISystem) as aliases; MobAISystem follows PathPlanningSystem's A* paths.
 using CollisionResolutionSystem = VoxelCollisionSystem;
 using EntityRenderSystem = EntityRenderInterpolationSystem;
 using CombatDamageSystem = HealthSystem;

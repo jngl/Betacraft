@@ -15,10 +15,10 @@ namespace betacraft::voxel {
     return {o + glm::vec3(b.x0, b.y0, b.z0) * s, o + glm::vec3(b.x1, b.y1, b.z1) * s};
 }
 
-// The block's box (S5.4: metadata-dependent for ladders, doors, stairs...): ladder 2/16,
+// The block's box (metadata-dependent for ladders, doors, stairs...): ladder 2/16,
 // door 3/16 by orientation and state, bed 9/16, fence 1.5 high, farmland 15/16, crops
 // their 0.25 pick slab (they do not collide), stairs the whole cell (forEachBlockAABB has
-// their two boxes). meta 0 is the pre-S5.4 form.
+// their two boxes). meta 0 is the original full-block form.
 [[nodiscard]] inline math::AABB blockAABB(int32_t x, int32_t y, int32_t z, BlockId id, uint8_t meta = 0) noexcept {
     const auto& def = BlockRegistry::get(id);
     const float fx = static_cast<float>(x);
@@ -57,7 +57,7 @@ namespace betacraft::voxel {
     return blockAABB(x, y, z, id, meta);
 }
 
-// S5.10: every collision box of the cell (Beta getCollidingBoundingBoxes), fn(const math::AABB&)
+// Every collision box of the cell (Beta getCollidingBoundingBoxes), fn(const math::AABB&)
 // returning bool; a true return stops the walk, which then returns true. Non-solid blocks
 // have none, stairs two, anything else its blockAABB box. The fence box reaches 0.5 into
 // the cell above, so callers scan one cell below their box.

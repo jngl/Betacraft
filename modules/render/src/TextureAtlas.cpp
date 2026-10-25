@@ -182,7 +182,7 @@ void fillRect(std::vector<uint8_t>& img, int tileIdx, int x0, int y0, int x1, in
     }
 }
 
-// S6.7 armor icons (helmet, chestplate, leggings, boots): light grey with a dark outline so
+// Armor icons (helmet, chestplate, leggings, boots): light grey with a dark outline so
 // ItemAppearance tints them per material. '#' body, '+' highlight, 'o' outline.
 void drawArmorIcon(std::vector<uint8_t>& img, int tileIdx, const std::array<const char*, 16>& rows) noexcept {
     for (int y = 0; y < 16; ++y) {
@@ -266,7 +266,7 @@ void drawArmorTiles(std::vector<uint8_t>& img) noexcept {
                              "                "});
 }
 
-// S6.10 mob spawner (Beta terrain tile 65): a dark iron cage around a black interior.
+// Mob spawner (Beta terrain tile 65): a dark iron cage around a black interior.
 void drawMobSpawnerTile(std::vector<uint8_t>& img) noexcept {
     for (int y = 0; y < 16; ++y) {
         for (int x = 0; x < 16; ++x) {
@@ -320,7 +320,7 @@ void drawMobSkinTiles(std::vector<uint8_t>& img) noexcept {
     fillNoisyTile(img, kZombieShirtTile, {40, 160, 170}, 10, 23100);
     fillNoisyTile(img, kZombieTrousersTile, {62, 58, 142}, 8, 23200);
 
-    // S6.3: skeleton bone and skull, spider body and its red eyes, creeper skin and face, cow
+    // Skeleton bone and skull, spider body and its red eyes, creeper skin and face, cow
     // hide (white with black patches) and face.
     constexpr Rgb kBone{196, 196, 190};
     constexpr Rgb kSpiderBody{52, 44, 40};
@@ -825,7 +825,7 @@ std::vector<uint8_t> TextureAtlas::generateProceduralAtlasRGBA() {
         }
     }
 
-    // S5.4 shapes. Tile 83: Ladder (two rails and four rungs on a transparent tile)
+    // Shapes. Tile 83: Ladder (two rails and four rungs on a transparent tile)
     clearTile(img, 83);
     for (int y = 0; y < 16; ++y) {
         for (int x = 0; x < 16; ++x) {
@@ -857,7 +857,7 @@ std::vector<uint8_t> TextureAtlas::generateProceduralAtlasRGBA() {
         }
     }
 
-    // S8.5 redstone. Tiles 82 / 98: Iron door, upper half (window with bars) and lower half
+    // Redstone. Tiles 82 / 98: Iron door, upper half (window with bars) and lower half
     for (int y = 0; y < 16; ++y) {
         for (int x = 0; x < 16; ++x) {
             const int n = static_cast<int>(pixelHash(x, y, 8200) % 12U) - 6;
@@ -1127,7 +1127,7 @@ std::vector<uint8_t> TextureAtlas::generateProceduralAtlasRGBA() {
 
     // Tiles 224..236 and 250..253: mob skins
     drawMobSkinTiles(img);
-    // S6.7 armor icons (238, 239, 254, 223) and the S6.10 mob spawner (65)
+    // Armor icons (238, 239, 254, 223) and the mob spawner (65)
     drawArmorTiles(img);
     drawMobSpawnerTile(img);
 

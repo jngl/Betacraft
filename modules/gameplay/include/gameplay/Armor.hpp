@@ -12,7 +12,7 @@
 
 namespace betacraft::gameplay {
 
-// S6.7 Beta 1.7.3 armor (ItemArmor 298..317, InventoryPlayer armor slots, EntityPlayer
+// Beta 1.7.3 armor (ItemArmor 298..317, InventoryPlayer armor slots, EntityPlayer
 // damageEntity). Slots are indexed in this order everywhere (Player, level.dat `armor` keys).
 enum class ArmorSlot : uint8_t { Helmet, Chestplate, Leggings, Boots };
 inline constexpr size_t kArmorSlotCount = 4;

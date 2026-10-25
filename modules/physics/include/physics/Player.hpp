@@ -49,7 +49,7 @@ struct StepEvent {
     bool triggered{false};
     voxel::BlockId groundBlock{voxel::BlockId::Grass};
     bool splashedWater{false};
-    // S5.7: fall distance of a landing during this step (0 without one) and the cell the feet
+    // Fall distance of a landing during this step (0 without one) and the cell the feet
     // came down on (Beta Entity.fall: floor(y - 0.2)), for trampling farmland.
     float landedFallDistance{0.0f};
     core::BlockPos landedOn{};
@@ -63,7 +63,7 @@ public:
     // Starts with an empty inventory, in Survival; game::applyStarterKit fills a new world's.
     Player() noexcept;
 
-    // Survival forces flying off. Every cheat is gated on isCreative() (roadmap conventions §3).
+    // Survival forces flying off. Every cheat is gated on isCreative() (CLAUDE.md conventions).
     void setGameMode(core::GameMode mode) noexcept;
     [[nodiscard]] core::GameMode gameMode() const noexcept { return m_gameMode; }
     [[nodiscard]] bool isCreative() const noexcept { return m_gameMode == core::GameMode::Creative; }
@@ -125,7 +125,7 @@ public:
     [[nodiscard]] bool isInLava() const noexcept { return m_inLava; }
     // A Cactus cell overlaps the box shrunk by 0.001 (Beta onEntityCollidedWithBlock).
     [[nodiscard]] bool isTouchingCactus() const noexcept { return m_touchingCactus; }
-    // S5.5: a Ladder in the feet or head cell, refreshed by fixedUpdate.
+    // A Ladder in the feet or head cell, refreshed by fixedUpdate.
     [[nodiscard]] bool isOnLadder() const noexcept { return m_onLadder; }
 
     // Beta EntityLiving ladder rules: descent capped at 0.15 blocks/tick, 0.2 blocks/tick up
@@ -158,7 +158,7 @@ public:
     // KNOCKBACK_MAX_UPWARD_SPEED. An upward push lifts the player off the ground.
     static constexpr float KNOCKBACK_MAX_UPWARD_SPEED = 8.0f; // 0.4 blocks/tick
     void applyKnockback(const glm::vec3& impulse) noexcept;
-    // S6.6 explosion push (Beta Explosion: motion += direction x impact): `delta` (blocks/s)
+    // Explosion push (Beta Explosion: motion += direction x impact): `delta` (blocks/s)
     // added to the velocity as is; an upward push lifts the player off the ground.
     void addVelocity(const glm::vec3& delta) noexcept;
     // One 20 TPS game tick of the hurt timer.
@@ -226,7 +226,7 @@ public:
     [[nodiscard]] int32_t countItem(gameplay::ItemId id) const noexcept;
     [[nodiscard]] int32_t countItem(voxel::BlockId id) const noexcept { return countItem(gameplay::toItemId(id)); }
 
-    // S6.7 armor (Beta InventoryPlayer.armorInventory), indexed by gameplay::ArmorSlot
+    // Armor (Beta InventoryPlayer.armorInventory), indexed by gameplay::ArmorSlot
     // (helmet, chestplate, leggings, boots). The setter stores what it is given; the
     // inventory screen only lets the matching piece in.
     static constexpr size_t ARMOR_SLOT_COUNT = 4;

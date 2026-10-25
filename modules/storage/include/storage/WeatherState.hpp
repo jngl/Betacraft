@@ -4,7 +4,7 @@
 
 namespace betacraft::storage {
 
-// S8.9 Beta weather (WorldInfo raining / thundering and their timers, World.updateWeather).
+// Beta weather (WorldInfo raining / thundering and their timers, World.updateWeather).
 // rainTime / thunderTime count down to the next flip of their flag; at 0 a new duration is
 // drawn: clear 12000..180000 ticks, rain 12000..24000, thunder 3600..15600. The strengths move
 // by 1/400 per tick towards their flag, so a transition takes 400 ticks (20 s); thunder

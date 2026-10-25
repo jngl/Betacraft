@@ -8,7 +8,7 @@ namespace {
 
 // Beta 1.7.3: EntityPig (10 HP, 0.9 x 0.9), EntitySheep (8 HP, 0.9 x 1.3, one wool block
 // unless sheared), EntityZombie (20 HP, 0.6 x 1.8, attackStrength 5, moveSpeed 0.5, feathers).
-// S6.1: EntitySkeleton (20 HP, 0.6 x 1.8, burns, arrows and bones, shoots every 30 ticks
+// EntitySkeleton (20 HP, 0.6 x 1.8, burns, arrows and bones, shoots every 30 ticks
 // within 10 blocks), EntitySpider (16 HP, 1.4 x 0.9, moveSpeed 0.8, 2 damage, string),
 // EntityCreeper (20 HP, 0.6 x 1.8, gunpowder, 30-tick fuse, power 3), EntityCow (10 HP,
 // 0.9 x 1.3, leather). Every drop is rand(3), i.e. 0..2.

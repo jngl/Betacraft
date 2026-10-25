@@ -272,7 +272,7 @@ StepEvent Player::fixedUpdate(float dt, const PlayerInput& input, const world::W
         m_velocity.y -= core::EngineConfig::GRAVITY * dt;
         m_velocity.y = std::max(m_velocity.y, -core::EngineConfig::TERMINAL_VELOCITY);
         if (m_onLadder) {
-            // S5.5 (Beta EntityLiving.moveEntityWithHeading): slow descent, no fall damage,
+            // (Beta EntityLiving.moveEntityWithHeading): slow descent, no fall damage,
             // and a sneaking player holds on.
             m_velocity.y = std::max(m_velocity.y, -LADDER_MAX_DESCENT_SPEED);
             if (m_sneaking) {

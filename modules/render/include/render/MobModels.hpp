@@ -23,7 +23,7 @@ inline constexpr uint8_t kZombieSkinTile = 229;
 inline constexpr uint8_t kZombieFaceTile = 230;
 inline constexpr uint8_t kZombieShirtTile = 231;
 inline constexpr uint8_t kZombieTrousersTile = 232;
-// S6.3 skins: 233..236 follow the Sprint 4 tiles, the creeper and the cow use 250..253 (237
+// Skins: 233..236 are the first four mobs' tiles, the creeper and the cow use 250..253 (237
 // is lava, 240..249 the crack overlays).
 inline constexpr uint8_t kSkeletonBoneTile = 233;
 inline constexpr uint8_t kSkeletonFaceTile = 234;
@@ -54,8 +54,8 @@ struct MobRenderInstance {
     float hurt{0.0f};     // 0..1 left of the hurt window; > 0 tints the model red
     float death{0.0f};    // 0..1 through the death animation; the body tips over by death * 90 deg
     float walkPhase{0.0f}; // Radians; legs (and zombie arms) swing by sin(walkPhase), 0 = at rest
-    float swell{0.0f};     // S6.3 creeper fuse, 0..1: the model grows up to kCreeperMaxSwell
-    float flash{0.0f};     // S6.3 creeper fuse, 0..1: white flash (full light, over-bright tint)
+    float swell{0.0f};     // creeper fuse, 0..1: the model grows up to kCreeperMaxSwell
+    float flash{0.0f};     // creeper fuse, 0..1: white flash (full light, over-bright tint)
 };
 
 // Beta RenderCreeper: a creeper about to explode swells by up to this factor.
@@ -63,7 +63,7 @@ inline constexpr float kCreeperMaxSwell = 1.2f;
 
 inline constexpr float kArrowModelLength = 0.5f; // Blocks, tip to fletching
 
-// S6.2 an arrow to draw this frame: a thin shaft along its flight.
+// An arrow to draw this frame: a thin shaft along its flight.
 struct ArrowRenderInstance {
     glm::vec3 pos{0.0f}; // Render-interpolated position of the middle of the shaft
     float yaw{0.0f};     // Degrees, ecs::TransformComp convention

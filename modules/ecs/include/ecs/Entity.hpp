@@ -6,7 +6,7 @@ namespace betacraft::ecs {
 
 // A scalar 32-bit handle: low 24 bits index the entity slot, high 8 bits carry the slot's
 // generation. Bumping the generation on destroy lets every stale copy of a handle be
-// detected in O(1) once its slot has been recycled (roadmap P2.1).
+// detected in O(1) once its slot has been recycled.
 using EntityId = uint32_t;
 
 inline constexpr uint32_t ENTITY_INDEX_BITS = 24U;

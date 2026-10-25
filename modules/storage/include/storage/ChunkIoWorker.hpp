@@ -49,7 +49,7 @@ struct ChunkIoConfig {
     bool threaded{true};
 };
 
-// S7.6 chunk disk I/O off the main thread. One std::jthread serves:
+// Chunk disk I/O off the main thread. One std::jthread serves:
 //  * loads (loadAsync), first, in request order; results are collected by takeCompletedLoads;
 //  * saves (enqueueSave), in order, keeping only the newest job of a chunk; IChunkStore::write
 //    (compression included, RegionFile) runs on the worker.

@@ -15,11 +15,11 @@ struct RaycastHit {
     core::FaceDir face{core::FaceDir::PosY};
     voxel::BlockId blockId{voxel::BlockId::Air};
     float distance{0.0f};
-    uint8_t blockMeta{0}; // Metadata of the hit block (S5.4 shapes: outline box)
+    uint8_t blockMeta{0}; // Metadata of the hit block (shapes: outline box)
 };
 
 // What a ray stops on. Solid: the selectable blocks (the crosshair, line of sight).
-// LiquidSources (S6.4 empty bucket, Beta rayTraceBlocks_do(..., true)): those plus the
+// LiquidSources (empty bucket, Beta rayTraceBlocks_do(..., true)): those plus the
 // liquid cells of metadata 0, as whole cubes.
 enum class RaycastMode : uint8_t { Solid, LiquidSources };
 

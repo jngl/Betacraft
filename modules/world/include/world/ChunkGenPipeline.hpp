@@ -44,7 +44,7 @@ struct ChunkGenStats {
     uint64_t discarded{0}; // Finished after a cancel or a seed change: thrown away
 };
 
-// S7.7 asynchronous pass-1 generation. Workers own nothing of the World: each job reads a
+// Asynchronous pass-1 generation. Workers own nothing of the World: each job reads a
 // shared_ptr<const WorldGen> (replaced by setWorldGen on a seed change) and produces a fresh
 // Chunk. Jobs are served nearest to the centre first (then FIFO) and can be cancelled: a
 // pending job is dropped, a running one has its stop_token signalled and its result is

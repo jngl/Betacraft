@@ -24,12 +24,12 @@ inline constexpr int32_t kDespawnMinAgeTicks = 600;
 inline constexpr int32_t kDespawnChance = 800;       // 1 in 800 per check once old and far
 
 // World.calculateSkylightSubtracted: 0 by day up to 11 at night; rain and thunder darken
-// the sky by up to 5/16 each (used from S8.10).
+// the sky by up to 5/16 each.
 [[nodiscard]] int32_t skylightSubtracted(float timeOfDay, float rain = 0.0f, float thunder = 0.0f) noexcept;
 
 // EntityMob.getCanSpawnHere during a thunderstorm (World.getIsThundering): the light of the
-// spawn cell is read with skylightSubtracted forced to 10, so hostiles appear in daylight
-// (S8.10). Otherwise `subtracted` is kept.
+// spawn cell is read with skylightSubtracted forced to 10, so hostiles appear in daylight.
+// Otherwise `subtracted` is kept.
 inline constexpr int32_t kThunderSkylightSubtracted = 10;
 [[nodiscard]] constexpr int32_t hostileSkylightSubtracted(int32_t subtracted, bool thundering) noexcept {
     return thundering ? kThunderSkylightSubtracted : subtracted;

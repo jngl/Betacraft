@@ -9,7 +9,7 @@
 
 namespace betacraft::redstone {
 
-// S8.6 redstone torch burnout (Beta BlockRedstoneTorch.checkForBurnout, with the roadmap's
+// Redstone torch burnout (Beta BlockRedstoneTorch.checkForBurnout, with our own
 // numbers): a torch that switches more than kMaxToggles times within kWindowTicks burns out
 // and stays off for kBurnoutTicks, so a too-fast clock stops instead of eating every tick.
 // Not persisted: a reloaded chunk starts with a clean history.

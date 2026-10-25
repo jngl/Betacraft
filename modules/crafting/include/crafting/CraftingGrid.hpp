@@ -10,7 +10,7 @@
 namespace betacraft::crafting {
 
 // Minimal stack view used by the grid. Kept local to the module so it does not
-// depend on the P2.5 ItemStack; integration converts field by field.
+// depend on the ItemStack; integration converts field by field.
 struct SlotStack {
     ItemId id{kAir};
     uint8_t count{0};

@@ -86,7 +86,7 @@ private:
     World& m_world;
 };
 
-// IRedstoneVoxelAccess over the World (S8.7): ordinary player-origin edits, so the
+// IRedstoneVoxelAccess over the World: ordinary player-origin edits, so the
 // circuits a player built are saved like the rest of their work.
 class World::RedstoneAccess final : public redstone::IRedstoneVoxelAccess {
 public:
@@ -416,7 +416,7 @@ voxel::Chunk& World::ensureChunkLoaded(core::ChunkCoord coord) {
     }
     cancelStreamRequest(coord);
 
-    // S7.3: blocks, decoration record and block entities come from one bundle; S7.6: a save
+    // Blocks, decoration record and block entities come from one bundle; a save
     // still queued on the I/O worker is newer than the disk.
     std::optional<storage::ChunkBundle> bundle;
     if (std::optional<std::vector<uint8_t>> pending = m_io->pendingSave(coord)) {
@@ -463,7 +463,7 @@ voxel::Chunk& World::integrateChunk(std::unique_ptr<voxel::Chunk> chunk, bool lo
                                ": no matching block");
             return true;
         });
-        // S2.10: chest and furnace stacks saved with the legacy ids 100..105 load as Beta numbers.
+        // Chest and furnace stacks saved with the legacy ids 100..105 load as Beta numbers.
         for (voxel::BlockEntityEntry& e : entities) {
             std::visit([](auto& data) { foldLegacyItemIds(data); }, e.second);
         }
@@ -548,13 +548,13 @@ bool World::persistChunk(const voxel::Chunk& chunk) {
     if (!entities.empty()) {
         bundle.blockEntities = voxel::encodeBlockEntities(entities);
     }
-    // S7.5 (bug 8 under the new storage): only player-touched chunks and their neighbours
+    // (bug 8 under the new storage): only player-touched chunks and their neighbours
     // ever reach the store; a write outside them is a regression the F3 counter shows.
     if (!persistSimulationEdits(coord)) {
         ++m_storageStats.unsolicitedBundleWrites;
         core::Logger::warn("World", "Chunk ", coord.x, ",", coord.z, " saved without any player edit around it");
     }
-    // S7.6: serialised here, compressed and written by the I/O worker.
+    // Serialised here, compressed and written by the I/O worker.
     m_io->enqueueSave({coord, m_storage.encodeChunkBundle(bundle)});
     ++m_storageStats.bundlesWritten;
     return true;
@@ -636,7 +636,7 @@ void World::unloadDistantChunks(int32_t centerCX, int32_t centerCZ, int32_t radi
     }
 }
 
-// --- S7.7 asynchronous streaming ----------------------------------------------------------
+// --- Asynchronous streaming ----------------------------------------------------------
 
 ChunkGenPipeline& World::genPipeline() {
     if (!m_genPipeline) {
@@ -945,7 +945,7 @@ int32_t World::applyBlockEdit(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId
         for (int32_t cy = wy + 1; cy < voxel::Chunk::HEIGHT; ++cy) {
             const voxel::BlockId above = chunk->getBlock(lx, cy, lz);
             const voxel::BlockDef& aboveDef = voxel::BlockRegistry::get(above);
-            // S8.5: wire and plates lie on the block, a lever or a torch may stand on it.
+            // Wire and plates lie on the block, a lever or a torch may stand on it.
             const bool standing = (aboveDef.shape == voxel::RenderShape::Torch || aboveDef.shape == voxel::RenderShape::Lever) &&
                                   voxel::attachmentOffset(chunk->getMetadata(lx, cy, lz)).y < 0;
             if (aboveDef.shape == voxel::RenderShape::Cross || above == voxel::BlockId::Cactus || standing ||
@@ -958,7 +958,7 @@ int32_t World::applyBlockEdit(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId
             }
         }
     } else if (oldId == voxel::BlockId::Farmland && wy + 1 < voxel::Chunk::HEIGHT && chunk->getBlock(lx, wy + 1, lz) == voxel::BlockId::Crops) {
-        // S5.7: crops only stay on farmland (Beta BlockCrops.canThisPlantGrowOnThisBlockID).
+        // Crops only stay on farmland (Beta BlockCrops.canThisPlantGrowOnThisBlockID).
         m_unsupportedBreaks.push_back({{wx, wy + 1, wz}, voxel::BlockId::Crops, chunk->getMetadata(lx, wy + 1, lz)});
         chunk->setBlock(lx, wy + 1, lz, voxel::BlockId::Air, markModified);
         ++changed;
@@ -1019,7 +1019,7 @@ void World::removeOtherHalf(int32_t wx, int32_t wy, int32_t wz, voxel::BlockId i
 }
 
 void World::breakDetachedWallBlocks(int32_t wx, int32_t wy, int32_t wz, EditOrigin origin) {
-    // S5.5: the support check of the column above, extended to the side neighbours for
+    // The support check of the column above, extended to the side neighbours for
     // blocks hanging on a wall (Beta BlockLadder.onNeighborBlockChange).
     static constexpr std::array<glm::ivec3, 4> kSides{{{1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}}};
     for (const glm::ivec3& d : kSides) {
@@ -1027,7 +1027,7 @@ void World::breakDetachedWallBlocks(int32_t wx, int32_t wy, int32_t wz, EditOrig
         const int32_t z = wz + d.z;
         const voxel::BlockId side = getBlock(x, wy, z);
         const uint8_t sideMeta = getMetadata(x, wy, z);
-        // S8.5: levers, buttons and redstone torches hanging on that wall go too.
+        // Levers, buttons and redstone torches hanging on that wall go too.
         const bool hangs = side == voxel::BlockId::Ladder ? voxel::ladderSupportOffset(sideMeta) == -d
                          : (side == voxel::BlockId::Lever || side == voxel::BlockId::StoneButton || side == voxel::BlockId::RedstoneTorchOn ||
                             side == voxel::BlockId::RedstoneTorchOff) && voxel::attachmentOffset(sideMeta) == -d;
@@ -1040,7 +1040,7 @@ void World::breakDetachedWallBlocks(int32_t wx, int32_t wy, int32_t wz, EditOrig
             m_fluids->notifyBlockChanged({x, wy, z});
         }
     }
-    // S5.6: a door stands on a normal cube (Beta BlockDoor.onNeighborBlockChange); its lower
+    // A door stands on a normal cube (Beta BlockDoor.onNeighborBlockChange); its lower
     // half breaks with the drop and takes the upper half along.
     if (const voxel::BlockId door = getBlock(wx, wy + 1, wz); wy + 1 < voxel::Chunk::HEIGHT && voxel::isDoorBlock(door)) {
         const uint8_t meta = getMetadata(wx, wy + 1, wz);
@@ -1079,7 +1079,7 @@ bool World::applyMetadataEdit(int32_t wx, int32_t wy, int32_t wz, uint8_t meta, 
     }
     const bool markModified = origin == EditOrigin::Player || persistSimulationEdits(coord);
     chunk->setMetadata(lx, wy, lz, nibble, markModified);
-    // S5.4: re-mesh only where the metadata shapes the block (door state, ladder side, crop
+    // Re-mesh only where the metadata shapes the block (door state, ladder side, crop
     // stage...). Fluid level changes keep re-meshing nothing.
     const voxel::BlockId id = chunk->getBlock(lx, wy, lz);
     if (voxel::shapeDependsOnMetadata(voxel::BlockRegistry::get(id).shape)) {

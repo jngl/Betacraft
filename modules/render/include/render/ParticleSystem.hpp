@@ -29,11 +29,11 @@ public:
     void spawnBlockBreakBurst(const world::World& world, core::BlockPos pos, voxel::BlockId blockId, int count = 24);
     void spawnMiningHitParticles(const world::World& world, core::BlockPos pos, core::FaceDir face, voxel::BlockId blockId, int count = 3);
 
-    // S6.6 explosion: a puff of grey smoke particles thrown out of `centre`, wider for a larger
+    // Explosion: a puff of grey smoke particles thrown out of `centre`, wider for a larger
     // `power`.
     void spawnExplosionBurst(const glm::vec3& centre, float power, int count = 48);
 
-    // S8.11 rain splash (Beta EntityRainFX): a few tiny water droplets bouncing off `at`, the
+    // Rain splash (Beta EntityRainFX): a few tiny water droplets bouncing off `at`, the
     // top of the block the rain hits.
     void spawnRainSplash(const glm::vec3& at, int count = 2);
 

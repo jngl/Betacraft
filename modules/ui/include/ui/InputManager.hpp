@@ -25,7 +25,7 @@ enum class GameAction : uint8_t {
     ToggleMusic,
     ToggleDebug,
     DropItem,
-    CycleWeather, // S8.13 debug: clear -> rain -> thunder (Creative only, no default key)
+    CycleWeather, // debug: clear -> rain -> thunder (Creative only, no default key)
     Count
 };
 
@@ -62,7 +62,7 @@ public:
     [[nodiscard]] render::GuiScalePreference getGuiScalePreference() const noexcept { return m_guiScalePref; }
     void setGuiScalePreference(render::GuiScalePreference pref) noexcept { m_guiScalePref = pref; }
 
-    // S3.8 mouse sensitivity, 0..1 (Beta mouseSensitivity, default 0.5), key mouse_sensitivity.
+    // Mouse sensitivity, 0..1 (Beta mouseSensitivity, default 0.5), key mouse_sensitivity.
     [[nodiscard]] float getMouseSensitivity() const noexcept { return m_mouseSensitivity; }
     void setMouseSensitivity(float s) noexcept;
     // Beta EntityRenderer: f = 0.6s + 0.2, turn = f^3 * 8 * 0.15 degrees per mouse pixel

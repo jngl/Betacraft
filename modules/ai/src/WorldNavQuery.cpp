@@ -20,7 +20,7 @@ NavCell classifyBlock(voxel::BlockId id, uint8_t meta) noexcept {
         case BlockId::Ladder: return NavCell::Ladder;
         case BlockId::Fence: return NavCell::Fence;
         case BlockId::WoodDoor:
-        case BlockId::IronDoor: // S8.8: opened by redstone only, same metadata
+        case BlockId::IronDoor: // opened by redstone only, same metadata
             // Both halves carry the open bit (toggleDoor and the redstone engine write it to each).
             return (meta & voxel::kDoorOpenBit) != 0 ? NavCell::DoorOpen : NavCell::DoorClosed;
         default: return voxel::BlockRegistry::isSolid(id) ? NavCell::Solid : NavCell::Passable;

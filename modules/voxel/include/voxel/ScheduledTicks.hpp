@@ -11,8 +11,8 @@
 
 namespace betacraft::voxel {
 
-// S5.2 block updates scheduled for a later game tick (Beta World.scheduleBlockUpdate /
-// TickNextTick): falling sand now, redstone later (S8.6). A min-heap on the due tick, at most
+// Block updates scheduled for a later game tick (Beta World.scheduleBlockUpdate /
+// TickNextTick): falling sand now, redstone later. A min-heap on the due tick, at most
 // one pending entry per position (Beta's NextTickListEntry set), first scheduled first served
 // among entries due on the same tick. Not persisted: an update pending when the world is
 // saved is lost.

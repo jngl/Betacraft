@@ -8,7 +8,7 @@ inline constexpr int32_t kPlayerMaxHealth = 20; // Half-hearts
 // Beta EntityLiving: heartsLife = 20 after a hit, and hits are "resisted" while
 // heartsLife > heartsHalvesLife / 2, i.e. for 10 ticks (0.5 s).
 inline constexpr int32_t kHurtResistanceTicks = 10;
-// Roadmap P2.5: 0.25 s red flash on damage (20 TPS).
+// 0.25 s red flash on damage (20 TPS).
 inline constexpr int32_t kHurtFlashTicks = 5;
 // Beta deathTime: the corpse is removed (and drops spawned) after 20 ticks.
 inline constexpr int32_t kDeathAnimationTicks = 20;
@@ -55,7 +55,7 @@ struct Health {
 // caller applies when HitResult::appliesKnockback() is true).
 HitResult applyDamage(Health& health, int32_t amount) noexcept;
 
-// Same rules, with Beta's damageEntity hook (S6.7 EntityPlayer armor): the hurt window works
+// Same rules, with Beta's damageEntity hook (EntityPlayer armor): the hurt window works
 // on the raw `amount` (lastDamage keeps it), and `reduce(landing)` turns the part that lands
 // (the whole hit, or its excess over the window's hit) into the health removed. `reduce` is
 // not called for an absorbed hit. A landing reduced to 0 still opens the window (Full).

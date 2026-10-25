@@ -13,7 +13,7 @@ struct SkyAtmosphere {
     glm::vec3 horizonColor{0.72f, 0.83f, 1.00f};
     float sunBrightness{1.0f}; // 0.16 (night) .. 1.0 (noon)
     glm::vec3 sunDir{0.0f, 1.0f, 0.0f};
-    float rainStrength{0.0f}; // S8.10: hides the sun, moon and stars (Beta 1 - rain alpha)
+    float rainStrength{0.0f}; // hides the sun, moon and stars (Beta 1 - rain alpha)
 };
 
 class SkyRenderer : private core::NonCopyable {
@@ -24,7 +24,7 @@ public:
     [[nodiscard]] bool initialize();
 
     [[nodiscard]] static SkyAtmosphere evaluateAtmosphere(float timeOfDay, bool underWater) noexcept;
-    // S8.10 weather: the clear-sky atmosphere, with sunBrightness *= 1 - 0.3125 rain - 0.3125
+    // Weather: the clear-sky atmosphere, with sunBrightness *= 1 - 0.3125 rain - 0.3125
     // thunder and the sky colours greyed and darkened like Beta World.getSkyColor (rain mixes
     // 75 % towards 0.6 x luminance, thunder 75 % towards 0.2 x luminance). `lightningFlash`
     // (0..1) brightens the sky towards (0.8, 0.8, 1) by up to 45 %. Under water the weather is

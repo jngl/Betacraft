@@ -9,7 +9,7 @@
 
 namespace betacraft::storage {
 
-// S7.3 where chunk bundles (ChunkBundleCodec) live: RegionChunkStore (region/r.X.Z.bcr, the
+// Where chunk bundles (ChunkBundleCodec) live: RegionChunkStore (region/r.X.Z.bcr, the
 // current format) or LegacyChunkStore (chunks/c_X_Z.{chk,dec,be}, read-only). WorldStorage is
 // the facade the game uses; the migration (SaveMigration) copies one into the other.
 class IChunkStore {

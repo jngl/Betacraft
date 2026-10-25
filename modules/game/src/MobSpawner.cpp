@@ -46,7 +46,7 @@ using gameplay::MobKind;
 }
 
 [[nodiscard]] MobKind pickKind(MobCategory category, gameplay::SplitMix64& rng) noexcept {
-    return gameplay::pickSpawnKind(category, rng); // S6.1: MobDef::spawnWeight
+    return gameplay::pickSpawnKind(category, rng); // MobDef::spawnWeight
 }
 
 } // namespace
@@ -55,7 +55,7 @@ void MobSpawner::tick(world::World& world, ecs::Registry& reg, ecs::CommandBuffe
                       const glm::vec3& playerFeet, float timeOfDay, core::GameMode mode,
                       gameplay::SplitMix64& rng, const storage::WeatherState& weather) {
     // Spawning ignores the mode: in Creative hostiles still appear, they only ignore the
-    // player (S4.5). Peaceful is out of scope.
+    // player. Peaceful is out of scope.
     (void)mode;
     ++m_ticks;
     despawn(world, reg, commands, playerFeet, m_ticks % DESPAWN_INTERVAL_TICKS == 0, rng);
