@@ -21,9 +21,10 @@ Run a single test by invoking a GoogleTest binary directly with a filter:
 ./build/betacraft_voxel_tests --gtest_filter='PalettedSection*'
 ./build/betacraft_fluids_tests --gtest_filter='*Lava*'
 ctest --test-dir build -R Module_storage --output-on-failure
+ctest --test-dir build -L integration -j4                # every integration test, one ctest entry each
 ```
 
-Test executables: one `betacraft_<m>_tests` per module with tests (ctest `Module_<m>`), `betacraft_integration_tests` (`tests/integration/<domain>/`, fixtures in `tests/integration/support/`), `betacraft_e2e_tests` (spawns the real `betacraft` binary), `betacraft_mock_tests`, `betacraft_all_tests` (everything combined, except each module's `STANDALONE_TESTS`), `betacraft_legacy_tests`. Frozen reference saves live in `tests/data/saves/vN/` (`BETACRAFT_TEST_DATA_DIR`).
+Test executables: one `betacraft_<m>_tests` per module with tests (ctest `Module_<m>`), `betacraft_integration_tests` (`tests/integration/<domain>/`, fixtures in `tests/integration/support/`; one ctest entry per test, `Integration.<Suite>.<Test>`, label `integration`), `betacraft_e2e_tests` (spawns the real `betacraft` binary), `betacraft_mock_tests`, `betacraft_all_tests` (everything combined, except each module's `STANDALONE_TESTS`), `betacraft_legacy_tests`. Frozen reference saves live in `tests/data/saves/vN/` (`BETACRAFT_TEST_DATA_DIR`).
 
 Optional build switches: `-DBETACRAFT_WITH_ZSTD=OFF` (region files stored uncompressed), `-DBETACRAFT_WITH_PNG=OFF` (`assets/terrain.png` neither exported nor loaded). Runtime feature flags turn off risky mechanics: `--no-async-gen`, `--no-region-storage`, `--no-pathfinding`, `--no-redstone`, `--no-weather`.
 

@@ -84,7 +84,14 @@ set(MOCK_TEST_SOURCES
 add_executable(betacraft_integration_tests ${INTEGRATION_TEST_SOURCES})
 target_include_directories(betacraft_integration_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(betacraft_integration_tests PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
-add_test(NAME IntegrationTests COMMAND betacraft_integration_tests)
+# One ctest entry per test (Integration.<Suite>.<Test>, label `integration`) so `ctest -j` spreads the
+# suite over every core; as a single entry it ran alone on one core long after the others.
+include(GoogleTest)
+gtest_discover_tests(betacraft_integration_tests
+    TEST_PREFIX "Integration."
+    DISCOVERY_MODE PRE_TEST
+    PROPERTIES LABELS integration
+)
 
 # 2. E2E Tests target
 add_executable(betacraft_e2e_tests ${E2E_TEST_SOURCES})
