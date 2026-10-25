@@ -157,7 +157,7 @@ TEST_F(FluidsWorld, ReplacingTheSourceRetractsTheFlow) {
 TEST_F(FluidsWorld, BreakingAWallLetsWaterThrough) {
     // A glass wall around the source; mining one side opens the flow.
     ASSERT_TRUE(m_world->setBlock(8, kY, 8, BlockId::Water));
-    for (const auto [dx, dz] : {std::pair{1, 0}, std::pair{-1, 0}, std::pair{0, 1}, std::pair{0, -1}}) {
+    for (const auto& [dx, dz] : {std::pair{1, 0}, std::pair{-1, 0}, std::pair{0, 1}, std::pair{0, -1}}) {
         (void)m_world->setBlock(8 + dx, kY, 8 + dz, BlockId::Glass);
     }
     tickN(kWaterTicks * 3);

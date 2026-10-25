@@ -84,7 +84,14 @@ set(MOCK_TEST_SOURCES
 add_executable(betacraft_integration_tests ${INTEGRATION_TEST_SOURCES})
 target_include_directories(betacraft_integration_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(betacraft_integration_tests PRIVATE betacraft::game betacraft_warnings betacraft_test_support GTest::gtest GTest::gtest_main GTest::gmock)
-add_test(NAME IntegrationTests COMMAND betacraft_integration_tests)
+# One ctest entry per test (Integration.<Suite>.<Test>, label `integration`) so `ctest -j` spreads the
+# suite over every core; as a single entry it ran alone on one core long after the others.
+include(GoogleTest)
+gtest_discover_tests(betacraft_integration_tests
+    TEST_PREFIX "Integration."
+    DISCOVERY_MODE PRE_TEST
+    PROPERTIES LABELS integration
+)
 
 # 2. E2E Tests target
 add_executable(betacraft_e2e_tests ${E2E_TEST_SOURCES})
@@ -127,7 +134,7 @@ add_test(NAME BetaCraftLegacyTests COMMAND betacraft_legacy_tests)
 
 # Wall-clock budgets are benchmarks: skipped unless BETACRAFT_PERF_TESTS is set, run with
 # `ctest -L benchmark` (CI runs `ctest -LE benchmark`). Module budgets are registered by their
-# module (Module_acoustics_perf in modules/acoustics).
+# module (Module_acoustics_perf, Module_streaming_perf).
 
 # One TNT blast under 15 ms in Release.
 add_test(NAME Integration_beta_content_perf COMMAND betacraft_integration_tests --gtest_filter=BetaContent.*Budget*)

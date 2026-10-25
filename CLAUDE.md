@@ -7,9 +7,9 @@ Betacraft is a game inspired by Minecraft in C++20 / OpenGL 3.3 Core / SDL2 / mi
 ## Build, run, test
 
 ```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release     # needs SDL2 (pkg-config); libzstd and libpng are optional
+cmake -B build -DCMAKE_BUILD_TYPE=Release     # needs SDL2 (pkg-config) and GLM headers; libzstd and libpng are optional
 cmake --build build -j
-ctest --test-dir build --output-on-failure -LE benchmark   # what CI runs
+ctest --test-dir build --output-on-failure -LE benchmark   # what CI runs (plus -E AllTests, under xvfb)
 ctest --test-dir build -L benchmark                       # wall-clock budget tests (sets BETACRAFT_PERF_TESTS=1)
 ./build/betacraft --help
 ./build/betacraft --frames 300 --save-dir /tmp/bc-smoke   # headless-ish smoke test required before merging
@@ -21,9 +21,10 @@ Run a single test by invoking a GoogleTest binary directly with a filter:
 ./build/betacraft_voxel_tests --gtest_filter='PalettedSection*'
 ./build/betacraft_fluids_tests --gtest_filter='*Lava*'
 ctest --test-dir build -R Module_storage --output-on-failure
+ctest --test-dir build -L integration -j4                # every integration test, one ctest entry each
 ```
 
-Test executables: one `betacraft_<m>_tests` per module with tests (ctest `Module_<m>`), `betacraft_integration_tests` (`tests/integration/<domain>/`, fixtures in `tests/integration/support/`), `betacraft_e2e_tests` (spawns the real `betacraft` binary), `betacraft_mock_tests`, `betacraft_all_tests` (everything combined, except each module's `STANDALONE_TESTS`), `betacraft_legacy_tests`. Frozen reference saves live in `tests/data/saves/vN/` (`BETACRAFT_TEST_DATA_DIR`).
+Test executables: one `betacraft_<m>_tests` per module with tests (ctest `Module_<m>`), `betacraft_integration_tests` (`tests/integration/<domain>/`, fixtures in `tests/integration/support/`; one ctest entry per test, `Integration.<Suite>.<Test>`, label `integration`), `betacraft_e2e_tests` (spawns the real `betacraft` binary), `betacraft_mock_tests`, `betacraft_all_tests` (everything combined, except each module's `STANDALONE_TESTS`), `betacraft_legacy_tests`. Frozen reference saves live in `tests/data/saves/vN/` (`BETACRAFT_TEST_DATA_DIR`).
 
 Optional build switches: `-DBETACRAFT_WITH_ZSTD=OFF` (region files stored uncompressed), `-DBETACRAFT_WITH_PNG=OFF` (`assets/terrain.png` neither exported nor loaded). Runtime feature flags turn off risky mechanics: `--no-async-gen`, `--no-region-storage`, `--no-pathfinding`, `--no-redstone`, `--no-weather`.
 
@@ -35,7 +36,11 @@ The engine is one static library per module (`docs/adr/0001-modules-as-static-li
 - **Globbed (no CMake edit needed):** everything under `modules/<m>/{src,test}`, and `tests/integration/**/*.cpp` → `INTEGRATION_TEST_SOURCES`.
 - **Listed by hand (otherwise never compiled):** `tests/e2e/*` → `E2E_TEST_SOURCES`; `tests/mock/*` → `MOCK_TEST_SOURCES`.
 
-Every module, `betacraft` and the test executables (through the `betacraft_warnings` interface target) build with `-Wall -Wextra -Wpedantic` (CI adds `-Werror`, ASan/UBSan, TSan on `Module_streaming`/`storage`/`ai`, and a no-zstd job). miniaudio is isolated in its own warning-free TU (`modules/audio/miniaudio_impl.cpp`, target `miniaudio_lib`), linked `PRIVATE` by `audio`: `AudioEngine.hpp` keeps the device behind a pimpl.
+Every module, `betacraft` and the test executables (through the `betacraft_warnings` interface target) build with `-Wall -Wextra -Wpedantic` (CI adds `-Werror`). miniaudio is isolated in its own warning-free TU (`modules/audio/miniaudio_impl.cpp`, target `miniaudio_lib`), linked `PRIVATE` by `audio`: `AudioEngine.hpp` keeps the device behind a pimpl.
+
+## CI
+
+`.github/workflows/ci.yml` (GitHub Actions, `ubuntu-26.04`, GCC 15 like the dev machine) builds Debug and Release with `-Werror`, runs `ctest -LE benchmark -E AllTests` and the `--frames 300` smoke test under `xvfb-run` with Mesa, so GL and e2e tests really run. It sets `BETACRAFT_REQUIRE_GL=1`: a test guarded by `BETACRAFT_REQUIRE_GL_CONTEXT()` (`test_support/GLTestContext.hpp`) then fails instead of skipping when no OpenGL 3.3 context exists. Guard every new GL test with that macro.
 
 ## Architecture
 
