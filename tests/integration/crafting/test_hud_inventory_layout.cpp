@@ -231,7 +231,7 @@ TEST(HudInventoryLayout, SlotsMapBackAtEveryGuiScale) {
             const ui::HudCanvas c = HudRenderer::hudCanvas(win.w, win.h, pref);
             ASSERT_GT(c.width, 0);
             for (const Slots s : {Slots{InventoryRegion::CraftingGrid, 9}, Slots{InventoryRegion::CraftingResult, 1},
-                                  Slots{InventoryRegion::Palette, 36},
+                                  Slots{InventoryRegion::Palette, 36}, Slots{InventoryRegion::PaletteTab, 8},
                                   Slots{InventoryRegion::Inventory, physics::Player::TOTAL_INVENTORY_SIZE}}) {
                 for (size_t i = 0; i < s.count; ++i) {
                     const ui::SlotRect r = HudRenderer::inventorySlotRect(s.region, i, c.width, c.height, layout);

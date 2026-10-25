@@ -10,6 +10,7 @@
 #include "render/Shader.hpp"
 #include "render/TextureAtlas.hpp"
 #include "render/WorldRenderer.hpp"
+#include "ui/CreativePalette.hpp"
 #include "ui/ScreenKind.hpp"
 #include "ui/ScreenState.hpp"
 #include "world/World.hpp"
@@ -40,7 +41,11 @@ struct CraftingScreenView {
 // Outside: the cursor is off the dialog panel; only hitTestInventoryScreen reports it.
 // Armor: the 4 armor slots left of the player inventory, index = gameplay::ArmorSlot;
 // only on the player's own inventory screen (Inventory2x2).
-enum class InventoryRegion : uint8_t { None, Palette, Inventory, CraftingGrid, CraftingResult, Container, Outside, Armor };
+// PaletteTab: the palette category tabs above the palette grid, index = position in
+// kPaletteCategories; drawn and hit only with the palette. Grows only at the end.
+enum class InventoryRegion : uint8_t {
+    None, Palette, Inventory, CraftingGrid, CraftingResult, Container, Outside, Armor, PaletteTab
+};
 
 // What decides the inventory screen layout. A container screen has no grid, no result slot
 // and no palette; its slots sit where the palette is drawn otherwise.
@@ -133,6 +138,7 @@ struct HudDebugContext {
     render::RenderStats renderStats{};
     physics::RaycastHit targetHit{};
     CraftingScreenView crafting{};
+    PaletteNavigation palette{}; // Creative palette: the active category's tab, title and grid
     // Hurt feedback (Survival)
     float hurtFlash{0.0f};   // gameplay::hurtFlashIntensity: red veil of 0.25 * hurtFlash
     bool heartsBlink{false}; // Hearts outlined in white (invulnerability blink)
@@ -166,15 +172,17 @@ public:
         const HudDebugContext& ctx
     );
 
-    // Creative palette clicks: equips a full stack of the entry in the selected hotbar slot and
-    // returns true (false for an empty palette slot).
+    // Creative palette clicks: equips a full stack of the entry `palette` shows in the clicked
+    // slot (Building, unscrolled, by default) in the selected hotbar slot and returns true
+    // (false for an empty palette slot). Tabs (PaletteTab) select a category in the game.
     // Inventory, grid and result slots belong to game::InventoryCrafting (hitTestInventory).
     bool handleInventoryClick(
         int32_t mouseX,
         int32_t mouseY,
         int32_t screenWidth,
         int32_t screenHeight,
-        physics::Player& player
+        physics::Player& player,
+        const PaletteNavigation& palette = {}
     );
 
     // Inventory screen layout (window points), shared by drawing and click mapping.

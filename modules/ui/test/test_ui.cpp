@@ -85,16 +85,13 @@ TEST(HudRendererTest, InventoryClickPaletteItemSelection) {
 
     const int32_t screenW = 1280;
     const int32_t screenH = 720;
-    constexpr float panelW = 720.0f;
-    constexpr float panelH = 460.0f;
-    const float px = (static_cast<float>(screenW) - panelW) * 0.5f;
-    const float py = (static_cast<float>(screenH) - panelH) * 0.5f - 15.0f;
-    const float palStartX = px + 340.0f;
-    const float palStartY = py + 36.0f;
+    // The grid used to start 36 points below the panel top; the category tabs (issue #65)
+    // now sit between the title and the grid, so the slot comes from the shared layout.
+    const SlotRect slot0 = HudRenderer::inventorySlotRect(InventoryRegion::Palette, 0, screenW, screenH, 2);
 
     // Click palette slot 0 (Stone)
-    const int32_t clickX = static_cast<int32_t>(palStartX + 10.0f);
-    const int32_t clickY = static_cast<int32_t>(palStartY + 10.0f);
+    const int32_t clickX = static_cast<int32_t>(slot0.x + 10.0f);
+    const int32_t clickY = static_cast<int32_t>(slot0.y + 10.0f);
 
     player.setSelectedSlot(0);
     EXPECT_TRUE(hud.handleInventoryClick(clickX, clickY, screenW, screenH, player));
@@ -110,11 +107,9 @@ TEST(HudRendererTest, InventoryClickPaletteShowsBuildingAndIgnoresEmptySlots) {
     HudRenderer hud;
     constexpr int32_t screenW = 1280;
     constexpr int32_t screenH = 720;
-    const float palStartX = (static_cast<float>(screenW) - 720.0f) * 0.5f + 340.0f;
-    const float palStartY = (static_cast<float>(screenH) - 460.0f) * 0.5f - 15.0f + 36.0f;
     const auto slotCentre = [&](size_t i) {
-        return std::pair{static_cast<int32_t>(palStartX + static_cast<float>(i % 9) * 38.0f + 19.0f),
-                         static_cast<int32_t>(palStartY + static_cast<float>(i / 9) * 38.0f + 19.0f)};
+        const SlotRect r = HudRenderer::inventorySlotRect(InventoryRegion::Palette, i, screenW, screenH, 2);
+        return std::pair{static_cast<int32_t>(r.x + r.size * 0.5f), static_cast<int32_t>(r.y + r.size * 0.5f)};
     };
 
     player.setSelectedSlot(0);

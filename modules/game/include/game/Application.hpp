@@ -15,6 +15,7 @@
 #include "render/TextRenderer.hpp"
 #include "render/WorldRenderer.hpp"
 #include "ui/CreateWorldScreen.hpp"
+#include "ui/CreativePalette.hpp"
 #include "ui/DeathScreen.hpp"
 #include "ui/HudRenderer.hpp"
 #include "ui/InputManager.hpp"
@@ -253,6 +254,9 @@ private:
     bool m_running{false};
     bool m_mouseCaptured{false};
     bool m_inventoryOpen{false};
+    // What the Creative palette shows: kept while the inventory closes and reopens, back to
+    // Building, unscrolled, whenever a world opens; never saved (UI state, not WorldSession).
+    ui::PaletteNavigation m_palette{};
     bool m_showDebug{false};
 
     int32_t m_mouseX{0};

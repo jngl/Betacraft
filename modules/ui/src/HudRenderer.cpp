@@ -63,6 +63,13 @@ void main() {
 constexpr float kPanelW = 720.0f;
 constexpr float kPanelH = 460.0f;
 constexpr float kSlot = 38.0f;
+// Right column of a grid screen, from the panel top: the palette title (the active
+// category's name), the row of category tabs, then the 9x4 palette grid.
+constexpr float kPaletteTitleTop = 6.0f;
+constexpr float kPaletteTitleScale = 1.6f;
+constexpr float kPaletteTabTop = 22.0f;
+constexpr float kPaletteTab = 30.0f;
+constexpr float kPaletteGridTop = 56.0f;
 constexpr float kResultSlot = 48.0f;
 
 [[nodiscard]] constexpr ScreenKind gridKind(int gridDim) noexcept {
@@ -493,7 +500,9 @@ void HudRenderer::render(
         if (craft.kind == ScreenKind::Chest) title = "CHEST";
         render::BitmapFont::appendText(verts, title, px + 16.0f, py + 12.0f, 2.0f, titleCol);
         if (layout.palette) {
-            render::BitmapFont::appendText(verts, "BLOCK PALETTE (CLICK TO EQUIP)", px + 340.0f, py + 12.0f, 2.0f, titleCol);
+            // The active palette category's name replaces the old "BLOCK PALETTE" title.
+            render::BitmapFont::appendText(verts, paletteCategoryName(ctx.palette.category()), px + 340.0f, py + kPaletteTitleTop, kPaletteTitleScale,
+                                           titleCol);
         }
 
         // Container screens: the block entity's slots in the palette area.
@@ -553,15 +562,28 @@ void HudRenderer::render(
         render::BitmapFont::appendText(verts, "LEFT: TAKE/PLACE STACK  RIGHT: HALF/ONE", px + 16.0f, py + kPanelH - 26.0f, 1.4f,
                                glm::vec4(0.92f, 0.92f, 0.92f, 0.9f));
 
-        // Right Top: the creative palette's 9x4 grid (the Building category, unscrolled).
+        // Right Top: one tab per palette category, the active one lit and joined to the grid,
+        // then the creative palette's 9x4 grid as the navigation state shows it.
+        for (size_t k = 0; layout.palette && k < kPaletteCategories.size(); ++k) {
+            const SlotRect r = inventorySlotRect(InventoryRegion::PaletteTab, k, screenWidth, screenHeight, layout);
+            const PaletteCategory category = kPaletteCategories[k];
+            if (category == ctx.palette.category()) {
+                const SlotRect grid = inventorySlotRect(InventoryRegion::Palette, 0, screenWidth, screenHeight, layout);
+                pushRect(verts, r.x - 2.0f, r.y - 2.0f, r.x + r.size + 2.0f, grid.y, glm::vec4(1.0f, 0.96f, 0.72f, 0.98f));
+                pushRect(verts, r.x + 1.0f, r.y + 1.0f, r.x + r.size - 1.0f, grid.y, glm::vec4(0.62f, 0.62f, 0.66f, 0.98f));
+            } else {
+                pushBeveledSlot(verts, r.x, r.y, r.size, hovered(r));
+            }
+            pushItemIcon(verts, paletteCategoryIcon(category), r.x + 4.0f, r.y + 4.0f, r.size - 8.0f);
+        }
         for (size_t i = 0; layout.palette && i < kPaletteVisibleSlots; ++i) {
             const SlotRect r = inventorySlotRect(InventoryRegion::Palette, i, screenWidth, screenHeight, layout);
             pushBeveledSlot(verts, r.x, r.y, r.size, hovered(r));
-            pushItemIcon(verts, paletteItem(i), r.x + 6.0f, r.y + 6.0f, r.size - 12.0f);
+            pushItemIcon(verts, ctx.palette.visibleItem(i), r.x + 6.0f, r.y + 6.0f, r.size - 12.0f);
         }
 
         // Right Bottom: Player Inventory (3 rows of 9 backpack slots + 1 row of 9 hotbar slots)
-        render::BitmapFont::appendText(verts, "PLAYER INVENTORY", px + 340.0f, py + 205.0f, 1.7f, glm::vec4(0.95f));
+        render::BitmapFont::appendText(verts, "PLAYER INVENTORY", px + 340.0f, py + 212.0f, 1.4f, glm::vec4(0.95f));
         for (size_t i = 0; i < physics::Player::TOTAL_INVENTORY_SIZE; ++i) {
             const SlotRect r = inventorySlotRect(InventoryRegion::Inventory, i, screenWidth, screenHeight, layout);
             pushBeveledSlot(verts, r.x, r.y, r.size, hovered(r));
@@ -599,7 +621,7 @@ void HudRenderer::render(
                 case InventoryRegion::Container:
                     under = hit.index < craft.container.size() ? craft.container[hit.index] : under;
                     break;
-                case InventoryRegion::Palette: under = {paletteItem(hit.index), 1}; break;
+                case InventoryRegion::Palette: under = {ctx.palette.visibleItem(hit.index), 1}; break;
                 case InventoryRegion::Armor: under = player.getArmorSlot(hit.index); break;
                 default: break;
             }
@@ -703,8 +725,14 @@ SlotRect HudRenderer::inventorySlotRect(InventoryRegion region, size_t index, in
             const float gridY = py + 60.0f + (3.0f - dim) * kSlot * 0.5f;
             return {px + 30.0f + dim * kSlot + 56.0f, gridY + (dim * kSlot - kResultSlot) * 0.5f, kResultSlot};
         }
+        case InventoryRegion::PaletteTab:
+            // One tab per grid column, centred on it, between the title and the grid.
+            if (index >= kPaletteCategories.size()) return {};
+            return {rightX + static_cast<float>(index) * kSlot + (kSlot - kPaletteTab) * 0.5f, py + kPaletteTabTop,
+                    kPaletteTab};
         case InventoryRegion::Palette:
-            return {rightX + static_cast<float>(index % 9) * kSlot, py + 36.0f + static_cast<float>(index / 9) * kSlot, kSlot};
+            return {rightX + static_cast<float>(index % 9) * kSlot,
+                    py + kPaletteGridTop + static_cast<float>(index / 9) * kSlot, kSlot};
         case InventoryRegion::Container: {
             // The palette area: 9 columns of kSlot fit it exactly.
             const float top = py + 36.0f;
@@ -767,6 +795,7 @@ InventoryHit HudRenderer::hitTestInventory(int32_t mouseX, int32_t mouseY, int32
         if (const auto hit = scan(InventoryRegion::CraftingGrid, dim * dim)) return *hit;
         if (const auto hit = scan(InventoryRegion::CraftingResult, 1)) return *hit;
         if (layout.palette) {
+            if (const auto hit = scan(InventoryRegion::PaletteTab, kPaletteCategories.size())) return *hit;
             if (const auto hit = scan(InventoryRegion::Palette, kPaletteVisibleSlots)) return *hit;
         }
     }
@@ -795,13 +824,14 @@ bool HudRenderer::handleInventoryClick(
     int32_t mouseY,
     int32_t screenWidth,
     int32_t screenHeight,
-    physics::Player& player
+    physics::Player& player,
+    const PaletteNavigation& palette
 ) {
     const InventoryHit hit = hitTestInventory(mouseX, mouseY, screenWidth, screenHeight, 2);
     if (hit.region != InventoryRegion::Palette) {
         return false;
     }
-    const gameplay::ItemId item = paletteItem(hit.index);
+    const gameplay::ItemId item = palette.visibleItem(hit.index);
     if (item == gameplay::kNoItem) {
         return false; // An empty palette slot hands out nothing
     }
