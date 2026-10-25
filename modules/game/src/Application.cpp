@@ -447,6 +447,17 @@ void Application::processEvents() {
             case SDL_MOUSEWHEEL:
                 if (!m_inventoryOpen && ev.wheel.y != 0) {
                     player().scrollSelectedSlot(ev.wheel.y > 0 ? -1 : 1);
+                } else if (m_inventoryOpen && ev.wheel.y != 0) {
+                    // Creative, cursor over the palette grid: the wheel scrolls the palette by
+                    // rows; anywhere else on the open inventory it does nothing.
+                    const InventoryCrafting& screen = m_session->crafting();
+                    const ui::InventoryLayoutKey layout{static_cast<int>(screen.gridSize()), screen.kind(),
+                                                        player().isCreative() && !ui::isContainerScreen(screen.kind())};
+                    const ui::HudCanvas canvas = hudCanvas();
+                    if (ui::HudRenderer::isOverPaletteGrid(canvas.toCanvasX(m_mouseX), canvas.toCanvasY(m_mouseY),
+                                                           canvas.width, canvas.height, layout)) {
+                        m_palette.scroll(ev.wheel.y);
+                    }
                 }
                 break;
 

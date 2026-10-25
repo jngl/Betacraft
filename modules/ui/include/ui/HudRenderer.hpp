@@ -66,6 +66,17 @@ struct SlotRect {
     float size{0.0f};
 };
 
+// The thin scrollbar beside the palette grid (window points): a track as tall as the grid
+// and the thumb showing which rows are visible. Indicative only, never hit-tested.
+struct PaletteScrollbar {
+    float x{0.0f};
+    float width{0.0f};
+    float trackTop{0.0f};
+    float trackHeight{0.0f};
+    float thumbTop{0.0f};
+    float thumbHeight{0.0f};
+};
+
 // GUI Scale: the HUD, the inventory and the death screen are laid out in a virtual
 // canvas of (window / scale) points, stretched over the window by the orthographic matrix.
 // scale = TextRenderer::calculateGuiScale / 3, so Auto at 1280x720 (guiScale 3) is 1.0 and
@@ -197,6 +208,16 @@ public:
     [[nodiscard]] static InventoryHit hitTestInventory(int32_t mouseX, int32_t mouseY, int32_t screenWidth,
                                                        int32_t screenHeight, int gridDim,
                                                        bool withPalette = true) noexcept;
+
+    // True when the cursor is over the palette grid (slots or the gaps between them), so the
+    // mouse wheel scrolls the palette; always false when the palette is not drawn.
+    [[nodiscard]] static bool isOverPaletteGrid(int32_t mouseX, int32_t mouseY, int32_t screenWidth,
+                                                int32_t screenHeight, InventoryLayoutKey layout) noexcept;
+    // The scrollbar drawn beside the palette grid; nullopt when the palette is not drawn or
+    // the active category fits the grid (PaletteNavigation::scrollbarVisible).
+    [[nodiscard]] static std::optional<PaletteScrollbar> paletteScrollbar(int32_t screenWidth, int32_t screenHeight,
+                                                                          InventoryLayoutKey layout,
+                                                                          const PaletteNavigation& palette) noexcept;
 
     // Same as hitTestInventory, but a point off the dialog panel reports Outside instead of
     // None (Beta drops the cursor stack there); None stays for gaps inside the panel.
