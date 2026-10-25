@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.build_type }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+    steps:
+      - uses: actions/checkout@v4
+
+      # xvfb + Mesa (llvmpipe) give the runner a display with OpenGL 3.3 Core, so the GL and
+      # e2e tests run instead of skipping.
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build ccache pkg-config libsdl2-dev libzstd-dev libpng-dev \
+            xvfb mesa-utils libgl1-mesa-dri
+
+      - uses: actions/cache@v4
+        with:
+          path: .ccache
+          key: ccache-${{ matrix.build_type }}-${{ github.sha }}
+          restore-keys: ccache-${{ matrix.build_type }}-
+
+      - name: Configure
+        run: >
+          cmake -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DCMAKE_CXX_FLAGS=-Werror
+
+      - name: Build
+        run: cmake --build build
+
+      # Benchmarks (wall-clock budgets) are too noisy on shared runners. AllTests only repeats
+      # tests that already run in their own executables; building it still proves they link.
+      # BETACRAFT_REQUIRE_GL=1 turns a missing GL context into a failure, not a silent skip.
+      - name: Test
+        env:
+          BETACRAFT_REQUIRE_GL: "1"
+        run: >
+          xvfb-run -a -s "-screen 0 1280x720x24"
+          ctest --test-dir build -j$(nproc) --output-on-failure -LE benchmark -E AllTests
+
+      - name: Smoke test
+        run: >
+          xvfb-run -a -s "-screen 0 1280x720x24"
+          ./build/betacraft --frames 300 --save-dir "$RUNNER_TEMP/bc-smoke"
+
+      - name: Upload test log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctest-log-${{ matrix.build_type }}
+          path: build/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore

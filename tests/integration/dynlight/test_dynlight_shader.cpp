@@ -119,9 +119,7 @@ TEST(DynLightShader, ChunkShadersFeedTheFragmentWorldPositionToTheDynamicLightTe
 }
 
 TEST(DynLightShader, ChunkProgramCompilesAndBindsTheBlockWhenGlIsAvailable) {
-    if (!test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "OpenGL 3.3 Core context not available in this test environment.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
 
     render::DynamicLightUniformBuffer ubo;
     ASSERT_TRUE(ubo.initialize());
@@ -209,9 +207,7 @@ private:
 } // namespace
 
 TEST(DynLightShader, HeldTorchBrightensAnUnlitWallAtNightOnTheGpu) {
-    if (!test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "OpenGL 3.3 Core context not available in this test environment.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
 
     OffscreenTarget target;
     ASSERT_TRUE(target.create());

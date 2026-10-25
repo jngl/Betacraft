@@ -209,9 +209,7 @@ TEST(ParticleSystemTest, SpawningAndSimulation) {
 }
 
 TEST(RenderGLTest, ShaderAndRendererWithGLContext) {
-    if (!test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "OpenGL 3.3 Core context not available in this test environment.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
 
     // Test ShaderProgram compilation
     ShaderProgram shader;

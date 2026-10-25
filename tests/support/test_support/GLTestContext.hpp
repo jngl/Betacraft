@@ -8,6 +8,9 @@
 #include <gmock/gmock.h>
 #include <SDL2/SDL.h>
 
+#include <cstdlib>
+#include <string_view>
+
 namespace betacraft::test {
 
 /// OpenGL Test Context helper (creates hidden window + GL 3.3 Core context)
@@ -16,6 +19,13 @@ public:
     static bool isAvailable() noexcept {
         initOnce();
         return s_available;
+    }
+
+    /// True when BETACRAFT_REQUIRE_GL=1: CI provides a display (xvfb + Mesa), so a missing
+    /// context is a broken runner, not a reason to skip.
+    static bool isRequired() noexcept {
+        const char* v = std::getenv("BETACRAFT_REQUIRE_GL");
+        return v && std::string_view(v) == "1";
     }
 
 private:
@@ -63,3 +73,15 @@ private:
 };
 
 } // namespace betacraft::test
+
+/// Skips the current test when no OpenGL 3.3 Core context can be created, or fails it when
+/// BETACRAFT_REQUIRE_GL=1. Use at the top of a test body or SetUp().
+#define BETACRAFT_REQUIRE_GL_CONTEXT()                                                        \
+    do {                                                                                     \
+        if (!::betacraft::test::GLTestContext::isAvailable()) {                              \
+            if (::betacraft::test::GLTestContext::isRequired()) {                            \
+                FAIL() << "OpenGL 3.3 Core context not available but BETACRAFT_REQUIRE_GL=1"; \
+            }                                                                                \
+            GTEST_SKIP() << "OpenGL 3.3 Core context not available in this test environment."; \
+        }                                                                                    \
+    } while (false)

@@ -19,9 +19,7 @@ using namespace betacraft;
 using namespace testing;
 
 TEST(ApplicationE2ETest, RunMultipleFramesAndCleanShutdown) {
-    if (!test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "Skipping E2E Application test: OpenGL 3.3 Core display/context not available.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
 
     test::TempDir tempDir;
     core::EngineConfig config{};
@@ -53,9 +51,7 @@ TEST(ApplicationE2ETest, RunMultipleFramesAndCleanShutdown) {
 class ApplicationInGameE2ETest : public ::testing::Test {
 protected:
     void SetUp() override {
-        if (!test::GLTestContext::isAvailable()) {
-            GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
-        }
+        BETACRAFT_REQUIRE_GL_CONTEXT();
         core::EngineConfig config{};
         config.windowTitle = "BetaCraft E2E In-Game Test";
         config.windowWidth = 320;
@@ -165,9 +161,7 @@ namespace {
 // (Survival) and writes level.dat; shutdown closes the session so the inventory comes back.
 // Details of the saved state: test_world_session_lifecycle.cpp.
 TEST(ApplicationE2ETest, SurvivalWorldSavesInventoryOnShutdown) {
-    if (!test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
     test::TempDir dir;
     {
         game::Application app(sprint1Config(dir));
@@ -191,9 +185,7 @@ TEST(ApplicationE2ETest, SurvivalWorldSavesInventoryOnShutdown) {
 
 // Hand-off: the title's mode (EngineConfig::defaultGameMode) starts the new world.
 TEST(ApplicationE2ETest, NewCreativeWorldGetsTheCreativeKit) {
-    if (!test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
     test::TempDir dir;
     core::EngineConfig config = sprint1Config(dir);
     config.defaultGameMode = core::GameMode::Creative;
@@ -210,9 +202,7 @@ TEST(ApplicationE2ETest, NewCreativeWorldGetsTheCreativeKit) {
 // Dying opens the death screen with the inventory scattered; Respawn goes back in game
 // alive. Where and how the player comes back: test_world_session_respawn (GL-free).
 TEST(ApplicationE2ETest, DeathScreenThenRespawnAtSpawn) {
-    if (!test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
     test::TempDir dir;
     game::Application app(sprint1Config(dir));
     ASSERT_TRUE(app.initialize());
@@ -239,9 +229,7 @@ TEST(ApplicationE2ETest, DeathScreenThenRespawnAtSpawn) {
 // Hand-off: quitting from the title screen of a new world writes no level.dat, so the
 // next launch still offers the mode choice.
 TEST(ApplicationE2ETest, NewWorldQuitAtTitleKeepsTheModeChoice) {
-    if (!test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
     test::TempDir dir;
     {
         game::Application app(sprint1Config(dir));
@@ -262,9 +250,7 @@ TEST(ApplicationE2ETest, NewWorldQuitAtTitleKeepsTheModeChoice) {
 // Conventions §1.2 hand-off: Application::isSaveDisabled forwards the session's flag, and
 // playing then shutting down leaves a too new level.dat untouched.
 TEST(ApplicationE2ETest, TooNewLevelDatIsNeverOverwritten) {
-    if (!test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
     test::TempDir dir;
     const std::string kV3 = "BETACRAFT_LEVEL_V3\nseed 42\n";
     {
@@ -335,9 +321,7 @@ void pushText(const char* text) {
 // Without autoEnterWorld the game starts on the title screen with no world, and nothing
 // is written until a world is picked.
 TEST(ApplicationWorldsE2ETest, StartsOnTitleWithoutWorldUnlessAutoEnter) {
-    if (!test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
     test::TempDir dir;
     game::Application app(menuConfig(dir));
     ASSERT_TRUE(app.initialize());
@@ -355,9 +339,7 @@ TEST(ApplicationWorldsE2ETest, StartsOnTitleWithoutWorldUnlessAutoEnter) {
 // Through real SDL events: Singleplayer -> World Select -> Create New World ->
 // typed name and seed, Survival toggled to Creative -> in game in the new world's folder.
 TEST(ApplicationWorldsE2ETest, MenusCreateAndEnterANewWorld) {
-    if (!test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
     test::TempDir dir;
     core::EngineConfig config = menuConfig(dir);
     config.windowWidth = 800;
@@ -406,9 +388,7 @@ TEST(ApplicationWorldsE2ETest, MenusCreateAndEnterANewWorld) {
 // opens each in turn, and the World Select list orders them by last play.
 // What each world keeps: test_world_session_lifecycle.cpp.
 TEST(ApplicationWorldsE2ETest, LeaveWorldThenAnotherWorldKeepsNothingOfTheFirst) {
-    if (!test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
     test::TempDir dir;
     const std::filesystem::path a = dir.path() / "saves" / "A";
     const std::filesystem::path b = dir.path() / "saves" / "B";
@@ -449,9 +429,7 @@ TEST(ApplicationWorldsE2ETest, LeaveWorldThenAnotherWorldKeepsNothingOfTheFirst)
 
 // Playtest: two worlds created with the seed "test" have the same terrain.
 TEST(ApplicationWorldsE2ETest, SameSeedTextGivesSameTerrain) {
-    if (!test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
     test::TempDir dir;
     game::Application app(menuConfig(dir));
     ASSERT_TRUE(app.initialize());
@@ -479,9 +457,7 @@ TEST(ApplicationWorldsE2ETest, SameSeedTextGivesSameTerrain) {
 // from the Application converts it, and it is no longer flagged.
 // The migration itself: test_world_session_lifecycle.cpp.
 TEST(ApplicationWorldsE2ETest, LegacySaveFlaggedThenMigratedOnEnter) {
-    if (!test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "OpenGL 3.3 Core display/context not available.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
     test::TempDir dir;
     const std::filesystem::path save = dir.path() / "saves" / "v1";
     std::filesystem::create_directories(save.parent_path());

@@ -19,9 +19,7 @@ TEST(CliE2ETest, HelpArgument) {
 }
 
 TEST(CliE2ETest, RunHeadlessFrames) {
-    if (!betacraft::test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "Skipping CLI execution test: OpenGL 3.3 Core display/context not available.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
 
     betacraft::test::TempDir tempDir;
     const std::string cmd = std::string(BETACRAFT_BIN_PATH) +
@@ -38,9 +36,7 @@ TEST(CliE2ETest, RunHeadlessFrames) {
 // Launching on a pre-region save (frozen copy of tests/data/saves/v1) migrates its
 // chunks/ files to region/ and keeps them as chunks.migrated/.
 TEST(CliE2ETest, LegacySaveMigratedToRegions) {
-    if (!betacraft::test::GLTestContext::isAvailable()) {
-        GTEST_SKIP() << "Skipping CLI execution test: OpenGL 3.3 Core display/context not available.";
-    }
+    BETACRAFT_REQUIRE_GL_CONTEXT();
     betacraft::test::TempDir tempDir;
     const auto save = tempDir.path() / "world";
     std::filesystem::copy(std::filesystem::path(BETACRAFT_TEST_DATA_DIR) / "saves" / "v1", save,
