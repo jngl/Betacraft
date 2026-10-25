@@ -1,6 +1,6 @@
 # crafting
 
-Beta 1.7.3 recipes (P2.6): 2×2 and 3×3 grids, shaped and shapeless matching, the recipe book, and the furnace. Pure data over item ids; it needs only `gameplay` and `voxel`.
+Recipes: 2×2 and 3×3 grids, shaped and shapeless matching, the recipe book, and the furnace. Pure data over item ids; it needs only `gameplay` and `voxel`.
 
 ## Public entry points
 

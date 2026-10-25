@@ -6,9 +6,9 @@ The live world: `World` owns the loaded chunks and runs everything that touches 
 
 - `world/World.hpp`: `World` (chunk loading and eviction, block and metadata edits, `tick()`, the queues `WorldSession` empties each tick).
 - `world/WorldGen.hpp`: `WorldGen`, pass-1 terrain of one chunk (heightmap, biomes, caves through `worldgen/CaveCarver`).
-- `world/ChunkGenPipeline.hpp`: pass 1 on worker threads (S7.7), or inline with `workerCount = 0`.
+- `world/ChunkGenPipeline.hpp`: pass 1 on worker threads, or inline with `workerCount = 0`.
 - `world/DifferentialLightingEngine.hpp`: BFS add/remove block light and skylight, bounded per edit.
-- `world/BlockTicks.hpp`: S5.1 random ticks (crops, grass, leaves, fire...).
+- `world/BlockTicks.hpp`: random ticks (crops, grass, leaves, fire...).
 - `world/Weather.hpp`: rain and thunder cycle, lightning rolls.
 
 ## What it does not do

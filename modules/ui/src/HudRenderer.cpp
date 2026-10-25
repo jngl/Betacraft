@@ -1,4 +1,6 @@
 #include "ui/HudRenderer.hpp"
+
+#include "core/Version.hpp"
 #include "gameplay/Armor.hpp"
 #include "gameplay/ItemStack.hpp"
 #include "gameplay/MobSpawnRules.hpp"
@@ -326,10 +328,10 @@ void HudRenderer::render(
         render::BitmapFont::appendText(verts, ctx.statusMessage, x, y, kMsgScale, glm::vec4(1.0f, 1.0f, 1.0f, a));
     }
 
-    // 2. Iconic Top-Left "Minecraft Beta 1.7.3" Watermark & F3 Debug Screen
+    // 2. Top-left title watermark & F3 debug screen
     constexpr float fontScale = 2.0f;
     if (!ctx.showDebug) {
-        render::BitmapFont::appendText(verts, "Minecraft Beta 1.7.3", 10.0f, 10.0f, fontScale, glm::vec4(1.0f));
+        render::BitmapFont::appendText(verts, core::kGameTitle, 10.0f, 10.0f, fontScale, glm::vec4(1.0f));
         render::BitmapFont::appendText(
             verts,
             ctx.creative ? "[F3] Debug  [E] Inventory/Craft  [F] Fly  [T] Time  [L] Smooth Light  [M] Music"
@@ -353,7 +355,7 @@ void HudRenderer::render(
         const uint8_t feetLight = gameplay::effectiveLight(world.getSkyLight(bx, by, bz), world.getBlockLight(bx, by, bz),
                                                            gameplay::skylightSubtracted(ctx.timeOfDay));
         std::ostringstream l1, l2, l3, l4, l5, l6;
-        l1 << "Minecraft Beta 1.7.3 (" << static_cast<int>(std::round(ctx.fps)) << " fps, "
+        l1 << core::kGameTitle << " (" << static_cast<int>(std::round(ctx.fps)) << " fps, "
            << ctx.renderStats.visibleChunks << "/" << ctx.renderStats.totalChunks << " chunks)";
         l2 << "Vertices: " << (ctx.renderStats.totalVertices / 1000) << "k  Frame: "
            << std::fixed << std::setprecision(2) << ctx.frameTimeMs << " ms  Mesh queue: "
@@ -491,7 +493,7 @@ void HudRenderer::render(
         if (craft.kind == ScreenKind::Chest) title = "CHEST";
         render::BitmapFont::appendText(verts, title, px + 16.0f, py + 12.0f, 2.0f, titleCol);
         if (layout.palette) {
-            render::BitmapFont::appendText(verts, "BETA 1.7.3 BLOCK PALETTE (CLICK TO EQUIP)", px + 340.0f, py + 12.0f, 2.0f, titleCol);
+            render::BitmapFont::appendText(verts, "BLOCK PALETTE (CLICK TO EQUIP)", px + 340.0f, py + 12.0f, 2.0f, titleCol);
         }
 
         // Container screens (S2.6): the block entity's slots in the palette area.

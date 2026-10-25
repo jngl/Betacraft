@@ -1,5 +1,6 @@
 #include "core/Config.hpp"
 #include "core/Logger.hpp"
+#include "core/Version.hpp"
 #include "game/Application.hpp"
 
 #include <algorithm>
@@ -14,7 +15,7 @@ int main(int argc, char* argv[]) {
     for (int i = 1; i < argc; ++i) {
         const std::string_view arg(argv[i]);
         if (arg == "--help" || arg == "-h") {
-            std::cout << "Minecraft Beta 1.7.3 Clone (C++20 / OpenGL 3.3 / SDL2 / miniaudio)\n"
+            std::cout << betacraft::core::kGameTitle << " (C++20 / OpenGL 3.3 / SDL2 / miniaudio)\n"
                       << "Usage: betacraft [options]\n"
                       << "  --seed <uint64>            World generation seed (default: 173173173)\n"
                       << "  --render-distance <int>    Render distance in chunks (default: 7)\n"
@@ -57,7 +58,7 @@ int main(int argc, char* argv[]) {
 
     betacraft::game::Application app(config);
     if (!app.initialize()) {
-        betacraft::core::Logger::error("Main", "Failed to initialize BetaCraft 1.7.3.");
+        betacraft::core::Logger::error("Main", "Failed to initialize ", betacraft::core::kGameTitle, ".");
         return EXIT_FAILURE;
     }
 

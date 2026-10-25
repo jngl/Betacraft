@@ -1,6 +1,6 @@
 # redstone
 
-Beta 1.7.3 redstone (S8.5–S8.8): wire power propagation, torches with burnout, levers, buttons and pressure plates, and the consumers they switch. Like `fluids`, it sees the world only through a voxel interface, so it is tested on an in-memory grid.
+Redstone: wire power propagation, torches with burnout, levers, buttons and pressure plates, and the consumers they switch. Like `fluids`, it sees the world only through a voxel interface, so it is tested on an in-memory grid.
 
 ## Public entry points
 

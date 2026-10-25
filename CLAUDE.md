@@ -53,8 +53,9 @@ Every module, `betacraft` and the test executables (through the `betacraft_warni
 
 **Persistence.** `storage/WorldStorage` facade over `storage/` (region files `region/r.X.Z.bcr`, 4 KiB sectors, zstd chunk bundles; legacy `chunks/*.chk|.dec|.be` are migrated to `chunks.migrated/`). `level.dat` is a `key value` text file with header `BETACRAFT_LEVEL_V2`. Textures are generated procedurally by `render/TextureAtlas` at startup and exported to `assets/terrain.png` (a custom `assets/terrain.png` overrides it); both need libpng, otherwise the generated atlas is used as is.
 
-## Conventions (from `docs/GAMEPLAY_ROADMAP.md`, "Conventions transverses")
+## Conventions
 
+- **Inspired by, not a clone:** Minecraft Beta 1.7.3 is the default reference for any mechanic not deliberately redesigned; departures are allowed and update the pinning tests with a comment (`docs/adr/0002-beta-as-behaviour-reference.md`). Player-facing text (title, HUD, `--help`, logs) says "Betacraft" with `core::kGameTitle`, never Minecraft.
 - **Saves:** every file carries a format id + version; readers accept versions ≤ their own and refuse (never overwrite) newer ones. New data = new key, no version bump. Write atomically (`.tmp` → rename old to `_old` → rename). Unreadable chunks are quarantined (`.chk.corrupt`), not silently regenerated.
 - **Enums grow only at the end:** `ScreenState`, `BlockId`, `SoundEffect`, `GameAction`, `RenderShape`, `InventoryRegion`, `MobKind`, `DamageCause`.
 - **Public signatures used by tests don't change** (add an overload or defaulted parameter instead): `WorldStorage::saveChunk/loadChunk`, `World::ensureChunkLoaded`, `SkyRenderer::evaluateAtmosphere`, `MobAISystem::update`, `Raycaster::cast`, `HudRenderer::hitTestInventory`, `EntitySimulation::tick`, `WorldSession::open`, `WorldSession::tick`, `renderWorld`.

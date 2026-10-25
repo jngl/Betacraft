@@ -1316,9 +1316,9 @@ bool TextureAtlas::initialize(const std::filesystem::path& externalPngPath) {
     } else {
         rgba = generateProceduralAtlasRGBA();
         if (savePngRGBA(externalPngPath, rgba)) {
-            core::Logger::info("TextureAtlas", "Generated procedural Beta 1.7.3 atlas and saved to ", externalPngPath.string());
+            core::Logger::info("TextureAtlas", "Generated procedural atlas and saved to ", externalPngPath.string());
         } else {
-            core::Logger::info("TextureAtlas", "Generated procedural Beta 1.7.3 atlas in memory (256x256 RGBA).");
+            core::Logger::info("TextureAtlas", "Generated procedural atlas in memory (256x256 RGBA).");
         }
     }
 

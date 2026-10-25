@@ -5,6 +5,8 @@
 #include <string>
 #include <string_view>
 
+#include "core/Version.hpp"
+
 namespace betacraft::core {
 
 // Beta game modes (level.dat stores the number). Every cheat (palette, 64-block pick, fly,
@@ -57,13 +59,13 @@ struct NewWorldParams {
 
 struct EngineConfig {
     // Window settings
-    std::string windowTitle{"Minecraft Beta 1.7.3"};
+    std::string windowTitle{kGameTitle};
     int32_t windowWidth{1280};
     int32_t windowHeight{720};
     bool vsync{true};
     bool fullscreen{false};
 
-    // World & Chunk constants (Minecraft Beta 1.7.3 specifications)
+    // World & chunk constants
     static constexpr int32_t CHUNK_WIDTH = 16;
     static constexpr int32_t CHUNK_HEIGHT = 128;
     static constexpr int32_t CHUNK_DEPTH = 16;

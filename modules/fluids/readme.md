@@ -1,6 +1,6 @@
 # fluids
 
-Beta 1.7.3 water and lava (BlockFlowing / BlockStationary) as a deterministic cellular automaton on scheduled ticks (P2.3). It reads and writes the world through a small voxel interface, so it runs on an in-memory grid in the tests and on a `World` adapter in the game.
+Water and lava as a deterministic cellular automaton on scheduled ticks, following Beta's BlockFlowing / BlockStationary. It reads and writes the world through a small voxel interface, so it runs on an in-memory grid in the tests and on a `World` adapter in the game.
 
 ## Public entry points
 

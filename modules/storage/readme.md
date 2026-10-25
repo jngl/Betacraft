@@ -1,6 +1,6 @@
 # storage
 
-Everything about saves on disk (S7.1–S7.6): region files of 4 KiB sectors with zstd-compressed chunk bundles, the read-only legacy `chunks/` layout and its one-way migration, the background I/O worker, and `level.dat`. Without libzstd (`-DBETACRAFT_WITH_ZSTD=OFF`) chunks are stored uncompressed, which every build can read.
+Everything about saves on disk: region files of 4 KiB sectors with zstd-compressed chunk bundles, the read-only legacy `chunks/` layout and its one-way migration, the background I/O worker, and `level.dat`. Without libzstd (`-DBETACRAFT_WITH_ZSTD=OFF`) chunks are stored uncompressed, which every build can read.
 
 ## Public entry points
 

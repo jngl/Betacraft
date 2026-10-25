@@ -92,7 +92,7 @@ WorldSession::WorldSession(const OpenOptions& options)
             if (options.newWorld) {
                 m_name = options.newWorld->name;
             }
-            core::Logger::info("WorldSession", "Generated new Beta 1.7.3 world (seed=", m_world->getSeed(),
+            core::Logger::info("WorldSession", "Generated new world (seed=", m_world->getSeed(),
                                ") at spawn (", m_spawnPoint.x, ", ", m_spawnPoint.y, ", ", m_spawnPoint.z, ").");
         } else {
             // Too new or unreadable: play, but never overwrite what is on disk (conventions §1.2).

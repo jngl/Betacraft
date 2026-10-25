@@ -5,7 +5,7 @@ Block and chunk data: what a block is, how a chunk stores its blocks, light and 
 ## Public entry points
 
 - `voxel/Block.hpp`: `BlockId`, `RenderShape`, `BlockDef` and `BlockRegistry` (hardness, light, opacity per block).
-- `voxel/BlockShapes.hpp`: metadata-dependent shapes in sixteenths of a block (S5.4), one table for collision, selection and meshing.
+- `voxel/BlockShapes.hpp`: metadata-dependent shapes in sixteenths of a block, one table for collision, selection and meshing.
 - `voxel/BlockBoxes.hpp`: a block's collision and selection boxes in world space (`blockAABB`, `selectionAABB`, `forEachBlockAABB`).
 - `voxel/Chunk.hpp`: `Chunk` (16×128×16 column of sections, biome, RLE serialisation), `BiomeId`.
 - `voxel/PalettedSection.hpp`: `PalettedSection`, a 16³ section with a 0/4/8/16-bit palette and lazily allocated light and metadata arrays.
