@@ -26,8 +26,8 @@ std::span<const CraftingRecipe> CraftingSystem::getRecipes() noexcept {
     return s_recipes;
 }
 
-std::span<const voxel::BlockId> CraftingSystem::getCreativePalette() noexcept {
-    return creativePalette();
+std::span<const gameplay::ItemId> CraftingSystem::getCreativePalette() noexcept {
+    return allPaletteEntries();
 }
 
 bool CraftingSystem::canCraft(const CraftingRecipe& recipe, const physics::Player& player) noexcept {

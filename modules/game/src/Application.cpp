@@ -207,6 +207,7 @@ bool Application::enterWorld(const std::filesystem::path& dir, std::optional<cor
         m_screenState = ui::ScreenState::TitleScreen;
         return false;
     }
+    m_palette = {}; // Every world opens its palette on Building, unscrolled
     m_config.worldSeed = world().getSeed();
     m_config.worldSaveDir = dir.string();
     // The title's mode button only for a new world opened at startup (autoEnterWorld).
@@ -446,6 +447,14 @@ void Application::processEvents() {
             case SDL_MOUSEWHEEL:
                 if (!m_inventoryOpen && ev.wheel.y != 0) {
                     player().scrollSelectedSlot(ev.wheel.y > 0 ? -1 : 1);
+                } else if (m_inventoryOpen && ev.wheel.y != 0) {
+                    // Creative, cursor over the palette grid: the wheel scrolls the palette by
+                    // rows; anywhere else on the open inventory it does nothing.
+                    const ui::HudCanvas canvas = hudCanvas();
+                    if (ui::HudRenderer::isOverPaletteGrid(canvas.toCanvasX(m_mouseX), canvas.toCanvasY(m_mouseY),
+                                                           canvas.width, canvas.height, inventoryLayout())) {
+                        m_palette.scroll(ev.wheel.y);
+                    }
                 }
                 break;
 
@@ -670,11 +679,16 @@ ui::HudCanvas Application::hudCanvas() const noexcept {
                                       m_inputManager.getGuiScalePreference());
 }
 
+ui::InventoryLayoutKey Application::inventoryLayout() const noexcept {
+    const InventoryCrafting& screen = m_session->crafting();
+    return {static_cast<int>(screen.gridSize()), screen.kind(),
+            player().isCreative() && !ui::isContainerScreen(screen.kind())};
+}
+
 void Application::handleInventoryClick(int32_t mouseX, int32_t mouseY, SlotButton button) {
     InventoryCrafting& screen = m_session->crafting();
     const bool container = ui::isContainerScreen(screen.kind());
-    const ui::InventoryLayoutKey layout{static_cast<int>(screen.gridSize()), screen.kind(),
-                                        player().isCreative() && !container};
+    const ui::InventoryLayoutKey layout = inventoryLayout();
     // The inventory is laid out in the GUI Scale canvas: window points map back first.
     const ui::HudCanvas canvas = hudCanvas();
     mouseX = canvas.toCanvasX(mouseX);
@@ -695,7 +709,15 @@ void Application::handleInventoryClick(int32_t mouseX, int32_t mouseY, SlotButto
             break;
         case ui::InventoryRegion::Palette:
             changed = player().isCreative() && button == SlotButton::Left &&
-                      m_hudRenderer.handleInventoryClick(mouseX, mouseY, canvas.width, canvas.height, player());
+                      m_hudRenderer.handleInventoryClick(mouseX, mouseY, canvas.width, canvas.height, player(), m_palette);
+            break;
+        case ui::InventoryRegion::PaletteTab:
+            // Only hit while the palette is drawn, i.e. in Creative on a grid screen.
+            if (player().isCreative() && button == SlotButton::Left && hit.index < ui::kPaletteCategories.size()) {
+                const ui::PaletteCategory category = ui::kPaletteCategories[hit.index];
+                changed = category != m_palette.category();
+                m_palette.selectCategory(category);
+            }
             break;
         case ui::InventoryRegion::Inventory:
             changed = shift ? screen.shiftClickInventorySlot(player(), &world(), hit.index)
@@ -1349,6 +1371,7 @@ void Application::renderScreens() {
             .renderStats = m_inWorld.state.lastRenderStats,
             .targetHit = m_inWorld.state.currentTarget,
             .crafting = craftingScreenView(m_session->crafting(), world()),
+            .palette = m_palette,
             .hurtFlash = gameplay::hurtFlashIntensity(player().health()),
             // Beta GuiIngame: the hearts flash white every 3 ticks while hits are resisted.
             .heartsBlink = player().health().isInvulnerable() && (player().health().invulnerableTicks / 3) % 2 == 1,

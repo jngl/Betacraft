@@ -10,6 +10,7 @@
 #include "render/Shader.hpp"
 #include "render/TextureAtlas.hpp"
 #include "render/WorldRenderer.hpp"
+#include "ui/CreativePalette.hpp"
 #include "ui/ScreenKind.hpp"
 #include "ui/ScreenState.hpp"
 #include "world/World.hpp"
@@ -40,7 +41,11 @@ struct CraftingScreenView {
 // Outside: the cursor is off the dialog panel; only hitTestInventoryScreen reports it.
 // Armor: the 4 armor slots left of the player inventory, index = gameplay::ArmorSlot;
 // only on the player's own inventory screen (Inventory2x2).
-enum class InventoryRegion : uint8_t { None, Palette, Inventory, CraftingGrid, CraftingResult, Container, Outside, Armor };
+// PaletteTab: the palette category tabs above the palette grid, index = position in
+// kPaletteCategories; drawn and hit only with the palette. Grows only at the end.
+enum class InventoryRegion : uint8_t {
+    None, Palette, Inventory, CraftingGrid, CraftingResult, Container, Outside, Armor, PaletteTab
+};
 
 // What decides the inventory screen layout. A container screen has no grid, no result slot
 // and no palette; its slots sit where the palette is drawn otherwise.
@@ -59,6 +64,17 @@ struct SlotRect {
     float x{0.0f};
     float y{0.0f};
     float size{0.0f};
+};
+
+// The thin scrollbar beside the palette grid (window points): a track as tall as the grid
+// and the thumb showing which rows are visible. Indicative only, never hit-tested.
+struct PaletteScrollbar {
+    float x{0.0f};
+    float width{0.0f};
+    float trackTop{0.0f};
+    float trackHeight{0.0f};
+    float thumbTop{0.0f};
+    float thumbHeight{0.0f};
 };
 
 // GUI Scale: the HUD, the inventory and the death screen are laid out in a virtual
@@ -133,6 +149,7 @@ struct HudDebugContext {
     render::RenderStats renderStats{};
     physics::RaycastHit targetHit{};
     CraftingScreenView crafting{};
+    PaletteNavigation palette{}; // Creative palette: the active category's tab, title and grid
     // Hurt feedback (Survival)
     float hurtFlash{0.0f};   // gameplay::hurtFlashIntensity: red veil of 0.25 * hurtFlash
     bool heartsBlink{false}; // Hearts outlined in white (invulnerability blink)
@@ -166,14 +183,17 @@ public:
         const HudDebugContext& ctx
     );
 
-    // Creative palette clicks: equips the block in the selected hotbar slot and returns true.
+    // Creative palette clicks: equips a full stack of the entry `palette` shows in the clicked
+    // slot (Building, unscrolled, by default) in the selected hotbar slot and returns true
+    // (false for an empty palette slot). Tabs (PaletteTab) select a category in the game.
     // Inventory, grid and result slots belong to game::InventoryCrafting (hitTestInventory).
     bool handleInventoryClick(
         int32_t mouseX,
         int32_t mouseY,
         int32_t screenWidth,
         int32_t screenHeight,
-        physics::Player& player
+        physics::Player& player,
+        const PaletteNavigation& palette = {}
     );
 
     // Inventory screen layout (window points), shared by drawing and click mapping.
@@ -188,6 +208,16 @@ public:
     [[nodiscard]] static InventoryHit hitTestInventory(int32_t mouseX, int32_t mouseY, int32_t screenWidth,
                                                        int32_t screenHeight, int gridDim,
                                                        bool withPalette = true) noexcept;
+
+    // True when the cursor is over the palette grid (slots or the gaps between them), so the
+    // mouse wheel scrolls the palette; always false when the palette is not drawn.
+    [[nodiscard]] static bool isOverPaletteGrid(int32_t mouseX, int32_t mouseY, int32_t screenWidth,
+                                                int32_t screenHeight, InventoryLayoutKey layout) noexcept;
+    // The scrollbar drawn beside the palette grid; nullopt when the palette is not drawn or
+    // the active category fits the grid (PaletteNavigation::scrollbarVisible).
+    [[nodiscard]] static std::optional<PaletteScrollbar> paletteScrollbar(int32_t screenWidth, int32_t screenHeight,
+                                                                          InventoryLayoutKey layout,
+                                                                          const PaletteNavigation& palette) noexcept;
 
     // Same as hitTestInventory, but a point off the dialog panel reports Outside instead of
     // None (Beta drops the cursor stack there); None stays for gaps inside the panel.

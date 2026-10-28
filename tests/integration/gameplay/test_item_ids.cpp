@@ -125,7 +125,12 @@ TEST(SharedItemIds, NoNewLegacyIds) {
         EXPECT_FALSE(isLegacyItemId(player.getInventorySlot(i).id)) << i;
     }
     EXPECT_EQ(player.getInventorySlot(0).id, items::StonePickaxe);
-    for (size_t i = 0; i < betacraft::ui::kCreativePalette.size(); ++i) {
+    // The palette is no longer one fixed 36-entry grid but every entry of every palette
+    // category (issue #64), so the whole catalogue is checked, not the visible slots.
+    for (const ItemId id : betacraft::ui::allPaletteEntries()) {
+        EXPECT_FALSE(isLegacyItemId(id)) << id;
+    }
+    for (size_t i = 0; i < betacraft::ui::kPaletteVisibleSlots; ++i) {
         EXPECT_FALSE(isLegacyItemId(betacraft::ui::paletteItem(i))) << i;
     }
 }

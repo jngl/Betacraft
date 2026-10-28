@@ -48,8 +48,12 @@ TEST(CraftingSystemTest, RecipesAndPaletteCompleteness) {
     const auto recipes = CraftingSystem::getRecipes();
     EXPECT_GE(recipes.size(), 14U);
 
+    // The creative palette used to be 36 fixed BlockIds (34 blocks, 2 pickaxes). It is now
+    // every block and item a player can hold, in the eight palette categories (issue #64):
+    // 12 Building + 10 Decoration + 27 Nature + 10 Redstone + 25 Tools + 29 Combat
+    // + 7 Food + 18 Materials. test_creative_palette.cpp checks what each one holds.
     const auto palette = CraftingSystem::getCreativePalette();
-    EXPECT_EQ(palette.size(), 36U);
+    EXPECT_EQ(palette.size(), 138U);
 }
 
 TEST(CraftingSystemTest, CraftingExecution) {
@@ -81,21 +85,45 @@ TEST(HudRendererTest, InventoryClickPaletteItemSelection) {
 
     const int32_t screenW = 1280;
     const int32_t screenH = 720;
-    constexpr float panelW = 720.0f;
-    constexpr float panelH = 460.0f;
-    const float px = (static_cast<float>(screenW) - panelW) * 0.5f;
-    const float py = (static_cast<float>(screenH) - panelH) * 0.5f - 15.0f;
-    const float palStartX = px + 340.0f;
-    const float palStartY = py + 36.0f;
+    // The grid used to start 36 points below the panel top; the category tabs (issue #65)
+    // now sit between the title and the grid, so the slot comes from the shared layout.
+    const SlotRect slot0 = HudRenderer::inventorySlotRect(InventoryRegion::Palette, 0, screenW, screenH, 2);
 
     // Click palette slot 0 (Stone)
-    const int32_t clickX = static_cast<int32_t>(palStartX + 10.0f);
-    const int32_t clickY = static_cast<int32_t>(palStartY + 10.0f);
+    const int32_t clickX = static_cast<int32_t>(slot0.x + 10.0f);
+    const int32_t clickY = static_cast<int32_t>(slot0.y + 10.0f);
 
     player.setSelectedSlot(0);
     EXPECT_TRUE(hud.handleInventoryClick(clickX, clickY, screenW, screenH, player));
     EXPECT_EQ(player.getHeldItem().id, voxel::BlockId::Stone);
     EXPECT_EQ(player.getHeldItem().count, 64);
+}
+
+// The grid shows the Building category, unscrolled: slot 1 is cobblestone, and the slots
+// past its last entry are empty, so clicking one hands out nothing.
+TEST(HudRendererTest, InventoryClickPaletteShowsBuildingAndIgnoresEmptySlots) {
+    voxel::BlockRegistry::initialize();
+    physics::Player player;
+    HudRenderer hud;
+    constexpr int32_t screenW = 1280;
+    constexpr int32_t screenH = 720;
+    const auto slotCentre = [&](size_t i) {
+        const SlotRect r = HudRenderer::inventorySlotRect(InventoryRegion::Palette, i, screenW, screenH, 2);
+        return std::pair{static_cast<int32_t>(r.x + r.size * 0.5f), static_cast<int32_t>(r.y + r.size * 0.5f)};
+    };
+
+    player.setSelectedSlot(0);
+    const auto [cx, cy] = slotCentre(1);
+    ASSERT_TRUE(hud.handleInventoryClick(cx, cy, screenW, screenH, player));
+    EXPECT_EQ(player.getHeldItem().id, voxel::BlockId::Cobblestone);
+    EXPECT_EQ(player.getHeldItem().count, 64);
+
+    const auto [ex, ey] = slotCentre(35);
+    const InventoryHit hit = HudRenderer::hitTestInventory(ex, ey, screenW, screenH, 2);
+    EXPECT_EQ(hit.region, InventoryRegion::Palette);
+    EXPECT_EQ(hit.index, 35U);
+    EXPECT_FALSE(hud.handleInventoryClick(ex, ey, screenW, screenH, player));
+    EXPECT_EQ(player.getHeldItem().id, voxel::BlockId::Cobblestone) << "the held stack is kept";
 }
 
 // The provisional "Game Mode" button (id 4) only exists for a new world, under

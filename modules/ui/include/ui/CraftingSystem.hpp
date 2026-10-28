@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gameplay/ItemIds.hpp"
 #include "physics/Player.hpp"
 #include "voxel/Block.hpp"
 
@@ -28,7 +29,8 @@ struct CraftingRecipe {
 class CraftingSystem {
 public:
     [[nodiscard]] static std::span<const CraftingRecipe> getRecipes() noexcept;
-    [[nodiscard]] static std::span<const voxel::BlockId> getCreativePalette() noexcept;
+    // Every creative palette entry, in category order (ui/CreativePalette.hpp allPaletteEntries).
+    [[nodiscard]] static std::span<const gameplay::ItemId> getCreativePalette() noexcept;
 
     [[nodiscard]] static bool canCraft(const CraftingRecipe& recipe, const physics::Player& player) noexcept;
     static bool craft(const CraftingRecipe& recipe, physics::Player& player) noexcept;
