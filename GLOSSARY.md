@@ -32,6 +32,10 @@ _Avoid_: World update, block tick
 The part of a world session that moves and resolves entities — mobs, dropped items, projectiles, primed TNT, falling blocks — together with the player's physical actions on blocks and entities: mining, attacking, using and dropping items, and taking damage.
 _Avoid_: Game session, gameplay
 
+**Player focus**:
+What the player is doing that decides whether their actions reach the world: playing, in an inventory screen, sleeping, or dead. Pause and other menus are not part of it: the world does not advance under them.
+_Avoid_: Input mode, game state, screen state
+
 **Creative palette**:
 The grid in the Creative inventory screen that hands out, for free, every block and item a player can hold, grouped into palette categories.
 _Avoid_: Creative menu, creative inventory
