@@ -42,6 +42,15 @@ Every module, `betacraft` and the test executables (through the `betacraft_warni
 
 `.github/workflows/ci.yml` (GitHub Actions, `ubuntu-26.04`, GCC 15 like the dev machine) builds Debug and Release with `-Werror`, runs `ctest -LE benchmark -E AllTests` and the `--frames 300` smoke test under `xvfb-run` with Mesa, so GL and e2e tests really run. It sets `BETACRAFT_REQUIRE_GL=1`: a test guarded by `BETACRAFT_REQUIRE_GL_CONTEXT()` (`test_support/GLTestContext.hpp`) then fails instead of skipping when no OpenGL 3.3 context exists. Guard every new GL test with that macro.
 
+A second matrix job, `variants`, runs alongside it (issue #61), each entry under xvfb with `BETACRAFT_REQUIRE_GL=1`:
+
+- `no-zstd`: Release, `-DBETACRAFT_WITH_ZSTD=OFF` (region files uncompressed); same ctest selection as the GCC jobs, plus the smoke test.
+- `asan-ubsan`: Debug, `-fsanitize=address,undefined -fno-sanitize-recover=all`; same ctest selection, plus the smoke test. LSan leak suppressions live in `.github/sanitizers/lsan.supp`, only for third-party libraries (Mesa, SDL, X11), one comment per entry, never Betacraft code.
+- `tsan`: Debug, `-fsanitize=thread`; builds and runs only `Module_streaming`, `Module_storage` and `Module_ai` (no smoke test).
+- `clang`: Release, the runner's default `clang++` with `-Werror`; same ctest selection, plus the smoke test.
+
+No test is excluded today: the `STANDALONE_TESTS` binaries (ecs, audio) also replace the `nothrow` `operator new`, so they run under ASan, and the one unlabelled complexity guard, `AcousticPipeline.DdaRayCostIsBoundedEvenInDebugBuilds`, scales its budget by `kSanitizerSlowdown` (`test_support/Sanitizers.hpp`). A sanitizer report that needs a non-trivial fix gets its own issue (`needs-triage`), and the test is excluded in that job with a comment citing the issue. Under Clang, googletest's own sources build with `-w` (root `CMakeLists.txt`): Clang 21 warns inside gtest v1.15.2.
+
 ## Architecture
 
 **Main loop (`game/Application`).** Polls SDL → `InputManager` → fixed-timestep accumulator (20 TPS game ticks, decoupled from render rate) → per tick: `WorldSession::tick` in Beta 1.7.3 order (input: mining/attack → entity phase via `EntitySimulation::tick`: ECS systems, pickup, TNT and explosions, falling-block landing, then block entities, and the death scatter → world phase: weather, sleep, `spawnMobs`, time of day +1 tick, `World::tick()` (scheduled ticks, redstone, fluids), random ticks, the lightning roll → World queues emptied: falling-block spawns, unsupported breaks, removed block entities, fluid wash-away drops), returning `WorldTickEvents` that `Application` turns into effects → render with interpolation alpha. A screen state machine (`ScreenState`, `ui/ScreenKind.hpp`, `ui/*Screen`) picks title / world select / options / in-game / death screens.

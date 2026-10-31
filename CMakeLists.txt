@@ -40,6 +40,15 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
 set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
+# Clang 21's -Wcharacter-conversion fires in googletest's own sources (gtest-printers.h, fixed
+# upstream after v1.17.0, not in the pinned v1.15.2), which -Werror turns into a build failure.
+# Third-party code: build gtest's own sources without warnings under Clang. Its headers are
+# already SYSTEM includes for our tests, so Betacraft code keeps every warning.
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    foreach(gtest_target gtest gtest_main gmock gmock_main)
+        target_compile_options(${gtest_target} PRIVATE -w)
+    endforeach()
+endif()
 
 # Engine modules (modules/<m>, ADR 0001): each one is its own static library and test executable.
 include(cmake/BetacraftModule.cmake)

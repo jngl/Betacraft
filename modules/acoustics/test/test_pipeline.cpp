@@ -1,6 +1,7 @@
 // End-to-end acoustic pipeline: world geometry -> 10 Hz DDA -> MPSC command -> voice filter
 // + shared aux FDN -> stereo output. Mirrors what AudioEngine will do once integrated.
 #include "test_support/AcousticsTestUtils.hpp"
+#include "test_support/Sanitizers.hpp"
 #include "acoustics/AcousticVoiceBank.hpp"
 #include "acoustics/EnclosureMonitor.hpp"
 #include "acoustics/OcclusionScheduler.hpp"
@@ -123,7 +124,7 @@ TEST(AcousticPipeline, CaveIsFarMoreReverberantThanOpenTerrain) {
 TEST(AcousticPipeline, DdaRayCostIsBoundedEvenInDebugBuilds) {
     // The spec budget (< 0.5 us per ray) is asserted by DdaRayMeetsTheSpecBudgetInOptimisedBuilds in
     // NDEBUG builds. Debug + a hash-set query is far slower, so this only guards against complexity
-    // blow-ups (e.g. allocation or O(n^2) per ray).
+    // blow-ups (e.g. allocation or O(n^2) per ray). Sanitizer builds get a proportionally larger budget.
     FakeVoxelGrid grid;
     const auto start = std::chrono::steady_clock::now();
     uint32_t solid = 0;
@@ -134,7 +135,7 @@ TEST(AcousticPipeline, DdaRayCostIsBoundedEvenInDebugBuilds) {
     }
     const double us = std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start).count();
     EXPECT_EQ(solid, 0u);
-    EXPECT_LT(us / RAYS, 50.0) << "average " << us / RAYS << " us per ray";
+    EXPECT_LT(us / RAYS, 50.0 * betacraft::test::kSanitizerSlowdown) << "average " << us / RAYS << " us per ray";
 }
 
 #ifdef NDEBUG

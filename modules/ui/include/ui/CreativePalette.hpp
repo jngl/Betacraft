@@ -133,17 +133,21 @@ static_assert([] {
     return true;
 }(), "kPaletteCategories lists PaletteCategory in enum order, so it indexes kPaletteCategoryTable");
 
-[[nodiscard]] constexpr const PaletteCategoryInfo* categoryInfo(PaletteCategory category) noexcept {
+// What an out-of-range category shows: no name, no icon, no entries.
+inline constexpr PaletteCategoryInfo kNoPaletteCategory{};
+
+// A reference rather than a nullable pointer: GCC with -fsanitize=undefined refuses to
+// constant-evaluate a null test on the address of a table element.
+[[nodiscard]] constexpr const PaletteCategoryInfo& categoryInfo(PaletteCategory category) noexcept {
     const auto index = static_cast<size_t>(category);
-    return index < kPaletteCategoryTable.size() ? &kPaletteCategoryTable[index] : nullptr;
+    return index < kPaletteCategoryTable.size() ? kPaletteCategoryTable[index] : kNoPaletteCategory;
 }
 
 } // namespace detail
 
 // The entries of `category`, in display order.
 [[nodiscard]] constexpr std::span<const gameplay::ItemId> paletteEntries(PaletteCategory category) noexcept {
-    const auto* info = detail::categoryInfo(category);
-    return info ? info->entries : std::span<const gameplay::ItemId>{};
+    return detail::categoryInfo(category).entries;
 }
 
 namespace detail {
@@ -169,14 +173,12 @@ inline constexpr auto kAllPaletteEntries = [] {
 
 // The palette title while `category` is shown ("BUILDING", "NATURE"...).
 [[nodiscard]] constexpr std::string_view paletteCategoryName(PaletteCategory category) noexcept {
-    const auto* info = detail::categoryInfo(category);
-    return info ? info->name : std::string_view{};
+    return detail::categoryInfo(category).name;
 }
 
 // The representative item drawn on the category's tab.
 [[nodiscard]] constexpr gameplay::ItemId paletteCategoryIcon(PaletteCategory category) noexcept {
-    const auto* info = detail::categoryInfo(category);
-    return info ? info->icon : gameplay::kNoItem;
+    return detail::categoryInfo(category).icon;
 }
 
 // The category that offers `id`; nullopt when the palette does not.

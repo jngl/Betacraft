@@ -40,7 +40,21 @@ void* operator new(std::size_t size) {
     throw std::bad_alloc();
 }
 
+// The nothrow forms must be replaced too: otherwise the runtime's own nothrow new (e.g. ASan's,
+// used by std::stable_sort's temporary buffer) pairs with the free() below.
+void* operator new(std::size_t size, const std::nothrow_t&) noexcept {
+    try {
+        return ::operator new(size);
+    } catch (const std::bad_alloc&) {
+        return nullptr;
+    }
+}
+
 void operator delete(void* p) noexcept {
+    std::free(p);
+}
+
+void operator delete(void* p, const std::nothrow_t&) noexcept {
     std::free(p);
 }
 
