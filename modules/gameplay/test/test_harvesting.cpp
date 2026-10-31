@@ -603,6 +603,7 @@ TEST(MiningProgress, DelayedTicksDoNotCountTowardsTheNextBlock) {
     int32_t ticks = 0;
     while (!p.advance({0, 0, 0}, stone)) {
         ++ticks;
+        ASSERT_LT(ticks, 1000);
     }
     // Second block: delay + full dig time, so a column of N blocks costs N*ticks + (N-1)*5.
     int32_t second = 1;

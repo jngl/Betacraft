@@ -19,13 +19,6 @@ constexpr std::array<glm::ivec3, 6> NEIGHBORS = {{
     {-1,  0,  0}  // -X
 }};
 
-constexpr std::array<glm::ivec3, 4> HORIZONTAL_NEIGHBORS = {{
-    { 0, 0,  1},
-    { 0, 0, -1},
-    { 1, 0,  0},
-    {-1, 0,  0}
-}};
-
 inline bool isVoxelInLoadedChunk(const World& world, int32_t x, int32_t z) noexcept {
     const core::ChunkCoord coord{
         core::floorDiv(x, voxel::Chunk::WIDTH),

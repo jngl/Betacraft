@@ -414,8 +414,9 @@ TEST(AdversarialPalettedSection, DeepCopyAndMoveSemantics) {
     ASSERT_EQ(original.getBlock(1, 2, 3), BlockId::GoldOre) << "Original block must not change";
     ASSERT_EQ(original.getBlockLight(1, 2, 3), 14) << "Original light must not change";
 
-    // Self-assignment
-    copySec = copySec;
+    // Self-assignment (through an alias: Clang's -Wself-assign-overloaded flags `x = x`)
+    const PalettedSection& self = copySec;
+    copySec = self;
     ASSERT_EQ(copySec.getBlock(1, 2, 3), BlockId::DiamondOre) << "Self-assignment must be safe";
     ASSERT_EQ(copySec.getBlockLight(1, 2, 3), 7) << "Self-assignment must preserve light";
 }

@@ -70,3 +70,113 @@ jobs:
           name: ctest-log-${{ matrix.build_type }}
           path: build/Testing/Temporary/LastTest.log
           if-no-files-found: ignore
+
+  # Extra configurations (issue #61), next to the GCC Debug/Release matrix above, which stays as
+  # it is. Each entry builds in its own directory and runs its own slice of ctest:
+  # - no-zstd:    BETACRAFT_WITH_ZSTD=OFF, region files stored uncompressed; full suite.
+  # - asan-ubsan: AddressSanitizer + LeakSanitizer + UndefinedBehaviorSanitizer (non-recoverable,
+  #               so any report fails the test); full suite under xvfb, plus the smoke test.
+  #               No exclusion: STANDALONE_TESTS (ecs, audio) are ASan-compatible. The smoke
+  #               test takes ~1.5 min instrumented, well within the timeout. Sanitizer builds
+  #               scale one unlabelled timing guard (test_support/Sanitizers.hpp).
+  # - tsan:       ThreadSanitizer on the threaded modules only (Module_streaming,
+  #               Module_storage, Module_ai). Only those test executables are built, so there is
+  #               no smoke test.
+  # - clang:      the runner's default Clang with -Werror, Release; full suite + smoke test.
+  variants:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: no-zstd
+            build_type: Release
+            cmake_args: -DBETACRAFT_WITH_ZSTD=OFF
+            cxx_flags: -Werror
+            linker_flags: ""
+            build_targets: all
+            ctest_args: -LE benchmark -E AllTests
+            smoke: true
+          - name: asan-ubsan
+            build_type: Debug
+            cmake_args: ""
+            cxx_flags: -Werror -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer
+            linker_flags: -fsanitize=address,undefined
+            build_targets: all
+            ctest_args: -LE benchmark -E AllTests
+            smoke: true
+          - name: tsan
+            build_type: Debug
+            cmake_args: ""
+            cxx_flags: -Werror -fsanitize=thread
+            linker_flags: -fsanitize=thread
+            build_targets: betacraft_streaming_tests betacraft_storage_tests betacraft_ai_tests
+            ctest_args: -R "^Module_(streaming|storage|ai)$"
+            smoke: false
+          - name: clang
+            build_type: Release
+            cmake_args: -DCMAKE_CXX_COMPILER=clang++
+            cxx_flags: -Werror
+            linker_flags: ""
+            build_targets: all
+            ctest_args: -LE benchmark -E AllTests
+            smoke: true
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      # Sanitizer runtimes ignore the options of the others, so every entry can share them.
+      # LSan suppressions only cover third-party libraries (see the file's comments).
+      ASAN_OPTIONS: detect_leaks=1:abort_on_error=1:strict_string_checks=1:detect_stack_use_after_return=1
+      UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+      LSAN_OPTIONS: suppressions=${{ github.workspace }}/.github/sanitizers/lsan.supp:print_suppressions=0
+      TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build ccache pkg-config libsdl2-dev libglm-dev libzstd-dev libpng-dev \
+            xvfb mesa-utils libgl1-mesa-dri ${{ matrix.name == 'clang' && 'clang' || '' }}
+
+      - uses: actions/cache@v4
+        with:
+          path: .ccache
+          key: ccache-${{ matrix.name }}-${{ github.sha }}
+          restore-keys: ccache-${{ matrix.name }}-
+
+      - name: Configure
+        run: >
+          cmake -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          "-DCMAKE_CXX_FLAGS=${{ matrix.cxx_flags }}"
+          "-DCMAKE_EXE_LINKER_FLAGS=${{ matrix.linker_flags }}"
+          ${{ matrix.cmake_args }}
+
+      - name: Build
+        run: cmake --build build --target ${{ matrix.build_targets }}
+
+      # Same exclusions as the GCC jobs (benchmarks, AllTests); tsan narrows to its three modules.
+      - name: Test
+        env:
+          BETACRAFT_REQUIRE_GL: "1"
+        run: >
+          xvfb-run -a -s "-screen 0 1280x720x24"
+          ctest --test-dir build -j$(nproc) --output-on-failure ${{ matrix.ctest_args }}
+
+      - name: Smoke test
+        if: matrix.smoke
+        run: >
+          xvfb-run -a -s "-screen 0 1280x720x24"
+          ./build/betacraft --frames 300 --save-dir "$RUNNER_TEMP/bc-smoke"
+
+      - name: Upload test log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctest-log-${{ matrix.name }}
+          path: build/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore

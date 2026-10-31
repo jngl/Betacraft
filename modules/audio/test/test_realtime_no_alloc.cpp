@@ -54,6 +54,17 @@ void operator delete(void* p) noexcept { std::free(p); }
 void operator delete[](void* p) noexcept { std::free(p); }
 void operator delete(void* p, std::size_t) noexcept { std::free(p); }
 void operator delete[](void* p, std::size_t) noexcept { std::free(p); }
+// The nothrow forms must be replaced too: otherwise the runtime's own nothrow new (e.g. ASan's,
+// used by std::stable_sort's temporary buffer) pairs with the free() above.
+// They count like the throwing forms.
+void* operator new(std::size_t size, const std::nothrow_t&) noexcept {
+    try { return countedAlloc(size); } catch (const std::bad_alloc&) { return nullptr; }
+}
+void* operator new[](std::size_t size, const std::nothrow_t&) noexcept {
+    try { return countedAlloc(size); } catch (const std::bad_alloc&) { return nullptr; }
+}
+void operator delete(void* p, const std::nothrow_t&) noexcept { std::free(p); }
+void operator delete[](void* p, const std::nothrow_t&) noexcept { std::free(p); }
 
 using namespace betacraft::acoustics;
 

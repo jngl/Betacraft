@@ -1,0 +1,5 @@
+# LeakSanitizer suppressions for the asan-ubsan CI job (.github/workflows/ci.yml, LSAN_OPTIONS).
+#
+# Only third-party code goes here (Mesa/llvmpipe, SDL, X11/GLX drivers), each entry with a
+# comment saying what leaks and why it is not ours. Never suppress a Betacraft frame: a leak in
+# Betacraft code gets fixed, or gets its own issue and a test exclusion in the workflow.
